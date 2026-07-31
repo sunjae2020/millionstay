@@ -119,7 +119,8 @@
     "booking_contract": "预订与合同",
     "calendar": "工作日历",
     "dashboards": "仪表板",
-    "document_intake": "批量导入"
+    "document_intake": "批量导入",
+    "document_library": "文件索引"
   },
   "dashboard": {
     "title": "仪表板",
@@ -5561,7 +5562,12 @@
     "col_size": "大小",
     "col_date": "上传日期",
     "issued_version": "已发出 v{{version}}",
-    "signed_original": "签署原件"
+    "signed_original": "签署原件",
+    "col_year": "年份",
+    "col_tags": "关键词",
+    "year_placeholder": "年份",
+    "year_hint": "文件上标注的年份，而非上传日期。",
+    "tags_placeholder": "关键词（逗号分隔）"
   },
   "intake": {
     "title": "文件批量导入",
@@ -5636,5 +5642,46 @@
     "section": "合同文件",
     "is_signed_original": "这是签署盖章的合同原件",
     "is_signed_original_help": "同时完成签订处理。仅归档文件时请不要勾选。"
+  },
+  "library": {
+    "title": "文件索引",
+    "subtitle": "按年份、类型和关键词检索所有记录下的已归档文件。",
+    "searchPlaceholder": "搜索文件名、标题或关键词…",
+    "search": "搜索",
+    "clear": "清除",
+    "all": "全部",
+    "byYear": "年份",
+    "byType": "文件类型",
+    "byRecord": "归档到",
+    "noYear": "无年份",
+    "empty": "没有符合条件的文件。",
+    "truncated": "仅显示前 500 条，请缩小筛选范围。",
+    "col_doc": "文件",
+    "col_type": "类型",
+    "col_year": "年份",
+    "col_tags": "关键词",
+    "col_record": "记录",
+    "col_size": "大小",
+    "col_uploaded": "上传时间",
+    "edit": "编辑索引",
+    "editTitle": "编辑索引信息",
+    "fieldTitle": "标题",
+    "fieldYear": "年份",
+    "fieldType": "类型",
+    "fieldTags": "关键词（逗号分隔）",
+    "typeChangesRetention": "更改文件类型也会改变其保存期限。",
+    "saved": "已保存",
+    "saveFailed": "无法保存",
+    "entity": {
+      "contract": "合同",
+      "invoice": "账单",
+      "quote": "报价",
+      "booking": "预订",
+      "account": "账户",
+      "contact": "个人",
+      "property": "房产",
+      "space": "房号",
+      "work_order": "工单"
+    }
   }
 }

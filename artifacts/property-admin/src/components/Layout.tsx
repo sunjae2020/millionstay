@@ -29,6 +29,7 @@ import {
   FileText,
   FileSignature,
   Upload,
+  Search,
   Box,
   Tag,
   Receipt,
@@ -162,6 +163,7 @@ function getNav(
       items: [
         { href: "/documents", label: t("nav.all_documents"), icon: FileText },
         { href: "/documents/intake", label: t("nav.document_intake"), icon: Upload },
+        { href: "/documents/library", label: t("nav.document_library"), icon: Search },
         { href: "/documents/quotes", label: t("nav.quotes"), icon: FileText },
         { href: "/finance/invoices", label: t("nav.invoice"), icon: Receipt },
         { href: "/finance/receipts", label: t("nav.receipt"), icon: Receipt },

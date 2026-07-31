@@ -4,7 +4,7 @@ import {
   db, invoicesTable, contractsTable, accountsTable, bookingsTable, quotesTable,
   contactsTable, propertiesTable, spacesTable, workOrdersTable, documentsTable,
 } from "@workspace/db";
-import { and, eq, ilike, isNull, desc } from "drizzle-orm";
+import { and, eq, ilike, inArray, notInArray, isNull, or, sql, desc } from "drizzle-orm";
 import { listSnapshots } from "../lib/documents/freeze";
 import { calcRetentionDate } from "../lib/retention";
 import { decodeUploadFilename } from "../lib/uploadFilename";
@@ -219,6 +219,8 @@ const UPLOADABLE_DOC_TYPES: Record<string, { personOnly?: boolean }> = {
 
 /** Company paperwork is role-gated by its own route and must not leak through here. */
 const ORG_ENTITY_TYPE = "organisation";
+/** Bulk-upload files parked by the intake flow, not yet filed against a record. */
+const INTAKE_ENTITY_TYPE = "intake";
 
 function isAttachable(t: string): t is AttachableEntity {
   return Object.prototype.hasOwnProperty.call(ATTACHABLE_ENTITIES, t);
@@ -241,10 +243,73 @@ interface AttachmentDto {
   /** Set on frozen snapshots of sent documents; null on manual uploads. */
   version: number | null;
   doc_ref: string | null;
+  /** Filing index — see the columns' comments in the schema. */
+  title: string | null;
+  doc_date: string | null;
+  doc_year: number | null;
+  tags: string[];
   retention_until: string | null;
   created_at: string | null;
   /** Always our own streaming endpoint — see the GET .../file comment. */
   file_url: string;
+}
+
+/** Tags are stored as jsonb; tolerate anything that is not a clean string array. */
+function readTags(raw: unknown): string[] {
+  if (!Array.isArray(raw)) return [];
+  return raw.filter((t): t is string => typeof t === "string" && t.trim().length > 0).map((t) => t.trim());
+}
+
+/**
+ * Normalise submitted tags: trim, drop blanks, de-duplicate case-insensitively,
+ * and cap the list. Keywords are typed by hand, so "홍길동", " 홍길동" and
+ * "홍길동" pasted twice must not become three different tags.
+ */
+function parseTags(raw: unknown): string[] {
+  const list =
+    Array.isArray(raw) ? raw
+    : typeof raw === "string" && raw.trim() ? raw.split(",")
+    : [];
+  const seen = new Set<string>();
+  const out: string[] = [];
+  for (const item of list) {
+    if (typeof item !== "string") continue;
+    const value = item.trim().slice(0, 60);
+    if (!value) continue;
+    const key = value.toLowerCase();
+    if (seen.has(key)) continue;
+    seen.add(key);
+    out.push(value);
+    if (out.length >= 20) break;
+  }
+  return out;
+}
+
+const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
+/** Wide enough for historic paperwork, narrow enough to catch a typo'd year. */
+const MIN_YEAR = 1900;
+const MAX_YEAR = 2200;
+
+function parseYear(raw: unknown): number | null {
+  const n = Number(raw);
+  if (!Number.isInteger(n) || n < MIN_YEAR || n > MAX_YEAR) return null;
+  return n;
+}
+
+/**
+ * Resolve the filing year from whatever the uploader gave.
+ *
+ * An explicit year wins; otherwise it is taken from the document's own date.
+ * The upload date is deliberately NOT a fallback here — the POST handler adds
+ * it, but only after this has had its chance, so a document that carries its
+ * own date is never filed under the year it happened to be scanned.
+ */
+function resolveYear(year: unknown, docDate: string | null): number | null {
+  return parseYear(year) ?? (docDate ? parseYear(docDate.slice(0, 4)) : null);
+}
+
+function parseDocDate(raw: unknown): string | null {
+  return typeof raw === "string" && ISO_DATE.test(raw.trim()) ? raw.trim() : null;
 }
 
 function toDto(d: typeof documentsTable.$inferSelect): AttachmentDto {
@@ -258,6 +323,10 @@ function toDto(d: typeof documentsTable.$inferSelect): AttachmentDto {
     mime_type: d.mime_type,
     version: d.version,
     doc_ref: d.doc_ref,
+    title: d.title,
+    doc_date: d.doc_date,
+    doc_year: d.doc_year,
+    tags: readTags(d.tags),
     retention_until: d.retention_until?.toISOString() ?? null,
     created_at: d.created_at?.toISOString() ?? null,
     file_url: `/api/v1/documents/${d.id}/file`,
@@ -317,6 +386,13 @@ router.post("/v1/documents", attachmentUpload.single("file"), async (req, res): 
   if (!isCloudinaryConfigured()) { res.status(503).json({ error: "File storage is not configured" }); return; }
 
   const fileName = decodeUploadFilename(file.originalname).slice(0, 255);
+  const title = String(body["title"] ?? "").trim().slice(0, 255) || null;
+  const docDate = parseDocDate(body["doc_date"]);
+  const tags = parseTags(body["tags"]);
+  // Upload date is the last resort, so a document that states its own date is
+  // never filed under the year it was scanned.
+  const docYear = resolveYear(body["doc_year"], docDate) ?? new Date().getFullYear();
+
   try {
     // resource_type "auto": attachments arrive as PDFs, phone photos, scans and
     // Office files, and Cloudinary's default image pipeline rejects whatever it
@@ -334,13 +410,17 @@ router.post("/v1/documents", attachmentUpload.single("file"), async (req, res): 
       mime_type: file.mimetype.slice(0, 100),
       cloudinary_public_id: up.public_id,
       resource_type: up.resource_type,
+      title,
+      doc_date: docDate,
+      doc_year: docYear,
+      tags,
       uploaded_by: (req as any).user?.id ?? null,
       uploaded_by_type: "User",
       retention_until: calcRetentionDate(docType),
     } as never).returning();
     await logAction({
       entityType: `${entityType}_document`, entityId, action: "CREATE",
-      newValue: { file_name: fileName, doc_type: docType },
+      newValue: { file_name: fileName, doc_type: docType, doc_year: docYear, tags },
     }).catch(() => {});
     res.status(201).json({ success: true, document: toDto(row) });
   } catch (err) {
@@ -348,6 +428,207 @@ router.post("/v1/documents", attachmentUpload.single("file"), async (req, res): 
     console.error(`[documents] upload failed (${fileName}):`, reason);
     res.status(500).json({ error: `File upload failed: ${reason}` });
   }
+});
+
+// ── Document library ─────────────────────────────────────────────────────────
+//
+// The per-record panel answers "what is filed on this contract?". This answers
+// the other question — "where is the 2023 lease for unit 1503?" — across every
+// record at once, by year, by type and by keyword.
+
+/** Records whose name is worth showing next to a document in the library. */
+const LABELLED_ENTITIES = {
+  contract: { table: contractsTable, column: contractsTable.contract_ref, path: "/booking/contracts" },
+  invoice: { table: invoicesTable, column: invoicesTable.invoice_ref, path: "/finance/invoices" },
+  quote: { table: quotesTable, column: quotesTable.quote_ref, path: "/documents/quotes" },
+  booking: { table: bookingsTable, column: bookingsTable.booking_ref, path: "/booking/bookings" },
+  account: { table: accountsTable, column: accountsTable.name, path: "/account/accounts" },
+  property: { table: propertiesTable, column: propertiesTable.name, path: "/property/properties" },
+  space: { table: spacesTable, column: spacesTable.name, path: "/property/spaces" },
+} as const;
+
+/**
+ * Look up the display name of every record referenced by a page of documents,
+ * one query per entity type rather than one per document.
+ *
+ * Contacts are handled separately because a person's label is two columns.
+ */
+async function labelEntities(
+  rows: Array<{ entity_type: string; entity_id: number }>,
+): Promise<Map<string, string>> {
+  const byType = new Map<string, Set<number>>();
+  for (const r of rows) {
+    if (!byType.has(r.entity_type)) byType.set(r.entity_type, new Set());
+    byType.get(r.entity_type)!.add(r.entity_id);
+  }
+
+  const labels = new Map<string, string>();
+  for (const [type, ids] of byType) {
+    const idList = [...ids];
+    if (!idList.length) continue;
+
+    if (type === "contact") {
+      const found = await db
+        .select({ id: contactsTable.id, first: contactsTable.first_name, last: contactsTable.last_name })
+        .from(contactsTable)
+        .where(inArray(contactsTable.id, idList));
+      for (const c of found) labels.set(`contact:${c.id}`, `${c.last}${c.first}`);
+      continue;
+    }
+
+    const meta = LABELLED_ENTITIES[type as keyof typeof LABELLED_ENTITIES];
+    if (!meta) continue;
+    const found = await db
+      .select({ id: meta.table.id, label: meta.column })
+      .from(meta.table)
+      .where(inArray(meta.table.id, idList));
+    for (const row of found) labels.set(`${type}:${row.id}`, String(row.label ?? ""));
+  }
+  return labels;
+}
+
+function detailUrlFor(entityType: string, entityId: number): string | null {
+  if (entityType === "contact") return `/account/contacts/${entityId}`;
+  const meta = LABELLED_ENTITIES[entityType as keyof typeof LABELLED_ENTITIES];
+  return meta ? `${meta.path}/${entityId}` : null;
+}
+
+/**
+ * GET /v1/documents/library?q=&year=&doc_type=&entity_type=
+ *
+ * Returns matching documents plus the facet counts the filter chips render
+ * from. The facets are computed over everything the *other* filters allow, so
+ * the year chips stay accurate while a type filter is applied.
+ */
+router.get("/v1/documents/library", async (req, res): Promise<void> => {
+  const { q, year, doc_type: docTypeFilter, entity_type: entityTypeFilter } =
+    req.query as Record<string, string | undefined>;
+
+  // Parked intake files have no record yet and company paperwork is role-gated
+  // by its own route — neither belongs in a cross-record library.
+  const HIDDEN_ENTITY_TYPES = [ORG_ENTITY_TYPE, INTAKE_ENTITY_TYPE];
+
+  // The keyword is part of both the result query and the facet counts (a facet
+  // describes the *other* filters, not itself), so it is kept separate rather
+  // than positionally recovered from the condition list.
+  const searchCond = q?.trim()
+    ? or(
+        // Tags are jsonb, so they are matched as text — a substring hit inside
+        // the serialised array is exactly the "does any keyword contain this?"
+        // the search box promises, without a second index to maintain.
+        ilike(documentsTable.file_name, `%${q.trim()}%`),
+        ilike(documentsTable.title, `%${q.trim()}%`),
+        ilike(documentsTable.doc_ref, `%${q.trim()}%`),
+        sql`${documentsTable.tags}::text ILIKE ${`%${q.trim()}%`}`,
+      )
+    : null;
+
+  const base = [
+    isNull(documentsTable.deleted_at),
+    notInArray(documentsTable.entity_type, HIDDEN_ENTITY_TYPES),
+    ...(searchCond ? [searchCond] : []),
+  ];
+
+  const conds = [...base];
+  if (docTypeFilter && docTypeFilter !== "_all") conds.push(eq(documentsTable.doc_type, docTypeFilter));
+  if (entityTypeFilter && entityTypeFilter !== "_all") conds.push(eq(documentsTable.entity_type, entityTypeFilter));
+  const parsedYear = parseYear(year);
+  if (year === "_none") conds.push(isNull(documentsTable.doc_year));
+  else if (parsedYear) conds.push(eq(documentsTable.doc_year, parsedYear));
+
+  const rows = await db
+    .select().from(documentsTable)
+    .where(and(...conds))
+    .orderBy(desc(documentsTable.doc_year), desc(documentsTable.created_at))
+    .limit(500);
+
+  const labels = await labelEntities(rows);
+
+  // Facets ignore the filter they describe, so selecting 2023 does not reduce
+  // the year list to just 2023 and strand the user there.
+  const facetConds = base;
+  const [years, types, entityTypes] = await Promise.all([
+    db.select({ value: documentsTable.doc_year, count: sql<number>`count(*)::int` })
+      .from(documentsTable).where(and(...facetConds)).groupBy(documentsTable.doc_year),
+    db.select({ value: documentsTable.doc_type, count: sql<number>`count(*)::int` })
+      .from(documentsTable).where(and(...facetConds)).groupBy(documentsTable.doc_type),
+    db.select({ value: documentsTable.entity_type, count: sql<number>`count(*)::int` })
+      .from(documentsTable).where(and(...facetConds)).groupBy(documentsTable.entity_type),
+  ]);
+
+  res.json({
+    documents: rows.map((d) => ({
+      ...toDto(d),
+      entity_label: labels.get(`${d.entity_type}:${d.entity_id}`) ?? null,
+      detail_url: detailUrlFor(d.entity_type, d.entity_id),
+    })),
+    // Newest year first; documents with no year sort to the end as null.
+    facets: {
+      years: years
+        .map((y) => ({ value: y.value, count: y.count }))
+        .sort((a, b) => (b.value ?? 0) - (a.value ?? 0)),
+      doc_types: types.sort((a, b) => b.count - a.count),
+      entity_types: entityTypes.sort((a, b) => b.count - a.count),
+    },
+    truncated: rows.length === 500,
+  });
+});
+
+/**
+ * PATCH /v1/documents/:docId — correct a document's filing index.
+ *
+ * Only the index is editable: title, date, year, keywords and type. The bytes,
+ * the record it is filed against and the retention clock are not — moving a
+ * document between records or changing what it legally is are different
+ * operations with different consequences, not a metadata edit.
+ *
+ * The one exception is `doc_type`, which *does* move the retention date,
+ * so it is recalculated here rather than left stale.
+ */
+router.patch("/v1/documents/:docId", async (req, res): Promise<void> => {
+  const docId = String(req.params["docId"] ?? "");
+  const body = (req.body ?? {}) as Record<string, unknown>;
+  const [doc] = await db.select().from(documentsTable)
+    .where(and(eq(documentsTable.id, docId), isNull(documentsTable.deleted_at)));
+  if (!doc || doc.entity_type === ORG_ENTITY_TYPE) { res.status(404).json({ error: "Not found" }); return; }
+
+  const patch: Record<string, unknown> = { updated_at: new Date() };
+
+  if ("title" in body) {
+    const title = String(body["title"] ?? "").trim().slice(0, 255);
+    patch["title"] = title || null;
+  }
+  if ("doc_date" in body) patch["doc_date"] = parseDocDate(body["doc_date"]);
+  if ("tags" in body) patch["tags"] = parseTags(body["tags"]);
+  if ("doc_year" in body) {
+    // Clearing the year is allowed — "we don't know" is a real answer, and
+    // those documents get their own facet rather than a wrong year.
+    patch["doc_year"] = resolveYear(body["doc_year"], parseDocDate(body["doc_date"] ?? doc.doc_date));
+  }
+  if ("doc_type" in body) {
+    const nextType = String(body["doc_type"] ?? "");
+    const rule = UPLOADABLE_DOC_TYPES[nextType];
+    if (!rule) { res.status(400).json({ error: `Unsupported doc_type: ${nextType}` }); return; }
+    if (rule.personOnly && !PERSON_ENTITIES.has(doc.entity_type as AttachableEntity)) {
+      res.status(400).json({
+        error: `${nextType} must be filed against the person it identifies, not a ${doc.entity_type}.`,
+      });
+      return;
+    }
+    patch["doc_type"] = nextType;
+    patch["retention_until"] = calcRetentionDate(nextType);
+  }
+
+  const [updated] = await db.update(documentsTable).set(patch as never)
+    .where(eq(documentsTable.id, docId)).returning();
+
+  await logAction({
+    entityType: `${doc.entity_type}_document`, entityId: doc.entity_id, action: "UPDATE",
+    oldValue: { doc_type: doc.doc_type, doc_year: doc.doc_year, title: doc.title, tags: readTags(doc.tags) },
+    newValue: { doc_type: updated.doc_type, doc_year: updated.doc_year, title: updated.title, tags: readTags(updated.tags) },
+  }).catch(() => {});
+
+  res.json(toDto(updated));
 });
 
 /**

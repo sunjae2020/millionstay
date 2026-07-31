@@ -230,6 +230,38 @@ function toDto(
   };
 }
 
+/**
+ * Turn what the classifier read into the filing index the library searches on.
+ *
+ * This is the payoff for reading the page in the first place: the year comes
+ * off the document's own date rather than the day it happened to be scanned,
+ * and the tenant name, unit and reference become keywords without anyone
+ * typing them again.
+ */
+function indexFromScan(item: typeof documentIntakeTable.$inferSelect): {
+  doc_date: string | null;
+  doc_year: number | null;
+  tags: string[];
+} {
+  const x = (item.extracted ?? {}) as Record<string, unknown>;
+  const str = (k: string) => (typeof x[k] === "string" && x[k] ? (x[k] as string) : null);
+
+  // The document's own date first, its term start second — a lease scanned
+  // years later still belongs to the year it was signed.
+  const docDate = str("document_date") ?? str("start_date");
+  const year = docDate ? Number(docDate.slice(0, 4)) : NaN;
+
+  const tags = [str("party_name"), str("unit_label"), str("building_name"), str("reference")]
+    .filter((v): v is string => Boolean(v))
+    .map((v) => v.trim().slice(0, 60));
+
+  return {
+    doc_date: docDate,
+    doc_year: Number.isInteger(year) && year >= 1900 && year <= 2200 ? year : null,
+    tags: [...new Set(tags)],
+  };
+}
+
 /** Attach each item's file metadata in one query rather than one per row. */
 async function withDocuments(rows: Array<typeof documentIntakeTable.$inferSelect>): Promise<IntakeItemDto[]> {
   if (!rows.length) return [];
@@ -406,13 +438,25 @@ router.post("/v1/document-intake/:id/confirm", async (req, res): Promise<void> =
   }
   if (!(await entityExists(entityType, entityId))) { res.status(404).json({ error: "Record not found" }); return; }
 
+  // The reviewer may override the index the scan proposed; whatever they leave
+  // alone falls back to what was read off the page.
+  const scanIndex = indexFromScan(item);
+  const docDate = typeof body["doc_date"] === "string" ? String(body["doc_date"]) : scanIndex.doc_date;
+  const docYear = Number(body["doc_year"]) || scanIndex.doc_year;
+  const tags = Array.isArray(body["tags"]) ? (body["tags"] as string[]) : scanIndex.tags;
+
   await db.update(documentsTable).set({
     entity_type: entityType,
     entity_id: entityId,
     doc_type: docType,
+    doc_date: docDate,
+    // Falling back to the upload year keeps every filed document reachable from
+    // a year filter, even when the page gave no date at all.
+    doc_year: docYear ?? new Date().getFullYear(),
+    tags,
     retention_until: calcRetentionDate(docType),
     updated_at: new Date(),
-  }).where(eq(documentsTable.id, item.document_id));
+  } as never).where(eq(documentsTable.id, item.document_id));
 
   await db.update(documentIntakeTable).set({
     status: "filed",
@@ -474,13 +518,17 @@ router.post("/v1/document-intake/confirm-batch", async (req, res): Promise<void>
       skipped.push({ id: item.id, file_name: item.file_name, reason: "record no longer exists" }); continue;
     }
 
+    const idx = indexFromScan(item);
     await db.update(documentsTable).set({
       entity_type: entityType,
       entity_id: entityId,
       doc_type: docType,
+      doc_date: idx.doc_date,
+      doc_year: idx.doc_year ?? new Date().getFullYear(),
+      tags: idx.tags,
       retention_until: calcRetentionDate(docType),
       updated_at: new Date(),
-    }).where(eq(documentsTable.id, item.document_id));
+    } as never).where(eq(documentsTable.id, item.document_id));
 
     await db.update(documentIntakeTable).set({
       status: "filed",

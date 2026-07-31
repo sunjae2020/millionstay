@@ -119,7 +119,8 @@
     "booking_contract": "Bookings & Contracts",
     "calendar": "Work Calendar",
     "dashboards": "Dashboards",
-    "document_intake": "Bulk intake"
+    "document_intake": "Bulk intake",
+    "document_library": "Document index"
   },
   "dashboard": {
     "title": "Dashboard",
@@ -5561,7 +5562,12 @@
     "col_size": "Size",
     "col_date": "Uploaded",
     "issued_version": "Issued v{{version}}",
-    "signed_original": "Signed original"
+    "signed_original": "Signed original",
+    "col_year": "Year",
+    "col_tags": "Keywords",
+    "year_placeholder": "Year",
+    "year_hint": "The year printed on the document, not today's date.",
+    "tags_placeholder": "Keywords (comma separated)"
   },
   "intake": {
     "title": "Bulk document intake",
@@ -5636,5 +5642,46 @@
     "section": "Contract documents",
     "is_signed_original": "This file is the signed original",
     "is_signed_original_help": "Records the contract as executed. Leave unchecked to simply file a document."
+  },
+  "library": {
+    "title": "Document index",
+    "subtitle": "Every filed document across all records — browse by year, type and keyword.",
+    "searchPlaceholder": "Search file name, title or keyword…",
+    "search": "Search",
+    "clear": "Clear",
+    "all": "All",
+    "byYear": "Year",
+    "byType": "Document type",
+    "byRecord": "Filed against",
+    "noYear": "No year",
+    "empty": "No documents match these filters.",
+    "truncated": "Showing the first 500 matches — narrow the filters to see the rest.",
+    "col_doc": "Document",
+    "col_type": "Type",
+    "col_year": "Year",
+    "col_tags": "Keywords",
+    "col_record": "Record",
+    "col_size": "Size",
+    "col_uploaded": "Uploaded",
+    "edit": "Edit index",
+    "editTitle": "Edit filing index",
+    "fieldTitle": "Title",
+    "fieldYear": "Year",
+    "fieldType": "Type",
+    "fieldTags": "Keywords (comma separated)",
+    "typeChangesRetention": "Changing the document type also changes how long it is kept before destruction.",
+    "saved": "Saved",
+    "saveFailed": "Could not save",
+    "entity": {
+      "contract": "Contract",
+      "invoice": "Invoice",
+      "quote": "Quote",
+      "booking": "Booking",
+      "account": "Account",
+      "contact": "Person",
+      "property": "Property",
+      "space": "Unit",
+      "work_order": "Work order"
+    }
   }
 }

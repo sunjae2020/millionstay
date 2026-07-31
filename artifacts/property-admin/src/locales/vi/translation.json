@@ -119,7 +119,8 @@
     "booking_contract": "Đặt chỗ & Hợp đồng",
     "calendar": "Lịch công việc",
     "dashboards": "Bảng điều khiển",
-    "document_intake": "Nhập hàng loạt"
+    "document_intake": "Nhập hàng loạt",
+    "document_library": "Chỉ mục tài liệu"
   },
   "dashboard": {
     "title": "Bảng điều khiển",
@@ -5561,7 +5562,12 @@
     "col_size": "Kích thước",
     "col_date": "Ngày tải lên",
     "issued_version": "Đã phát hành v{{version}}",
-    "signed_original": "Bản gốc đã ký"
+    "signed_original": "Bản gốc đã ký",
+    "col_year": "Năm",
+    "col_tags": "Từ khóa",
+    "year_placeholder": "Năm",
+    "year_hint": "Năm ghi trên tài liệu, không phải ngày tải lên.",
+    "tags_placeholder": "Từ khóa (phân tách bằng dấu phẩy)"
   },
   "intake": {
     "title": "Nhập tài liệu hàng loạt",
@@ -5636,5 +5642,46 @@
     "section": "Tài liệu hợp đồng",
     "is_signed_original": "Đây là bản gốc đã ký",
     "is_signed_original_help": "Đồng thời ghi nhận hợp đồng đã ký kết. Chỉ lưu tài liệu thì không tích chọn."
+  },
+  "library": {
+    "title": "Chỉ mục tài liệu",
+    "subtitle": "Tra cứu mọi tài liệu đã lưu trên tất cả bản ghi theo năm, loại và từ khóa.",
+    "searchPlaceholder": "Tìm theo tên tệp, tiêu đề hoặc từ khóa…",
+    "search": "Tìm",
+    "clear": "Xóa lọc",
+    "all": "Tất cả",
+    "byYear": "Năm",
+    "byType": "Loại tài liệu",
+    "byRecord": "Lưu tại",
+    "noYear": "Không có năm",
+    "empty": "Không có tài liệu nào khớp bộ lọc.",
+    "truncated": "Chỉ hiển thị 500 kết quả đầu — hãy thu hẹp bộ lọc.",
+    "col_doc": "Tài liệu",
+    "col_type": "Loại",
+    "col_year": "Năm",
+    "col_tags": "Từ khóa",
+    "col_record": "Bản ghi",
+    "col_size": "Dung lượng",
+    "col_uploaded": "Tải lên",
+    "edit": "Sửa chỉ mục",
+    "editTitle": "Sửa thông tin chỉ mục",
+    "fieldTitle": "Tiêu đề",
+    "fieldYear": "Năm",
+    "fieldType": "Loại",
+    "fieldTags": "Từ khóa (phân tách bằng dấu phẩy)",
+    "typeChangesRetention": "Đổi loại tài liệu cũng đổi thời hạn lưu trữ trước khi hủy.",
+    "saved": "Đã lưu",
+    "saveFailed": "Không thể lưu",
+    "entity": {
+      "contract": "Hợp đồng",
+      "invoice": "Hóa đơn",
+      "quote": "Báo giá",
+      "booking": "Đặt phòng",
+      "account": "Tài khoản",
+      "contact": "Cá nhân",
+      "property": "Bất động sản",
+      "space": "Căn hộ",
+      "work_order": "Lệnh công việc"
+    }
   }
 }

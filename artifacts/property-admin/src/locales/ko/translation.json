@@ -119,7 +119,8 @@
     "booking_contract": "예약 & 계약",
     "calendar": "업무 캘린더",
     "dashboards": "대시보드",
-    "document_intake": "일괄 업로드"
+    "document_intake": "일괄 업로드",
+    "document_library": "문서 색인"
   },
   "dashboard": {
     "title": "대시보드",
@@ -5561,7 +5562,12 @@
     "col_size": "크기",
     "col_date": "등록일",
     "issued_version": "발행본 v{{version}}",
-    "signed_original": "서명 원본"
+    "signed_original": "서명 원본",
+    "col_year": "연도",
+    "col_tags": "키워드",
+    "year_placeholder": "연도",
+    "year_hint": "업로드 날짜가 아니라 문서에 적힌 연도입니다.",
+    "tags_placeholder": "키워드 (쉼표로 구분)"
   },
   "intake": {
     "title": "서류 일괄 업로드",
@@ -5636,5 +5642,46 @@
     "section": "계약 서류",
     "is_signed_original": "서명·날인한 계약 원본입니다",
     "is_signed_original_help": "체결 처리까지 함께 합니다. 그냥 서류만 보관하려면 체크하지 마세요."
+  },
+  "library": {
+    "title": "문서 색인",
+    "subtitle": "모든 레코드에 첨부된 문서를 연도·종류·키워드로 찾습니다.",
+    "searchPlaceholder": "파일명, 제목, 키워드 검색…",
+    "search": "검색",
+    "clear": "초기화",
+    "all": "전체",
+    "byYear": "연도",
+    "byType": "문서 종류",
+    "byRecord": "첨부 대상",
+    "noYear": "연도 없음",
+    "empty": "조건에 맞는 문서가 없습니다.",
+    "truncated": "먼저 500건만 표시합니다. 조건을 좁혀 주세요.",
+    "col_doc": "문서",
+    "col_type": "종류",
+    "col_year": "연도",
+    "col_tags": "키워드",
+    "col_record": "레코드",
+    "col_size": "크기",
+    "col_uploaded": "업로드",
+    "edit": "색인 수정",
+    "editTitle": "색인 정보 수정",
+    "fieldTitle": "제목",
+    "fieldYear": "연도",
+    "fieldType": "종류",
+    "fieldTags": "키워드 (쉼표로 구분)",
+    "typeChangesRetention": "문서 종류를 바꾸면 보존 기간도 함께 바뀝니다.",
+    "saved": "저장했습니다",
+    "saveFailed": "저장하지 못했습니다",
+    "entity": {
+      "contract": "계약",
+      "invoice": "청구서",
+      "quote": "견적",
+      "booking": "예약",
+      "account": "계정",
+      "contact": "인물",
+      "property": "매물",
+      "space": "세대",
+      "work_order": "작업지시"
+    }
   }
 }

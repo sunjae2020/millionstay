@@ -87,6 +87,7 @@ import CsTicketDetail from "@/pages/cs/CsTicketDetail";
 // Documents
 import DocumentHub from "@/pages/documents/DocumentHub";
 import DocumentIntake from "@/pages/documents/DocumentIntake";
+import DocumentLibrary from "@/pages/documents/DocumentLibrary";
 import QuoteList from "@/pages/documents/QuoteList";
 import QuoteDetail from "@/pages/documents/QuoteDetail";
 
@@ -312,6 +313,7 @@ function Router() {
       {/* ── DOCUMENTS ─────────────────────────────────── */}
       <Route path="/documents" component={DocumentHub} />
       <Route path="/documents/intake" component={DocumentIntake} />
+      <Route path="/documents/library" component={DocumentLibrary} />
       <Route path="/documents/quotes" component={QuoteList} />
       <Route path="/documents/quotes/new" component={QuoteDetail} />
       <Route path="/documents/quotes/:id" component={QuoteDetail} />

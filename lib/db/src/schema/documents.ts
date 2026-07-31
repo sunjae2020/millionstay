@@ -1,4 +1,4 @@
-import { pgTable, uuid, integer, varchar, timestamp, index } from "drizzle-orm/pg-core";
+import { pgTable, uuid, integer, varchar, text, timestamp, jsonb, index } from "drizzle-orm/pg-core";
 
 /**
  * Documents — Sprint B-2
@@ -30,6 +30,30 @@ export const documentsTable = pgTable(
     // Document Hub: human reference + version for frozen document snapshots.
     doc_ref: varchar("doc_ref", { length: 64 }),
     version: integer("version"),
+
+    // ── Filing index ──────────────────────────────────────────────────────
+    //
+    // A document's own identity, as opposed to the file it arrived as. Once
+    // there are years of paperwork the filename stops being findable — nobody
+    // remembers whether the 2023 lease was scanned as "계약서_최종.pdf" or
+    // "scan_0412.pdf" — so the fields people actually search by are stored
+    // explicitly rather than parsed back out of the name each time.
+
+    /** Human label. Falls back to the filename when the uploader gives none. */
+    title: varchar("title", { length: 255 }),
+    /**
+     * The date printed on the document — not the upload date. A lease signed in
+     * 2023 and scanned today belongs in 2023, and `created_at` cannot say that.
+     */
+    doc_date: text("doc_date"),
+    /**
+     * Filing year, indexed. Stored rather than derived from `doc_date` because
+     * plenty of paperwork gives a year and nothing more, and because a year
+     * filter is the single most common query against this table.
+     */
+    doc_year: integer("doc_year"),
+    /** Free keywords (tenant name, unit, "갱신", "해지"…) as a JSON string array. */
+    tags: jsonb("tags"),
     uploaded_by: integer("uploaded_by"),
     uploaded_by_type: varchar("uploaded_by_type", { length: 16 }),
     retention_until: timestamp("retention_until", { withTimezone: true }).notNull(),
@@ -41,6 +65,9 @@ export const documentsTable = pgTable(
     index("idx_documents_entity").on(t.entity_type, t.entity_id),
     index("idx_documents_doctype").on(t.doc_type),
     index("idx_documents_retention").on(t.retention_until),
+    // The library screen filters by year and by type, in that order.
+    index("idx_documents_year").on(t.doc_year),
+    index("idx_documents_year_type").on(t.doc_year, t.doc_type),
   ],
 );
 

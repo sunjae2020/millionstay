@@ -119,7 +119,8 @@
     "booking_contract": "予約・契約",
     "calendar": "業務カレンダー",
     "dashboards": "ダッシュボード",
-    "document_intake": "一括取り込み"
+    "document_intake": "一括取り込み",
+    "document_library": "文書索引"
   },
   "dashboard": {
     "title": "ダッシュボード",
@@ -5561,7 +5562,12 @@
     "col_size": "サイズ",
     "col_date": "登録日",
     "issued_version": "発行版 v{{version}}",
-    "signed_original": "署名原本"
+    "signed_original": "署名原本",
+    "col_year": "年度",
+    "col_tags": "キーワード",
+    "year_placeholder": "年度",
+    "year_hint": "アップロード日ではなく、書類に記載された年です。",
+    "tags_placeholder": "キーワード（カンマ区切り）"
   },
   "intake": {
     "title": "書類の一括取り込み",
@@ -5636,5 +5642,46 @@
     "section": "契約書類",
     "is_signed_original": "署名・押印した契約原本です",
     "is_signed_original_help": "締結処理まで行います。書類を保管するだけならチェックしないでください。"
+  },
+  "library": {
+    "title": "文書索引",
+    "subtitle": "全レコードに添付された書類を年度・種類・キーワードで探せます。",
+    "searchPlaceholder": "ファイル名・タイトル・キーワードを検索…",
+    "search": "検索",
+    "clear": "クリア",
+    "all": "すべて",
+    "byYear": "年度",
+    "byType": "書類の種類",
+    "byRecord": "添付先",
+    "noYear": "年度なし",
+    "empty": "条件に一致する書類がありません。",
+    "truncated": "先頭500件のみ表示しています。条件を絞ってください。",
+    "col_doc": "書類",
+    "col_type": "種類",
+    "col_year": "年度",
+    "col_tags": "キーワード",
+    "col_record": "レコード",
+    "col_size": "サイズ",
+    "col_uploaded": "アップロード",
+    "edit": "索引を編集",
+    "editTitle": "索引情報の編集",
+    "fieldTitle": "タイトル",
+    "fieldYear": "年度",
+    "fieldType": "種類",
+    "fieldTags": "キーワード（カンマ区切り）",
+    "typeChangesRetention": "書類の種類を変更すると保存期間も変わります。",
+    "saved": "保存しました",
+    "saveFailed": "保存できませんでした",
+    "entity": {
+      "contract": "契約",
+      "invoice": "請求書",
+      "quote": "見積",
+      "booking": "予約",
+      "account": "アカウント",
+      "contact": "個人",
+      "property": "物件",
+      "space": "住戸",
+      "work_order": "作業指示"
+    }
   }
 }

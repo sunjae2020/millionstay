@@ -37,6 +37,10 @@ export interface EntityDocument {
   mime_type: string;
   version: number | null;
   doc_ref: string | null;
+  title: string | null;
+  doc_date: string | null;
+  doc_year: number | null;
+  tags: string[];
   retention_until: string | null;
   created_at: string | null;
   file_url: string;
@@ -89,6 +93,12 @@ export default function EntityDocuments({ entityType, entityId, defaultDocType =
   const { previewConfig, openPreview, closePreview } = useDocumentPreview();
 
   const fileRef = useRef<HTMLInputElement>(null);
+  // Filing index captured at upload time, so the document library can find this
+  // file by year and keyword later. The year defaults to now because an optional
+  // field left blank on every upload indexes nothing — and it is the year on the
+  // document that matters, so it stays editable.
+  const [docYear, setDocYear] = useState<string>(String(new Date().getFullYear()));
+  const [tagInput, setTagInput] = useState("");
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -113,6 +123,8 @@ export default function EntityDocuments({ entityType, entityId, defaultDocType =
         form.append("entity_type", entityType);
         form.append("entity_id", String(entityId));
         form.append("doc_type", defaultDocType);
+        if (docYear.trim()) form.append("doc_year", docYear.trim());
+        if (tagInput.trim()) form.append("tags", tagInput.trim());
         const res = await apiFetch("/api/v1/documents", { method: "POST", body: form });
         if (!res.ok) {
           const data = await res.json().catch(() => null);
@@ -144,7 +156,22 @@ export default function EntityDocuments({ entityType, entityId, defaultDocType =
       {!hideUpload && (
         <>
           <p className="text-sm text-muted-foreground mb-4">{t("entity_docs.description")}</p>
-          <div className="mb-3">
+          <div className="mb-3 flex flex-wrap items-center gap-2">
+            <input
+              type="number"
+              value={docYear}
+              onChange={(e) => setDocYear(e.target.value)}
+              placeholder={t("entity_docs.year_placeholder", "Year")}
+              title={t("entity_docs.year_hint", "The year printed on the document, not today's date.")}
+              className="h-9 w-24 rounded-md border bg-background px-2 text-sm"
+            />
+            <input
+              type="text"
+              value={tagInput}
+              onChange={(e) => setTagInput(e.target.value)}
+              placeholder={t("entity_docs.tags_placeholder", "Keywords (comma separated)")}
+              className="h-9 w-56 rounded-md border bg-background px-2 text-sm"
+            />
             <input ref={fileRef} type="file" multiple className="hidden"
               onChange={(e) => void handleUpload(e.target.files)} />
             <Button type="button" variant="outline" size="sm" className="gap-1.5"
@@ -162,6 +189,8 @@ export default function EntityDocuments({ entityType, entityId, defaultDocType =
           <thead className="bg-muted/50 border-b">
             <tr>
               <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("entity_docs.col_file")}</th>
+              <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("entity_docs.col_year", "Year")}</th>
+              <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("entity_docs.col_tags", "Keywords")}</th>
               <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("entity_docs.col_size")}</th>
               <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("entity_docs.col_date")}</th>
               <th className="px-4 py-3" />
@@ -169,9 +198,9 @@ export default function EntityDocuments({ entityType, entityId, defaultDocType =
           </thead>
           <tbody className="divide-y">
             {isLoading ? (
-              <tr><td colSpan={4} className="px-4 py-8 text-center text-muted-foreground text-sm">{t("common.loading")}</td></tr>
+              <tr><td colSpan={6} className="px-4 py-8 text-center text-muted-foreground text-sm">{t("common.loading")}</td></tr>
             ) : !docs?.length ? (
-              <tr><td colSpan={4} className="px-4 py-8 text-center text-muted-foreground text-sm">{t("entity_docs.empty")}</td></tr>
+              <tr><td colSpan={6} className="px-4 py-8 text-center text-muted-foreground text-sm">{t("entity_docs.empty")}</td></tr>
             ) : (
               docs.map((d) => (
                 <tr key={d.id} className="hover:bg-muted/30 transition-colors">
@@ -190,6 +219,16 @@ export default function EntityDocuments({ entityType, entityId, defaultDocType =
                         </span>
                       )}
                     </span>
+                  </td>
+                  <td className="px-4 py-3 text-muted-foreground whitespace-nowrap">{d.doc_year ?? "—"}</td>
+                  <td className="px-4 py-3 text-muted-foreground">
+                    {d.tags?.length ? (
+                      <span className="flex flex-wrap gap-1">
+                        {d.tags.map((tag) => (
+                          <span key={tag} className="rounded bg-muted px-1.5 py-0.5 text-[11px]">{tag}</span>
+                        ))}
+                      </span>
+                    ) : "—"}
                   </td>
                   <td className="px-4 py-3 text-muted-foreground whitespace-nowrap">{formatSize(d.file_size)}</td>
                   <td className="px-4 py-3 text-muted-foreground whitespace-nowrap">{d.created_at ? formatDate(d.created_at) : "—"}</td>
