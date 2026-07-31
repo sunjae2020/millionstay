@@ -5607,15 +5607,6 @@
       "filed": "添付済み",
       "discarded": "破棄済み"
     },
-    "docType": {
-      "contract": "契約書",
-      "tax_invoice": "税務請求書",
-      "receipt": "領収書",
-      "property_document": "不動産書類",
-      "id_document": "身分証明書",
-      "visa_document": "ビザ書類",
-      "other": "その他"
-    },
     "entity": {
       "contract": "契約",
       "contact": "個人"
@@ -5683,16 +5674,24 @@
       "property": "物件",
       "space": "住戸",
       "work_order": "作業指示"
-    },
-    "type": {
-      "contract": "契約書",
-      "signed_contract": "署名済み原本",
-      "tax_invoice": "税務請求書",
-      "receipt": "領収書",
-      "property_document": "不動産書類",
-      "id_document": "身分証明書",
-      "visa_document": "ビザ書類",
-      "other": "その他"
     }
+  },
+  "doc_type": {
+    "contract": "契約書",
+    "signed_contract": "署名済み原本",
+    "tax_invoice": "税務請求書",
+    "receipt": "領収書",
+    "property_document": "不動産書類",
+    "id_document": "身分証明書",
+    "visa_document": "ビザ書類",
+    "brokerage_disclosure": "重要事項説明書",
+    "lease_report": "賃貸借届出証",
+    "property_register": "登記簿謄本",
+    "building_ledger": "建築物台帳",
+    "settlement_statement": "管理費精算書",
+    "move_in_out_report": "入居・退去確認書",
+    "repair_record": "修繕履歴",
+    "bank_account_copy": "口座・通帳の写し",
+    "other": "その他"
   }
 }

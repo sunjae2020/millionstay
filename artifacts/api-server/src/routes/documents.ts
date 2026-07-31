@@ -211,9 +211,21 @@ const UPLOADABLE_DOC_TYPES: Record<string, { personOnly?: boolean }> = {
   contract: {},            // 7y — signed original scans, annexes, addenda
   tax_invoice: {},         // 5y
   receipt: {},             // 5y
-  property_document: {},   // 7y — 등기부등본, 건축물대장, title deeds
+  property_document: {},   // 7y — general property paperwork, title deeds
   id_document: { personOnly: true },   // 30d
   visa_document: { personOnly: true }, // 30d
+
+  // Korean tenancy paperwork. These used to land in `other` and be destroyed
+  // after 2 years; each now follows the obligation it evidences (retention.ts).
+  brokerage_disclosure: {},  // 7y — 중개대상물 확인·설명서
+  lease_report: {},          // 7y — 임대차 신고필증
+  property_register: {},     // 7y — 등기부등본
+  building_ledger: {},       // 7y — 건축물대장
+  settlement_statement: {},  // 5y — 관리비 정산서
+  move_in_out_report: {},    // 5y — 입·퇴실 확인서
+  repair_record: {},         // 5y — 하자·수선 내역
+  bank_account_copy: {},     // 5y — 계좌·통장 사본 (see retention.ts)
+
   other: {},               // 2y
 };
 

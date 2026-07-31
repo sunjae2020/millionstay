@@ -23,7 +23,15 @@ import { logAction } from "../utils/auditLog";
 import { logger } from "./logger";
 
 /** Doc types we must retain for a statutory minimum even if soft-deleted. */
-const STATUTORY_RETENTION_TYPES = ["tax_invoice", "receipt", "contract", "signed_contract"];
+const STATUTORY_RETENTION_TYPES = [
+  "tax_invoice", "receipt", "contract", "signed_contract",
+  // Tenancy paperwork we are required to be able to produce for the term of the
+  // lease, so a deletion request must not destroy it early either.
+  "brokerage_disclosure", "lease_report", "property_register", "building_ledger",
+  // Deliberately absent: bank_account_copy. It is financial personal
+  // information with no statutory floor, so a deletion request should be able
+  // to destroy it promptly.
+];
 
 export interface PurgeResult {
   scanned: number;

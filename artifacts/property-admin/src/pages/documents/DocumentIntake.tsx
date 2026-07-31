@@ -71,6 +71,14 @@ const DOC_TYPES = [
   "property_document",
   "id_document",
   "visa_document",
+  "brokerage_disclosure",
+  "lease_report",
+  "property_register",
+  "building_ledger",
+  "settlement_statement",
+  "move_in_out_report",
+  "repair_record",
+  "bank_account_copy",
   "other",
 ] as const;
 
@@ -373,7 +381,7 @@ export default function DocumentIntake() {
                         </Badge>
                         {item.detected_doc_type && (
                           <span className="text-xs text-muted-foreground">
-                            {t(`intake.docType.${item.detected_doc_type}`, item.detected_doc_type)}
+                            {t(`doc_type.${item.detected_doc_type}`, item.detected_doc_type)}
                           </span>
                         )}
                         {item.match_score != null && (
@@ -505,7 +513,7 @@ export default function DocumentIntake() {
                         <SelectTrigger><SelectValue /></SelectTrigger>
                         <SelectContent>
                           {DOC_TYPES.map((d) => (
-                            <SelectItem key={d} value={d}>{t(`intake.docType.${d}`, d)}</SelectItem>
+                            <SelectItem key={d} value={d}>{t(`doc_type.${d}`, d)}</SelectItem>
                           ))}
                         </SelectContent>
                       </Select>

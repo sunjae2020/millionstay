@@ -5607,15 +5607,6 @@
       "filed": "첨부 완료",
       "discarded": "삭제됨"
     },
-    "docType": {
-      "contract": "계약서",
-      "tax_invoice": "세금계산서",
-      "receipt": "영수증",
-      "property_document": "부동산 서류",
-      "id_document": "신분증",
-      "visa_document": "비자 서류",
-      "other": "기타"
-    },
     "entity": {
       "contract": "계약",
       "contact": "인물"
@@ -5683,16 +5674,24 @@
       "property": "매물",
       "space": "세대",
       "work_order": "작업지시"
-    },
-    "type": {
-      "contract": "계약서",
-      "signed_contract": "서명 원본",
-      "tax_invoice": "세금계산서",
-      "receipt": "영수증",
-      "property_document": "부동산 서류",
-      "id_document": "신분증",
-      "visa_document": "비자 서류",
-      "other": "기타"
     }
+  },
+  "doc_type": {
+    "contract": "계약서",
+    "signed_contract": "서명 원본",
+    "tax_invoice": "세금계산서",
+    "receipt": "영수증",
+    "property_document": "부동산 서류",
+    "id_document": "신분증",
+    "visa_document": "비자 서류",
+    "brokerage_disclosure": "중개대상물 확인·설명서",
+    "lease_report": "임대차 신고필증",
+    "property_register": "등기부등본",
+    "building_ledger": "건축물대장",
+    "settlement_statement": "관리비 정산서",
+    "move_in_out_report": "입·퇴실 확인서",
+    "repair_record": "하자·수선 내역",
+    "bank_account_copy": "계좌·통장 사본",
+    "other": "기타"
   }
 }

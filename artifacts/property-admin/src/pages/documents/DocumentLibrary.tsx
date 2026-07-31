@@ -71,6 +71,14 @@ const DOC_TYPES = [
   "property_document",
   "id_document",
   "visa_document",
+  "brokerage_disclosure",
+  "lease_report",
+  "property_register",
+  "building_ledger",
+  "settlement_statement",
+  "move_in_out_report",
+  "repair_record",
+  "bank_account_copy",
   "other",
 ] as const;
 
@@ -93,11 +101,12 @@ export default function DocumentLibrary() {
   const { previewConfig, openPreview, closePreview } = useDocumentPreview();
 
   /**
-   * Label for a document type. The per-record panel stopped asking users for a
-   * type and its `entity_docs.type_*` keys went with it, so the library carries
-   * its own — otherwise the chips fall back to raw keys like "contract".
+   * Label for a document type, from the one namespace both document screens
+   * read. The per-record panel dropped its own `entity_docs.type_*` keys when
+   * it stopped asking users for a type; keeping a second copy here would let
+   * the same type read differently on two screens.
    */
-  const typeLabel = (value: string) => t(`library.type.${value}`, value);
+  const typeLabel = (value: string) => t(`doc_type.${value}`, value);
 
   /** One description of where a document is filed, used by the row and the preview. */
   const locationLabel = (doc: { entity_type: string; entity_id: number; entity_label: string | null }) => {

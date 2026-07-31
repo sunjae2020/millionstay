@@ -37,6 +37,14 @@ export const INTAKE_DOC_TYPES = [
   "property_document",
   "id_document",
   "visa_document",
+  "brokerage_disclosure",
+  "lease_report",
+  "property_register",
+  "building_ledger",
+  "settlement_statement",
+  "move_in_out_report",
+  "repair_record",
+  "bank_account_copy",
   "other",
 ] as const;
 
@@ -193,12 +201,21 @@ const SYSTEM_PROMPT =
   `Rules:\n` +
   `- Transcribe only what is actually on the page. NEVER guess, complete or invent a value. Omit any ` +
   `field you cannot read. An omitted field is correct; a plausible-looking invented one is not.\n` +
-  `- doc_type must be exactly one of: ${INTAKE_DOC_TYPES.join(", ")}. Use "contract" for a lease or ` +
-  `tenancy agreement and its annexes/addenda (임대차계약서, 전세·월세 계약서, 별지). Use ` +
-  `"property_document" for registry and building records (등기부등본, 건축물대장, 토지대장). Use ` +
-  `"tax_invoice" for 세금계산서, "receipt" for 영수증/입금증. Use "id_document" for an identity ` +
-  `document (주민등록증, 운전면허증, 여권) and "visa_document" for a visa or residence permit. ` +
-  `Use "other" when nothing fits — do not force a match.\n` +
+  `- doc_type must be exactly one of: ${INTAKE_DOC_TYPES.join(", ")}.\n` +
+  `  · "contract" — a lease or tenancy agreement and its annexes/addenda (임대차계약서, 전세·월세 계약서, 별지).\n` +
+  `  · "brokerage_disclosure" — 중개대상물 확인·설명서, the agent's disclosure issued alongside a lease.\n` +
+  `  · "lease_report" — 임대차 신고필증 / 확정일자, proof the tenancy was reported to the authority.\n` +
+  `  · "property_register" — 등기부등본 / 등기사항전부증명서.\n` +
+  `  · "building_ledger" — 건축물대장 or 토지대장.\n` +
+  `  · "property_document" — other property paperwork that is none of the three above.\n` +
+  `  · "tax_invoice" — 세금계산서. "receipt" — 영수증/입금증.\n` +
+  `  · "settlement_statement" — 관리비 정산서 / 정산내역서.\n` +
+  `  · "move_in_out_report" — 입실·퇴실 확인서, 세대점검표, condition report at handover.\n` +
+  `  · "repair_record" — 하자 보수 내역, 수선 견적·완료 확인서.\n` +
+  `  · "bank_account_copy" — 통장 사본 or an account-details page showing a bank account number.\n` +
+  `  · "id_document" — 주민등록증, 운전면허증, 여권. "visa_document" — a visa or residence permit.\n` +
+  `  · "other" — use it when nothing fits. Do NOT force a match: a wrong type sets a wrong ` +
+  `destruction date, which is worse than an unclassified document a person will look at.\n` +
   `- party_name is the tenant / 임차인 (the person or company renting). counterparty_name is the ` +
   `landlord / 임대인. For a Korean name written without a space (홍길동), keep it exactly as printed.\n` +
   `- unit_label is the unit designation as printed ("1503호", "A-1503", "Unit 12"). building_name is ` +

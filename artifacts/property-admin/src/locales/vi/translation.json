@@ -5607,15 +5607,6 @@
       "filed": "Đã lưu",
       "discarded": "Đã bỏ"
     },
-    "docType": {
-      "contract": "Hợp đồng",
-      "tax_invoice": "Hóa đơn thuế",
-      "receipt": "Biên lai",
-      "property_document": "Giấy tờ bất động sản",
-      "id_document": "Giấy tờ tùy thân",
-      "visa_document": "Giấy tờ thị thực",
-      "other": "Khác"
-    },
     "entity": {
       "contract": "Hợp đồng",
       "contact": "Cá nhân"
@@ -5683,16 +5674,24 @@
       "property": "Bất động sản",
       "space": "Căn hộ",
       "work_order": "Lệnh công việc"
-    },
-    "type": {
-      "contract": "Hợp đồng",
-      "signed_contract": "Bản gốc đã ký",
-      "tax_invoice": "Hóa đơn thuế",
-      "receipt": "Biên lai",
-      "property_document": "Giấy tờ bất động sản",
-      "id_document": "Giấy tờ tùy thân",
-      "visa_document": "Giấy tờ thị thực",
-      "other": "Khác"
     }
+  },
+  "doc_type": {
+    "contract": "Hợp đồng",
+    "signed_contract": "Bản gốc đã ký",
+    "tax_invoice": "Hóa đơn thuế",
+    "receipt": "Biên lai",
+    "property_document": "Giấy tờ bất động sản",
+    "id_document": "Giấy tờ tùy thân",
+    "visa_document": "Giấy tờ thị thực",
+    "brokerage_disclosure": "Bản giải trình môi giới",
+    "lease_report": "Giấy xác nhận khai báo thuê",
+    "property_register": "Trích lục đăng ký bất động sản",
+    "building_ledger": "Sổ đăng ký công trình",
+    "settlement_statement": "Bảng quyết toán phí quản lý",
+    "move_in_out_report": "Biên bản nhận / trả nhà",
+    "repair_record": "Hồ sơ sửa chữa",
+    "bank_account_copy": "Bản sao tài khoản ngân hàng",
+    "other": "Khác"
   }
 }

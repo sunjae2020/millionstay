@@ -5607,15 +5607,6 @@
       "filed": "จัดเก็บแล้ว",
       "discarded": "ทิ้งแล้ว"
     },
-    "docType": {
-      "contract": "สัญญา",
-      "tax_invoice": "ใบกำกับภาษี",
-      "receipt": "ใบเสร็จ",
-      "property_document": "เอกสารอสังหาริมทรัพย์",
-      "id_document": "เอกสารแสดงตน",
-      "visa_document": "เอกสารวีซ่า",
-      "other": "อื่น ๆ"
-    },
     "entity": {
       "contract": "สัญญา",
       "contact": "บุคคล"
@@ -5683,16 +5674,24 @@
       "property": "อสังหาริมทรัพย์",
       "space": "ห้อง",
       "work_order": "ใบสั่งงาน"
-    },
-    "type": {
-      "contract": "สัญญา",
-      "signed_contract": "ต้นฉบับที่ลงนาม",
-      "tax_invoice": "ใบกำกับภาษี",
-      "receipt": "ใบเสร็จ",
-      "property_document": "เอกสารอสังหาริมทรัพย์",
-      "id_document": "เอกสารแสดงตน",
-      "visa_document": "เอกสารวีซ่า",
-      "other": "อื่น ๆ"
     }
+  },
+  "doc_type": {
+    "contract": "สัญญา",
+    "signed_contract": "ต้นฉบับที่ลงนาม",
+    "tax_invoice": "ใบกำกับภาษี",
+    "receipt": "ใบเสร็จ",
+    "property_document": "เอกสารอสังหาริมทรัพย์",
+    "id_document": "เอกสารแสดงตน",
+    "visa_document": "เอกสารวีซ่า",
+    "brokerage_disclosure": "หนังสือชี้แจงของนายหน้า",
+    "lease_report": "ใบรับแจ้งการเช่า",
+    "property_register": "สำเนาทะเบียนอสังหาริมทรัพย์",
+    "building_ledger": "ทะเบียนอาคาร",
+    "settlement_statement": "ใบสรุปค่าส่วนกลาง",
+    "move_in_out_report": "ใบตรวจรับเข้า-ออก",
+    "repair_record": "ประวัติการซ่อม",
+    "bank_account_copy": "สำเนาบัญชีธนาคาร",
+    "other": "อื่น ๆ"
   }
 }

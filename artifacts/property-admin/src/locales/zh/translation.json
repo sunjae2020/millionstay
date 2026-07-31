@@ -5607,15 +5607,6 @@
       "filed": "已归档",
       "discarded": "已丢弃"
     },
-    "docType": {
-      "contract": "合同",
-      "tax_invoice": "税务发票",
-      "receipt": "收据",
-      "property_document": "房产文件",
-      "id_document": "身份证件",
-      "visa_document": "签证文件",
-      "other": "其他"
-    },
     "entity": {
       "contract": "合同",
       "contact": "个人"
@@ -5683,16 +5674,24 @@
       "property": "房产",
       "space": "房号",
       "work_order": "工单"
-    },
-    "type": {
-      "contract": "合同",
-      "signed_contract": "签署原件",
-      "tax_invoice": "税务发票",
-      "receipt": "收据",
-      "property_document": "房产文件",
-      "id_document": "身份证件",
-      "visa_document": "签证文件",
-      "other": "其他"
     }
+  },
+  "doc_type": {
+    "contract": "合同",
+    "signed_contract": "签署原件",
+    "tax_invoice": "税务发票",
+    "receipt": "收据",
+    "property_document": "房产文件",
+    "id_document": "身份证件",
+    "visa_document": "签证文件",
+    "brokerage_disclosure": "中介事项说明书",
+    "lease_report": "租赁申报证明",
+    "property_register": "不动产登记簿誊本",
+    "building_ledger": "建筑物台账",
+    "settlement_statement": "管理费结算书",
+    "move_in_out_report": "入住·退租确认书",
+    "repair_record": "维修记录",
+    "bank_account_copy": "银行账户复印件",
+    "other": "其他"
   }
 }

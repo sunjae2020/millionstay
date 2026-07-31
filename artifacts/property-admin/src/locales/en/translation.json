@@ -5607,15 +5607,6 @@
       "filed": "Filed",
       "discarded": "Discarded"
     },
-    "docType": {
-      "contract": "Contract",
-      "tax_invoice": "Tax invoice",
-      "receipt": "Receipt",
-      "property_document": "Property document",
-      "id_document": "Identity document",
-      "visa_document": "Visa document",
-      "other": "Other"
-    },
     "entity": {
       "contract": "Contract",
       "contact": "Person"
@@ -5683,16 +5674,24 @@
       "property": "Property",
       "space": "Unit",
       "work_order": "Work order"
-    },
-    "type": {
-      "contract": "Contract",
-      "signed_contract": "Signed original",
-      "tax_invoice": "Tax invoice",
-      "receipt": "Receipt",
-      "property_document": "Property document",
-      "id_document": "Identity document",
-      "visa_document": "Visa document",
-      "other": "Other"
     }
+  },
+  "doc_type": {
+    "contract": "Contract",
+    "signed_contract": "Signed original",
+    "tax_invoice": "Tax invoice",
+    "receipt": "Receipt",
+    "property_document": "Property document",
+    "id_document": "Identity document",
+    "visa_document": "Visa document",
+    "brokerage_disclosure": "Agency disclosure statement",
+    "lease_report": "Tenancy report certificate",
+    "property_register": "Property register extract",
+    "building_ledger": "Building ledger",
+    "settlement_statement": "Settlement statement",
+    "move_in_out_report": "Move-in / move-out report",
+    "repair_record": "Repair record",
+    "bank_account_copy": "Bank account copy",
+    "other": "Other"
   }
 }
