@@ -19,6 +19,10 @@ export const RETENTION_DAYS: Record<string, number> = {
   // like identity documents.
   business_card_front: 365 * 5,
   business_card_back: 365 * 5,
+  // Property paperwork (등기부등본, 건축물대장, title deeds, strata certificates)
+  // evidences the tenancy it was relied on for, so it follows the contract's
+  // 7-year term rather than the 2-year default.
+  property_document: 365 * 7,
   other: 365 * 2,
 };
 

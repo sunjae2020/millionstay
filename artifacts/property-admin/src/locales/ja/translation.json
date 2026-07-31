@@ -5551,5 +5551,25 @@
     "role_customer": "顧客",
     "role_contact": "担当者",
     "role_landlord": "貸主"
+  },
+  "entity_docs": {
+    "tab_title": "書類",
+    "description": "このレコードに保管する書類です。署名済み原本のスキャン、別紙、証明書などをアップロードできます。ファイルは非公開で保存され、認証付きの短期リンクからのみ開けます。発行済み文書のスナップショットは送付の証跡のため削除できません。",
+    "upload": "ファイルをアップロード",
+    "upload_failed": "アップロードに失敗しました",
+    "confirm_delete": "この書類を削除しますか？",
+    "empty": "書類がまだありません。",
+    "col_file": "ファイル",
+    "col_type": "種類",
+    "col_size": "サイズ",
+    "col_date": "登録日",
+    "issued_version": "発行版 v{{version}}",
+    "type_contract": "契約書・署名原本",
+    "type_property_document": "不動産書類",
+    "type_tax_invoice": "税務請求書",
+    "type_receipt": "領収書",
+    "type_id_document": "身分証明書",
+    "type_visa_document": "ビザ書類",
+    "type_other": "その他"
   }
 }

@@ -5551,5 +5551,25 @@
     "role_customer": "Khách hàng",
     "role_contact": "Người phụ trách",
     "role_landlord": "Chủ nhà"
+  },
+  "entity_docs": {
+    "tab_title": "Tài liệu",
+    "description": "Tài liệu lưu theo bản ghi này — bản scan gốc đã ký, phụ lục, giấy chứng nhận. Tệp được lưu riêng tư và chỉ mở qua liên kết đã xác thực có thời hạn ngắn. Bản chụp tài liệu đã phát hành là bằng chứng đã gửi nên không thể xoá.",
+    "upload": "Tải tệp lên",
+    "upload_failed": "Tải lên thất bại",
+    "confirm_delete": "Xoá tài liệu này?",
+    "empty": "Chưa có tài liệu.",
+    "col_file": "Tệp",
+    "col_type": "Loại",
+    "col_size": "Kích thước",
+    "col_date": "Ngày tải lên",
+    "issued_version": "Đã phát hành v{{version}}",
+    "type_contract": "Hợp đồng / bản gốc đã ký",
+    "type_property_document": "Tài liệu bất động sản",
+    "type_tax_invoice": "Hoá đơn thuế",
+    "type_receipt": "Biên nhận",
+    "type_id_document": "Giấy tờ tùy thân",
+    "type_visa_document": "Tài liệu thị thực",
+    "type_other": "Khác"
   }
 }

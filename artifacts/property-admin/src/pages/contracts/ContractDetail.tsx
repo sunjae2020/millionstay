@@ -22,12 +22,13 @@ import {
 } from "@workspace/api-client-react";
 import { LookupSelect } from "@/components/LookupSelect";
 import { AccountLookupSelect } from "@/components/AccountLookupSelect";
-import { ArrowLeft, Save, Trash2, CalendarDays, Plus, Pencil, List, FileDown, Eye, Mail, Receipt, ClipboardList, Wallet, Check, FileSignature } from "lucide-react";
+import { ArrowLeft, Save, Trash2, CalendarDays, Plus, Pencil, List, FileDown, Eye, Mail, Receipt, ClipboardList, Wallet, Check, FileSignature, FileText } from "lucide-react";
 import { apiFetch } from "@/lib/apiFetch";
 import { useToast } from "@/hooks/use-toast";
 import { DocumentVersions } from "@/components/DocumentVersions";
 import { HomestaySignatureCard } from "@/components/HomestaySignatureCard";
 import ContractInspections from "@/components/ContractInspections";
+import EntityDocuments from "@/components/EntityDocuments";
 import { DocumentPreviewDialog, useDocumentPreview } from "@/components/DocumentPreviewDialog";
 import {
   ContractIssueWizard,
@@ -1180,6 +1181,7 @@ export default function ContractDetail() {
               { id: "rent-ledger", label: `${t('contract.tab_rent_ledger')}${rentInvoices.length ? ` (${rentInvoices.length})` : ""}`, icon: <Wallet className="w-3.5 h-3.5" /> },
               { id: "schedule", label: `${t('contract.tab_schedule')}${schedules.length ? ` (${schedules.length})` : ""}`, icon: <CalendarDays className="w-3.5 h-3.5" /> },
               { id: "inspections", label: t('inspection.tab_title'), icon: <ClipboardList className="w-3.5 h-3.5" /> },
+              { id: "documents", label: t('entity_docs.tab_title'), icon: <FileText className="w-3.5 h-3.5" /> },
             ].map((tab) => (
               <button
                 key={tab.id}
@@ -1493,6 +1495,14 @@ export default function ContractDetail() {
           )}
 
           {activeTab === "inspections" && <ContractInspections contractId={id!} />}
+
+          {/* Scanned signed originals, annexes, title deeds … Identity documents
+              deliberately are NOT offered here: they belong to the person
+              (contact) so their 30-day APP 11 retention is not stretched to the
+              contract's 7 years. */}
+          {activeTab === "documents" && (
+            <EntityDocuments entityType="contract" entityId={id!} docTypes={["contract", "property_document", "other"]} />
+          )}
 
         </div>
       )}

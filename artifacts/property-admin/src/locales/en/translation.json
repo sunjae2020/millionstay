@@ -5551,5 +5551,25 @@
     "role_customer": "Customer",
     "role_contact": "Contact",
     "role_landlord": "Landlord"
+  },
+  "entity_docs": {
+    "tab_title": "Documents",
+    "description": "Paperwork filed against this record — scanned signed originals, annexes, certificates. Files are stored privately and streamed through short-lived, authenticated links. Issued document snapshots are kept as evidence of what was sent and cannot be deleted.",
+    "upload": "Upload file",
+    "upload_failed": "Upload failed",
+    "confirm_delete": "Delete this document?",
+    "empty": "No documents yet.",
+    "col_file": "File",
+    "col_type": "Type",
+    "col_size": "Size",
+    "col_date": "Uploaded",
+    "issued_version": "Issued v{{version}}",
+    "type_contract": "Contract / signed original",
+    "type_property_document": "Property document",
+    "type_tax_invoice": "Tax invoice",
+    "type_receipt": "Receipt",
+    "type_id_document": "ID document",
+    "type_visa_document": "Visa document",
+    "type_other": "Other"
   }
 }
