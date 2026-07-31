@@ -5570,6 +5570,8 @@
     "type_receipt": "ใบเสร็จ",
     "type_id_document": "เอกสารแสดงตน",
     "type_visa_document": "เอกสารวีซ่า",
-    "type_other": "อื่น ๆ"
+    "type_other": "อื่น ๆ",
+    "type_signed_contract": "ต้นฉบับที่ลงนาม (สแกน)",
+    "evidence": "หลักฐาน"
   }
 }

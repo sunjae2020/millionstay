@@ -4,26 +4,21 @@
  * 1달을 초과하는 계약은 온라인 서명을 쓰지 않으므로(→ ContractIssueWizard),
  * 날인한 원본을 스캔해 올리는 이 카드가 유일한 체결 증빙 경로다.
  * 업로드일과 실제 날인일이 다를 수 있어 날인일을 따로 받는다.
+ *
+ * 파일 목록은 일부러 두지 않는다. 저장 위치가 계약 서류함(documents 테이블)
+ * 하나이므로 목록도 한 곳 — 이 카드 바로 아래 서류 표 — 에서만 보여준다.
+ * 이 카드가 맡는 건 보관이 아니라 체결 처리(날인일·상태 전이·발행본 동결)다.
  */
 import { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { DateInput } from "@/components/ui/date-input";
 import { apiFetch } from "@/lib/apiFetch";
 import { useToast } from "@/hooks/use-toast";
-import { formatDate } from "@/lib/date";
-import { DocumentPreviewDialog, useDocumentPreview } from "@/components/DocumentPreviewDialog";
-import { FileUp, Paperclip } from "lucide-react";
-
-interface StoredDoc {
-  id: string;
-  file_name: string;
-  created_at: string;
-  doc_type: string;
-}
+import { FileUp } from "lucide-react";
 
 interface Props {
   contractId: number;
@@ -40,22 +35,10 @@ export function SignedScanCard({ contractId }: Props) {
   const { toast } = useToast();
   const qc = useQueryClient();
   const fileInput = useRef<HTMLInputElement>(null);
-  const { previewConfig, openPreview, closePreview } = useDocumentPreview();
 
   const [signedOn, setSignedOn] = useState(today());
   const [setSigned, setSetSigned] = useState(true);
   const [freezeIssued, setFreezeIssued] = useState(true);
-
-  const listKey = ["contract-signed-scans", contractId];
-  const { data: scans } = useQuery({
-    queryKey: listKey,
-    queryFn: async () => {
-      const res = await apiFetch(`/api/v1/contracts/${contractId}/documents?doc_type=signed_contract`);
-      if (!res.ok) return [] as StoredDoc[];
-      const json = await res.json().catch(() => null);
-      return (Array.isArray(json) ? json : []) as StoredDoc[];
-    },
-  });
 
   const upload = useMutation({
     mutationFn: async (file: File) => {
@@ -71,7 +54,8 @@ export function SignedScanCard({ contractId }: Props) {
     },
     onSuccess: () => {
       toast({ title: t("contract.scan_uploaded") });
-      qc.invalidateQueries({ queryKey: listKey });
+      // 목록은 아래 서류 표가 갖고 있으므로 그쪽 쿼리를 갱신한다.
+      qc.invalidateQueries({ queryKey: ["entity-documents", "contract", String(contractId)] });
       qc.invalidateQueries({ queryKey: ["/api/v1/contracts"] });
       qc.invalidateQueries({ queryKey: ["document-snapshots", "contract", contractId] });
       if (fileInput.current) fileInput.current.value = "";
@@ -114,30 +98,6 @@ export function SignedScanCard({ contractId }: Props) {
         {upload.isPending ? t("contract.scan_uploading") : t("contract.scan_upload")}
       </Button>
       <p className="text-[11px] text-muted-foreground mt-1.5">{t("contract.scan_formats")}</p>
-
-      {!!scans?.length && (
-        <ul className="mt-4 divide-y border rounded-lg">
-          {scans.map((doc) => (
-            <li key={doc.id} className="flex items-center justify-between gap-3 p-2.5 text-sm">
-              <span className="flex items-center gap-2 min-w-0">
-                <Paperclip className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-                <span className="truncate">{doc.file_name}</span>
-              </span>
-              <span className="flex items-center gap-3 shrink-0">
-                <span className="text-xs text-muted-foreground">{formatDate(doc.created_at)}</span>
-                <Button type="button" variant="ghost" size="sm" onClick={() => openPreview({
-                  title: doc.file_name,
-                  filename: doc.file_name,
-                  source: { kind: "api", path: `/api/v1/contracts/${contractId}/documents/${doc.id}/file` },
-                })}>
-                  {t("common.preview")}
-                </Button>
-              </span>
-            </li>
-          ))}
-        </ul>
-      )}
-      <DocumentPreviewDialog config={previewConfig} onClose={closePreview} />
     </div>
   );
 }

@@ -383,12 +383,16 @@ router.get("/v1/documents/:docId/file", async (req, res): Promise<void> => {
   }
 });
 
+/** Evidence types nobody may delete by hand — see the DELETE handler. */
+const EVIDENCE_DOC_TYPES = new Set(["signed_contract"]);
+
 /**
  * DELETE /v1/documents/:docId — soft-delete the row and drop the asset.
  *
- * Frozen snapshots (`version` set) are refused: they are the exact bytes a
- * customer received, and the retention purge is what removes them once their
- * statutory period is up.
+ * Refused for evidence: frozen snapshots (`version` set) are the exact bytes a
+ * customer received, and a `signed_contract` scan is the original a tenancy was
+ * executed on. Both are removed by the retention policy once their statutory
+ * period is up, never by a click.
  */
 router.delete("/v1/documents/:docId", async (req, res): Promise<void> => {
   const docId = String(req.params["docId"] ?? "");
@@ -396,8 +400,8 @@ router.delete("/v1/documents/:docId", async (req, res): Promise<void> => {
   const [doc] = await db.select().from(documentsTable)
     .where(and(eq(documentsTable.id, docId), isNull(documentsTable.deleted_at)));
   if (!doc || doc.entity_type === ORG_ENTITY_TYPE) { res.status(404).json({ error: "Not found" }); return; }
-  if (doc.version != null) {
-    res.status(409).json({ error: "Issued document snapshots cannot be deleted." }); return;
+  if (doc.version != null || EVIDENCE_DOC_TYPES.has(doc.doc_type)) {
+    res.status(409).json({ error: "Issued and signed documents cannot be deleted." }); return;
   }
   await db.update(documentsTable).set({ deleted_at: new Date() }).where(eq(documentsTable.id, doc.id));
   await deleteFromCloudinary(doc.cloudinary_public_id, doc.resource_type);

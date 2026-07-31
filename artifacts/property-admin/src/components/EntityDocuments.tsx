@@ -51,6 +51,18 @@ interface Props {
 
 const DEFAULT_DOC_TYPES = ["contract", "property_document", "other"];
 
+/**
+ * Types filed as evidence rather than as working attachments: the signed
+ * original a tenancy was executed on, and anything frozen when it was sent.
+ * They are removed by the retention policy, not by a person, so the row shows
+ * no delete action (the API refuses it too).
+ */
+const EVIDENCE_DOC_TYPES = new Set(["signed_contract"]);
+
+function isEvidence(doc: EntityDocument): boolean {
+  return doc.version != null || EVIDENCE_DOC_TYPES.has(doc.doc_type);
+}
+
 function formatSize(bytes: number): string {
   if (!bytes) return "—";
   if (bytes < 1024) return `${bytes} B`;
@@ -162,12 +174,17 @@ export default function EntityDocuments({ entityType, entityId, docTypes = DEFAU
                     <span className="flex items-center gap-1.5">
                       <FileText className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
                       {d.file_name}
-                      {d.version != null && (
+                      {d.version != null ? (
                         <span className="ml-1 inline-flex items-center gap-1 rounded bg-muted px-1.5 py-0.5 text-[11px] text-muted-foreground">
                           <Lock className="h-3 w-3" />
                           {t("entity_docs.issued_version", { version: d.version })}
                         </span>
-                      )}
+                      ) : isEvidence(d) ? (
+                        <span className="ml-1 inline-flex items-center gap-1 rounded bg-muted px-1.5 py-0.5 text-[11px] text-muted-foreground">
+                          <Lock className="h-3 w-3" />
+                          {t("entity_docs.evidence")}
+                        </span>
+                      ) : null}
                     </span>
                   </td>
                   <td className="px-4 py-3 text-muted-foreground whitespace-nowrap">
@@ -185,8 +202,7 @@ export default function EntityDocuments({ entityType, entityId, docTypes = DEFAU
                       className="text-primary hover:underline inline-flex items-center gap-1 text-xs">
                       <Eye className="h-3.5 w-3.5" /> {t("common.preview", "Preview")}
                     </button>
-                    {/* Issued snapshots are evidence of what was sent — retention removes them, not a person. */}
-                    {d.version == null && (
+                    {!isEvidence(d) && (
                       <button type="button" onClick={() => void handleDelete(d)}
                         className="ml-3 text-destructive hover:underline inline-flex items-center gap-1 text-xs">
                         <Trash2 className="h-3.5 w-3.5" /> {t("common.remove")}

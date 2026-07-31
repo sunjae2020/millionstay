@@ -5570,6 +5570,8 @@
     "type_receipt": "영수증",
     "type_id_document": "신분증",
     "type_visa_document": "비자 서류",
-    "type_other": "기타"
+    "type_other": "기타",
+    "type_signed_contract": "서명본 스캔",
+    "evidence": "증빙"
   }
 }

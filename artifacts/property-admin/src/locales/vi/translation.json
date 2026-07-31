@@ -5570,6 +5570,8 @@
     "type_receipt": "Biên nhận",
     "type_id_document": "Giấy tờ tùy thân",
     "type_visa_document": "Tài liệu thị thực",
-    "type_other": "Khác"
+    "type_other": "Khác",
+    "type_signed_contract": "Bản gốc đã ký (bản scan)",
+    "evidence": "Bằng chứng"
   }
 }

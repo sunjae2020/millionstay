@@ -5570,6 +5570,8 @@
     "type_receipt": "Receipt",
     "type_id_document": "ID document",
     "type_visa_document": "Visa document",
-    "type_other": "Other"
+    "type_other": "Other",
+    "type_signed_contract": "Signed original (scan)",
+    "evidence": "Evidence"
   }
 }

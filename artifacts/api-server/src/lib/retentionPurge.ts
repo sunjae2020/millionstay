@@ -23,7 +23,7 @@ import { logAction } from "../utils/auditLog";
 import { logger } from "./logger";
 
 /** Doc types we must retain for a statutory minimum even if soft-deleted. */
-const STATUTORY_RETENTION_TYPES = ["tax_invoice", "receipt", "contract"];
+const STATUTORY_RETENTION_TYPES = ["tax_invoice", "receipt", "contract", "signed_contract"];
 
 export interface PurgeResult {
   scanned: number;

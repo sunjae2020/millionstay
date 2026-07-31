@@ -11,6 +11,8 @@
 export const RETENTION_DAYS: Record<string, number> = {
   tax_invoice: 365 * 5,
   contract: 365 * 7,
+  // 날인한 원본 스캔 — 계약 그 자체의 증빙이므로 계약과 같은 7년.
+  signed_contract: 365 * 7,
   receipt: 365 * 5,
   id_document: 30,
   visa_document: 30,

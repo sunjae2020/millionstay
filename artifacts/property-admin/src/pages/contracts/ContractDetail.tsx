@@ -757,9 +757,6 @@ export default function ContractDetail() {
               />
             )}
 
-            {/* 출력·날인 계약의 서명본 스캔 보관 */}
-            {!isNew && contract && <SignedScanCard contractId={Number(id)} />}
-
             {/* General */}
             <div className="border rounded-lg bg-white p-4 sm:p-6">
               <h2 className="text-sm font-semibold uppercase text-primary tracking-wide mb-4">{t('contract.section_general')}</h2>
@@ -1502,12 +1499,20 @@ export default function ContractDetail() {
 
           {activeTab === "inspections" && <ContractInspections contractId={id!} />}
 
-          {/* Scanned signed originals, annexes, title deeds … Identity documents
-              deliberately are NOT offered here: they belong to the person
-              (contact) so their 30-day APP 11 retention is not stretched to the
-              contract's 7 years. */}
+          {/* One filing cabinet, two ways in. The scan card is a *contract
+              execution* action (날인일 + 상태 전이 + 발행본 동결), not plain
+              storage, so it keeps its own form — but it no longer lists files:
+              everything it saves lands in the table below, which is the single
+              place documents are listed.
+
+              Identity documents are deliberately not offered here: they belong
+              to the person (contact) so their 30-day APP 11 retention is not
+              stretched to the contract's 7 years. */}
           {activeTab === "documents" && (
-            <EntityDocuments entityType="contract" entityId={id!} docTypes={["contract", "property_document", "other"]} />
+            <div className="space-y-4">
+              {contract && <SignedScanCard contractId={Number(id)} />}
+              <EntityDocuments entityType="contract" entityId={id!} docTypes={["contract", "property_document", "other"]} />
+            </div>
           )}
 
           </div>
