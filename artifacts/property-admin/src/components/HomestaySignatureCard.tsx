@@ -23,17 +23,25 @@ interface EmailLog { id: number; to_email: string; status: string; subject?: str
  * Used for homestay applications and regular contracts. When `issuePath` is given
  * and no signing request exists yet, an "Issue signing request" button POSTs to it
  * (contracts must be issued explicitly; homestay auto-creates on submit).
+ *
+ * `hideIfEmpty` keeps the card out of the way on records that cannot be signed
+ * online (1달 초과 계약 등) while still surfacing the history when a request
+ * already exists — hiding the card outright would make a completed signature and
+ * its signed PDF disappear from the screen.
  */
 export function HomestaySignatureCard({
   contextType,
   contextId,
   entityType,
   issuePath,
+  hideIfEmpty = false,
 }: {
   contextType: "student_app" | "host_app" | "contract";
   contextId: number;
   entityType: "homestay_student_request" | "homestay_host_application" | "contract";
   issuePath?: string;
+  /** 서명 요청이 하나도 없으면 카드를 아예 그리지 않는다. */
+  hideIfEmpty?: boolean;
 }) {
   const { t } = useTranslation();
   const { toast } = useToast();
@@ -95,6 +103,8 @@ export function HomestaySignatureCard({
     },
     onError: (e: any) => toast({ title: t("homestayDoc.error"), description: e.message, variant: "destructive" }),
   });
+
+  if (hideIfEmpty && !latest) return null;
 
   return (
     <div className="border rounded-lg overflow-hidden">

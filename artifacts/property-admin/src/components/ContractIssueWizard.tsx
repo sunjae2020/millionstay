@@ -46,7 +46,7 @@ export interface SigningPolicy {
   override_reason: string | null;
   term_days: number | null;
   online_allowed: boolean;
-  blocked_reason: "long_term" | "government_form" | "term_unknown" | null;
+  blocked_reason: "long_term" | "government_form" | "term_unknown" | "manual_override" | null;
 }
 
 interface Props {
@@ -81,20 +81,30 @@ export function ContractIssueWizard({
   const [step, setStep] = useState(0);
   const [form, setForm] = useState<string>(leaseForm ?? "");
   const [picked, setPicked] = useState<string[]>(attachments);
-  const [modeOverride, setModeOverride] = useState<"" | "online" | "wet">("");
-  const [overrideReason, setOverrideReason] = useState("");
+  // 이미 저장된 재지정이 있으면 그대로 물고 시작한다 — 빈 값으로 두면
+  // 검토 단계를 지나는 것만으로 재지정이 지워진다.
+  const [modeOverride, setModeOverride] = useState<"" | "online" | "wet">(
+    signingPolicy?.overridden ? signingPolicy.mode : "",
+  );
+  const [overrideReason, setOverrideReason] = useState(signingPolicy?.override_reason ?? "");
   const [policy, setPolicy] = useState<SigningPolicy | null>(signingPolicy);
 
-  // 계약이 다시 읽힐 때마다 초기값을 맞춘다. 위저드를 닫았다 열면 1단계부터.
+  // 초기값은 **위저드를 열 때만** 잡는다.
+  //
+  // 여기에 leaseForm/attachments/signingPolicy 를 의존성으로 넣으면 안 된다:
+  // 부모가 `attachments`를 매 렌더 새 배열로 만들어 내려주므로, 2→3단계 저장이
+  // 성공해 계약을 재조회하는 순간 부모가 리렌더되고 이 훅이 다시 돌아 1단계로
+  // 튕긴다. 열려 있는 동안의 최신값은 saveConfig 응답으로 policy 에 반영된다.
   useEffect(() => {
     if (!open) return;
     setStep(0);
     setForm(leaseForm ?? "");
     setPicked(attachments);
     setPolicy(signingPolicy);
-    setModeOverride("");
-    setOverrideReason("");
-  }, [open, leaseForm, attachments, signingPolicy]);
+    setModeOverride(signingPolicy?.overridden ? signingPolicy.mode : "");
+    setOverrideReason(signingPolicy?.override_reason ?? "");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open]);
 
   const saveConfig = useMutation({
     mutationFn: async (body: Record<string, unknown>) => {
@@ -136,24 +146,30 @@ export function ContractIssueWizard({
   );
 
   const canLeaveFormStep = form !== "";
+  /** 실제로 저장될 첨부 — 서식에 맞지 않는 것은 서버에서도 걸러진다. */
+  const savedAttachments = picked.filter((p) => availableAttachments.some((a) => a.value === p));
   const wet = policy?.mode === "wet";
 
   async function next() {
-    // 서식·첨부·서명방식은 검토 단계로 넘어갈 때 한 번에 저장한다.
-    if (step === 1) {
-      const body: Record<string, unknown> = {
-        lease_form: form,
-        doc_attachments: picked.filter((p) => availableAttachments.some((a) => a.value === p)),
-      };
-      await saveConfig.mutateAsync(body).catch(() => null);
-      if (saveConfig.isError) return;
-    }
-    if (step === 2 && modeOverride) {
-      await saveConfig.mutateAsync({
-        signing_mode: modeOverride,
-        signing_mode_reason: overrideReason,
-      }).catch(() => null);
-      if (saveConfig.isError) return;
+    // 저장이 실패하면 그 자리에 머문다 — `saveConfig.isError` 는 이 렌더에서
+    // 갱신되지 않으므로 반드시 예외로 판정해야 한다(토스트는 onError 가 띄운다).
+    try {
+      // 서식·첨부는 검토 단계로 넘어갈 때 한 번에 저장한다.
+      if (step === 1) {
+        await saveConfig.mutateAsync({
+          lease_form: form,
+          doc_attachments: picked.filter((p) => availableAttachments.some((a) => a.value === p)),
+        });
+      }
+      // 서명 방식은 검토 단계에서 확정한다. 빈 값이면 재지정을 해제한다.
+      if (step === 2) {
+        await saveConfig.mutateAsync({
+          signing_mode: modeOverride,
+          signing_mode_reason: modeOverride ? overrideReason : "",
+        });
+      }
+    } catch {
+      return;
     }
     setStep((s) => Math.min(s + 1, STEP_KEYS.length - 1));
   }
@@ -239,8 +255,9 @@ export function ContractIssueWizard({
               <div className="flex justify-between gap-4 p-2.5">
                 <dt className="text-muted-foreground">{t("contract.label_doc_attachments")}</dt>
                 <dd className="text-right">
-                  {picked.length
-                    ? picked.map((p) => t(LEASE_ATTACHMENT_OPTIONS.find((a) => a.value === p)?.labelKey ?? p)).join(", ")
+                  {/* 서식에 맞지 않는 첨부는 저장되지 않으므로 요약에서도 뺀다. */}
+                  {savedAttachments.length
+                    ? savedAttachments.map((p) => t(LEASE_ATTACHMENT_OPTIONS.find((a) => a.value === p)?.labelKey ?? p)).join(", ")
                     : t("contract.wiz_attach_zero")}
                 </dd>
               </div>
@@ -265,6 +282,7 @@ export function ContractIssueWizard({
                 {t(
                   policy.blocked_reason === "government_form" ? "contract.signing_blocked_gov"
                   : policy.blocked_reason === "term_unknown" ? "contract.signing_blocked_unknown"
+                  : policy.blocked_reason === "manual_override" ? "contract.signing_blocked_manual"
                   : "contract.signing_blocked_long",
                 )}
               </p>

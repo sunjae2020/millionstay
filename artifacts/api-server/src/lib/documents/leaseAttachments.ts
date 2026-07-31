@@ -35,6 +35,31 @@ export const LEASE_ATTACHMENT_TITLES: Record<LeaseAttachmentKind, string> = {
   renewal_refusal: "계약갱신 거절통지서 (별지2)",
 };
 
+/**
+ * 서식별로 붙일 수 있는 첨부 — 여기에 없는 조합은 저장 단계에서 걸러진다.
+ * `renewal_refusal`(계약갱신 거절통지서)은 주택임대차표준계약서 원본의 [별지2]라
+ * 다른 서식에는 존재하지 않는다.
+ */
+const FORM_ONLY_ATTACHMENTS: Partial<Record<LeaseAttachmentKind, string[]>> = {
+  renewal_refusal: ["housing_standard"],
+};
+
+/** 이 서식에 이 첨부를 붙일 수 있는지. 서식이 아직 없으면 전부 허용한다. */
+export function isAttachmentAllowedForForm(kind: LeaseAttachmentKind, leaseForm: string | null | undefined): boolean {
+  const only = FORM_ONLY_ATTACHMENTS[kind];
+  if (!only) return true;
+  if (!leaseForm) return false;
+  return only.includes(leaseForm);
+}
+
+/** 서식에 맞지 않는 첨부를 떨궈 낸다. */
+export function filterAttachmentsForForm(
+  kinds: LeaseAttachmentKind[],
+  leaseForm: string | null | undefined,
+): LeaseAttachmentKind[] {
+  return kinds.filter((k) => isAttachmentAllowedForForm(k, leaseForm));
+}
+
 export interface LeaseAttachmentParty {
   name?: string | null;
   address?: string | null;

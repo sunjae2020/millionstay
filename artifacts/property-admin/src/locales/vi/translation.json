@@ -1204,6 +1204,7 @@
     "signing_blocked_long": "Hợp đồng dài hơn một tháng không thuộc diện ký trực tuyến. Hãy in hợp đồng, ký và đóng dấu, rồi tải bản scan lên.",
     "signing_blocked_gov": "Mẫu tiêu chuẩn của nhà nước không hỗ trợ ký trực tuyến. Hãy in, đóng dấu rồi tải bản scan lên.",
     "signing_blocked_unknown": "Vui lòng nhập ngày bắt đầu và ngày kết thúc trước. Thời hạn quyết định việc có được ký trực tuyến hay không.",
+    "signing_blocked_manual": "Hợp đồng này được đặt là “in và đóng dấu”. Hãy đổi phương thức ký bên dưới nếu cần ký trực tuyến.",
     "wiz_override_label": "Chỉ định lại phương thức ký",
     "wiz_override_auto": "Tự động",
     "wiz_override_reason_ph": "Lý do chỉ định lại (ví dụ: lưu trú 35 ngày)",

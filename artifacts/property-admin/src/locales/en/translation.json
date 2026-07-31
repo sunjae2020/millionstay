@@ -1204,6 +1204,7 @@
     "signing_blocked_long": "Terms longer than one month cannot be signed online. Print the contract, sign and seal it, then upload the scan.",
     "signing_blocked_gov": "Government standard forms do not support online signing. Print, seal, then upload the scan.",
     "signing_blocked_unknown": "Fill in the start and end dates first — the term decides whether online signing is available.",
+    "signing_blocked_manual": "This contract is set to print-and-seal. Change the signing method below if you need online signing.",
     "wiz_override_label": "Override signing method",
     "wiz_override_auto": "Automatic",
     "wiz_override_reason_ph": "Reason for the override (e.g. 35-day monthly stay)",

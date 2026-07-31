@@ -1204,6 +1204,7 @@
     "signing_blocked_long": "1달을 초과하는 계약이라 온라인 서명 대상이 아닙니다. 계약서를 출력해 작성·날인한 뒤 서명본 스캔을 올려 주세요.",
     "signing_blocked_gov": "정부 표준 서식은 온라인 서명을 지원하지 않습니다. 출력해 날인한 뒤 서명본 스캔을 올려 주세요.",
     "signing_blocked_unknown": "계약 시작일과 종료일을 먼저 채워 주세요. 단기 계약인지 확인되어야 온라인 서명을 발행할 수 있습니다.",
+    "signing_blocked_manual": "이 계약은 “출력 후 날인”으로 지정되어 있습니다. 온라인 서명이 필요하면 아래에서 서명 방식을 바꿔 주세요.",
     "wiz_override_label": "서명 방식 재지정",
     "wiz_override_auto": "자동 판정",
     "wiz_override_reason_ph": "재지정 사유 (예: 35일 한달살기)",

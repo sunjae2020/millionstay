@@ -31,6 +31,7 @@ import {
 } from "../lib/documents/forms/mltStandardLeaseForm";
 import {
   buildLeaseAttachmentsHtml,
+  filterAttachmentsForForm,
   LEASE_ATTACHMENT_KINDS,
   type LeaseAttachmentInput,
   type LeaseAttachmentKind,
@@ -556,7 +557,7 @@ router.post("/v1/contracts", async (req, res): Promise<void> => {
     advance_amount: data.advance_amount ?? null,
     contract_category: data.contract_category ?? null,
     lease_form: data.lease_form ?? null,
-    doc_attachments: normalizeAttachmentsInput(data.doc_attachments),
+    doc_attachments: normalizeAttachmentsInput(data.doc_attachments, data.lease_form ?? null),
     ...mltLeaseFields(data),
     down_payment: data.down_payment ?? null,
     down_payment_date: data.down_payment_date ?? null,
@@ -717,8 +718,11 @@ function contractTemplateVars(
 /** 발급할 계약서 서식 — contracts.lease_form. */
 export type ContractLeaseForm = "housing_standard" | "mlt_standard" | "general";
 
-/** 어드민이 보낸 첨부 선택(배열 또는 이미 JSON 문자열) → 저장할 JSON 문자열. */
-function normalizeAttachmentsInput(raw: unknown): string | null {
+/**
+ * 어드민이 보낸 첨부 선택(배열 또는 이미 JSON 문자열) → 저장할 JSON 문자열.
+ * 서식을 알면 그 서식에 없는 첨부(예: 일반 계약서에 별지2)는 떨궈 낸다.
+ */
+function normalizeAttachmentsInput(raw: unknown, leaseForm?: string | null): string | null {
   const valid = new Set<string>(LEASE_ATTACHMENT_KINDS);
   const list = Array.isArray(raw)
     ? raw
@@ -726,8 +730,12 @@ function normalizeAttachmentsInput(raw: unknown): string | null {
       ? (() => { try { return JSON.parse(raw); } catch { return raw.split(","); } })()
       : null;
   if (!Array.isArray(list)) return null;
-  const kinds = list.filter((k): k is string => typeof k === "string").map((k) => k.trim()).filter((k) => valid.has(k));
-  return kinds.length ? JSON.stringify(kinds) : null;
+  const kinds = list
+    .filter((k): k is string => typeof k === "string")
+    .map((k) => k.trim())
+    .filter((k): k is LeaseAttachmentKind => valid.has(k));
+  const allowed = leaseForm === undefined ? kinds : filterAttachmentsForForm(kinds, leaseForm);
+  return allowed.length ? JSON.stringify(allowed) : null;
 }
 
 /** contracts.doc_attachments(JSON 배열) → 유효한 첨부 키만. */
@@ -1345,7 +1353,7 @@ router.put("/v1/contracts/:id", async (req, res): Promise<void> => {
         advance_amount: data.advance_amount ?? null,
         contract_category: data.contract_category ?? null,
         lease_form: data.lease_form ?? null,
-        doc_attachments: normalizeAttachmentsInput(data.doc_attachments),
+        doc_attachments: normalizeAttachmentsInput(data.doc_attachments, data.lease_form ?? null),
         ...mltLeaseFields(data),
         down_payment: data.down_payment ?? null,
         down_payment_date: data.down_payment_date ?? null,
@@ -1444,7 +1452,11 @@ router.patch("/v1/contracts/:id/issue-config", async (req, res): Promise<void> =
     if (form && !valid.includes(form)) { res.status(400).json({ error: "Unknown lease_form" }); return; }
     updates.lease_form = form || null;
   }
-  if ("doc_attachments" in data) updates.doc_attachments = normalizeAttachmentsInput(data.doc_attachments);
+  if ("doc_attachments" in data) {
+    // 같은 요청에서 서식을 바꿨으면 바뀐 서식 기준으로 거른다.
+    const effectiveForm = "lease_form" in updates ? (updates.lease_form as string | null) : existing.lease_form;
+    updates.doc_attachments = normalizeAttachmentsInput(data.doc_attachments, effectiveForm);
+  }
   if ("signing_mode" in data) {
     const mode = typeof data.signing_mode === "string" ? data.signing_mode.trim() : "";
     if (mode && mode !== "online" && mode !== "wet") { res.status(400).json({ error: "Unknown signing_mode" }); return; }
@@ -1578,8 +1590,10 @@ router.post("/v1/contracts/:id/signed-scan", scanUpload.single("file"), async (r
       retention_until: calcRetentionDate("contract"),
     } as never).returning();
   } catch (err) {
-    console.error("[contracts] signed scan upload failed:", err instanceof Error ? err.message : err);
-    res.status(500).json({ error: "File upload failed" });
+    const reason = (err as any)?.message ?? String(err);
+    console.error("[contracts] signed scan upload failed:", reason);
+    // 사유를 감추면(예: Cloudinary 계정 비활성) 담당자가 손쓸 방법이 없다.
+    res.status(500).json({ error: `File upload failed: ${reason}` });
     return;
   }
 

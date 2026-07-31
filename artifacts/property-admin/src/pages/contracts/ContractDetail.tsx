@@ -746,13 +746,17 @@ export default function ContractDetail() {
           )}
 
           <div className="grid grid-cols-1 gap-6 max-w-4xl">
-            {/* E-signature — 단기(1달 이하) 계약만 온라인 서명 대상이다. */}
-            {!isNew && contract && signingPolicy?.online_allowed && (
+            {/* E-signature — 온라인 서명은 단기(1달 이하) 계약만 발행할 수 있다.
+                다만 이미 받아 둔 서명이 있으면 카드를 계속 보여 준다: 기간이
+                늘거나 서식이 바뀌었다고 완료된 서명과 서명본 PDF 가 화면에서
+                사라지면 안 된다. */}
+            {!isNew && contract && (
               <HomestaySignatureCard
                 contextType="contract"
                 contextId={Number(id)}
                 entityType="contract"
-                issuePath={`/api/v1/contracts/${id}/issue-signing`}
+                issuePath={signingPolicy?.online_allowed ? `/api/v1/contracts/${id}/issue-signing` : undefined}
+                hideIfEmpty={!signingPolicy?.online_allowed}
               />
             )}
 

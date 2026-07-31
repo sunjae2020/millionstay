@@ -1204,6 +1204,7 @@
     "signing_blocked_long": "超过一个月的合同不适用在线签署。请打印合同、填写并盖章后上传签署件扫描。",
     "signing_blocked_gov": "政府标准格式不支持在线签署。请打印盖章后上传扫描件。",
     "signing_blocked_unknown": "请先填写合同起止日期。确认是否为短期合同后才能发出在线签署。",
+    "signing_blocked_manual": "此合同已指定为“打印后盖章”。如需在线签署，请在下方更改签署方式。",
     "wiz_override_label": "重新指定签署方式",
     "wiz_override_auto": "自动判定",
     "wiz_override_reason_ph": "重新指定的理由（例如：35天的月租）",

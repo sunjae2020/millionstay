@@ -30,14 +30,21 @@ export type SigningBlockedReason =
   /** 정부 표준 서식은 원본 PDF 오버레이라 HTML 서명 스냅숏을 만들 수 없다. */
   | "government_form"
   /** 기간이 비어 있어 단기인지 판단할 수 없다. */
-  | "term_unknown";
+  | "term_unknown"
+  /** 담당자가 직접 "출력 후 날인"으로 지정했다. */
+  | "manual_override";
 
 export interface SigningPolicy {
   /** 실제 적용되는 방식(수동 재지정이 있으면 그 값). */
   mode: SigningMode;
   /** 계약기간만으로 계산한 방식. */
   auto: SigningMode;
-  /** 담당자가 자동 판정을 뒤집었는지. */
+  /**
+   * 담당자가 서명 방식을 명시 지정했는지.
+   *
+   * 자동 판정과 값이 같아도 참이다 — 지정값이 저장돼 있으면 나중에 기간이 바뀌어도
+   * 자동 판정으로 돌아오지 않으므로, 화면이 "자동 판정"처럼 보이면 안 된다.
+   */
   overridden: boolean;
   override_reason: string | null;
   /** 계약기간 일수(양 끝 포함). 기간이 비었으면 null. */
@@ -79,13 +86,20 @@ export function resolveSigningPolicy(row: SigningPolicyInput): SigningPolicy {
   const mode: SigningMode = override ?? auto;
 
   let blocked: SigningBlockedReason | null = null;
-  if (mode === "wet") blocked = days == null && override == null ? "term_unknown" : "long_term";
-  else if (isGovernmentForm(row.lease_form)) blocked = "government_form";
+  if (mode === "wet") {
+    // 사유는 실제로 막은 것을 가리켜야 한다 — 5일짜리 계약을 담당자가 날인으로
+    // 돌려놓고 "1달을 초과해서"라고 안내하면 안 된다.
+    blocked = override === "wet" ? "manual_override"
+      : days == null ? "term_unknown"
+      : "long_term";
+  } else if (isGovernmentForm(row.lease_form)) {
+    blocked = "government_form";
+  }
 
   return {
     mode,
     auto,
-    overridden: override != null && override !== auto,
+    overridden: override != null,
     override_reason: row.signing_mode_reason ?? null,
     term_days: days,
     online_allowed: blocked == null,
@@ -101,4 +115,6 @@ export const SIGNING_BLOCKED_MESSAGE: Record<SigningBlockedReason, string> = {
     "정부 표준 서식(주택임대차표준계약서·민간임대주택 표준임대차계약서)은 온라인 서명을 지원하지 않습니다. 출력해 날인한 뒤 서명본 스캔을 올려 주세요.",
   term_unknown:
     "계약 시작일과 종료일을 먼저 채워 주세요. 단기(1달 이하) 계약인지 확인되어야 온라인 서명을 발행할 수 있습니다.",
+  manual_override:
+    "이 계약은 “출력 후 날인”으로 지정되어 있습니다. 온라인 서명이 필요하면 계약서 발행 위저드에서 서명 방식을 바꿔 주세요.",
 };

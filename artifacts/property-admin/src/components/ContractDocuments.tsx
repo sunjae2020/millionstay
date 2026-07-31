@@ -96,6 +96,9 @@ export default function ContractDocuments({ contractId }: { contractId: number }
       setUploading(false);
       qc.invalidateQueries({ queryKey: listKey });
       qc.invalidateQueries({ queryKey: ["/api/v1/contracts"] });
+      // 체결 처리에서 발행본을 동결하면 새 버전이 생긴다 — DocumentVersions 가
+      // 쓰는 키와 정확히 같아야 그 목록이 새로고침된다.
+      qc.invalidateQueries({ queryKey: ["doc-snapshots", "contract", String(contractId)] });
       if (fileRef.current) fileRef.current.value = "";
     }
   }
