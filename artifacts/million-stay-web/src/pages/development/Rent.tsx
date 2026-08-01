@@ -3,6 +3,8 @@ import { useTranslation } from "react-i18next";
 import { CalendarDays, ArrowRight, FileSignature, KeyRound, CalendarCheck, Headphones } from "lucide-react";
 import { DevLayout } from "@/components/development/DevLayout";
 import { usePageContent } from "@/lib/usePageContent";
+import { Section } from "@/components/development/DevSection";
+import { UnitTypeTable } from "@/components/development/UnitTypeTable";
 import { InquiryForm } from "@/components/development/InquiryForm";
 import { SectionHeading, WhyGrid } from "@/components/development/marketing";
 import { submitLongTermInquiry } from "@/lib/development-api";
@@ -37,7 +39,7 @@ export default function DevRent() {
   return (
     <DevLayout title={t("dev.rent.hero_title")}>
       {/* Hero */}
-      <section className="bg-[hsl(var(--brand-navy))] text-white">
+      <section className="bg-[hsl(var(--brand-navy))] dev-tex-units text-white">
         <div className="max-w-7xl mx-auto px-6 py-16 md:py-24">
           <p className="text-sm font-semibold tracking-widest uppercase text-white/80">{t("dev.rent.eyebrow")}</p>
           <h1 className="mt-4 font-display text-4xl md:text-5xl font-extrabold tracking-tight max-w-3xl">
@@ -68,7 +70,7 @@ export default function DevRent() {
       </section>
 
       {/* 임대 절차 — horizontal step row */}
-      <section className="bg-[hsl(var(--brand-navy))] text-white">
+      <section className="bg-[hsl(var(--brand-navy))] dev-tex-units text-white">
         <div className="max-w-7xl mx-auto px-6 py-14 md:py-20">
           <div className="text-center max-w-2xl mx-auto">
             <p className="text-sm font-semibold tracking-widest uppercase text-white/70">{pc("process_eyebrow", t("dev.rent.process_eyebrow"))}</p>
@@ -143,7 +145,24 @@ export default function DevRent() {
       </section>
 
       {/* Long-term — lease consultation */}
-      <section id="long-term" className="bg-[hsl(var(--brand-cream))] border-y border-gray-100">
+      {/* Lease terms by unit type — hidden until an editor fills them in */}
+      <Section tone="plain" className="border-t border-black/5">
+        <UnitTypeTable
+          pc={pc}
+          eyebrow={t("dev.rent.types_eyebrow")}
+          title={pc("types_title", t("dev.rent.types_title"))}
+          lead={pc("types_subtitle", t("dev.rent.types_subtitle"))}
+          fields={[
+            { key: "name", label: t("dev.type_col_name") },
+            { key: "exclusive", label: t("dev.type_col_exclusive"), numeric: true },
+            { key: "deposit", label: t("dev.type_col_deposit"), numeric: true },
+            { key: "rent", label: t("dev.type_col_rent"), numeric: true },
+            { key: "available", label: t("dev.type_col_available"), numeric: true },
+          ]}
+        />
+      </Section>
+
+      <section id="long-term" className="bg-[hsl(var(--brand-cream))] dev-tex-wave border-y border-gray-100">
         <div className="max-w-7xl mx-auto px-6 py-14 md:py-20 grid gap-10 lg:grid-cols-2 items-start">
           <div>
             <div className="w-11 h-11 rounded-xl bg-primary/10 flex items-center justify-center text-primary">

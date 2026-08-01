@@ -1902,7 +1902,8 @@
       "homepage_label": "홈페이지",
       "homepage": "www.metheim.com",
       "privacy_officer_label": "개인정보 보호책임자",
-      "privacy_officer": "홍길동 (metheim.yeosu@gmail.com)"
+      "privacy_officer": "홍길동 (metheim.yeosu@gmail.com)",
+      "company_col": "회사"
     },
     "home": {
       "hero_eyebrow": "하나의 건물, 세 가지 가능성",
@@ -2031,7 +2032,10 @@
       "list_title": "전체 물건",
       "list_subtitle": "분양·판매 중인 모든 물건을 확인하세요.",
       "back_to_buy": "돌아가기",
-      "result_count": "물건 {{count}}건"
+      "result_count": "물건 {{count}}건",
+      "types_eyebrow": "타입 안내",
+      "types_title": "타입별 분양 정보",
+      "types_subtitle": "면적과 세대수를 한눈에 비교해 보세요."
     },
     "rent": {
       "eyebrow": "임대",
@@ -2077,7 +2081,10 @@
       "step_3_title": "계약 체결",
       "step_3_body": "계약 조건을 확인한 뒤 온라인 또는 방문으로 간편하게 계약을 진행합니다.",
       "step_4_title": "입주 · 생활 시작",
-      "step_4_body": "입주 안내에 따라 키를 받고 바로 생활을 시작합니다."
+      "step_4_body": "입주 안내에 따라 키를 받고 바로 생활을 시작합니다.",
+      "types_eyebrow": "임대 조건",
+      "types_title": "타입별 임대 조건",
+      "types_subtitle": "보증금과 월 임대료를 타입별로 정리했습니다."
     },
     "mgmt": {
       "eyebrow": "위탁관리",
@@ -2257,7 +2264,16 @@
       "s7_body": "회사는 천재지변, 이용자의 귀책 사유 등 회사의 통제 범위를 벗어난 사유로 발생한 손해에 대해서는 책임을 지지 않습니다. 서비스에서 제공하는 정보는 참고용이며 최종 판단과 계약의 책임은 이용자에게 있습니다.",
       "s8_title": "제8조 (준거법 및 관할)",
       "s8_body": "본 약관은 대한민국 법령에 따라 해석되며, 서비스 이용과 관련하여 분쟁이 발생할 경우 관할 법원은 민사소송법에 따른 법원으로 합니다."
-    }
+    },
+    "spec_table_disclaimer": "표기된 면적·금액은 관리자가 등록한 값이며, 실제 계약 조건은 상담 시 확인해 주세요.",
+    "type_col_name": "타입",
+    "type_col_exclusive": "전용면적",
+    "type_col_supply": "공급면적",
+    "type_col_units": "세대수",
+    "type_col_price": "분양가",
+    "type_col_deposit": "보증금",
+    "type_col_rent": "월 임대료",
+    "type_col_available": "임대 가능"
   },
   "portalLogin": {
     "eyebrow": "파트너 포털",

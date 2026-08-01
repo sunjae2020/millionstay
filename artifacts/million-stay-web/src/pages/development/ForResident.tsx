@@ -25,7 +25,7 @@ export default function DevForResident() {
   return (
     <DevLayout title={t("dev.resident.hero_title")}>
       {/* Hero */}
-      <section className="bg-[hsl(var(--brand-navy))] text-white">
+      <section className="bg-[hsl(var(--brand-navy))] dev-tex-units text-white">
         <div className="max-w-7xl mx-auto px-6 py-16 md:py-24">
           <p className="text-sm font-semibold tracking-widest uppercase text-white/80">{t("dev.resident.eyebrow")}</p>
           <h1 className="mt-4 font-display text-4xl md:text-5xl font-extrabold tracking-tight max-w-3xl">
@@ -68,7 +68,7 @@ export default function DevForResident() {
       </section>
 
       {/* How to move in */}
-      <section className="bg-[hsl(var(--brand-cream))] border-y border-gray-100">
+      <section className="bg-[hsl(var(--brand-cream))] dev-tex-wave border-y border-gray-100">
         <div className="max-w-7xl mx-auto px-6 py-14 md:py-20">
           <h2 className="font-display text-2xl md:text-3xl font-bold text-[hsl(var(--brand-navy))] tracking-tight">
             {pc("steps_title", t("dev.resident.steps_title"))}

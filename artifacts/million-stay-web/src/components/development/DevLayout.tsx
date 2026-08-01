@@ -311,17 +311,17 @@ export function DevFooter() {
 
   return (
     <footer className="bg-[hsl(var(--brand-navy))] text-white/80 mt-auto">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 grid gap-8 lg:grid-cols-[1.4fr_2fr] lg:gap-16">
+      {/* Four labelled columns. The company links (소개 / 찾아오기) and the legal
+          links used to be loose text under the logo and in the bottom bar, which
+          is why they read as unrelated; they are one "회사" column now. On mobile
+          the columns stack two-up rather than collapsing into one long list. */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 grid gap-8 lg:grid-cols-[1.3fr_2.2fr] lg:gap-16">
         <div>
           <BrandMark invert textClassName="text-3xl" className="h-12 w-auto brightness-0 invert" />
           <p className="mt-4 text-sm leading-relaxed max-w-sm">{t("dev.footer.desc")}</p>
-          <div className="mt-4 flex flex-wrap gap-x-4 gap-y-1">
-            <Link href="/about" className="text-sm hover:text-white">{t("dev.nav.about")}</Link>
-            <Link href="/directions" className="text-sm hover:text-white">{t("dev.nav.directions")}</Link>
-          </div>
         </div>
-        {/* Buy / Rent / Management combined into one compact 3-column group. */}
-        <div className="grid grid-cols-3 gap-x-6 gap-y-2">
+
+        <div className="grid grid-cols-2 gap-x-6 gap-y-8 sm:grid-cols-4">
           <div>
             <h4 className="text-white font-semibold text-sm mb-3">{t("dev.nav.buy")}</h4>
             <Link href="/buy" className="block text-sm py-1 hover:text-white">{t("dev.footer.buy_link")}</Link>
@@ -334,6 +334,13 @@ export function DevFooter() {
           <div>
             <h4 className="text-white font-semibold text-sm mb-3">{t("dev.nav.management")}</h4>
             <Link href="/management" className="block text-sm py-1 hover:text-white">{t("dev.footer.mgmt_link")}</Link>
+          </div>
+          <div>
+            <h4 className="text-white font-semibold text-sm mb-3">{t("dev.footer.company_col")}</h4>
+            <Link href="/about" className="block text-sm py-1 hover:text-white">{t("dev.nav.about")}</Link>
+            <Link href="/directions" className="block text-sm py-1 hover:text-white">{t("dev.nav.directions")}</Link>
+            <Link href="/privacy-policy" className="block text-sm py-1 hover:text-white">{t("dev.footer.privacy")}</Link>
+            <Link href="/terms" className="block text-sm py-1 hover:text-white">{t("dev.footer.terms")}</Link>
           </div>
         </div>
       </div>
@@ -353,13 +360,10 @@ export function DevFooter() {
       )}
 
       <div className="border-t border-white/10">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 text-xs text-white/60">
+        {/* Legal links now live in the company column above, so the bottom bar
+            carries only the copyright — one line on every screen size. */}
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5 text-xs text-white/60">
           <span>© {year} {companyName}. {t("dev.footer.rights")}</span>
-          <nav className="flex items-center gap-4">
-            <Link href="/privacy-policy" className="hover:text-white font-medium">{t("dev.footer.privacy")}</Link>
-            <span className="text-white/20">·</span>
-            <Link href="/terms" className="hover:text-white font-medium">{t("dev.footer.terms")}</Link>
-          </nav>
         </div>
       </div>
     </footer>

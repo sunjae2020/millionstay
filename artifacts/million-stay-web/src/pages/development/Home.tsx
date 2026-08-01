@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import { ArrowRight, Building2, KeyRound, LineChart, ShieldCheck, MapPin, Sparkles, Quote, Star, Newspaper } from "lucide-react";
 import { DevLayout } from "@/components/development/DevLayout";
 import { usePageContent } from "@/lib/usePageContent";
+import { Section } from "@/components/development/DevSection";
 
 // Default free stock images for the building-intro + news cards (Unsplash CDN).
 const DEFAULT_INTRO_IMAGE =
@@ -27,6 +28,13 @@ const DEFAULT_HERO_IMAGES = [
   "https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?auto=format&fit=crop&w=1920&q=80",
   "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?auto=format&fit=crop&w=1920&q=80",
   "https://images.unsplash.com/photo-1493809842364-78817add7ffb?auto=format&fit=crop&w=1920&q=80",
+];
+
+// Buy / Rent / Management card imagery — swap per card in the CMS.
+const DEFAULT_PILLAR_IMAGES = [
+  "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=900&q=80",
+  "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&w=900&q=80",
+  "https://images.unsplash.com/photo-1554224155-6726b3ff858f?auto=format&fit=crop&w=900&q=80",
 ];
 
 const SLIDE_INTERVAL = 6000;
@@ -83,7 +91,10 @@ function HeroSlider({ slides, eyebrow, ctaBuy, ctaRent }: {
   const active = slides[i] ?? slides[0];
 
   return (
-    <section className="relative flex items-center min-h-[82vh] overflow-hidden bg-[hsl(var(--brand-navy))]">
+    // Hero height: 82vh pushed everything below the fold and read as a splash
+    // screen. 58/64vh with a hard cap is the range property sites sit in — the
+    // headline still dominates, but the next section shows itself.
+    <section className="relative flex items-center min-h-[58vh] md:min-h-[64vh] max-h-[700px] overflow-hidden bg-[hsl(var(--brand-navy))] dev-tex-units">
       {/* Crossfading background layers */}
       {slides.map((s, idx) =>
         s.image && !failed[idx] ? (
@@ -177,10 +188,12 @@ export default function DevHome() {
         subtitle: pc("hero_subtitle", t("dev.home.hero_subtitle")),
       }];
 
+  // Each pillar leads with a photograph — the section read as three text boxes
+  // when the only visual was an icon. Images are CMS-editable per pillar.
   const PILLARS = [
-    { icon: Building2, href: "/buy", title: pc("pillar_buy_title", t("dev.home.pillar_buy_title")), body: pc("pillar_buy_body", t("dev.home.pillar_buy_body")), cta: t("dev.home.pillar_buy_cta") },
-    { icon: KeyRound, href: "/rent", title: pc("pillar_rent_title", t("dev.home.pillar_rent_title")), body: pc("pillar_rent_body", t("dev.home.pillar_rent_body")), cta: t("dev.home.pillar_rent_cta") },
-    { icon: LineChart, href: "/management", title: pc("pillar_mgmt_title", t("dev.home.pillar_mgmt_title")), body: pc("pillar_mgmt_body", t("dev.home.pillar_mgmt_body")), cta: t("dev.home.pillar_mgmt_cta") },
+    { icon: Building2, href: "/buy", image: pc("pillar_buy_image", DEFAULT_PILLAR_IMAGES[0]!), title: pc("pillar_buy_title", t("dev.home.pillar_buy_title")), body: pc("pillar_buy_body", t("dev.home.pillar_buy_body")), cta: t("dev.home.pillar_buy_cta") },
+    { icon: KeyRound, href: "/rent", image: pc("pillar_rent_image", DEFAULT_PILLAR_IMAGES[1]!), title: pc("pillar_rent_title", t("dev.home.pillar_rent_title")), body: pc("pillar_rent_body", t("dev.home.pillar_rent_body")), cta: t("dev.home.pillar_rent_cta") },
+    { icon: LineChart, href: "/management", image: pc("pillar_mgmt_image", DEFAULT_PILLAR_IMAGES[2]!), title: pc("pillar_mgmt_title", t("dev.home.pillar_mgmt_title")), body: pc("pillar_mgmt_body", t("dev.home.pillar_mgmt_body")), cta: t("dev.home.pillar_mgmt_cta") },
   ];
 
   const WHY = [
@@ -239,7 +252,7 @@ export default function DevHome() {
             <p className="mt-5 text-gray-600 leading-relaxed">{pc("intro_body", t("dev.home.intro_body"))}</p>
             <div className="mt-8 grid grid-cols-3 gap-4">
               {STATS.map(({ value, label }) => (
-                <div key={label} className="rounded-2xl bg-[hsl(var(--brand-cream))] px-3 py-5 text-center">
+                <div key={label} className="rounded-2xl bg-[hsl(var(--brand-cream))] dev-tex-wave px-3 py-5 text-center">
                   <p className="font-display text-2xl md:text-3xl font-extrabold text-primary">{value}</p>
                   <p className="mt-1 text-xs text-gray-600 leading-snug">{label}</p>
                 </div>
@@ -250,26 +263,34 @@ export default function DevHome() {
       </section>
 
       {/* Three pillars */}
-      <section className="max-w-7xl mx-auto px-6 py-16 md:py-24">
+      <Section tone="plain">
         <div className="grid gap-6 md:grid-cols-3">
-          {PILLARS.map(({ icon: Icon, href, title, body, cta }) => (
-            <Link key={href} href={href} className="group rounded-2xl border border-gray-200 bg-white p-8 flex flex-col transition hover:-translate-y-1 hover:shadow-lg">
-              <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
-                <Icon className="w-6 h-6" />
+          {PILLARS.map(({ icon: Icon, href, image, title, body, cta }) => (
+            <Link
+              key={href}
+              href={href}
+              className="group flex flex-col overflow-hidden rounded-2xl border border-[#E4E9EA] bg-white transition hover:-translate-y-1 hover:shadow-[0_10px_32px_rgba(0,50,61,0.12)]"
+            >
+              <div className="relative aspect-[16/10] overflow-hidden">
+                <img src={image} alt="" loading="lazy" className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.05]" />
+                <span className="absolute left-4 top-4 inline-flex h-10 w-10 items-center justify-center rounded-xl bg-white/95 text-primary shadow-sm">
+                  <Icon className="w-5 h-5" />
+                </span>
               </div>
-              <h3 className="mt-5 font-display text-xl font-bold text-[hsl(var(--brand-navy))]">{title}</h3>
-              <p className="mt-2 text-sm leading-relaxed text-gray-600 flex-1">{body}</p>
-              <span className="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-primary transition-all group-hover:gap-3">
-                {cta} <ArrowRight className="w-4 h-4" />
-              </span>
+              <div className="flex flex-1 flex-col p-7">
+                <h3 className="font-display text-xl font-bold text-[hsl(var(--brand-navy))]">{title}</h3>
+                <p className="mt-2 flex-1 text-sm leading-relaxed text-gray-600">{body}</p>
+                <span className="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-primary transition-all group-hover:gap-3">
+                  {cta} <ArrowRight className="w-4 h-4" />
+                </span>
+              </div>
             </Link>
           ))}
         </div>
-      </section>
+      </Section>
 
       {/* Why this building */}
-      <section className="bg-[hsl(var(--brand-cream))] border-y border-gray-100">
-        <div className="max-w-7xl mx-auto px-6 py-16 md:py-24">
+      <Section tone="cream" className="border-y border-black/5">
           <h2 className="text-center font-display text-3xl md:text-4xl font-bold text-[hsl(var(--brand-navy))] tracking-tight">
             {pc("why_heading", t("dev.home.why_heading"))}
           </h2>
@@ -284,8 +305,7 @@ export default function DevHome() {
               </div>
             ))}
           </div>
-        </div>
-      </section>
+      </Section>
 
       {/* Resident reviews */}
       {REVIEWS.length > 0 && (
@@ -322,8 +342,7 @@ export default function DevHome() {
 
       {/* News */}
       {NEWS.length > 0 && (
-        <section className="bg-[hsl(var(--brand-cream))] border-y border-gray-100">
-          <div className="max-w-7xl mx-auto px-6 py-16 md:py-24">
+        <Section tone="tint" className="border-y border-black/5">
             <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
               <div className="max-w-2xl">
                 <p className="text-sm font-semibold tracking-widest uppercase text-primary inline-flex items-center gap-2">
@@ -355,12 +374,11 @@ export default function DevHome() {
                   : <div key={idx} className={cls}>{Card}</div>;
               })}
             </div>
-          </div>
-        </section>
+        </Section>
       )}
 
       {/* CTA band */}
-      <section className="bg-[hsl(var(--brand-navy))]">
+      <section className="bg-[hsl(var(--brand-navy))] dev-tex-units">
         <div className="max-w-4xl mx-auto px-6 py-16 md:py-20 text-center text-white">
           <h2 className="font-display text-3xl md:text-4xl font-bold tracking-tight">{pc("cta_title", t("dev.home.cta_title"))}</h2>
           <p className="mt-4 text-white/85 leading-relaxed">{pc("cta_subtitle", t("dev.home.cta_subtitle"))}</p>

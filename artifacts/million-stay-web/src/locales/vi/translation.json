@@ -2312,7 +2312,8 @@
       "phone_label": "Điện thoại",
       "homepage_label": "Trang web",
       "privacy_officer_label": "Người phụ trách bảo vệ TTCN",
-      "privacy_officer": "Hong Gildong (metheim.yeosu@gmail.com)"
+      "privacy_officer": "Hong Gildong (metheim.yeosu@gmail.com)",
+      "company_col": "Công ty"
     },
     "home": {
       "hero_eyebrow": "Một tòa nhà, ba khả năng",
@@ -2440,7 +2441,10 @@
       "list_title": "Tất cả căn",
       "list_subtitle": "Xem tất cả các căn mở bán và bán lại.",
       "back_to_buy": "Quay lại",
-      "result_count": "{{count}} căn"
+      "result_count": "{{count}} căn",
+      "types_eyebrow": "Loại căn hộ",
+      "types_title": "Thông tin bán theo loại căn",
+      "types_subtitle": "So sánh diện tích và số căn trong một bảng."
     },
     "rent": {
       "eyebrow": "Cho thuê",
@@ -2486,7 +2490,10 @@
       "step_3_title": "Ký hợp đồng",
       "step_3_body": "Sau khi xác nhận điều kiện, ký hợp đồng dễ dàng qua trực tuyến hoặc tại chỗ.",
       "step_4_title": "Dọn vào · Bắt đầu cuộc sống",
-      "step_4_body": "Nhận chìa khóa theo hướng dẫn dọn vào và bắt đầu cuộc sống ngay."
+      "step_4_body": "Nhận chìa khóa theo hướng dẫn dọn vào và bắt đầu cuộc sống ngay.",
+      "types_eyebrow": "Điều kiện thuê",
+      "types_title": "Điều kiện thuê theo loại căn",
+      "types_subtitle": "Tiền cọc và tiền thuê hàng tháng theo từng loại căn."
     },
     "mgmt": {
       "eyebrow": "Ủy thác quản lý",
@@ -2660,7 +2667,16 @@
       "s7_body": "Công ty không chịu trách nhiệm đối với thiệt hại phát sinh từ các nguyên nhân nằm ngoài tầm kiểm soát của Công ty, như thiên tai hoặc lỗi của chính người dùng. Thông tin cung cấp trong Dịch vụ chỉ mang tính tham khảo; quyết định cuối cùng và trách nhiệm đối với hợp đồng thuộc về người dùng.",
       "s8_title": "Điều 8 (Luật điều chỉnh và thẩm quyền)",
       "s8_body": "Điều khoản này được giải thích theo pháp luật của Đại Hàn Dân Quốc, và mọi tranh chấp phát sinh liên quan đến việc sử dụng Dịch vụ thuộc thẩm quyền của tòa án theo Luật Tố tụng Dân sự."
-    }
+    },
+    "spec_table_disclaimer": "Diện tích và số tiền là giá trị do đơn vị quản lý nhập; vui lòng xác nhận điều kiện hợp đồng thực tế khi liên hệ.",
+    "type_col_name": "Loại căn",
+    "type_col_exclusive": "Diện tích riêng",
+    "type_col_supply": "Diện tích cung cấp",
+    "type_col_units": "Số căn",
+    "type_col_price": "Giá bán",
+    "type_col_deposit": "Tiền cọc",
+    "type_col_rent": "Tiền thuê hàng tháng",
+    "type_col_available": "Còn trống"
   },
   "portalLogin": {
     "eyebrow": "Cổng đối tác",

@@ -2008,7 +2008,8 @@
       "homepage_label": "ホームページ",
       "homepage": "www.metheim.com",
       "privacy_officer_label": "個人情報保護責任者",
-      "privacy_officer": "ホン・ギルドン (metheim.yeosu@gmail.com)"
+      "privacy_officer": "ホン・ギルドン (metheim.yeosu@gmail.com)",
+      "company_col": "会社"
     },
     "home": {
       "hero_eyebrow": "ひとつの建物、三つの可能性",
@@ -2137,7 +2138,10 @@
       "list_title": "すべての物件",
       "list_subtitle": "分譲・販売中のすべての物件をご覧ください。",
       "back_to_buy": "戻る",
-      "result_count": "{{count}}件"
+      "result_count": "{{count}}件",
+      "types_eyebrow": "タイプ案内",
+      "types_title": "タイプ別分譲情報",
+      "types_subtitle": "面積と戸数をひと目で比較できます。"
     },
     "rent": {
       "eyebrow": "賃貸",
@@ -2183,7 +2187,10 @@
       "step_3_title": "契約締結",
       "step_3_body": "契約条件を確認のうえ、オンラインまたはご来場で手軽に契約します。",
       "step_4_title": "入居・生活スタート",
-      "step_4_body": "入居案内に沿って鍵を受け取り、すぐに生活を始められます。"
+      "step_4_body": "入居案内に沿って鍵を受け取り、すぐに生活を始められます。",
+      "types_eyebrow": "賃貸条件",
+      "types_title": "タイプ別賃貸条件",
+      "types_subtitle": "保証金と月額賃料をタイプごとにまとめました。"
     },
     "mgmt": {
       "eyebrow": "運営委託",
@@ -2363,7 +2370,16 @@
       "s7_body": "当社は、天災地変、利用者の責めに帰すべき事由など、当社の管理範囲を超える事由により生じた損害については責任を負いません。本サービスで提供する情報は参考用であり、最終的な判断および契約の責任は利用者にあります。",
       "s8_title": "第8条（準拠法および管轄）",
       "s8_body": "本規約は大韓民国の法令に従って解釈され、本サービスの利用に関して紛争が生じた場合、管轄裁判所は民事訴訟法に基づく裁判所とします。"
-    }
+    },
+    "spec_table_disclaimer": "記載の面積・金額は管理者が登録した値です。実際の契約条件はお問い合わせ時にご確認ください。",
+    "type_col_name": "タイプ",
+    "type_col_exclusive": "専有面積",
+    "type_col_supply": "供給面積",
+    "type_col_units": "戸数",
+    "type_col_price": "分譲価格",
+    "type_col_deposit": "保証金",
+    "type_col_rent": "月額賃料",
+    "type_col_available": "空室"
   },
   "portalLogin": {
     "eyebrow": "パートナーポータル",

@@ -2376,7 +2376,8 @@
       "homepage_label": "Website",
       "homepage": "www.metheim.com",
       "privacy_officer_label": "Privacy officer",
-      "privacy_officer": "Gildong Hong (metheim.yeosu@gmail.com)"
+      "privacy_officer": "Gildong Hong (metheim.yeosu@gmail.com)",
+      "company_col": "Company"
     },
     "home": {
       "hero_eyebrow": "One building, three possibilities",
@@ -2505,7 +2506,10 @@
       "list_title": "All listings",
       "list_subtitle": "Browse every pre-sale and resale unit.",
       "back_to_buy": "Back to Buy",
-      "result_count": "{{count}} listings"
+      "result_count": "{{count}} listings",
+      "types_eyebrow": "Unit types",
+      "types_title": "Units by type",
+      "types_subtitle": "Compare area and unit counts at a glance."
     },
     "rent": {
       "eyebrow": "Rent / Stay",
@@ -2551,7 +2555,10 @@
       "step_3_title": "Sign the contract",
       "step_3_body": "Confirm the terms and sign easily, online or in person.",
       "step_4_title": "Move in & settle",
-      "step_4_body": "Collect your keys per the move-in guide and start living right away."
+      "step_4_body": "Collect your keys per the move-in guide and start living right away.",
+      "types_eyebrow": "Lease terms",
+      "types_title": "Lease terms by type",
+      "types_subtitle": "Deposit and monthly rent, set out per unit type."
     },
     "mgmt": {
       "eyebrow": "Management",
@@ -2731,7 +2738,16 @@
       "s7_body": "The Company is not liable for damages arising from causes beyond its control, such as force majeure or the user's own fault. Information provided in the Services is for reference; the final judgment and responsibility for any contract rest with the user.",
       "s8_title": "Article 8 (Governing law and jurisdiction)",
       "s8_body": "These terms are interpreted under the laws of the Republic of Korea, and any dispute arising from use of the Services is subject to the court having jurisdiction under the Civil Procedure Act."
-    }
+    },
+    "spec_table_disclaimer": "Areas and amounts are as entered by the operator; confirm the actual terms when you enquire.",
+    "type_col_name": "Type",
+    "type_col_exclusive": "Exclusive area",
+    "type_col_supply": "Supply area",
+    "type_col_units": "Units",
+    "type_col_price": "Price",
+    "type_col_deposit": "Deposit",
+    "type_col_rent": "Monthly rent",
+    "type_col_available": "Available"
   },
   "portalLogin": {
     "eyebrow": "Partner Portal",

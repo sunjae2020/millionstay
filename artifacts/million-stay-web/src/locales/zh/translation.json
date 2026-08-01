@@ -1861,7 +1861,8 @@
       "homepage_label": "官网",
       "homepage": "www.metheim.com",
       "privacy_officer_label": "个人信息保护负责人",
-      "privacy_officer": "洪吉童 (metheim.yeosu@gmail.com)"
+      "privacy_officer": "洪吉童 (metheim.yeosu@gmail.com)",
+      "company_col": "公司"
     },
     "home": {
       "hero_eyebrow": "一栋建筑，三种可能",
@@ -1990,7 +1991,10 @@
       "list_title": "全部房源",
       "list_subtitle": "浏览所有预售与转售房源。",
       "back_to_buy": "返回",
-      "result_count": "{{count}} 个房源"
+      "result_count": "{{count}} 个房源",
+      "types_eyebrow": "户型介绍",
+      "types_title": "各户型销售信息",
+      "types_subtitle": "一目了然地比较面积与户数。"
     },
     "rent": {
       "eyebrow": "租赁",
@@ -2036,7 +2040,10 @@
       "step_3_title": "签订合同",
       "step_3_body": "核对合同条件后，线上或到场即可便捷签约。",
       "step_4_title": "入住·开启生活",
-      "step_4_body": "按入住指引领取钥匙，随即开始生活。"
+      "step_4_body": "按入住指引领取钥匙，随即开始生活。",
+      "types_eyebrow": "租赁条件",
+      "types_title": "各户型租赁条件",
+      "types_subtitle": "按户型整理押金与月租金。"
     },
     "mgmt": {
       "eyebrow": "委托管理",
@@ -2216,7 +2223,16 @@
       "s7_body": "对于因不可抗力、用户自身过错等超出公司可控范围的事由所致损害，公司不承担责任。本服务所提供信息仅供参考，最终判断与合同责任由用户承担。",
       "s8_title": "第八条（准据法与管辖）",
       "s8_body": "本条款依据大韩民国法律解释，因使用本服务而发生争议时，管辖法院为依《民事诉讼法》确定的法院。"
-    }
+    },
+    "spec_table_disclaimer": "所列面积与金额为管理方录入值，实际合同条件请在咨询时确认。",
+    "type_col_name": "户型",
+    "type_col_exclusive": "专有面积",
+    "type_col_supply": "供给面积",
+    "type_col_units": "户数",
+    "type_col_price": "销售价格",
+    "type_col_deposit": "押金",
+    "type_col_rent": "月租金",
+    "type_col_available": "可租"
   },
   "portalLogin": {
     "eyebrow": "合作伙伴门户",

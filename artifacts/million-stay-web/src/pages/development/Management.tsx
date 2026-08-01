@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { LineChart, ShieldCheck, Wrench, Wallet, Calculator, PiggyBank, BarChart3, Users } from "lucide-react";
 import { DevLayout } from "@/components/development/DevLayout";
 import { usePageContent } from "@/lib/usePageContent";
+import { FeatureCard } from "@/components/development/DevSection";
 import { InquiryForm } from "@/components/development/InquiryForm";
 import { SectionHeading, WhyGrid, ProcessZigzag } from "@/components/development/marketing";
 import { submitManagementInquiry, computeYield } from "@/lib/development-api";
@@ -57,7 +58,7 @@ function YieldSimulator() {
         <Field label={t("dev.mgmt.sim_fee")} value={mgmtFeePct} onChange={setMgmtFeePct} suffix="%" />
         <Field label={t("dev.mgmt.sim_costs")} value={monthlyCosts} onChange={setMonthlyCosts} suffix={CURRENCY} />
       </div>
-      <div className="bg-[hsl(var(--brand-navy))] text-white p-6 sm:p-8 grid gap-6 sm:grid-cols-3">
+      <div className="bg-[hsl(var(--brand-navy))] dev-tex-units text-white p-6 sm:p-8 grid gap-6 sm:grid-cols-3">
         <div>
           <p className="text-xs uppercase tracking-wide text-white/70">{t("dev.mgmt.sim_net_yield")}</p>
           <p className="mt-1 text-3xl font-extrabold text-primary-foreground" style={{ color: "hsl(var(--brand-apricot))" }}>
@@ -78,14 +79,22 @@ function YieldSimulator() {
   );
 }
 
+// Management benefit imagery — maintenance, safety, settlement. CMS-editable.
+const DEFAULT_BENEFIT_IMAGES = [
+  "https://images.unsplash.com/photo-1581092918056-0c4c3acd3789?auto=format&fit=crop&w=900&q=80",
+  "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=900&q=80",
+  "https://images.unsplash.com/photo-1554224155-6726b3ff858f?auto=format&fit=crop&w=900&q=80",
+];
+
 export default function DevManagement() {
   const { t } = useTranslation();
   const pc = usePageContent("dev-manage");
 
+  // Each benefit leads with a photograph — the row read as three text boxes.
   const BENEFITS = [
-    { icon: Wrench, title: pc("benefit_1_title", t("dev.mgmt.benefit_1_title")), body: pc("benefit_1_body", t("dev.mgmt.benefit_1_body")) },
-    { icon: ShieldCheck, title: pc("benefit_2_title", t("dev.mgmt.benefit_2_title")), body: pc("benefit_2_body", t("dev.mgmt.benefit_2_body")) },
-    { icon: Wallet, title: pc("benefit_3_title", t("dev.mgmt.benefit_3_title")), body: pc("benefit_3_body", t("dev.mgmt.benefit_3_body")) },
+    { icon: Wrench, image: pc("benefit_1_image", DEFAULT_BENEFIT_IMAGES[0]!), title: pc("benefit_1_title", t("dev.mgmt.benefit_1_title")), body: pc("benefit_1_body", t("dev.mgmt.benefit_1_body")) },
+    { icon: ShieldCheck, image: pc("benefit_2_image", DEFAULT_BENEFIT_IMAGES[1]!), title: pc("benefit_2_title", t("dev.mgmt.benefit_2_title")), body: pc("benefit_2_body", t("dev.mgmt.benefit_2_body")) },
+    { icon: Wallet, image: pc("benefit_3_image", DEFAULT_BENEFIT_IMAGES[2]!), title: pc("benefit_3_title", t("dev.mgmt.benefit_3_title")), body: pc("benefit_3_body", t("dev.mgmt.benefit_3_body")) },
   ];
 
   const WHY = [
@@ -101,7 +110,7 @@ export default function DevManagement() {
   return (
     <DevLayout title={t("dev.mgmt.hero_title")}>
       {/* Hero */}
-      <section className="bg-[hsl(var(--brand-navy))] text-white">
+      <section className="bg-[hsl(var(--brand-navy))] dev-tex-units text-white">
         <div className="max-w-7xl mx-auto px-6 py-16 md:py-24">
           <p className="text-sm font-semibold tracking-widest uppercase text-white/80">{t("dev.mgmt.eyebrow")}</p>
           <h1 className="mt-4 font-display text-4xl md:text-5xl font-extrabold tracking-tight max-w-3xl">
@@ -119,20 +128,14 @@ export default function DevManagement() {
           {pc("benefits_heading", t("dev.mgmt.benefits_heading"))}
         </h2>
         <div className="mt-10 grid gap-6 md:grid-cols-3">
-          {BENEFITS.map(({ icon: Icon, title, body }) => (
-            <div key={title} className="rounded-2xl border border-gray-200 p-7">
-              <div className="w-11 h-11 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
-                <Icon className="w-5 h-5" />
-              </div>
-              <h3 className="mt-4 font-semibold text-lg text-[hsl(var(--brand-navy))]">{title}</h3>
-              <p className="mt-2 text-sm leading-relaxed text-gray-600">{body}</p>
-            </div>
+          {BENEFITS.map(({ icon: Icon, image, title, body }) => (
+            <FeatureCard key={title} image={image} icon={<Icon className="w-5 h-5" />} title={title} body={body} />
           ))}
         </div>
       </section>
 
       {/* Why Metheim — 위탁관리 */}
-      <section className="bg-[hsl(var(--brand-cream))] border-y border-gray-100">
+      <section className="bg-[hsl(var(--brand-cream))] dev-tex-wave border-y border-gray-100">
         <div className="max-w-7xl mx-auto px-6 py-14 md:py-20">
           <SectionHeading
             eyebrow={pc("why_eyebrow", t("dev.mgmt.why_eyebrow"))}
@@ -162,7 +165,7 @@ export default function DevManagement() {
       </section>
 
       {/* 위탁 절차 — alternating zig-zag */}
-      <section className="bg-[hsl(var(--brand-cream))] border-y border-gray-100">
+      <section className="bg-[hsl(var(--brand-cream))] dev-tex-wave border-y border-gray-100">
         <div className="max-w-7xl mx-auto px-6 py-14 md:py-20">
           <SectionHeading
             eyebrow={pc("process_eyebrow", t("dev.mgmt.process_eyebrow"))}

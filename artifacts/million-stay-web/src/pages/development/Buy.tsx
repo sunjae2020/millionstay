@@ -7,6 +7,8 @@ import { usePageContent } from "@/lib/usePageContent";
 import { InquiryForm } from "@/components/development/InquiryForm";
 import { ListingCard } from "@/components/development/ListingCard";
 import { fetchSaleListings, submitSalesInquiry } from "@/lib/development-api";
+import { Section } from "@/components/development/DevSection";
+import { UnitTypeTable } from "@/components/development/UnitTypeTable";
 
 // BUY / SALES — the main page shows a preview of the newest 분양(pre-sale) /
 // 판매(sale) listings (3), with a link to the full board (/buy/list). Each card
@@ -32,7 +34,7 @@ export default function DevBuy() {
   return (
     <DevLayout title={t("dev.buy.hero_title")}>
       {/* Hero */}
-      <section className="bg-[hsl(var(--brand-navy))] text-white">
+      <section className="bg-[hsl(var(--brand-navy))] dev-tex-units text-white">
         <div className="max-w-7xl mx-auto px-6 py-16 md:py-24">
           <p className="text-sm font-semibold tracking-widest uppercase text-white/80">{t("dev.buy.eyebrow")}</p>
           <h1 className="mt-4 font-display text-4xl md:text-5xl font-extrabold tracking-tight max-w-3xl">
@@ -90,8 +92,25 @@ export default function DevBuy() {
         </div>
       </section>
 
+      {/* Unit-type specifications — hidden until an editor fills them in */}
+      <Section tone="plain" className="border-t border-black/5">
+        <UnitTypeTable
+          pc={pc}
+          eyebrow={t("dev.buy.types_eyebrow")}
+          title={pc("types_title", t("dev.buy.types_title"))}
+          lead={pc("types_subtitle", t("dev.buy.types_subtitle"))}
+          fields={[
+            { key: "name", label: t("dev.type_col_name") },
+            { key: "exclusive", label: t("dev.type_col_exclusive"), numeric: true },
+            { key: "supply", label: t("dev.type_col_supply"), numeric: true },
+            { key: "units", label: t("dev.type_col_units"), numeric: true },
+            { key: "price", label: t("dev.type_col_price"), numeric: true },
+          ]}
+        />
+      </Section>
+
       {/* General inquiry (not tied to a specific listing) */}
-      <section id="inquiry" className="bg-[hsl(var(--brand-cream))] border-t border-gray-100">
+      <section id="inquiry" className="bg-[hsl(var(--brand-cream))] dev-tex-wave border-t border-gray-100">
         <div className="max-w-3xl mx-auto px-6 py-14 md:py-20">
           <h2 className="text-center font-display text-2xl md:text-3xl font-bold text-[hsl(var(--brand-navy))] tracking-tight">
             {pc("inquiry_title", t("dev.buy.inquiry_title"))}

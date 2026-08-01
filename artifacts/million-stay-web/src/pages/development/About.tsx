@@ -58,7 +58,7 @@ export default function DevAbout() {
   return (
     <DevLayout title={t("dev.about.hero_title")}>
       {/* Hero */}
-      <section className="relative bg-[hsl(var(--brand-navy))] text-white">
+      <section className="relative bg-[hsl(var(--brand-navy))] dev-tex-units text-white">
         {heroImage && <img src={heroImage} alt="" className="absolute inset-0 w-full h-full object-cover opacity-40" />}
         <div className="relative max-w-7xl mx-auto px-6 py-16 md:py-24">
           <p className="text-sm font-semibold tracking-widest uppercase text-white/80">{pc("eyebrow", t("dev.about.eyebrow"))}</p>
@@ -83,7 +83,7 @@ export default function DevAbout() {
       </section>
 
       {/* Logo meaning */}
-      <section className="bg-[hsl(var(--brand-navy))] text-white">
+      <section className="bg-[hsl(var(--brand-navy))] dev-tex-units text-white">
         <div className="max-w-7xl mx-auto px-6 py-14 md:py-20 grid gap-10 lg:grid-cols-2 items-center">
           <div className="flex justify-center">
             <div className="w-56 h-56 md:w-64 md:h-64 rounded-3xl bg-white shadow-lg flex items-center justify-center p-8">
@@ -129,7 +129,7 @@ export default function DevAbout() {
       )}
 
       {/* Vision */}
-      <section className="bg-[hsl(var(--brand-cream))] border-y border-gray-100">
+      <section className="bg-[hsl(var(--brand-cream))] dev-tex-wave border-y border-gray-100">
         <div className="max-w-3xl mx-auto px-6 py-14 md:py-20 text-center">
           <h2 className="font-display text-2xl md:text-3xl font-bold text-[hsl(var(--brand-navy))] tracking-tight">
             {pc("vision_title", t("dev.about.vision_title"))}
@@ -166,7 +166,7 @@ export default function DevAbout() {
       </section>
 
       {/* CTA */}
-      <section className="bg-[hsl(var(--brand-navy))]">
+      <section className="bg-[hsl(var(--brand-navy))] dev-tex-units">
         <div className="max-w-4xl mx-auto px-6 py-14 md:py-16 text-center text-white">
           <h2 className="font-display text-2xl md:text-3xl font-bold tracking-tight">{pc("cta_title", t("dev.about.cta_title"))}</h2>
           <p className="mt-3 text-white/85">{pc("cta_subtitle", t("dev.about.cta_subtitle"))}</p>

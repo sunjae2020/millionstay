@@ -29,7 +29,7 @@ export default function DevDirections() {
   return (
     <DevLayout title={t("dev.directions.hero_title")}>
       {/* Hero */}
-      <section className="bg-[hsl(var(--brand-navy))] text-white">
+      <section className="bg-[hsl(var(--brand-navy))] dev-tex-units text-white">
         <div className="max-w-7xl mx-auto px-6 py-16 md:py-24">
           <p className="text-sm font-semibold tracking-widest uppercase text-white/80">{pc("eyebrow", t("dev.directions.eyebrow"))}</p>
           <h1 className="mt-4 font-display text-4xl md:text-5xl font-extrabold tracking-tight max-w-3xl">
@@ -74,7 +74,7 @@ export default function DevDirections() {
       </section>
 
       {/* Transit + parking */}
-      <section className="bg-[hsl(var(--brand-cream))] border-t border-gray-100">
+      <section className="bg-[hsl(var(--brand-cream))] dev-tex-wave border-t border-gray-100">
         <div className="max-w-7xl mx-auto px-6 py-14 md:py-20 grid gap-6 md:grid-cols-2">
           <div className="rounded-2xl bg-white p-7 border border-gray-100">
             <div className="w-11 h-11 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
