@@ -2747,7 +2747,9 @@
     "type_col_price": "Price",
     "type_col_deposit": "Deposit",
     "type_col_rent": "Monthly rent",
-    "type_col_available": "Available"
+    "type_col_available": "Available",
+    "type_col_kind": "Layout",
+    "type_col_contract": "Contract area"
   },
   "portalLogin": {
     "eyebrow": "Partner Portal",

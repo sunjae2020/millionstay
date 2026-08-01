@@ -12,7 +12,7 @@ import { APP_NAME } from "@/lib/appName";
 import { useAuthStore } from "@/lib/store";
 import { getApiBase } from "@/lib/api-base";
 import { flagIsoFor } from "@/lib/flagOverrides";
-import { usePageContent } from "@/lib/usePageContent";
+import { usePageContent, usePageSeo } from "@/lib/usePageContent";
 import { useCompanyContact } from "@/lib/guest-api";
 
 // Dedicated shell for the single-building "development" site (Metheim). Four top
@@ -370,12 +370,29 @@ export function DevFooter() {
   );
 }
 
-export function DevLayout({ children, title }: { children: ReactNode; title?: string }) {
+export function DevLayout({
+  children,
+  title,
+  pageKey,
+}: {
+  children: ReactNode;
+  title?: string;
+  /**
+   * The page's CMS key. Given one, the tab title and the meta description /
+   * keywords come from the CMS entry for the current language, so SEO is edited
+   * in the admin rather than in code. Without it the page keeps its own title.
+   */
+  pageKey?: string;
+}) {
   const [location] = useLocation();
 
   useEffect(() => {
     document.title = title ? `${title} — ${APP_NAME}` : APP_NAME;
   }, [title]);
+
+  // Runs after the effect above, so an authored seo_title wins over the title
+  // prop while an unset one leaves the prop's value in place.
+  usePageSeo(pageKey ?? "", { titleFallback: title, brand: APP_NAME });
 
   // Scroll to #hash target on navigation (long-term / anchored sections), else top.
   useEffect(() => {

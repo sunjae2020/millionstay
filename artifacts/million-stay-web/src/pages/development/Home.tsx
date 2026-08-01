@@ -227,7 +227,7 @@ export default function DevHome() {
   })).filter((n) => n.title);
 
   return (
-    <DevLayout>
+    <DevLayout pageKey="dev-home">
       <HeroSlider
         slides={heroSlides}
         eyebrow={pc("hero_eyebrow", t("dev.home.hero_eyebrow"))}

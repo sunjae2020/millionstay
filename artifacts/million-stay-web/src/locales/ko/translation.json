@@ -2273,7 +2273,9 @@
     "type_col_price": "분양가",
     "type_col_deposit": "보증금",
     "type_col_rent": "월 임대료",
-    "type_col_available": "임대 가능"
+    "type_col_available": "임대 가능",
+    "type_col_kind": "구분",
+    "type_col_contract": "계약면적"
   },
   "portalLogin": {
     "eyebrow": "파트너 포털",

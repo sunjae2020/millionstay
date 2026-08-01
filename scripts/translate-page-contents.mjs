@@ -7,7 +7,11 @@
 // insert (existing rows are left untouched).
 //
 // Usage:
-//   node scripts/translate-page-contents.mjs <env-file> <lang> <out.sql>
+//   node scripts/translate-page-contents.mjs <env-file> <lang> <out.sql> [--from=en] [--brand="..."]
+//
+// `--from` names the source language to translate out of; it defaults to `en`
+// because that is the primary instance's authoring language, but a tenant whose
+// site is authored in Korean passes --from=ko.
 
 import fs from "node:fs";
 import path from "node:path";
@@ -18,15 +22,21 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, "..");
 
 const [, , ENV_FILE, LANG, OUT] = process.argv;
+const FROM = (process.argv.find((a) => a.startsWith("--from=")) ?? "--from=en").slice(7);
+const BRAND =
+  process.argv.find((a) => a.startsWith("--brand="))?.slice(8) ??
+  "MillionStay / Million Homestay (student homestay and property management in Australia)";
 if (!ENV_FILE || !LANG || !OUT) {
   console.error("usage: translate-page-contents.mjs <env-file> <lang> <out.sql>");
   process.exit(1);
 }
 
 const LANG_NAMES = {
+  en: "English",
   ko: "Korean", zh: "Simplified Chinese", ja: "Japanese", th: "Thai", vi: "Vietnamese",
 };
 const langName = LANG_NAMES[LANG] || LANG;
+const fromName = LANG_NAMES[FROM] || FROM;
 
 function envValue(file, key) {
   for (const line of fs.readFileSync(file, "utf8").split("\n")) {
@@ -50,23 +60,24 @@ SELECT coalesce(json_agg(json_build_object(
   'seo_title', e.seo_title, 'seo_description', e.seo_description, 'seo_keywords', e.seo_keywords
 )), '[]')
 FROM page_contents e
-WHERE e.language = 'en'
+WHERE e.language = '${FROM}'
   AND NOT EXISTS (SELECT 1 FROM page_contents t WHERE t.page_key = e.page_key AND t.language = '${LANG}');
 `;
 const rows = JSON.parse(
   execFileSync("psql", [DB_URL, "-At", "-c", sql], { encoding: "utf8", maxBuffer: 64 * 1024 * 1024 }).trim() || "[]",
 );
-console.log(`${ENV_FILE} → ${LANG}: ${rows.length} page(s) missing`);
+console.log(`${ENV_FILE} ${FROM} → ${LANG}: ${rows.length} page(s) missing`);
 if (rows.length === 0) { fs.writeFileSync(OUT, "-- nothing to do\n"); process.exit(0); }
 
-const SYSTEM = `You translate website copy for MillionStay / Million Homestay (student homestay and property management in Australia).
-Target language: ${langName}.
+const SYSTEM = `You translate website copy for ${BRAND}.
+Source language: ${fromName}. Target language: ${langName}.
 
 Rules:
 - Translate VALUES only; keep every JSON key exactly as-is and keep the object shape identical.
 - Preserve placeholders ({{...}}) and inline HTML tags.
 - This is public marketing copy: produce natural, warm, persuasive ${langName} — not a literal rendering.
-- Do not translate brand names (MillionStay, Million Homestay) or technical identifiers.
+- Do not translate brand names or technical identifiers.
+- Leave measurements, prices and unit counts exactly as written (e.g. "18.49㎡", "3,000,000원") — only translate the words around them.
 - Return ONLY the translated JSON object. No prose, no code fences.`;
 
 async function translateJson(obj, attempt = 0) {

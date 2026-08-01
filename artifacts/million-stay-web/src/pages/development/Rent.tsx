@@ -37,7 +37,7 @@ export default function DevRent() {
   }));
 
   return (
-    <DevLayout title={t("dev.rent.hero_title")}>
+    <DevLayout title={t("dev.rent.hero_title")} pageKey="dev-rent">
       {/* Hero */}
       <section className="bg-[hsl(var(--brand-navy))] dev-tex-units text-white">
         <div className="max-w-7xl mx-auto px-6 py-16 md:py-24">
@@ -154,10 +154,11 @@ export default function DevRent() {
           lead={pc("types_subtitle", t("dev.rent.types_subtitle"))}
           fields={[
             { key: "name", label: t("dev.type_col_name") },
+            { key: "kind", label: t("dev.type_col_kind") },
             { key: "exclusive", label: t("dev.type_col_exclusive"), numeric: true },
+            { key: "supply", label: t("dev.type_col_supply"), numeric: true },
             { key: "deposit", label: t("dev.type_col_deposit"), numeric: true },
             { key: "rent", label: t("dev.type_col_rent"), numeric: true },
-            { key: "available", label: t("dev.type_col_available"), numeric: true },
           ]}
         />
       </Section>

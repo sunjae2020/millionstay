@@ -2378,7 +2378,9 @@
     "type_col_price": "ราคาขาย",
     "type_col_deposit": "เงินมัดจำ",
     "type_col_rent": "ค่าเช่าต่อเดือน",
-    "type_col_available": "ว่าง"
+    "type_col_available": "ว่าง",
+    "type_col_kind": "รูปแบบ",
+    "type_col_contract": "พื้นที่ตามสัญญา"
   },
   "portalLogin": {
     "eyebrow": "พอร์ทัลพาร์ทเนอร์",

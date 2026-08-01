@@ -49,14 +49,14 @@ export default function DevAbout() {
   useCmsSeo(cmsPage, t("dev.about.hero_title"));
   if (cmsPage) {
     return (
-      <DevLayout title={cmsPage.title ?? t("dev.about.hero_title")}>
+      <DevLayout title={cmsPage.title ?? t("dev.about.hero_title")} pageKey="dev-about">
         <BlockRenderer blocks={cmsPage.blocks} tokens={cmsPage.tokens} data={cmsData} />
       </DevLayout>
     );
   }
 
   return (
-    <DevLayout title={t("dev.about.hero_title")}>
+    <DevLayout title={t("dev.about.hero_title")} pageKey="dev-about">
       {/* Hero */}
       <section className="relative bg-[hsl(var(--brand-navy))] dev-tex-units text-white">
         {heroImage && <img src={heroImage} alt="" className="absolute inset-0 w-full h-full object-cover opacity-40" />}

@@ -23,7 +23,7 @@ export default function DevForResident() {
   const pc = usePageContent("dev-resident");
 
   return (
-    <DevLayout title={t("dev.resident.hero_title")}>
+    <DevLayout title={t("dev.resident.hero_title")} pageKey="dev-resident">
       {/* Hero */}
       <section className="bg-[hsl(var(--brand-navy))] dev-tex-units text-white">
         <div className="max-w-7xl mx-auto px-6 py-16 md:py-24">

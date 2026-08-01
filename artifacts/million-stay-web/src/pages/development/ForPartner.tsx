@@ -20,7 +20,7 @@ export default function DevForPartner() {
   const pc = usePageContent("dev-partner");
 
   return (
-    <DevLayout title={t("dev.partner.hero_title")}>
+    <DevLayout title={t("dev.partner.hero_title")} pageKey="dev-partner">
       {/* Hero */}
       <section className="bg-[hsl(var(--brand-navy))] dev-tex-units text-white">
         <div className="max-w-7xl mx-auto px-6 py-16 md:py-24">

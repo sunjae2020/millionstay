@@ -34,7 +34,7 @@ export default function DevBuyList() {
   const filtered = filter === "all" ? listings : listings.filter((l) => l.category === filter);
 
   return (
-    <DevLayout title={t("dev.buy.list_title")}>
+    <DevLayout title={t("dev.buy.list_title")} pageKey="dev-buy">
       <section className="max-w-7xl mx-auto px-6 py-10 md:py-14">
         <Link href="/buy" className="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-primary transition">
           <ArrowLeft className="w-4 h-4" /> {t("dev.buy.back_to_buy")}

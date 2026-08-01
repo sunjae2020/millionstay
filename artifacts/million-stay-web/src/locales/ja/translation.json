@@ -2379,7 +2379,9 @@
     "type_col_price": "分譲価格",
     "type_col_deposit": "保証金",
     "type_col_rent": "月額賃料",
-    "type_col_available": "空室"
+    "type_col_available": "空室",
+    "type_col_kind": "区分",
+    "type_col_contract": "契約面積"
   },
   "portalLogin": {
     "eyebrow": "パートナーポータル",

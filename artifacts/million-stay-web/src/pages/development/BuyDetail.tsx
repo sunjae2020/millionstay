@@ -42,7 +42,7 @@ export default function DevBuyDetail() {
   const gallery = images.filter((u, i) => images.indexOf(u) === i);
 
   return (
-    <DevLayout title={listing?.title ?? t("dev.buy.hero_title")}>
+    <DevLayout title={listing?.title ?? t("dev.buy.hero_title")} pageKey="dev-buy">
       <div className="max-w-7xl mx-auto px-6 py-8 md:py-12">
         <Link href="/buy" className="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-primary transition">
           <ArrowLeft className="w-4 h-4" /> {t("dev.listing.back_to_list")}

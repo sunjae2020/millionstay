@@ -2232,7 +2232,9 @@
     "type_col_price": "销售价格",
     "type_col_deposit": "押金",
     "type_col_rent": "月租金",
-    "type_col_available": "可租"
+    "type_col_available": "可租",
+    "type_col_kind": "户型",
+    "type_col_contract": "合同面积"
   },
   "portalLogin": {
     "eyebrow": "合作伙伴门户",

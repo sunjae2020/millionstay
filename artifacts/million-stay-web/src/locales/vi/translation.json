@@ -2676,7 +2676,9 @@
     "type_col_price": "Giá bán",
     "type_col_deposit": "Tiền cọc",
     "type_col_rent": "Tiền thuê hàng tháng",
-    "type_col_available": "Còn trống"
+    "type_col_available": "Còn trống",
+    "type_col_kind": "Bố cục",
+    "type_col_contract": "Diện tích hợp đồng"
   },
   "portalLogin": {
     "eyebrow": "Cổng đối tác",

@@ -73,20 +73,33 @@ function upsertMeta(name: string, value: string | null) {
   el.setAttribute("content", value);
 }
 
-// Apply CMS-managed SEO (title + meta description/keywords) to the document
-// head. Falls back to the provided title when the CMS has no seo_title. The
-// page calling this is the parent of HomestayLayout, so this effect runs after
-// the layout's own title effect and wins.
-export function useHomestaySeo(pageKey: string, opts: { titleFallback?: string } = {}): void {
+/**
+ * Apply a page's CMS-managed SEO (title + meta description/keywords) to the
+ * document head, falling back to the page's own title when the CMS has no
+ * seo_title. Runs after the layout's title effect, so it wins.
+ *
+ * `brand` is appended to the fallback title only — a seo_title authored in the
+ * CMS is used verbatim, because an editor writing one has already decided how
+ * the whole tag should read.
+ */
+export function usePageSeo(
+  pageKey: string,
+  opts: { titleFallback?: string; brand?: string } = {},
+): void {
   const { seo_title, seo_description, seo_keywords } = usePageContentData(pageKey);
-  const { titleFallback } = opts;
+  const { titleFallback, brand } = opts;
 
   useEffect(() => {
-    const title = (seo_title && seo_title.trim())
-      ? seo_title.trim()
-      : (titleFallback ? `${titleFallback} — Million Homestay` : null);
+    const authored = seo_title?.trim();
+    const fallback = titleFallback ? (brand ? `${titleFallback} — ${brand}` : titleFallback) : null;
+    const title = authored || fallback;
     if (title) document.title = title;
     upsertMeta("description", seo_description);
     upsertMeta("keywords", seo_keywords);
-  }, [seo_title, seo_description, seo_keywords, titleFallback]);
+  }, [seo_title, seo_description, seo_keywords, titleFallback, brand]);
+}
+
+/** Homestay pages keep their existing call shape. */
+export function useHomestaySeo(pageKey: string, opts: { titleFallback?: string } = {}): void {
+  usePageSeo(pageKey, { ...opts, brand: "Million Homestay" });
 }
