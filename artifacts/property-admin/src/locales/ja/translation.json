@@ -5933,6 +5933,14 @@
     "site_host": "公開アドレス",
     "site_locales": "言語",
     "site_default_locale": "既定の言語",
-    "site_active": "使用中"
+    "site_active": "使用中",
+    "site_domain_auto_hint": "アドレスを保存すると自動でホスティングに登録されます。ダッシュボードでの操作は不要で、証明書の発行に数分かかります。",
+    "domain_verified": "アドレスは正常に動作しています",
+    "domain_pending": "DNS 待ち — アドレスは登録済みですが、まだ接続されていません",
+    "domain_add_record": "ドメイン事業者で次の DNS レコードを追加してください：",
+    "domain_platform": "標準提供のアドレスのため設定は不要です",
+    "domain_error": "アドレスを確認できませんでした",
+    "page_search": "検索",
+    "page_search_desc": "検索画面の上部見出しと画像"
   }
 }

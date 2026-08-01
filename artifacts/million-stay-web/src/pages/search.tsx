@@ -8,6 +8,7 @@ import { Navbar } from "@/components/navbar";
 import { SpaceCard } from "@/components/space-card";
 import { Footer } from "@/components/footer";
 import { DevNavbar, DevFooter } from "@/components/development/DevLayout";
+import { usePageContent } from "@/lib/usePageContent";
 import { isDevelopmentSite } from "@/lib/site-mode";
 import { Slider } from "@/components/ui/slider";
 import {
@@ -30,9 +31,14 @@ const today = new Date().toISOString().split("T")[0];
 // and navy footer — so the header, mobile menu and footer read identically to
 // the main landing page. Standard instances keep the MillionStay Navbar/Footer.
 const DEV_SITE = isDevelopmentSite();
+// The search screen is functional UI (filters, results, map) so it is not a CMS
+// block page — but its hero copy and image ARE editable in the admin under
+// CMS -> Pages -> Search, overlaid on the i18n defaults like the other pages.
+const SEARCH_PAGE_KEY = DEV_SITE ? "dev-search" : "search";
 
 export default function Search() {
   const { t } = useTranslation();
+  const pc = usePageContent(SEARCH_PAGE_KEY);
 
   // Room-type tabs (header, immediate apply). Single source of truth now that the
   // duplicate Room Type block was removed from the advanced filter panel.
@@ -196,11 +202,11 @@ export default function Search() {
 
       {/* ── Hero Banner ── */}
       <div className="relative h-52 md:h-60 overflow-hidden shrink-0">
-        <img src={heroBg} alt={t("search.search")} className="absolute inset-0 w-full h-full object-cover object-center" />
+        <img src={pc("hero_image_url", heroBg)} alt={t("search.search")} className="absolute inset-0 w-full h-full object-cover object-center" />
         <div className="absolute inset-0 bg-gradient-to-b from-black/55 via-black/30 to-black/55" />
         <div className="absolute inset-0 flex flex-col items-start justify-end px-8 pb-8 max-w-7xl mx-auto w-full">
-          <p className="font-cursive text-white/80 text-lg italic mb-1">{t("search.hero_tagline")}</p>
-          <h1 className="text-3xl md:text-4xl font-bold text-white italic">{t("search.hero_title")}</h1>
+          <p className="font-cursive text-white/80 text-lg italic mb-1">{pc("hero_tagline", t("search.hero_tagline"))}</p>
+          <h1 className="text-3xl md:text-4xl font-bold text-white italic">{pc("hero_title", t("search.hero_title"))}</h1>
         </div>
       </div>
 

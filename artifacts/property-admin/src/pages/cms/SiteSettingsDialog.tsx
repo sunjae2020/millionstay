@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Loader2, Save } from "lucide-react";
+import { Loader2, Save, CheckCircle2, AlertTriangle, Clock } from "lucide-react";
 import { apiFetch } from "@/lib/apiFetch";
 import { useToast } from "@/hooks/use-toast";
 import type { CmsSite } from "./useCmsSites";
@@ -18,6 +18,75 @@ import type { CmsSite } from "./useCmsSites";
 // hardcoded brand or domain would be wrong on every instance but one.
 
 const ALL_LOCALES = ["en", "ko", "ja", "zh", "th", "vi"] as const;
+
+interface DomainState {
+  host: string;
+  state: "unconfigured" | "platform" | "verified" | "pending" | "error";
+  records?: { type: string; domain: string; value: string }[];
+  message?: string;
+}
+
+/**
+ * Live certificate/DNS state for a site's saved address. Saving a custom
+ * address registers it automatically; this says whether it is actually serving
+ * yet, and when it is not, prints the exact DNS record still missing — the one
+ * thing an operator needs and cannot guess.
+ */
+function DomainStatus({ siteKey, host }: { siteKey: string; host: string | null }) {
+  const { t } = useTranslation();
+  const { data } = useQuery<DomainState>({
+    queryKey: ["cms-site-domain", siteKey, host],
+    queryFn: async () => {
+      const res = await apiFetch(`/api/v1/cms/sites/${siteKey}/domain`);
+      if (!res.ok) throw new Error("Failed to check domain");
+      return res.json();
+    },
+    enabled: Boolean(host),
+    // Provisioning is async on Vercel's side; re-check while it is pending.
+    refetchInterval: (query) => (query.state.data?.state === "pending" ? 10_000 : false),
+    retry: false,
+  });
+
+  if (!host || !data || data.state === "unconfigured") return null;
+
+  if (data.state === "platform") {
+    return <p className="text-[11px] text-muted-foreground mt-1">{t("cms.domain_platform")}</p>;
+  }
+  if (data.state === "verified") {
+    return (
+      <p className="text-[11px] text-green-700 mt-1 flex items-center gap-1">
+        <CheckCircle2 className="h-3 w-3" />
+        {t("cms.domain_verified")}
+      </p>
+    );
+  }
+  if (data.state === "error") {
+    return (
+      <p className="text-[11px] text-destructive mt-1 flex items-center gap-1">
+        <AlertTriangle className="h-3 w-3" />
+        {data.message ?? t("cms.domain_error")}
+      </p>
+    );
+  }
+  return (
+    <div className="mt-1">
+      <p className="text-[11px] text-amber-700 flex items-center gap-1">
+        <Clock className="h-3 w-3" />
+        {t("cms.domain_pending")}
+      </p>
+      {data.records && data.records.length > 0 && (
+        <div className="mt-1 rounded-md bg-muted/40 p-2 space-y-0.5">
+          <p className="text-[11px] text-muted-foreground">{t("cms.domain_add_record")}</p>
+          {data.records.map((record, index) => (
+            <p key={index} className="text-[11px] font-mono break-all">
+              {record.type} {record.domain} → {record.value}
+            </p>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
 
 export function SiteSettingsDialog({
   open,
@@ -88,6 +157,7 @@ export function SiteSettingsDialog({
         </DialogHeader>
 
         <p className="text-xs text-muted-foreground">{t("cms.site_settings_hint")}</p>
+        <p className="text-xs text-muted-foreground">{t("cms.site_domain_auto_hint")}</p>
 
         {isLoading ? (
           <div className="p-8 flex justify-center">
@@ -125,9 +195,10 @@ export function SiteSettingsDialog({
                       <Label className="text-xs">{t("cms.site_host")}</Label>
                       <Input
                         value={draft.host ?? ""}
-                        placeholder="https://example.com"
+                        placeholder="example.com"
                         onChange={(e) => patch(site.site_key, { host: e.target.value })}
                       />
+                      <DomainStatus siteKey={site.site_key} host={site.host} />
                     </div>
                   </div>
 

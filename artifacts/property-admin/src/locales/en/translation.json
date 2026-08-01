@@ -5933,6 +5933,14 @@
     "site_host": "Public address",
     "site_locales": "Languages",
     "site_default_locale": "Default language",
-    "site_active": "In use"
+    "site_active": "In use",
+    "site_domain_auto_hint": "Save a custom address and it is set up on the hosting automatically — no dashboard step. The certificate takes a few minutes.",
+    "domain_verified": "Address is live",
+    "domain_pending": "Waiting for DNS — the address is registered but not serving yet",
+    "domain_add_record": "Add this DNS record at your domain provider:",
+    "domain_platform": "Built-in hosting address — nothing to set up",
+    "domain_error": "Could not check this address",
+    "page_search": "Search",
+    "page_search_desc": "Search screen hero heading and image"
   }
 }

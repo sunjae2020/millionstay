@@ -163,6 +163,14 @@ gates it, so keep it green. Two notable classes were fixed:
   from the hardcoded React sections + `page_contents` overlay, and only pages an
   editor flips to `blocks` are drawn by `<BlockRenderer>`. Each site (`www` /
   `homestay` / `dev`) has its own pages, blog (`blog_posts.site_key`) and tokens.
+  **Site name, public address and palette are TENANT data, never literals in
+  code or a migration** — `cms_sites`/`cms_site_settings` ship blank and
+  `scripts/seed-cms-sites.mjs <tenant> --apply` fills them from
+  `tenants/<name>/config.env` (admins can also edit them in CMS → Pages → site
+  settings). Saving a custom address auto-registers it on the tenant's Vercel
+  web project (`VERCEL_TOKEN` + **`VERCEL_WEB_PROJECT_ID`** + `VERCEL_TEAM_ID`
+  on the API host; provisioning stays inert without them rather than defaulting
+  to another tenant's project).
   See [docs/proposals/WEBSITE_CMS_BLOCK_BUILDER.md](docs/proposals/WEBSITE_CMS_BLOCK_BUILDER.md).
 - **Postal addresses follow the address's own country (UPU S42), not the reader's.**
   Compose every address — API and apps alike — with `formatPostalAddress(parts, lang)`

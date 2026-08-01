@@ -264,6 +264,13 @@ const PAGE_FIELDS: Record<string, SectionField[]> = {
     { key: "news_3_image", label: "News 3 — Image URL", type: "image" },
     { key: "news_3_link", label: "News 3 — Link URL (optional)", type: "text" },
   ],
+  // The search screen is functional UI (filters, results, map) built in code —
+  // only its hero is content-managed, so these are the only fields it has.
+  "dev-search": [
+    { key: "hero_title", label: "Hero Title", type: "text", hint: "Leave empty to keep the built-in wording." },
+    { key: "hero_tagline", label: "Hero Tagline", type: "text" },
+    { key: "hero_image_url", label: "Hero Background Image", type: "image" },
+  ],
   "dev-about": [
     { key: "hero_image_url", label: "Hero Background Image URL", type: "image" },
     { key: "eyebrow", label: "Hero Eyebrow", type: "text" },

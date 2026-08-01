@@ -5933,6 +5933,14 @@
     "site_host": "공개 주소",
     "site_locales": "언어",
     "site_default_locale": "기본 언어",
-    "site_active": "사용 중"
+    "site_active": "사용 중",
+    "site_domain_auto_hint": "주소를 저장하면 호스팅에 자동으로 등록됩니다. 대시보드에서 따로 할 일은 없고, 인증서 발급에 몇 분 걸립니다.",
+    "domain_verified": "주소가 정상 동작합니다",
+    "domain_pending": "DNS 대기 중 — 주소는 등록됐지만 아직 연결되지 않았습니다",
+    "domain_add_record": "도메인 업체에서 아래 DNS 레코드를 추가하세요:",
+    "domain_platform": "기본 제공 주소라 별도 설정이 필요 없습니다",
+    "domain_error": "주소를 확인하지 못했습니다",
+    "page_search": "검색",
+    "page_search_desc": "검색 화면 상단 문구와 이미지"
   }
 }

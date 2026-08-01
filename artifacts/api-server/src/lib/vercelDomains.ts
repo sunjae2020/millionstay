@@ -28,7 +28,12 @@ function fqdn(slug: string): string {
 
 async function vercelFetch(path: string, init: RequestInit): Promise<Response> {
   const sep = path.includes("?") ? "&" : "?";
-  const url = `https://api.vercel.com${path}${sep}teamId=${VERCEL_TEAM_ID}`;
+  // The team can be given as an id (team_…) or as the slug shown by the CLI;
+  // Vercel takes them under different query names.
+  const scope = VERCEL_TEAM_ID.startsWith("team_")
+    ? `teamId=${VERCEL_TEAM_ID}`
+    : `slug=${encodeURIComponent(VERCEL_TEAM_ID)}`;
+  const url = `https://api.vercel.com${path}${sep}${scope}`;
   const ctrl = new AbortController();
   const timer = setTimeout(() => ctrl.abort(), 10_000);
   try {
@@ -113,4 +118,139 @@ export async function syncOwnerSubdomain(opts: {
     // Moved to draft (or created as draft) — make sure it isn't live.
     await unregisterOwnerSubdomain(slug);
   }
+}
+
+
+// ── CMS site domains ───────────────────────────────────────────────────────
+//
+// Setting a public address on a site (CMS -> Pages -> site settings) registers
+// that hostname on the tenant's web project, so Vercel issues its certificate
+// automatically instead of someone doing it by hand in the dashboard. Same
+// mechanism as the owner subdomains above, but the caller supplies a full
+// hostname rather than a slug.
+//
+// The target project is REQUIRED to be explicit. VERCEL_PROJECT_ID above falls
+// back to the millionstay-web project so owner subdomains keep working on the
+// primary instance — but silently inheriting that default here would register a
+// second tenant's domain on MillionStay's project. So site-domain provisioning
+// needs its own env and stays inert (with a clear message) when it is unset.
+
+const SITE_PROJECT_ID = process.env["VERCEL_WEB_PROJECT_ID"] ?? "";
+
+/** Strip scheme/path/port and lowercase — site settings accept a pasted URL. */
+export function normaliseHostname(input: string | null | undefined): string {
+  if (!input) return "";
+  return String(input)
+    .trim()
+    .replace(/^https?:\/\//i, "")
+    .replace(/[/?#].*$/, "")
+    .replace(/:\d+$/, "")
+    .toLowerCase();
+}
+
+/**
+ * Vercel's own preview hostnames are assigned by the platform and cannot be
+ * added as project domains — trying returns 403 and would only produce noise.
+ */
+export function isPlatformHostname(host: string): boolean {
+  return host.endsWith(".vercel.app") || host === "localhost";
+}
+
+/** Why site-domain provisioning cannot run right now, or "" when it can. */
+function siteProvisioningIssue(): string {
+  if (!VERCEL_TOKEN) return "VERCEL_TOKEN not set";
+  if (!SITE_PROJECT_ID) return "VERCEL_WEB_PROJECT_ID not set";
+  return "";
+}
+
+export interface DomainStatus {
+  host: string;
+  /** "unconfigured" when there is no token/host to check. */
+  state: "unconfigured" | "platform" | "verified" | "pending" | "error";
+  /** DNS records the operator must add, when Vercel says the domain is pending. */
+  records?: { type: string; domain: string; value: string }[];
+  message?: string;
+}
+
+/** Register `host` on the web project. Idempotent; never throws. */
+export async function registerSiteDomain(host: string): Promise<DomainStatus> {
+  const name = normaliseHostname(host);
+  if (!name) return { host: "", state: "unconfigured" };
+  if (isPlatformHostname(name)) return { host: name, state: "platform" };
+  const guard = siteProvisioningIssue();
+  if (guard) {
+    console.warn(`[vercel] ${guard} — skipping domain register for ${name}`);
+    return { host: name, state: "unconfigured", message: guard };
+  }
+  try {
+    const res = await vercelFetch(`/v10/projects/${SITE_PROJECT_ID}/domains`, {
+      method: "POST",
+      body: JSON.stringify({ name }),
+    });
+    const body: any = await res.json().catch(() => ({}));
+    if (res.ok) {
+      console.log(`[vercel] registered site domain ${name}`);
+      return await getSiteDomainStatus(name);
+    }
+    const code = body?.error?.code;
+    if (res.status === 409 || code === "domain_already_in_use" || code === "domain_already_exists") {
+      return await getSiteDomainStatus(name);
+    }
+    console.error(`[vercel] site domain register failed for ${name}: ${res.status} ${JSON.stringify(body?.error ?? body)}`);
+    return { host: name, state: "error", message: body?.error?.message ?? `HTTP ${res.status}` };
+  } catch (err) {
+    console.error(`[vercel] site domain register error for ${name}:`, err);
+    return { host: name, state: "error", message: err instanceof Error ? err.message : "failed" };
+  }
+}
+
+/** Remove `host` from the web project (called when the address changes). */
+export async function unregisterSiteDomain(host: string): Promise<void> {
+  const name = normaliseHostname(host);
+  if (!name || isPlatformHostname(name) || siteProvisioningIssue()) return;
+  try {
+    const res = await vercelFetch(`/v9/projects/${SITE_PROJECT_ID}/domains/${name}`, { method: "DELETE" });
+    if (!res.ok && res.status !== 404) {
+      console.error(`[vercel] site domain remove failed for ${name}: ${res.status}`);
+    }
+  } catch (err) {
+    console.error(`[vercel] site domain remove error for ${name}:`, err);
+  }
+}
+
+/**
+ * Whether the domain is live, and if not, exactly which DNS record is missing —
+ * so the admin can show the operator what to add rather than "not working".
+ */
+export async function getSiteDomainStatus(host: string): Promise<DomainStatus> {
+  const name = normaliseHostname(host);
+  if (!name) return { host: "", state: "unconfigured" };
+  if (isPlatformHostname(name)) return { host: name, state: "platform" };
+  const guard = siteProvisioningIssue();
+  if (guard) return { host: name, state: "unconfigured", message: guard };
+  try {
+    const res = await vercelFetch(`/v9/projects/${SITE_PROJECT_ID}/domains/${name}`, { method: "GET" });
+    if (res.status === 404) {
+      return { host: name, state: "pending", message: "not registered" };
+    }
+    const body: any = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      return { host: name, state: "error", message: body?.error?.message ?? `HTTP ${res.status}` };
+    }
+    if (body?.verified) return { host: name, state: "verified" };
+    const records = Array.isArray(body?.verification)
+      ? body.verification.map((v: any) => ({ type: v.type, domain: v.domain, value: v.value }))
+      : [];
+    return { host: name, state: "pending", records };
+  } catch (err) {
+    return { host: name, state: "error", message: err instanceof Error ? err.message : "failed" };
+  }
+}
+
+/** Reconcile after a site's address is edited. Fire-and-forget. */
+export async function syncSiteDomain(host: string, previousHost?: string | null): Promise<void> {
+  const next = normaliseHostname(host);
+  const prev = normaliseHostname(previousHost);
+  if (prev && prev !== next) await unregisterSiteDomain(prev);
+  if (next) await registerSiteDomain(next);
 }

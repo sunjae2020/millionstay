@@ -5933,6 +5933,14 @@
     "site_host": "公开地址",
     "site_locales": "语言",
     "site_default_locale": "默认语言",
-    "site_active": "使用中"
+    "site_active": "使用中",
+    "site_domain_auto_hint": "保存地址后会自动注册到托管平台，无需在控制台另行操作；证书签发需要几分钟。",
+    "domain_verified": "地址已正常访问",
+    "domain_pending": "等待 DNS — 地址已注册，但尚未生效",
+    "domain_add_record": "请在域名服务商处添加以下 DNS 记录：",
+    "domain_platform": "平台自带地址，无需设置",
+    "domain_error": "无法检查该地址",
+    "page_search": "搜索",
+    "page_search_desc": "搜索页顶部标题与图片"
   }
 }

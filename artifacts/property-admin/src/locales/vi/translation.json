@@ -5933,6 +5933,14 @@
     "site_host": "Địa chỉ công khai",
     "site_locales": "Ngôn ngữ",
     "site_default_locale": "Ngôn ngữ mặc định",
-    "site_active": "Đang dùng"
+    "site_active": "Đang dùng",
+    "site_domain_auto_hint": "Lưu địa chỉ là hệ thống tự đăng ký với dịch vụ lưu trữ, không cần thao tác thêm; chứng chỉ mất vài phút.",
+    "domain_verified": "Địa chỉ đã hoạt động",
+    "domain_pending": "Đang chờ DNS — địa chỉ đã đăng ký nhưng chưa hoạt động",
+    "domain_add_record": "Thêm bản ghi DNS sau tại nhà cung cấp tên miền:",
+    "domain_platform": "Địa chỉ có sẵn, không cần thiết lập",
+    "domain_error": "Không kiểm tra được địa chỉ này",
+    "page_search": "Tìm kiếm",
+    "page_search_desc": "Tiêu đề và ảnh đầu trang tìm kiếm"
   }
 }

@@ -23,6 +23,7 @@ import {
   type TextRef,
 } from "@workspace/cms-blocks";
 import { makeBulkDelete, makeBulkRestore, deletedFilter } from "../lib/softDelete.js";
+import { syncSiteDomain, getSiteDomainStatus, normaliseHostname } from "../lib/vercelDomains.js";
 import { getAnthropic, isChatConfigured, CHAT_MODEL, ChatConfigError } from "../lib/chat/anthropic.js";
 
 // ---------------------------------------------------------------------------
@@ -64,16 +65,51 @@ router.put("/v1/cms/sites/:siteKey", async (req, res): Promise<void> => {
     res.status(400).json({ error: "Invalid body", details: parsed.error.issues });
     return;
   }
-  const [row] = await db
-    .update(cmsSitesTable)
-    .set(parsed.data)
-    .where(eq(cmsSitesTable.site_key, String(req.params["siteKey"])))
-    .returning();
-  if (!row) {
+  const siteKey = String(req.params["siteKey"]);
+  const [before] = await db.select().from(cmsSitesTable).where(eq(cmsSitesTable.site_key, siteKey));
+  if (!before) {
     res.status(404).json({ error: "Site not found" });
     return;
   }
+
+  const patch = { ...parsed.data };
+  // Accept a pasted URL but store the bare hostname, so the same value can be
+  // handed straight to certificate provisioning below.
+  if (typeof patch.host === "string") patch.host = normaliseHostname(patch.host) || null;
+
+  const [row] = await db
+    .update(cmsSitesTable)
+    .set(patch)
+    .where(eq(cmsSitesTable.site_key, siteKey))
+    .returning();
+
+  // A custom address is provisioned on the web project automatically, so nobody
+  // has to add it in the Vercel dashboard by hand. Not awaited: a provisioning
+  // hiccup must not fail the save, and the dialog polls the status endpoint for
+  // the outcome.
+  if (typeof patch.host !== "undefined" && patch.host !== before.host) {
+    void syncSiteDomain(patch.host ?? "", before.host).catch((err) =>
+      console.error("[cms] domain sync failed:", err),
+    );
+  }
+
   res.json(row);
+});
+
+/**
+ * Whether this site's address is serving yet — and if not, the exact DNS record
+ * still missing, so the admin can show what to add instead of "not working".
+ */
+router.get("/v1/cms/sites/:siteKey/domain", async (req, res): Promise<void> => {
+  const [site] = await db
+    .select()
+    .from(cmsSitesTable)
+    .where(eq(cmsSitesTable.site_key, String(req.params["siteKey"])));
+  if (!site) {
+    res.status(404).json({ error: "Site not found" });
+    return;
+  }
+  res.json(await getSiteDomainStatus(site.host ?? ""));
 });
 
 // ── Block registry ─────────────────────────────────────────────────────────
