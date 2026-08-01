@@ -15,7 +15,7 @@ import { apiFetch } from "@/lib/apiFetch";
 import { formatDate } from "@/lib/date";
 import { DataTable, type ColumnDef } from "@/components/ui/data-table";
 import { useToast } from "@/hooks/use-toast";
-import { useCmsSites } from "./useCmsSites";
+import { useCmsSites, pageDisplayTitle } from "./useCmsSites";
 import { SiteSettingsDialog } from "./SiteSettingsDialog";
 
 // The CMS pages register. Every public page of every site lives here; the
@@ -23,6 +23,7 @@ import { SiteSettingsDialog } from "./SiteSettingsDialog";
 
 interface LocaleSummary {
   locale: string;
+  title?: string | null;
   status: string;
   blocks: number;
 }
@@ -48,7 +49,7 @@ const STATUS_COLORS: Record<string, string> = {
 };
 
 export default function CmsPagesList() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const qc = useQueryClient();
   const { toast } = useToast();
   const [, navigate] = useLocation();
@@ -109,7 +110,7 @@ export default function CmsPagesList() {
         cell: (page) => (
           <div className="font-medium">
             <Link href={`/cms/pages/${page.id}`} className="text-primary hover:underline line-clamp-1">
-              {page.title || page.slug || t("cms.untitled")}
+              {pageDisplayTitle(page, i18n.language) || t("cms.untitled")}
             </Link>
             <p className="text-xs text-muted-foreground mt-0.5">
               /{page.slug}

@@ -16,7 +16,7 @@ import {
   Tag,
 } from "lucide-react";
 import { apiFetch } from "@/lib/apiFetch";
-import { useCmsSites } from "./useCmsSites";
+import { useCmsSites, pageDisplayTitle } from "./useCmsSites";
 
 // The CMS content tree — every site's pages, blog and blog categories in one
 // column, so content is navigated where it lives instead of through separate
@@ -27,13 +27,14 @@ interface TreePage {
   site_key: string;
   slug: string;
   title: string | null;
+  locales?: { locale: string; title?: string | null }[];
   status: string;
   is_home: boolean;
   legacy_page_key: string | null;
 }
 
 export function CmsContentTree({ onCreatePage }: { onCreatePage: (siteKey: string) => void }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [location] = useLocation();
   const { sites } = useCmsSites();
   const [search, setSearch] = useState("");
@@ -52,7 +53,8 @@ export function CmsContentTree({ onCreatePage }: { onCreatePage: (siteKey: strin
     const q = search.trim().toLowerCase();
     const map = new Map<string, TreePage[]>();
     for (const page of pages) {
-      if (q && !`${page.title ?? ""} ${page.slug}`.toLowerCase().includes(q)) continue;
+      const label = `${page.title ?? ""} ${(page.locales ?? []).map((l) => l.title ?? "").join(" ")} ${page.slug}`;
+      if (q && !label.toLowerCase().includes(q)) continue;
       const list = map.get(page.site_key) ?? [];
       list.push(page);
       map.set(page.site_key, list);
@@ -119,7 +121,7 @@ export function CmsContentTree({ onCreatePage }: { onCreatePage: (siteKey: strin
                       href={`/cms/pages/${page.id}`}
                       active={location === `/cms/pages/${page.id}`}
                       icon={<FileText className="h-3.5 w-3.5" />}
-                      label={page.title || page.slug || t("cms.untitled")}
+                      label={pageDisplayTitle(page, i18n.language) || t("cms.untitled")}
                       muted={page.status !== "Published"}
                       // A built-in page is a code route: its address cannot move.
                       trailing={page.legacy_page_key ? <Lock className="h-3 w-3 opacity-40" /> : null}

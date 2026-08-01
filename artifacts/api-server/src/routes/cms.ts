@@ -301,6 +301,7 @@ router.get("/v1/cms/pages", async (req, res): Promise<void> => {
     .select({
       page_id: cmsPageTranslationsTable.page_id,
       locale: cmsPageTranslationsTable.locale,
+      title: cmsPageTranslationsTable.title,
       status: cmsPageTranslationsTable.status,
       body_json: cmsPageTranslationsTable.body_json,
       updated_at: cmsPageTranslationsTable.updated_at,
@@ -308,11 +309,12 @@ router.get("/v1/cms/pages", async (req, res): Promise<void> => {
     .from(cmsPageTranslationsTable)
     .where(inArray(cmsPageTranslationsTable.page_id, pages.map((p) => p.id)));
 
-  const byPage = new Map<number, { locale: string; status: string; blocks: number }[]>();
+  const byPage = new Map<number, { locale: string; title: string | null; status: string; blocks: number }[]>();
   for (const t of translations) {
     const list = byPage.get(t.page_id) ?? [];
     list.push({
       locale: t.locale,
+      title: t.title,
       status: t.status,
       blocks: countBlocks(normaliseBody(t.body_json).blocks),
     });

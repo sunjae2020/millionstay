@@ -52,3 +52,17 @@ export function useCmsSites(options: { includeInactive?: boolean } = {}) {
 
   return { sites, siteKey, setSiteKey, activeSite, isLoading };
 }
+
+/**
+ * A page's name in the language the admin is being read in, falling back to the
+ * page's own title. A Korean-speaking editor should not have to read "For
+ * Owners" for a page called 소유주 안내.
+ */
+export function pageDisplayTitle(
+  page: { title: string | null; slug: string; locales?: { locale: string; title?: string | null }[] },
+  uiLanguage: string,
+): string {
+  const lang = (uiLanguage || "en").split("-")[0];
+  const localised = page.locales?.find((l) => l.locale === lang)?.title?.trim();
+  return localised || page.title?.trim() || page.slug;
+}
