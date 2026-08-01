@@ -31,9 +31,15 @@ function matchSupported(tag: string | undefined | null): string | null {
   return SUPPORTED_LANGS.find((l) => l === base) ?? null;
 }
 
+// Per-instance default language. A tenant serving one country should open in
+// that country's language rather than English — Metheim sells in Yeosu, so its
+// visitors get Korean unless their device says otherwise.
+const DEFAULT_LANG =
+  matchSupported(import.meta.env["VITE_DEFAULT_LANG"] ?? "") ?? "en";
+
 // First visit → follow the device/OS language (navigator.languages, in
-// preference order). Once the user picks a language manually it's saved to
-// localStorage and that choice wins on every later visit.
+// preference order), falling back to the instance default. Once the user picks
+// a language manually it's saved to localStorage and wins on every later visit.
 function getInitialLanguage(): string {
   const saved = localStorage.getItem("ms_language");
   if (saved && (SUPPORTED_LANGS as readonly string[]).includes(saved)) return saved;
@@ -46,7 +52,7 @@ function getInitialLanguage(): string {
     const match = matchSupported(tag);
     if (match) return match;
   }
-  return "en";
+  return DEFAULT_LANG;
 }
 
 const savedLanguage = getInitialLanguage();
@@ -56,7 +62,8 @@ i18n
   .init({
     resources,
     lng: savedLanguage,
-    fallbackLng: "en",
+    // Missing keys fall back to the instance language, then English.
+    fallbackLng: DEFAULT_LANG === "en" ? "en" : [DEFAULT_LANG, "en"],
     interpolation: {
       escapeValue: false,
       // White-label: translation strings use {{appName}} instead of a hardcoded
