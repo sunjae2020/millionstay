@@ -32,7 +32,7 @@ export default function DevBuy() {
   const preview = listings.slice(0, PREVIEW_COUNT);
 
   return (
-    <DevLayout title={t("dev.buy.hero_title")} pageKey="dev-buy">
+    <DevLayout title={t("dev.buy.hero_title")} pageKey="dev-buy" slug="buy">
       {/* Hero */}
       <section className="bg-[hsl(var(--brand-navy))] dev-tex-units text-white">
         <div className="max-w-7xl mx-auto px-6 py-16 md:py-24">

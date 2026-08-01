@@ -22,7 +22,7 @@ export interface CmsPageData {
  * case during the migration, and the caller keeps its existing hardcoded
  * rendering. Only pages an editor has flipped to block mode return content.
  */
-export function useCmsPage(siteKey: string, slug: string): CmsPageData | null {
+export function useCmsPage(siteKey: string, slug: string | undefined): CmsPageData | null {
   const { i18n } = useTranslation();
   const lang = (i18n.language || "en").split("-")[0];
 
@@ -46,6 +46,8 @@ export function useCmsPage(siteKey: string, slug: string): CmsPageData | null {
         return null;
       }
     },
+    // A page that never opted in has no slug to look up — skip the request.
+    enabled: slug !== undefined,
     staleTime: 5 * 60 * 1000,
     retry: false,
   });

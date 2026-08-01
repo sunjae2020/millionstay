@@ -22,7 +22,7 @@ export default function DevStayPlan() {
   ];
 
   return (
-    <DevLayout title={t("dev.stayplan.hero_title")} pageKey="dev-stayplan">
+    <DevLayout title={t("dev.stayplan.hero_title")} pageKey="dev-stayplan" slug="stayplan">
       {/* Hero */}
       <section className="bg-[hsl(var(--brand-navy))] dev-tex-units text-white">
         <div className="max-w-7xl mx-auto px-6 py-16 md:py-24">

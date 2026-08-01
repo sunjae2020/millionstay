@@ -21,7 +21,7 @@ export default function DevForOwner() {
   const pc = usePageContent("dev-owner");
 
   return (
-    <DevLayout title={t("dev.owner.hero_title")} pageKey="dev-owner">
+    <DevLayout title={t("dev.owner.hero_title")} pageKey="dev-owner" slug="owner">
       {/* Hero */}
       <section className="bg-[hsl(var(--brand-navy))] dev-tex-units text-white">
         <div className="max-w-7xl mx-auto px-6 py-16 md:py-24">

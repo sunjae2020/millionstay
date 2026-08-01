@@ -37,7 +37,7 @@ export default function DevRent() {
   }));
 
   return (
-    <DevLayout title={t("dev.rent.hero_title")} pageKey="dev-rent">
+    <DevLayout title={t("dev.rent.hero_title")} pageKey="dev-rent" slug="rent">
       {/* Hero */}
       <section className="bg-[hsl(var(--brand-navy))] dev-tex-units text-white">
         <div className="max-w-7xl mx-auto px-6 py-16 md:py-24">

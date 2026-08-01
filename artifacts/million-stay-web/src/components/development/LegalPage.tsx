@@ -13,6 +13,9 @@ import { useCompanyContact } from "@/lib/guest-api";
 const MAX_SECTIONS = 12;
 
 export function LegalPage({ pageKey, ns }: { pageKey: "dev-privacy" | "dev-terms"; ns: "privacy" | "terms" }) {
+  // The CMS slug matches the namespace ("privacy" / "terms"), so publishing a
+  // block version of either page replaces the sections below.
+  const slug = ns;
   const { t } = useTranslation();
   const pc = usePageContent(pageKey);
   const company = usePageContent("dev-footer");
@@ -41,7 +44,7 @@ export function LegalPage({ pageKey, ns }: { pageKey: "dev-privacy" | "dev-terms
   const info = infoAll.filter(([, v]) => v);
 
   return (
-    <DevLayout title={pc("title", t(`dev.${ns}.title`))}>
+    <DevLayout title={pc("title", t(`dev.${ns}.title`))} pageKey={pageKey} slug={slug}>
       {/* Header */}
       <section className="bg-[hsl(var(--brand-navy))] text-white">
         <div className="max-w-3xl mx-auto px-6 py-14 md:py-20">

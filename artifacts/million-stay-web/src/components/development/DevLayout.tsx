@@ -13,6 +13,9 @@ import { useAuthStore } from "@/lib/store";
 import { getApiBase } from "@/lib/api-base";
 import { flagIsoFor } from "@/lib/flagOverrides";
 import { usePageContent, usePageSeo } from "@/lib/usePageContent";
+import { useCmsPage } from "@/lib/useCmsPage";
+import { useCmsBlockData } from "@/lib/useCmsBlockData";
+import { BlockRenderer } from "@workspace/cms-blocks/react";
 import { useCompanyContact } from "@/lib/guest-api";
 
 // Dedicated shell for the single-building "development" site (Metheim). Four top
@@ -374,6 +377,7 @@ export function DevLayout({
   children,
   title,
   pageKey,
+  slug,
 }: {
   children: ReactNode;
   title?: string;
@@ -383,6 +387,13 @@ export function DevLayout({
    * in the admin rather than in code. Without it the page keeps its own title.
    */
   pageKey?: string;
+  /**
+   * The page's CMS slug ("" for home). When an editor publishes a BLOCK version
+   * of that page, this layout renders the block tree instead of `children` —
+   * which is how a page moves off its built-in design without a deploy. Until
+   * then nothing changes, so passing this is safe on every page.
+   */
+  slug?: string;
 }) {
   const [location] = useLocation();
 
@@ -393,6 +404,12 @@ export function DevLayout({
   // Runs after the effect above, so an authored seo_title wins over the title
   // prop while an unset one leaves the prop's value in place.
   usePageSeo(pageKey ?? "", { titleFallback: title, brand: APP_NAME });
+
+  // A published block version replaces the built-in page body. `useCmsPage`
+  // returns null while the page is still on its original design, and the hooks
+  // below run unconditionally either way.
+  const cmsPage = useCmsPage("dev", slug);
+  const cmsData = useCmsBlockData(cmsPage?.blocks ?? [], "dev");
 
   // Scroll to #hash target on navigation (long-term / anchored sections), else top.
   useEffect(() => {
@@ -411,7 +428,9 @@ export function DevLayout({
   return (
     <div className="min-h-screen flex flex-col bg-white text-gray-800">
       <DevNavbar />
-      <main className="flex-1">{children}</main>
+      <main className="flex-1">
+        {cmsPage ? <BlockRenderer blocks={cmsPage.blocks} tokens={cmsPage.tokens} data={cmsData} /> : children}
+      </main>
       <DevFooter />
     </div>
   );

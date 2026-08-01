@@ -108,7 +108,7 @@ export default function DevManagement() {
   }));
 
   return (
-    <DevLayout title={t("dev.mgmt.hero_title")} pageKey="dev-manage">
+    <DevLayout title={t("dev.mgmt.hero_title")} pageKey="dev-manage" slug="manage">
       {/* Hero */}
       <section className="bg-[hsl(var(--brand-navy))] dev-tex-units text-white">
         <div className="max-w-7xl mx-auto px-6 py-16 md:py-24">
