@@ -73,6 +73,31 @@ function upsertMeta(name: string, value: string | null) {
   el.setAttribute("content", value);
 }
 
+/** Open Graph uses `property=`, not `name=` — a `name` tag is ignored by scrapers. */
+function upsertMetaProperty(property: string, value: string | null) {
+  if (typeof document === "undefined") return;
+  if (!value || !value.trim()) return;
+  let el = document.head.querySelector<HTMLMetaElement>(`meta[property="${property}"]`);
+  if (!el) {
+    el = document.createElement("meta");
+    el.setAttribute("property", property);
+    document.head.appendChild(el);
+  }
+  el.setAttribute("content", value);
+}
+
+/** One canonical URL per page, so query strings do not read as duplicates. */
+function upsertCanonical(href: string) {
+  if (typeof document === "undefined" || !href) return;
+  let el = document.head.querySelector<HTMLLinkElement>('link[rel="canonical"]');
+  if (!el) {
+    el = document.createElement("link");
+    el.setAttribute("rel", "canonical");
+    document.head.appendChild(el);
+  }
+  el.setAttribute("href", href);
+}
+
 /**
  * Apply a page's CMS-managed SEO (title + meta description/keywords) to the
  * document head, falling back to the page's own title when the CMS has no
@@ -86,8 +111,10 @@ export function usePageSeo(
   pageKey: string,
   opts: { titleFallback?: string; brand?: string } = {},
 ): void {
-  const { seo_title, seo_description, seo_keywords } = usePageContentData(pageKey);
+  const { content, seo_title, seo_description, seo_keywords } = usePageContentData(pageKey);
   const { titleFallback, brand } = opts;
+  // Share cards need a picture; the page's own hero is the truest one available.
+  const image = content["seo_image"] || content["hero_image_url"] || content["hero_1_image"] || "";
 
   useEffect(() => {
     const authored = seo_title?.trim();
@@ -96,7 +123,21 @@ export function usePageSeo(
     if (title) document.title = title;
     upsertMeta("description", seo_description);
     upsertMeta("keywords", seo_keywords);
-  }, [seo_title, seo_description, seo_keywords, titleFallback, brand]);
+
+    // Open Graph / Twitter — without these a shared link shows a bare URL.
+    const url = typeof window !== "undefined" ? window.location.href.split("#")[0]! : "";
+    upsertMetaProperty("og:type", "website");
+    upsertMetaProperty("og:site_name", brand ?? null);
+    upsertMetaProperty("og:title", title);
+    upsertMetaProperty("og:description", seo_description);
+    upsertMetaProperty("og:url", url);
+    upsertMetaProperty("og:image", image || null);
+    upsertMeta("twitter:card", image ? "summary_large_image" : "summary");
+    upsertMeta("twitter:title", title);
+    upsertMeta("twitter:description", seo_description);
+    upsertMeta("twitter:image", image || null);
+    upsertCanonical(url);
+  }, [seo_title, seo_description, seo_keywords, image, titleFallback, brand]);
 }
 
 /** Homestay pages keep their existing call shape. */
