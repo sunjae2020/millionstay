@@ -137,6 +137,15 @@ deploy_one() {
   local out="$dir/dist/public"
   [[ -f "$out/index.html" ]] || { echo "  ✖ build produced no $out/index.html" >&2; return 1; }
 
+  # Per-route share cards. Messaging apps read the served HTML and never run the
+  # SPA, so without this every shared link shows the same site-wide card. Best
+  # effort: a failure here must not block the deploy.
+  if [[ "$app" == "web" ]]; then
+    echo "── [$app] share meta ──"
+    API_URL="$API_URL" SITE_KEY="${CMS_SITE_KEY:-dev}" SITE_LANG="${VITE_DEFAULT_LANG:-ko}" \
+      node scripts/prerender-share-meta.mjs "$out" || echo "  ⚠ share meta skipped"
+  fi
+
   # Verify the API wiring actually baked (web) — cheap guard against silent clobber.
   if [[ "$app" == "web" ]]; then
     if ! grep -rqF "metheim-api-production" "$out/assets/" 2>/dev/null && \

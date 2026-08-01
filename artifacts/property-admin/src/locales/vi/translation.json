@@ -5958,6 +5958,16 @@
     "mode_legacy_title": "Trang này dùng thiết kế có sẵn",
     "mode_legacy_hint": "Chỉnh sửa ở đây chưa có tác dụng cho tới khi bạn chuyển sang khối.",
     "back_to_original": "Về thiết kế gốc",
-    "build_from_blocks": "Dựng bằng khối"
+    "build_from_blocks": "Dựng bằng khối",
+    "media_sync": "Lập chỉ mục ảnh",
+    "media_synced": "Đã lập chỉ mục {{indexed}} ảnh ({{added}} ảnh mới)",
+    "media_sync_failed": "Không thể lập chỉ mục ảnh",
+    "media_search": "Tìm theo mô tả, thẻ hoặc tên tệp",
+    "media_no_results": "Không có ảnh nào phù hợp.",
+    "media_tags": "Thẻ",
+    "media_tags_placeholder": "ngoại thất, nội thất, ban đêm (cách nhau bằng dấu phẩy)",
+    "media_alt": "Văn bản thay thế",
+    "media_alt_hint": "Trình đọc màn hình và công cụ tìm kiếm sẽ đọc nội dung này. Hãy mô tả những gì có trong ảnh.",
+    "media_select_hint": "Chọn một ảnh để thêm mô tả và thẻ."
   }
 }

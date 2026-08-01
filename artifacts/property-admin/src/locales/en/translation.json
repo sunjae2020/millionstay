@@ -5958,6 +5958,16 @@
     "mode_legacy_title": "This page uses its built-in design",
     "mode_legacy_hint": "Editing blocks here changes nothing until you switch it over.",
     "back_to_original": "Back to original",
-    "build_from_blocks": "Build from blocks"
+    "build_from_blocks": "Build from blocks",
+    "media_sync": "Index images",
+    "media_synced": "Indexed {{indexed}} images ({{added}} new)",
+    "media_sync_failed": "Could not index the images",
+    "media_search": "Search by caption, tag or file name",
+    "media_no_results": "Nothing matches that search.",
+    "media_tags": "Tags",
+    "media_tags_placeholder": "exterior, interior, night (comma separated)",
+    "media_alt": "Alt text",
+    "media_alt_hint": "Read aloud by screen readers and by search engines. Describe what is in the picture.",
+    "media_select_hint": "Choose an image to caption and tag it."
   }
 }

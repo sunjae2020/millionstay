@@ -5958,6 +5958,16 @@
     "mode_legacy_title": "本页使用内置设计",
     "mode_legacy_hint": "切换为区块之前，此处的编辑不会生效。",
     "back_to_original": "恢复内置设计",
-    "build_from_blocks": "改用区块"
+    "build_from_blocks": "改用区块",
+    "media_sync": "建立索引",
+    "media_synced": "已索引 {{indexed}} 张图片（新增 {{added}} 张）",
+    "media_sync_failed": "无法索引图片",
+    "media_search": "按说明、标签或文件名搜索",
+    "media_no_results": "没有匹配的图片。",
+    "media_tags": "标签",
+    "media_tags_placeholder": "外观, 室内, 夜景（用逗号分隔）",
+    "media_alt": "替代文本",
+    "media_alt_hint": "屏幕阅读器与搜索引擎会读取此内容，请描述图片内容。",
+    "media_select_hint": "选择图片即可填写说明和标签。"
   }
 }

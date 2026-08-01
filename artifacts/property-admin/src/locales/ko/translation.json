@@ -5958,6 +5958,16 @@
     "mode_legacy_title": "이 페이지는 기본 디자인을 사용합니다",
     "mode_legacy_hint": "블록으로 전환하기 전까지 여기 편집은 사이트에 반영되지 않습니다.",
     "back_to_original": "기본 디자인으로",
-    "build_from_blocks": "블록으로 만들기"
+    "build_from_blocks": "블록으로 만들기",
+    "media_sync": "이미지 색인",
+    "media_synced": "이미지 {{indexed}}장 색인 (신규 {{added}}장)",
+    "media_sync_failed": "이미지를 색인하지 못했습니다",
+    "media_search": "설명·태그·파일명으로 검색",
+    "media_no_results": "검색 결과가 없습니다.",
+    "media_tags": "태그",
+    "media_tags_placeholder": "외관, 내부, 야경 (쉼표로 구분)",
+    "media_alt": "대체 텍스트",
+    "media_alt_hint": "화면 낭독기와 검색엔진이 읽는 문구입니다. 사진에 무엇이 있는지 적어 주세요.",
+    "media_select_hint": "이미지를 선택하면 설명과 태그를 넣을 수 있습니다."
   }
 }

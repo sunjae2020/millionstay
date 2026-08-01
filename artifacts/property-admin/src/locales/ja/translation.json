@@ -5958,6 +5958,16 @@
     "mode_legacy_title": "このページは標準デザインを使用しています",
     "mode_legacy_hint": "ブロックに切り替えるまで、ここでの編集はサイトに反映されません。",
     "back_to_original": "標準デザインに戻す",
-    "build_from_blocks": "ブロックで作る"
+    "build_from_blocks": "ブロックで作る",
+    "media_sync": "画像を索引",
+    "media_synced": "画像 {{indexed}} 件を索引（新規 {{added}} 件）",
+    "media_sync_failed": "画像を索引できませんでした",
+    "media_search": "説明・タグ・ファイル名で検索",
+    "media_no_results": "該当する画像がありません。",
+    "media_tags": "タグ",
+    "media_tags_placeholder": "外観, 内装, 夜景（カンマ区切り）",
+    "media_alt": "代替テキスト",
+    "media_alt_hint": "スクリーンリーダーと検索エンジンが読み上げます。写真の内容を記述してください。",
+    "media_select_hint": "画像を選ぶと説明とタグを設定できます。"
   }
 }
