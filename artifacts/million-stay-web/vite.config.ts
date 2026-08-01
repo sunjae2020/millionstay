@@ -6,14 +6,23 @@ import path from "path";
 const port = Number(process.env.PORT) || 5173;
 const basePath = process.env.BASE_PATH || "/";
 
-// White-label: replace the static index.html <title> at build time so the
-// initial (pre-JS) title matches the instance name too (SEO/first paint).
-// Defaults to "Million Stay" for the primary instance. Spec §2.3.
+// White-label: rewrite the static parts of index.html at build time so the
+// pre-JavaScript document belongs to THIS instance. That covers the <title>
+// (first paint / SEO) and the share card — messaging apps read the raw HTML
+// only, so a baked-in "Million Stay" would be what every tenant's shared link
+// showed. Defaults to the primary instance. Spec §2.3.
 const appName = process.env.VITE_APP_NAME?.trim() || "Million Stay";
+const shareImage = process.env.VITE_LOGO_MARK_URL?.trim() || "/logo-mark.png";
 const htmlAppName = {
   name: "html-app-name",
   transformIndexHtml(html: string) {
-    return html.replace(/<title>[\s\S]*?<\/title>/, `<title>${appName}</title>`);
+    return html
+      .replace(/<title>[\s\S]*?<\/title>/, `<title>${appName}</title>`)
+      .replace(
+        /(<meta property="og:title" content=")[^"]*(")/,
+        `$1${appName.replace(/"/g, "&quot;")}$2`,
+      )
+      .replace(/(<meta property="og:image" content=")[^"]*(")/, `$1${shareImage}$2`);
   },
 };
 
