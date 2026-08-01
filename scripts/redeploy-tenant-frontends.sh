@@ -132,19 +132,13 @@ deploy_one() {
   esac
 
   echo "── [$app] build ($pkg) ──"
+  # API_URL / SITE_KEY / SITE_LANG feed the share-card prerender that runs as
+  # part of the web build (see million-stay-web package.json).
   VITE_API_URL="$api_for_build" VITE_LOGO_MODE="$logo_mode" \
+  API_URL="$API_URL" SITE_KEY="${CMS_SITE_KEY:-dev}" SITE_LANG="${VITE_DEFAULT_LANG:-ko}" \
     pnpm --filter "$pkg" build >/dev/null
   local out="$dir/dist/public"
   [[ -f "$out/index.html" ]] || { echo "  ✖ build produced no $out/index.html" >&2; return 1; }
-
-  # Per-route share cards. Messaging apps read the served HTML and never run the
-  # SPA, so without this every shared link shows the same site-wide card. Best
-  # effort: a failure here must not block the deploy.
-  if [[ "$app" == "web" ]]; then
-    echo "── [$app] share meta ──"
-    API_URL="$API_URL" SITE_KEY="${CMS_SITE_KEY:-dev}" SITE_LANG="${VITE_DEFAULT_LANG:-ko}" \
-      node scripts/prerender-share-meta.mjs "$out" || echo "  ⚠ share meta skipped"
-  fi
 
   # Verify the API wiring actually baked (web) — cheap guard against silent clobber.
   if [[ "$app" == "web" ]]; then

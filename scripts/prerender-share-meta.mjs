@@ -41,22 +41,49 @@ if (!fs.existsSync(shellPath)) {
 }
 const shell = fs.readFileSync(shellPath, "utf8");
 
-/** Which CMS page key backs which public route. */
-const ROUTES = {
-  "": "dev-home",
-  about: "dev-about",
-  buy: "dev-buy",
-  rent: "dev-rent",
-  management: "dev-manage",
-  stayplan: "dev-stayplan",
-  "for-resident": "dev-resident",
-  "for-owner": "dev-owner",
-  "for-partner": "dev-partner",
-  directions: "dev-directions",
-  "privacy-policy": "dev-privacy",
-  terms: "dev-terms",
-  search: "dev-search",
+/**
+ * Which CMS page key backs which public route, per site. A route missing from
+ * the map keeps the site-wide card rather than getting a wrong one.
+ */
+const ROUTES_BY_SITE = {
+  dev: {
+    "": "dev-home",
+    about: "dev-about",
+    buy: "dev-buy",
+    rent: "dev-rent",
+    management: "dev-manage",
+    stayplan: "dev-stayplan",
+    "for-resident": "dev-resident",
+    "for-owner": "dev-owner",
+    "for-partner": "dev-partner",
+    directions: "dev-directions",
+    "privacy-policy": "dev-privacy",
+    terms: "dev-terms",
+    search: "dev-search",
+  },
+  www: {
+    "": "home",
+    "for-student": "for-student",
+    "for-agent": "for-agent",
+    about: "about",
+    faq: "faq",
+    contact: "contact",
+  },
+  homestay: {
+    "": "homestay-home",
+    about: "homestay-about",
+    students: "homestay-students",
+    hosts: "homestay-hosts",
+    partners: "homestay-partners",
+    contact: "homestay-contact",
+  },
 };
+
+const ROUTES = ROUTES_BY_SITE[SITE_KEY];
+if (!ROUTES) {
+  console.log(`prerender-share-meta: no route map for site "${SITE_KEY}" — skipping`);
+  process.exit(0);
+}
 
 const escapeAttr = (value) =>
   String(value ?? "")
