@@ -36,8 +36,9 @@ if (!API_URL || !SITE_KEY) {
 
 const shellPath = path.join(DIST, "index.html");
 if (!fs.existsSync(shellPath)) {
-  console.error(`prerender-share-meta: no build at ${shellPath}`);
-  process.exit(1);
+  // Nothing to decorate. Never fail the build over a share card.
+  console.log(`prerender-share-meta: no build at ${shellPath} — skipping`);
+  process.exit(0);
 }
 const shell = fs.readFileSync(shellPath, "utf8");
 
@@ -114,6 +115,7 @@ async function getJson(url) {
 let written = 0;
 let skipped = 0;
 
+try {
 for (const [route, pageKey] of Object.entries(ROUTES)) {
   const data = await getJson(`${API_URL}/api/v1/public/page-contents/${pageKey}/${LANG}`);
   const title = data?.seo_title?.trim();
@@ -142,6 +144,12 @@ for (const [route, pageKey] of Object.entries(ROUTES)) {
   fs.writeFileSync(outPath, html, "utf8");
   written += 1;
   console.log(`  /${route.padEnd(14)} ${title ?? "(description only)"}`);
+}
+
+} catch (err) {
+  // The site still works with the site-wide card; a broken card must never stop
+  // a release.
+  console.log(`prerender-share-meta: stopped early (${err instanceof Error ? err.message : err})`);
 }
 
 console.log(`prerender-share-meta: ${written} routes written, ${skipped} without SEO (left on the shared card)`);
