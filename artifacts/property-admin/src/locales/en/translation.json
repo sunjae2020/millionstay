@@ -5941,6 +5941,23 @@
     "domain_platform": "Built-in hosting address — nothing to set up",
     "domain_error": "Could not check this address",
     "page_search": "Search",
-    "page_search_desc": "Search screen hero heading and image"
+    "page_search_desc": "Search screen hero heading and image",
+    "content": "Content",
+    "search": "Search",
+    "editing": "Editing",
+    "page_settings": "Page settings",
+    "internal_note": "Internal note",
+    "internal_note_placeholder": "Hero slides, company intro, stats…",
+    "internal_note_hint": "Only your team sees this. It labels the page in the content tree.",
+    "builtin_address_locked": "Built-in pages keep their address — it is a code route.",
+    "in_menu": "In menu",
+    "status_draft": "Draft",
+    "status_published": "Published",
+    "mode_blocks_title": "This page is built from blocks",
+    "mode_blocks_hint": "What you edit below is what visitors see.",
+    "mode_legacy_title": "This page uses its built-in design",
+    "mode_legacy_hint": "Editing blocks here changes nothing until you switch it over.",
+    "back_to_original": "Back to original",
+    "build_from_blocks": "Build from blocks"
   }
 }

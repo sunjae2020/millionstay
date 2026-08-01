@@ -60,6 +60,8 @@ export const cmsPagesTable = pgTable(
     /** Matching `page_contents.page_key`, kept so the legacy overlay still resolves. */
     legacy_page_key: text("legacy_page_key"),
     title: text("title"),
+    /** Staff-only description shown in the page tree. Never rendered publicly. */
+    internal_note: text("internal_note"),
     template_key: text("template_key"),
     /** 'legacy' = hardcoded React sections; 'blocks' = rendered from body_json. */
     render_mode: text("render_mode").notNull().default("legacy"),

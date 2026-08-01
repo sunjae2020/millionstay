@@ -105,7 +105,7 @@ import PageTranslations from "@/pages/content/PageTranslations";
 import MediaLibrary from "@/pages/cms/CmsMedia";
 import CmsPagesList from "@/pages/cms/CmsPagesList";
 import CmsPageBuilder from "@/pages/cms/CmsPageBuilder";
-import CmsBlog from "@/pages/cms/CmsBlog";
+import CmsBlog, { CmsBlogCategories } from "@/pages/cms/CmsBlog";
 import CmsCompany from "@/pages/cms/CmsCompany";
 import CmsDesign from "@/pages/cms/CmsDesign";
 import CmsBlockTemplates from "@/pages/cms/CmsBlockTemplates";
@@ -298,6 +298,7 @@ function Router() {
       <Route path="/cms/pages" component={CmsPagesList} />
       <Route path="/cms/pages/:id" component={CmsPageBuilder} />
       <Route path="/cms/blog" component={CmsBlog} />
+      <Route path="/cms/blog-categories" component={CmsBlogCategories} />
       <Route path="/cms/blog/new" component={BlogDetail} />
       <Route path="/cms/blog/:id" component={BlogDetail} />
       <Route path="/cms/listings" component={SaleListingsList} />
@@ -313,7 +314,7 @@ function Router() {
           redirect into the CMS group rather than 404ing. The fixed-field page
           editor is still reachable while pages are migrated to blocks. */}
       <Route path="/content/blog"><Redirect to="/cms/blog" /></Route>
-      <Route path="/content/blog-categories"><Redirect to="/cms/blog" /></Route>
+      <Route path="/content/blog-categories"><Redirect to="/cms/blog-categories" /></Route>
       <Route path="/content/blog/new"><Redirect to="/cms/blog/new" /></Route>
       <Route path="/content/blog/:id">{(p) => <Redirect to={`/cms/blog/${p.id}`} />}</Route>
       <Route path="/content/listings"><Redirect to="/cms/listings" /></Route>

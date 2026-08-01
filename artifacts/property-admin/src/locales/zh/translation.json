@@ -5941,6 +5941,23 @@
     "domain_platform": "平台自带地址，无需设置",
     "domain_error": "无法检查该地址",
     "page_search": "搜索",
-    "page_search_desc": "搜索页顶部标题与图片"
+    "page_search_desc": "搜索页顶部标题与图片",
+    "content": "内容",
+    "search": "搜索",
+    "editing": "编辑中",
+    "page_settings": "页面设置",
+    "internal_note": "内部备注",
+    "internal_note_placeholder": "主视觉轮播、公司介绍、数据…",
+    "internal_note_hint": "仅团队可见，用于在内容树中区分页面。",
+    "builtin_address_locked": "内置页面地址固定 — 由代码路由决定。",
+    "in_menu": "显示在菜单",
+    "status_draft": "草稿",
+    "status_published": "已发布",
+    "mode_blocks_title": "本页由区块构成",
+    "mode_blocks_hint": "您在下方编辑的内容即访客所见。",
+    "mode_legacy_title": "本页使用内置设计",
+    "mode_legacy_hint": "切换为区块之前，此处的编辑不会生效。",
+    "back_to_original": "恢复内置设计",
+    "build_from_blocks": "改用区块"
   }
 }

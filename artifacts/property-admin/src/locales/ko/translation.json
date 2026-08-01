@@ -5941,6 +5941,23 @@
     "domain_platform": "기본 제공 주소라 별도 설정이 필요 없습니다",
     "domain_error": "주소를 확인하지 못했습니다",
     "page_search": "검색",
-    "page_search_desc": "검색 화면 상단 문구와 이미지"
+    "page_search_desc": "검색 화면 상단 문구와 이미지",
+    "content": "콘텐츠",
+    "search": "검색",
+    "editing": "편집 중",
+    "page_settings": "페이지 설정",
+    "internal_note": "내부 메모",
+    "internal_note_placeholder": "히어로 슬라이드, 회사 소개, 지표…",
+    "internal_note_hint": "우리 팀만 봅니다. 콘텐츠 트리에서 페이지를 구분하는 설명입니다.",
+    "builtin_address_locked": "기본 제공 페이지는 주소가 고정입니다 — 코드에 정의된 경로입니다.",
+    "in_menu": "메뉴에 표시",
+    "status_draft": "초안",
+    "status_published": "발행됨",
+    "mode_blocks_title": "이 페이지는 블록으로 만들어집니다",
+    "mode_blocks_hint": "아래에서 편집한 그대로 방문자에게 보입니다.",
+    "mode_legacy_title": "이 페이지는 기본 디자인을 사용합니다",
+    "mode_legacy_hint": "블록으로 전환하기 전까지 여기 편집은 사이트에 반영되지 않습니다.",
+    "back_to_original": "기본 디자인으로",
+    "build_from_blocks": "블록으로 만들기"
   }
 }

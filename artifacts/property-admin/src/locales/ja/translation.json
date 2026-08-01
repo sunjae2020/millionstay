@@ -5941,6 +5941,23 @@
     "domain_platform": "標準提供のアドレスのため設定は不要です",
     "domain_error": "アドレスを確認できませんでした",
     "page_search": "検索",
-    "page_search_desc": "検索画面の上部見出しと画像"
+    "page_search_desc": "検索画面の上部見出しと画像",
+    "content": "コンテンツ",
+    "search": "検索",
+    "editing": "編集中",
+    "page_settings": "ページ設定",
+    "internal_note": "内部メモ",
+    "internal_note_placeholder": "ヒーロースライド、会社紹介、指標…",
+    "internal_note_hint": "社内のみ表示されます。コンテンツツリーでページを見分けるための説明です。",
+    "builtin_address_locked": "標準ページはアドレスが固定です — コード側のルートです。",
+    "in_menu": "メニューに表示",
+    "status_draft": "下書き",
+    "status_published": "公開中",
+    "mode_blocks_title": "このページはブロックで構成されています",
+    "mode_blocks_hint": "下で編集した内容がそのまま訪問者に表示されます。",
+    "mode_legacy_title": "このページは標準デザインを使用しています",
+    "mode_legacy_hint": "ブロックに切り替えるまで、ここでの編集はサイトに反映されません。",
+    "back_to_original": "標準デザインに戻す",
+    "build_from_blocks": "ブロックで作る"
   }
 }

@@ -326,6 +326,7 @@ const PageBody = z.object({
   site_key: z.string().min(1),
   slug: z.string().optional(),
   title: z.string().optional(),
+  internal_note: z.string().nullable().optional(),
   legacy_page_key: z.string().nullable().optional(),
   template_key: z.string().nullable().optional(),
   render_mode: z.enum(["legacy", "blocks"]).optional(),

@@ -2,7 +2,6 @@ import { useEffect, useMemo, useState } from "react";
 import { useParams, useLocation } from "wouter";
 import { useTranslation } from "react-i18next";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Layout, PageHeader } from "@/components/Layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -10,12 +9,10 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   ArrowLeft,
   Save,
-  Globe,
   Languages,
   Loader2,
   Search,
@@ -23,16 +20,21 @@ import {
   Download,
   ExternalLink,
   Info,
+  Lock,
+  LayoutTemplate,
+  Blocks,
 } from "lucide-react";
 import { apiFetch } from "@/lib/apiFetch";
 import { useToast } from "@/hooks/use-toast";
-import { formatDate } from "@/lib/date";
 import { MediaPickerDialog } from "@/components/MediaLibrary";
 import { normaliseBody, type Block } from "@workspace/cms-blocks";
 import { BlockCanvas } from "./BlockCanvas";
+import { CmsWorkspace } from "./CmsWorkspace";
 
-// The page builder — one page, one locale at a time ("You are editing the
-// English version"), matching how the reference CMS models multilingual pages.
+// The page editor — one screen. Body, SEO, page settings, publish state and the
+// language versions all live here rather than behind separate tabs and screens,
+// because an editor's question is nearly always "what does this page say and is
+// it live", and answering it should not cost three navigations.
 
 const LOCALE_LABELS: Record<string, { label: string; flag: string }> = {
   en: { label: "English", flag: "🇦🇺" },
@@ -48,6 +50,7 @@ interface PageDetail {
   site_key: string;
   slug: string;
   title: string | null;
+  internal_note: string | null;
   render_mode: string;
   status: string;
   is_home: boolean;
@@ -83,7 +86,15 @@ export default function CmsPageBuilder() {
   const [locale, setLocale] = useState("");
   const [blocks, setBlocks] = useState<Block[]>([]);
   const [meta, setMeta] = useState({ title: "", seo_title: "", seo_description: "", seo_keywords: "" });
-  const [pageMeta, setPageMeta] = useState({ slug: "", status: "Draft", is_home: false, nav_hidden: false, seo_image_url: "" });
+  const [pageMeta, setPageMeta] = useState({
+    title: "",
+    slug: "",
+    internal_note: "",
+    status: "Draft",
+    is_home: false,
+    nav_hidden: false,
+    seo_image_url: "",
+  });
   const [dirty, setDirty] = useState(false);
   const [imagePickerOpen, setImagePickerOpen] = useState(false);
 
@@ -106,7 +117,9 @@ export default function CmsPageBuilder() {
   useEffect(() => {
     if (!page) return;
     setPageMeta({
+      title: page.title ?? "",
       slug: page.slug,
+      internal_note: page.internal_note ?? "",
       status: page.status,
       is_home: page.is_home,
       nav_hidden: page.nav_hidden,
@@ -141,45 +154,55 @@ export default function CmsPageBuilder() {
       const bodyRes = await apiFetch(`/api/v1/cms/pages/${pageId}/translations/${locale}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          ...meta,
-          body_json: { blocks },
-          ...(status ? { status } : {}),
-          source: "human",
-        }),
+        body: JSON.stringify({ ...meta, body_json: { blocks }, ...(status ? { status } : {}), source: "human" }),
       });
-      if (!bodyRes.ok) throw new Error("Failed to save body");
+      if (!bodyRes.ok) throw new Error("Failed to save the content");
       const pageRes = await apiFetch(`/api/v1/cms/pages/${pageId}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ site_key: page?.site_key, ...pageMeta }),
+        body: JSON.stringify({ site_key: page?.site_key, ...pageMeta, ...(status ? { status } : {}) }),
       });
-      if (!pageRes.ok) throw new Error("Failed to save page settings");
+      if (!pageRes.ok) throw new Error("Failed to save the page settings");
     },
     onSuccess: () => {
       setDirty(false);
       qc.invalidateQueries({ queryKey: ["cms-page", pageId] });
       qc.invalidateQueries({ queryKey: ["cms-page-translation", pageId, locale] });
+      qc.invalidateQueries({ queryKey: ["cms-pages"] });
       toast({ title: t("cms.saved") });
     },
     onError: (err: Error) => toast({ title: t("cms.save_failed"), description: err.message, variant: "destructive" }),
   });
 
+  /** Switch a page between its built-in rendering and the block tree. */
+  const setRenderMode = useMutation({
+    mutationFn: async (mode: "legacy" | "blocks") => {
+      const res = await apiFetch(`/api/v1/cms/pages/${pageId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ site_key: page?.site_key, render_mode: mode }),
+      });
+      if (!res.ok) throw new Error("Failed to switch");
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["cms-page", pageId] }),
+  });
+
   const translate = useMutation({
     mutationFn: async () => {
-      const targets = siteLocales.filter((l) => l !== locale);
       const res = await apiFetch(`/api/v1/cms/pages/${pageId}/translate`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ from: locale, to: targets }),
+        body: JSON.stringify({ from: locale, to: siteLocales.filter((l) => l !== locale) }),
       });
       if (!res.ok) throw new Error((await res.json()).error ?? "Translation failed");
       return res.json();
     },
-    onSuccess: (result: { results: { locale: string; ok: boolean }[] }) => {
-      const ok = result.results.filter((r) => r.ok).length;
+    onSuccess: (result: { results: { ok: boolean }[] }) => {
       qc.invalidateQueries({ queryKey: ["cms-page", pageId] });
-      toast({ title: t("cms.translated", { count: ok }), description: t("cms.translated_review_hint") });
+      toast({
+        title: t("cms.translated", { count: result.results.filter((r) => r.ok).length }),
+        description: t("cms.translated_review_hint"),
+      });
     },
     onError: (err: Error) => toast({ title: t("cms.translate_failed"), description: err.message, variant: "destructive" }),
   });
@@ -208,326 +231,347 @@ export default function CmsPageBuilder() {
 
   if (isLoading || !page) {
     return (
-      <Layout>
+      <CmsWorkspace>
         <div className="p-10 flex justify-center">
           <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
         </div>
-      </Layout>
+      </CmsWorkspace>
     );
   }
 
-  const previewUrl = page.site?.host
-    ? `${page.site.host.replace(/\/$/, "")}/${page.slug}${locale ? `?lang=${locale}` : ""}`
-    : "";
+  const bareHost = page.site?.host ? page.site.host.replace(/^https?:\/\//, "") : "";
+  const previewUrl = bareHost ? `https://${bareHost}/${page.slug}${locale ? `?lang=${locale}` : ""}` : "";
+  const isBuiltIn = Boolean(page.legacy_page_key);
+  const usesBlocks = page.render_mode === "blocks";
 
   return (
-    <Layout>
-      <PageHeader
-        title={
-          <>
-            <Globe className="h-5 w-5" />
-            {page.title || page.slug}
-          </>
-        }
-        subtitle={`${page.site?.label ?? page.site_key} · /${page.slug}`}
-        actions={
-          <div className="flex items-center gap-2">
-            <Button variant="outline" onClick={() => navigate("/cms/pages")}>
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              {t("common.back")}
-            </Button>
-            <Button onClick={() => save.mutate(undefined)} disabled={save.isPending}>
-              {save.isPending ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Save className="h-4 w-4 mr-2" />}
-              {t("common.save")}
-            </Button>
-          </div>
-        }
-      />
-
-      <div className="p-6">
-        {/* "You are editing the <locale> version" — mirrors the reference CMS. */}
-        <div className="mb-4 flex items-center gap-2 rounded-lg border bg-blue-50/60 px-4 py-3 text-sm text-blue-900">
-          <Info className="h-4 w-4 shrink-0" />
-          <span>
-            {t("cms.editing_locale_banner", {
-              locale: LOCALE_LABELS[locale]?.label ?? locale,
-            })}
-          </span>
-          {translation?.source === "machine" && (
-            <Badge variant="outline" className="ml-2 border-amber-400 text-amber-700 text-[10px]">
-              {t("cms.machine_translated")}
-            </Badge>
-          )}
-          {dirty && <span className="ml-auto text-xs text-amber-700">{t("cms.unsaved_changes")}</span>}
+    <CmsWorkspace>
+      <div className="border-b bg-background px-6 py-4 flex flex-wrap items-start justify-between gap-3">
+        <div className="min-w-0">
+          <h1 className="text-xl font-semibold truncate">{pageMeta.title || page.slug || t("cms.untitled")}</h1>
+          <p className="text-sm text-muted-foreground truncate">
+            {bareHost || page.site?.label}/{page.slug}
+          </p>
         </div>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" onClick={() => navigate("/cms/pages")}>
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            {t("common.back")}
+          </Button>
+          {previewUrl && (
+            <a href={previewUrl} target="_blank" rel="noopener noreferrer">
+              <Button variant="outline">
+                <ExternalLink className="h-4 w-4 mr-2" />
+                {t("cms.open_preview")}
+              </Button>
+            </a>
+          )}
+          <Button onClick={() => save.mutate(undefined)} disabled={save.isPending}>
+            {save.isPending ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Save className="h-4 w-4 mr-2" />}
+            {t("common.save")}
+          </Button>
+        </div>
+      </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-6">
-          {/* ── Main column ── */}
-          <div>
-            <Tabs defaultValue="body">
-              <TabsList>
-                <TabsTrigger value="body">{t("cms.tab_body")}</TabsTrigger>
-                <TabsTrigger value="seo">{t("cms.tab_seo")}</TabsTrigger>
-                <TabsTrigger value="settings">{t("cms.tab_settings")}</TabsTrigger>
-              </TabsList>
-
-              <TabsContent value="body" className="mt-4">
-                <div className="mb-3 flex flex-wrap items-center gap-2">
-                  <Label className="text-sm">{t("cms.field_title")}</Label>
-                  <Input
-                    className="max-w-md"
-                    value={meta.title}
-                    onChange={(e) => {
-                      setMeta({ ...meta, title: e.target.value });
-                      setDirty(true);
-                    }}
-                  />
-                  {page.legacy_page_key && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => importLegacy.mutate()}
-                      disabled={importLegacy.isPending}
-                    >
-                      <Download className="h-3.5 w-3.5 mr-1" />
-                      {t("cms.import_legacy")}
-                    </Button>
-                  )}
-                </div>
-
-                {loadingBody ? (
-                  <div className="p-10 flex justify-center">
-                    <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
-                  </div>
-                ) : (
-                  <BlockCanvas
-                    blocks={blocks}
-                    siteKey={page.site_key}
-                    onChange={(next) => {
-                      setBlocks(next);
-                      setDirty(true);
-                    }}
-                  />
-                )}
-              </TabsContent>
-
-              <TabsContent value="seo" className="mt-4 space-y-4">
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-base flex items-center gap-2">
-                      <Search className="h-4 w-4" />
-                      {t("cms.tab_seo")}
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div>
-                      <Label>{t("cms.seo_title")}</Label>
-                      <Input
-                        value={meta.seo_title}
-                        onChange={(e) => {
-                          setMeta({ ...meta, seo_title: e.target.value });
-                          setDirty(true);
-                        }}
-                      />
-                    </div>
-                    <div>
-                      <Label>{t("cms.seo_description")}</Label>
-                      <Textarea
-                        rows={3}
-                        value={meta.seo_description}
-                        onChange={(e) => {
-                          setMeta({ ...meta, seo_description: e.target.value });
-                          setDirty(true);
-                        }}
-                      />
-                    </div>
-                    <div>
-                      <Label>{t("cms.seo_keywords")}</Label>
-                      <Input
-                        value={meta.seo_keywords}
-                        onChange={(e) => {
-                          setMeta({ ...meta, seo_keywords: e.target.value });
-                          setDirty(true);
-                        }}
-                      />
-                    </div>
-                    <div>
-                      <Label>{t("cms.seo_image")}</Label>
-                      <div className="flex gap-2">
-                        <Input
-                          value={pageMeta.seo_image_url}
-                          onChange={(e) => {
-                            setPageMeta({ ...pageMeta, seo_image_url: e.target.value });
-                            setDirty(true);
-                          }}
-                        />
-                        <Button variant="outline" onClick={() => setImagePickerOpen(true)}>
-                          {t("cms.choose_image")}
-                        </Button>
-                      </div>
-                      <p className="text-xs text-muted-foreground mt-1">{t("cms.seo_image_hint")}</p>
-                    </div>
-                  </CardContent>
-                </Card>
-              </TabsContent>
-
-              <TabsContent value="settings" className="mt-4 space-y-4">
-                <Card>
-                  <CardContent className="space-y-4 pt-6">
-                    <div>
-                      <Label>{t("cms.field_slug")}</Label>
-                      <Input
-                        value={pageMeta.slug}
-                        onChange={(e) => {
-                          setPageMeta({ ...pageMeta, slug: e.target.value });
-                          setDirty(true);
-                        }}
-                      />
-                      <p className="text-xs text-muted-foreground mt-1">{t("cms.field_slug_hint")}</p>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <Label>{t("cms.is_home")}</Label>
-                        <p className="text-xs text-muted-foreground">{t("cms.is_home_hint")}</p>
-                      </div>
-                      <Switch
-                        checked={pageMeta.is_home}
-                        onCheckedChange={(v) => {
-                          setPageMeta({ ...pageMeta, is_home: v });
-                          setDirty(true);
-                        }}
-                      />
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <Label>{t("cms.nav_hidden")}</Label>
-                        <p className="text-xs text-muted-foreground">{t("cms.nav_hidden_hint")}</p>
-                      </div>
-                      <Switch
-                        checked={pageMeta.nav_hidden}
-                        onCheckedChange={(v) => {
-                          setPageMeta({ ...pageMeta, nav_hidden: v });
-                          setDirty(true);
-                        }}
-                      />
-                    </div>
-                    {page.render_mode === "legacy" && (
-                      <div className="rounded-md bg-amber-50 text-amber-900 text-xs px-3 py-2">
-                        {t("cms.legacy_mode_notice")}
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-              </TabsContent>
-            </Tabs>
+      <div className="p-6 grid grid-cols-1 xl:grid-cols-[1fr_320px] gap-6 items-start">
+        <div className="space-y-6 min-w-0">
+          <div className="flex items-center gap-2 rounded-lg border bg-blue-50/60 px-4 py-3 text-sm text-blue-900">
+            <Info className="h-4 w-4 shrink-0" />
+            <span>{t("cms.editing_locale_banner", { locale: LOCALE_LABELS[locale]?.label ?? locale })}</span>
+            {translation?.source === "machine" && (
+              <Badge variant="outline" className="ml-2 border-amber-400 text-amber-700 text-[10px]">
+                {t("cms.machine_translated")}
+              </Badge>
+            )}
+            {dirty && <span className="ml-auto text-xs text-amber-700">{t("cms.unsaved_changes")}</span>}
           </div>
 
-          {/* ── Side column ── */}
-          <div className="space-y-4">
-            <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-sm">{t("cms.publish")}</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <div>
-                  <Label className="text-xs">{t("common.status")}</Label>
-                  <Select
-                    value={pageMeta.status}
-                    onValueChange={(v) => {
-                      setPageMeta({ ...pageMeta, status: v });
-                      setDirty(true);
-                    }}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Draft">Draft</SelectItem>
-                      <SelectItem value="Published">Published</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <Button className="w-full" onClick={() => save.mutate("Published")} disabled={save.isPending}>
-                  {t("cms.publish_locale", { locale: LOCALE_LABELS[locale]?.label ?? locale })}
-                </Button>
-                {previewUrl && (
-                  <a href={previewUrl} target="_blank" rel="noopener noreferrer">
-                    <Button variant="outline" className="w-full">
-                      <ExternalLink className="h-4 w-4 mr-2" />
-                      {t("cms.open_preview")}
-                    </Button>
-                  </a>
-                )}
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-sm flex items-center gap-2">
-                  <Languages className="h-4 w-4" />
-                  {t("cms.languages")}
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-1">
-                {siteLocales.map((code) => {
-                  const summary = page.locales.find((l) => l.locale === code);
-                  const info = LOCALE_LABELS[code];
-                  return (
-                    <button
-                      key={code}
-                      onClick={() => setLocale(code)}
-                      className={`w-full flex items-center gap-2 rounded-md px-2 py-2 text-sm transition-colors ${
-                        locale === code ? "bg-primary/10 text-primary" : "hover:bg-muted"
-                      }`}
-                    >
-                      <span>{info?.flag ?? "🌐"}</span>
-                      <span className="flex-1 text-left">{info?.label ?? code}</span>
-                      {summary?.status === "Published" ? (
-                        <Badge className="bg-green-100 text-green-700 text-[10px] px-1 py-0">
-                          {summary.blocks}
-                        </Badge>
-                      ) : (
-                        <Badge variant="outline" className="text-[10px] px-1 py-0 text-muted-foreground">
-                          {summary ? summary.blocks : "—"}
-                        </Badge>
-                      )}
-                    </button>
-                  );
-                })}
+          {/* Which rendering this page uses, and how to change it. */}
+          <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border px-4 py-3">
+            <div className="flex items-center gap-3">
+              {usesBlocks ? (
+                <Blocks className="h-5 w-5 text-primary" />
+              ) : (
+                <LayoutTemplate className="h-5 w-5 text-muted-foreground" />
+              )}
+              <div>
+                <p className="text-sm font-medium">
+                  {usesBlocks ? t("cms.mode_blocks_title") : t("cms.mode_legacy_title")}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  {usesBlocks ? t("cms.mode_blocks_hint") : t("cms.mode_legacy_hint")}
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              {isBuiltIn && (
                 <Button
                   variant="outline"
                   size="sm"
-                  className="w-full mt-2"
-                  onClick={() => translate.mutate()}
-                  disabled={translate.isPending}
+                  onClick={() => importLegacy.mutate()}
+                  disabled={importLegacy.isPending}
                 >
-                  {translate.isPending ? (
-                    <Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" />
-                  ) : (
-                    <Sparkles className="h-3.5 w-3.5 mr-1" />
-                  )}
-                  {t("cms.ai_translate_all")}
+                  <Download className="h-3.5 w-3.5 mr-1" />
+                  {t("cms.import_legacy")}
                 </Button>
-                <p className="text-[11px] text-muted-foreground pt-1">{t("cms.ai_translate_hint")}</p>
-              </CardContent>
-            </Card>
-
-            {page.locales.length > 0 && (
-              <Card>
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-sm">{t("cms.locale_status")}</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-1 text-xs text-muted-foreground">
-                  {page.locales.map((l) => (
-                    <div key={l.locale} className="flex justify-between">
-                      <span>{LOCALE_LABELS[l.locale]?.label ?? l.locale}</span>
-                      <span>{formatDate(l.updated_at)}</span>
-                    </div>
-                  ))}
-                </CardContent>
-              </Card>
-            )}
+              )}
+              <Button
+                variant={usesBlocks ? "outline" : "default"}
+                size="sm"
+                onClick={() => setRenderMode.mutate(usesBlocks ? "legacy" : "blocks")}
+                disabled={setRenderMode.isPending}
+              >
+                {usesBlocks ? t("cms.back_to_original") : t("cms.build_from_blocks")}
+              </Button>
+            </div>
           </div>
+
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base">{t("cms.page_settings")}</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div>
+                  <Label>{t("cms.field_title")}</Label>
+                  <Input
+                    value={pageMeta.title}
+                    onChange={(e) => {
+                      setPageMeta({ ...pageMeta, title: e.target.value });
+                      setDirty(true);
+                    }}
+                  />
+                </div>
+                <div>
+                  <Label>{t("cms.field_slug")}</Label>
+                  <div className="flex items-center gap-2">
+                    {bareHost && <span className="text-xs text-muted-foreground shrink-0">{bareHost}/</span>}
+                    <Input
+                      value={pageMeta.slug}
+                      disabled={isBuiltIn}
+                      onChange={(e) => {
+                        setPageMeta({ ...pageMeta, slug: e.target.value });
+                        setDirty(true);
+                      }}
+                    />
+                  </div>
+                  {isBuiltIn && (
+                    <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
+                      <Lock className="h-3 w-3" />
+                      {t("cms.builtin_address_locked")}
+                    </p>
+                  )}
+                </div>
+              </div>
+              <div>
+                <Label>{t("cms.internal_note")}</Label>
+                <Textarea
+                  rows={2}
+                  value={pageMeta.internal_note}
+                  placeholder={t("cms.internal_note_placeholder")}
+                  onChange={(e) => {
+                    setPageMeta({ ...pageMeta, internal_note: e.target.value });
+                    setDirty(true);
+                  }}
+                />
+                <p className="text-xs text-muted-foreground mt-1">{t("cms.internal_note_hint")}</p>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base">
+                {t("cms.content")}{" "}
+                <span className="ml-1 text-sm font-normal text-muted-foreground">
+                  {t("cms.blocks_count", { count: blocks.length })}
+                </span>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {loadingBody ? (
+                <div className="p-10 flex justify-center">
+                  <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+                </div>
+              ) : (
+                <BlockCanvas
+                  blocks={blocks}
+                  siteKey={page.site_key}
+                  onChange={(next) => {
+                    setBlocks(next);
+                    setDirty(true);
+                  }}
+                />
+              )}
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base flex items-center gap-2">
+                <Search className="h-4 w-4" />
+                {t("cms.tab_seo")}
+                <span className="text-xs font-normal text-muted-foreground">
+                  · {LOCALE_LABELS[locale]?.label ?? locale}
+                </span>
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div>
+                <Label>{t("cms.seo_title")}</Label>
+                <Input
+                  value={meta.seo_title}
+                  onChange={(e) => {
+                    setMeta({ ...meta, seo_title: e.target.value });
+                    setDirty(true);
+                  }}
+                />
+              </div>
+              <div>
+                <Label>{t("cms.seo_description")}</Label>
+                <Textarea
+                  rows={2}
+                  value={meta.seo_description}
+                  onChange={(e) => {
+                    setMeta({ ...meta, seo_description: e.target.value });
+                    setDirty(true);
+                  }}
+                />
+              </div>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div>
+                  <Label>{t("cms.seo_keywords")}</Label>
+                  <Input
+                    value={meta.seo_keywords}
+                    onChange={(e) => {
+                      setMeta({ ...meta, seo_keywords: e.target.value });
+                      setDirty(true);
+                    }}
+                  />
+                </div>
+                <div>
+                  <Label>{t("cms.seo_image")}</Label>
+                  <div className="flex gap-2">
+                    <Input
+                      value={pageMeta.seo_image_url}
+                      onChange={(e) => {
+                        setPageMeta({ ...pageMeta, seo_image_url: e.target.value });
+                        setDirty(true);
+                      }}
+                    />
+                    <Button variant="outline" onClick={() => setImagePickerOpen(true)}>
+                      {t("cms.choose_image")}
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Right rail — publish state and the language versions */}
+        <div className="space-y-4 xl:sticky xl:top-6">
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm">{t("cms.publish")}</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <Button className="w-full" onClick={() => save.mutate(undefined)} disabled={save.isPending}>
+                {save.isPending ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Save className="h-4 w-4 mr-2" />}
+                {t("common.save")}
+              </Button>
+              <div>
+                <Label className="text-xs">{t("common.status")}</Label>
+                <Select
+                  value={pageMeta.status}
+                  onValueChange={(v) => {
+                    setPageMeta({ ...pageMeta, status: v });
+                    setDirty(true);
+                  }}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Draft">{t("cms.status_draft")}</SelectItem>
+                    <SelectItem value="Published">{t("cms.status_published")}</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="flex items-center justify-between rounded-md border px-3 py-2">
+                <Label className="text-sm">{t("cms.in_menu")}</Label>
+                <Switch
+                  checked={!pageMeta.nav_hidden}
+                  onCheckedChange={(v) => {
+                    setPageMeta({ ...pageMeta, nav_hidden: !v });
+                    setDirty(true);
+                  }}
+                />
+              </div>
+              <div className="flex items-center justify-between rounded-md border px-3 py-2">
+                <Label className="text-sm">{t("cms.is_home")}</Label>
+                <Switch
+                  checked={pageMeta.is_home}
+                  onCheckedChange={(v) => {
+                    setPageMeta({ ...pageMeta, is_home: v });
+                    setDirty(true);
+                  }}
+                />
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm flex items-center gap-2">
+                <Languages className="h-4 w-4" />
+                {t("cms.languages")}
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-1">
+              {siteLocales.map((code) => {
+                const summary = page.locales.find((l) => l.locale === code);
+                const info = LOCALE_LABELS[code];
+                const editing = locale === code;
+                return (
+                  <button
+                    key={code}
+                    onClick={() => setLocale(code)}
+                    className={`w-full flex items-center gap-2 rounded-md border px-2.5 py-2 text-sm transition-colors ${
+                      editing ? "border-primary bg-primary/5 text-primary" : "border-transparent hover:bg-muted"
+                    }`}
+                  >
+                    <span>{info?.flag ?? "🌐"}</span>
+                    <span className="flex-1 text-left">{info?.label ?? code}</span>
+                    {editing ? (
+                      <Badge className="bg-primary/10 text-primary text-[10px] px-1.5 py-0">{t("cms.editing")}</Badge>
+                    ) : summary?.status === "Published" ? (
+                      <Badge className="bg-green-100 text-green-700 text-[10px] px-1.5 py-0">{summary.blocks}</Badge>
+                    ) : (
+                      <Badge variant="outline" className="text-[10px] px-1.5 py-0 text-muted-foreground">
+                        {summary ? summary.blocks : "—"}
+                      </Badge>
+                    )}
+                  </button>
+                );
+              })}
+              <Button
+                variant="outline"
+                size="sm"
+                className="w-full mt-2"
+                onClick={() => translate.mutate()}
+                disabled={translate.isPending}
+              >
+                {translate.isPending ? (
+                  <Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" />
+                ) : (
+                  <Sparkles className="h-3.5 w-3.5 mr-1" />
+                )}
+                {t("cms.ai_translate_all")}
+              </Button>
+              <p className="text-[11px] text-muted-foreground pt-1">{t("cms.ai_translate_hint")}</p>
+            </CardContent>
+          </Card>
         </div>
       </div>
 
@@ -539,6 +583,6 @@ export default function CmsPageBuilder() {
           setDirty(true);
         }}
       />
-    </Layout>
+    </CmsWorkspace>
   );
 }

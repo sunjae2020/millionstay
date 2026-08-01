@@ -5941,6 +5941,23 @@
     "domain_platform": "Địa chỉ có sẵn, không cần thiết lập",
     "domain_error": "Không kiểm tra được địa chỉ này",
     "page_search": "Tìm kiếm",
-    "page_search_desc": "Tiêu đề và ảnh đầu trang tìm kiếm"
+    "page_search_desc": "Tiêu đề và ảnh đầu trang tìm kiếm",
+    "content": "Nội dung",
+    "search": "Tìm kiếm",
+    "editing": "Đang sửa",
+    "page_settings": "Cài đặt trang",
+    "internal_note": "Ghi chú nội bộ",
+    "internal_note_placeholder": "Ảnh bìa, giới thiệu công ty, số liệu…",
+    "internal_note_hint": "Chỉ nhóm của bạn thấy. Dùng để nhận biết trang trong cây nội dung.",
+    "builtin_address_locked": "Trang có sẵn giữ nguyên địa chỉ — đây là tuyến trong mã nguồn.",
+    "in_menu": "Hiện trong menu",
+    "status_draft": "Bản nháp",
+    "status_published": "Đã xuất bản",
+    "mode_blocks_title": "Trang này được dựng từ các khối",
+    "mode_blocks_hint": "Những gì bạn sửa bên dưới chính là những gì khách thấy.",
+    "mode_legacy_title": "Trang này dùng thiết kế có sẵn",
+    "mode_legacy_hint": "Chỉnh sửa ở đây chưa có tác dụng cho tới khi bạn chuyển sang khối.",
+    "back_to_original": "Về thiết kế gốc",
+    "build_from_blocks": "Dựng bằng khối"
   }
 }

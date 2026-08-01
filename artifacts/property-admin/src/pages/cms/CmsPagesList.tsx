@@ -2,7 +2,8 @@ import { useMemo, useState } from "react";
 import { Link, useLocation } from "wouter";
 import { useTranslation } from "react-i18next";
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
-import { Layout, PageHeader } from "@/components/Layout";
+import { PageHeader } from "@/components/Layout";
+import { CmsWorkspace } from "./CmsWorkspace";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -174,7 +175,7 @@ export default function CmsPagesList() {
   );
 
   return (
-    <Layout>
+    <CmsWorkspace>
       <PageHeader
         title={
           <>
@@ -282,7 +283,7 @@ export default function CmsPagesList() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </Layout>
+    </CmsWorkspace>
   );
 }
 

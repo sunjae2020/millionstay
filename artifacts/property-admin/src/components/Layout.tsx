@@ -195,8 +195,10 @@ function getNav(
       icon: Newspaper,
       defaultOpen: true,
       items: [
+        // "Pages" opens the content workspace, whose own tree lists every
+        // site's pages, blog and blog categories — so those are not repeated
+        // here. The entries below are the CMS screens that are not content.
         { href: "/cms/pages", label: t("nav.cms_pages"), icon: Globe },
-        { href: "/cms/blog", label: t("nav.cms_blog"), icon: Newspaper },
         { href: "/cms/listings", label: t("nav.sale_listings"), icon: Building2 },
         { href: "/cms/company", label: t("nav.cms_company"), icon: Building2 },
         { href: "/cms/media", label: t("nav.cms_media"), icon: Images },

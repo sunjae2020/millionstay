@@ -1,27 +1,34 @@
-import { useState } from "react";
+import { useEffect } from "react";
+import { useLocation } from "wouter";
 import { useTranslation } from "react-i18next";
-import { Layout } from "@/components/Layout";
+import { CmsWorkspace } from "./CmsWorkspace";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import BlogList from "@/pages/blog/BlogList";
 import BlogCategories from "@/pages/blog/BlogCategories";
 
-// The blog is one CMS screen with two tabs (posts / categories) instead of the
-// two separate sidebar entries it used to have. The embedded children skip
-// their own <Layout>, so this screen supplies the sidebar chrome once.
-export default function CmsBlog() {
+// The blog sits in the content tree beside the pages of the site it belongs to,
+// so which tab is open is a route (not local state) — clicking "Blog" or "Blog
+// Categories" in the tree lands on the right one, and the address is shareable.
+// `?site=` carries the site the tree entry was under.
+function CmsBlogScreen({ tab }: { tab: "posts" | "categories" }) {
   const { t } = useTranslation();
-  const [tab, setTab] = useState(() => localStorage.getItem("cms.blogTab") ?? "posts");
+  const [location, navigate] = useLocation();
+
+  // Selecting a site's blog in the tree also moves the CMS site selection, so
+  // the list, the "new post" button and the category list all agree.
+  useEffect(() => {
+    const site = new URLSearchParams(window.location.search).get("site");
+    if (site) localStorage.setItem("cms.site", site);
+  }, [location]);
+
+  const siteParam = typeof window !== "undefined" ? window.location.search : "";
 
   return (
-    <Layout>
+    <CmsWorkspace>
       <Tabs
         value={tab}
-        onValueChange={(v) => {
-          setTab(v);
-          localStorage.setItem("cms.blogTab", v);
-        }}
+        onValueChange={(v) => navigate(v === "posts" ? `/cms/blog${siteParam}` : `/cms/blog-categories${siteParam}`)}
       >
-        {/* The tab strip sits above the embedded page's own header. */}
         <div className="border-b bg-background px-6 pt-4">
           <TabsList>
             <TabsTrigger value="posts">{t("cms.blog_tab_posts")}</TabsTrigger>
@@ -35,6 +42,14 @@ export default function CmsBlog() {
           <BlogCategories embedded />
         </TabsContent>
       </Tabs>
-    </Layout>
+    </CmsWorkspace>
   );
+}
+
+export default function CmsBlog() {
+  return <CmsBlogScreen tab="posts" />;
+}
+
+export function CmsBlogCategories() {
+  return <CmsBlogScreen tab="categories" />;
 }
