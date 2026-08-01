@@ -8,9 +8,13 @@ const ListBlogPostsQuery = z.object({
   search: z.string().optional(),
   status: z.string().optional(),
   category: z.string().optional(),
+  site: z.string().optional(),
 });
 
 const CreateBlogPostBody = z.object({
+  site_key: z.string().optional(),
+  render_mode: z.enum(["legacy", "blocks"]).optional(),
+  cover_image_alt: z.string().optional().nullable(),
   title: z.string().min(1),
   slug: z.string().min(1),
   excerpt: z.string().optional().nullable(),
@@ -26,6 +30,9 @@ const CreateBlogPostBody = z.object({
 });
 
 const UpdateBlogPostBody = z.object({
+  site_key: z.string().optional(),
+  render_mode: z.enum(["legacy", "blocks"]).optional(),
+  cover_image_alt: z.string().optional().nullable(),
   title: z.string().min(1).optional(),
   slug: z.string().min(1).optional(),
   excerpt: z.string().optional().nullable(),
@@ -48,10 +55,12 @@ const router: IRouter = Router();
 router.get("/v1/blog-posts", async (req, res): Promise<void> => {
   const parsed = ListBlogPostsQuery.safeParse(req.query);
   if (!parsed.success) { res.status(400).json({ error: parsed.error.message }); return; }
-  const { search, status, category } = parsed.data;
+  const { search, status, category, site } = parsed.data;
   const conditions: SQL[] = [deletedFilter(blogPostsTable.deleted_at, req)];
   if (status) conditions.push(eq(blogPostsTable.status, status));
   if (category) conditions.push(eq(blogPostsTable.category, category));
+  // Each public site runs its own blog (www | homestay | dev).
+  if (site) conditions.push(eq(blogPostsTable.site_key, site));
   if (search) conditions.push(keywordCondition(search, [
     blogPostsTable.title, blogPostsTable.slug, blogPostsTable.excerpt, blogPostsTable.category,
   ]));

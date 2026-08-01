@@ -16,6 +16,7 @@
     "@pdf-lib/fontkit": "^1.1.1",
     "@workspace/address": "workspace:*",
     "@workspace/api-zod": "workspace:*",
+    "@workspace/cms-blocks": "workspace:*",
     "@workspace/db": "workspace:*",
     "bcryptjs": "^3.0.3",
     "cloudinary": "^2.9.0",

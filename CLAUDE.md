@@ -146,6 +146,24 @@ gates it, so keep it green. Two notable classes were fixed:
   a `lang: DocLang`; endpoints resolve it from `?lang=` and fall back to the
   tenant's `DEFAULT_DOC_LANG`. Status chips must go through `statusLabel(lang, …)`
   — never render a raw DB status into a document.
+- **Website content is block-based and per-locale.** Public pages and blog posts
+  are composed from **UI Blocks** — a shared block tree defined once in
+  **`@workspace/cms-blocks`** (`lib/cms-blocks/`) and read by the admin builder,
+  the API and the public renderer alike. Every read and write goes through
+  `normaliseBody()` (unknown block types dropped, `html`/`richtext` sanitised —
+  scripts are forbidden, tags allow-listed). Bodies live one row per
+  (page|post × locale) in `cms_page_translations` / `cms_post_translations`;
+  pages, sites, the block registry and per-site design tokens are in
+  `cms_pages` / `cms_sites` / `cms_block_templates` / `cms_site_settings`.
+  **Never put a raw colour or pixel value in a block** — `style` may only carry
+  token ROLES (`primary`/`accent`/`ink`/`surface`/`muted`) and scale steps (0–4),
+  which resolve from `cms_site_settings.design_tokens` (admin-edited per site at
+  CMS → Design Guide). Admin lives under `/cms/*`; `/content/*` redirects there.
+  `cms_pages.render_mode` is the migration switch: `legacy` pages still render
+  from the hardcoded React sections + `page_contents` overlay, and only pages an
+  editor flips to `blocks` are drawn by `<BlockRenderer>`. Each site (`www` /
+  `homestay` / `dev`) has its own pages, blog (`blog_posts.site_key`) and tokens.
+  See [docs/proposals/WEBSITE_CMS_BLOCK_BUILDER.md](docs/proposals/WEBSITE_CMS_BLOCK_BUILDER.md).
 - **Postal addresses follow the address's own country (UPU S42), not the reader's.**
   Compose every address — API and apps alike — with `formatPostalAddress(parts, lang)`
   from **`@workspace/address`** (`lib/address/`); never hand-join address fields.

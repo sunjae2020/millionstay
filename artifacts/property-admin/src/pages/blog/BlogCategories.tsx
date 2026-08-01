@@ -12,7 +12,7 @@ import { Tag, Plus, Trash2, Check, X, Pencil, ArrowUp, ArrowDown, Loader2, Alert
 import { useToast } from "@/hooks/use-toast";
 import { apiFetch } from "@/lib/apiFetch";
 
-type Category = { id: number; name: string; sort_order: number; is_active: boolean };
+type Category = { id: number; name: string; site_key: string; sort_order: number; is_active: boolean };
 
 const API = "/api/v1/blog-categories";
 
@@ -22,7 +22,7 @@ async function fetchCategories(): Promise<Category[]> {
   return (await res.json()).data ?? [];
 }
 
-export default function BlogCategories() {
+export default function BlogCategories({ embedded = false }: { embedded?: boolean } = {}) {
   const { t } = useTranslation();
   const qc = useQueryClient();
   const { toast } = useToast();
@@ -80,8 +80,10 @@ export default function BlogCategories() {
     update.mutate({ id: b.id, patch: { sort_order: a.sort_order } });
   }
 
+  const Shell = embedded ? EmbeddedShell : Layout;
+
   return (
-    <Layout>
+    <Shell>
       <PageHeader
         title={<><Tag className="h-5 w-5" />{t("blog_categories.title", { defaultValue: "Blog Categories" })}</>}
         subtitle={t("blog_categories.subtitle", { defaultValue: "Manage the categories available to blog posts and the public blog filter." })}
@@ -178,6 +180,12 @@ export default function BlogCategories() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </Layout>
+    </Shell>
   );
+}
+
+// When the categories screen is rendered inside the CMS blog tabs, the page
+// chrome (sidebar Layout) is already provided by the parent route.
+function EmbeddedShell({ children }: { children: React.ReactNode }) {
+  return <>{children}</>;
 }

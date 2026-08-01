@@ -9,7 +9,15 @@ export const blogPostsTable = pgTable("blog_posts", {
   excerpt: text("excerpt"),
   content: text("content"),
   cover_image_url: text("cover_image_url"),
+  cover_image_alt: text("cover_image_alt"),
   category: text("category"),
+  // Which public site this post belongs to ('www' | 'homestay' | 'dev'). Each
+  // site runs its own blog; historical posts default to the guest site.
+  site_key: text("site_key").notNull().default("www"),
+  // 'legacy' = the HTML in `content`; 'blocks' = the block tree in `body_json`
+  // (and per-locale trees in cms_post_translations).
+  render_mode: text("render_mode").notNull().default("legacy"),
+  body_json: jsonb("body_json"),
   author: text("author"),
   status: text("status").notNull().default("Draft"),
   published_at: timestamp("published_at", { withTimezone: true }),

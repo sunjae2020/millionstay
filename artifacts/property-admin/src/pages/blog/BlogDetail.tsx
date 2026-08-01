@@ -16,11 +16,12 @@ import {
   ArrowLeft, Save, Trash2, Globe, FileText, Search, Image, Eye, EyeOff,
   Bold, Italic, Underline, AlignLeft, AlignCenter, AlignRight,
   List, ListOrdered, Heading2, Heading3, Link as LinkIcon, Undo, Redo, Loader2,
-  Languages,
-} from "lucide-react";
+  Languages, LayoutTemplate,} from "lucide-react";
 
 import { useToast } from "@/hooks/use-toast";
 import { apiFetch } from "@/lib/apiFetch";
+import { useCmsSites } from "@/pages/cms/useCmsSites";
+import { PostBlockEditor } from "@/pages/cms/PostBlockEditor";
 
 const LANGUAGES = [
   { code: "ko", label: "Korean", flag: "🇰🇷" },
@@ -180,7 +181,7 @@ function SeoPreview({ title, description, slug }: { title: string; description: 
 
 const EMPTY_FORM = {
   title: "", slug: "", excerpt: "", content: "", cover_image_url: "",
-  category: "", author: "", status: "Draft", published_at: "",
+  category: "", author: "", status: "Draft", published_at: "", site_key: "www",
   seo_title: "", seo_description: "", seo_keywords: "",
 };
 
@@ -193,14 +194,15 @@ export default function BlogDetail() {
   const isNew = !params.id || params.id === "new";
   const [isSaving, setIsSaving] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
-  // A new post opened from the Homestay blog tab carries ?category=Homestay so
-  // it lands in the right site by default.
-  const initialCategory = isNew
-    ? new URLSearchParams(typeof window !== "undefined" ? window.location.search : "").get("category") ?? ""
-    : "";
-  const [form, setForm] = useState({ ...EMPTY_FORM, category: initialCategory });
+  // A new post opened from a site's blog tab carries ?site=<key> so it lands on
+  // the right site's blog by default.
+  const initialSite = isNew
+    ? new URLSearchParams(typeof window !== "undefined" ? window.location.search : "").get("site") ?? "www"
+    : "www";
+  const [form, setForm] = useState({ ...EMPTY_FORM, site_key: initialSite });
   const [slugManuallyEdited, setSlugManuallyEdited] = useState(false);
   const [translations, setTranslations] = useState<Record<string, LangData>>({});
+  const { sites: cmsSites } = useCmsSites();
 
   const { data: post, isLoading } = useQuery({
     queryKey: ["blog-post", params.id],
@@ -215,9 +217,9 @@ export default function BlogDetail() {
   // Category dropdown options come from the admin-managed list (active only);
   // fall back to the historical defaults if the list can't be loaded.
   const { data: categoryList } = useQuery({
-    queryKey: ["blog-categories"],
+    queryKey: ["blog-categories", form.site_key],
     queryFn: async () => {
-      const res = await apiFetch("/api/v1/blog-categories");
+      const res = await apiFetch(`/api/v1/blog-categories?site=${encodeURIComponent(form.site_key)}`);
       if (!res.ok) return [] as { name: string; is_active: boolean }[];
       return (await res.json()).data ?? [];
     },
@@ -235,6 +237,7 @@ export default function BlogDetail() {
         content: post.content ?? "",
         cover_image_url: post.cover_image_url ?? "",
         category: post.category ?? "",
+        site_key: post.site_key ?? "www",
         author: post.author ?? "",
         status: post.status ?? "Draft",
         published_at: post.published_at ? new Date(post.published_at).toISOString().slice(0, 16) : "",
@@ -297,7 +300,7 @@ export default function BlogDetail() {
       if (!res.ok) throw new Error(data.error ?? "Failed to save");
       qc.invalidateQueries({ queryKey: ["blog-posts"] });
       toast({ title: isNew ? t("blog.post_created") : t("blog.post_updated") });
-      if (isNew) navigate(`/content/blog/${data.id}`);
+      if (isNew) navigate(`/cms/blog/${data.id}`);
     } catch (err: any) {
       toast({ title: t("blog.error"), description: err.message, variant: "destructive" });
     } finally {
@@ -311,7 +314,7 @@ export default function BlogDetail() {
       if (!res.ok) throw new Error("Failed to delete");
       qc.invalidateQueries({ queryKey: ["blog-posts"] });
       toast({ title: t("blog.post_archived") });
-      navigate("/content/blog");
+      navigate("/cms/blog");
     } catch (err: any) {
       toast({ title: t("blog.error"), description: err.message, variant: "destructive" });
     }
@@ -333,7 +336,7 @@ export default function BlogDetail() {
       <PageHeader
         title={
           <div className="flex items-center gap-2">
-            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => navigate("/content/blog")}>
+            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => navigate("/cms/blog")}>
               <ArrowLeft className="h-4 w-4" />
             </Button>
             <FileText className="h-5 w-5" />
@@ -367,6 +370,7 @@ export default function BlogDetail() {
         <Tabs defaultValue="content" className="w-full">
           <TabsList className="mb-6">
             <TabsTrigger value="content" className="gap-1.5"><FileText className="h-3.5 w-3.5" />{t("blog.tab_content")}</TabsTrigger>
+            <TabsTrigger value="blocks" className="gap-1.5"><LayoutTemplate className="h-3.5 w-3.5" />{t("cms.tab_blocks")}</TabsTrigger>
             <TabsTrigger value="settings" className="gap-1.5"><Globe className="h-3.5 w-3.5" />{t("blog.tab_settings")}</TabsTrigger>
             <TabsTrigger value="seo" className="gap-1.5"><Search className="h-3.5 w-3.5" />{t("blog.tab_seo")}</TabsTrigger>
             <TabsTrigger value="translations" className="gap-1.5"><Languages className="h-3.5 w-3.5" />{t("blog.tab_translations")}</TabsTrigger>
@@ -431,7 +435,28 @@ export default function BlogDetail() {
             </div>
           </TabsContent>
 
+          <TabsContent value="blocks">
+            {/* Section-by-section body, same UI Blocks canvas as website pages. */}
+            <PostBlockEditor postId={params.id ?? "new"} siteKey={form.site_key} />
+          </TabsContent>
+
           <TabsContent value="settings" className="space-y-5 max-w-2xl">
+            {/* Which site's blog this post belongs to. Categories follow it. */}
+            <div>
+              <Label>{t("cms.field_site")}</Label>
+              <Select value={form.site_key} onValueChange={(v) => set("site_key", v)}>
+                <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {cmsSites.map((site) => (
+                    <SelectItem key={site.site_key} value={site.site_key}>
+                      {t(`cms.site_${site.site_key}`, { defaultValue: site.label })}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground mt-1">{t("cms.field_site_hint")}</p>
+            </div>
+
             <div className="grid grid-cols-2 gap-5">
               <div>
                 <Label>{t("common.status")}</Label>

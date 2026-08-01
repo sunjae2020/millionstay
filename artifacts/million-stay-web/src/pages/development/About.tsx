@@ -4,6 +4,8 @@ import { ArrowRight, Building2, Compass, HeartHandshake } from "lucide-react";
 import { DevLayout } from "@/components/development/DevLayout";
 import { BrandMark } from "@/components/brand-mark";
 import { usePageContent } from "@/lib/usePageContent";
+import { useCmsPage, useCmsSeo } from "@/lib/useCmsPage";
+import { BlockRenderer } from "@/components/cms/BlockRenderer";
 
 // 메트하임 소개 (About Metheim) — brand story, logo meaning, image gallery, vision,
 // values and headline numbers. Content-only, CMS-editable per-locale via
@@ -20,6 +22,7 @@ const DEFAULT_GALLERY = [
 export default function DevAbout() {
   const { t } = useTranslation();
   const pc = usePageContent("dev-about");
+  const cmsPage = useCmsPage("dev", "about");
 
   const VALUES = [
     { icon: Building2, title: pc("value_1_title", t("dev.about.value_1_title")), body: pc("value_1_body", t("dev.about.value_1_body")) },
@@ -37,6 +40,18 @@ export default function DevAbout() {
     value: pc(`stat_${n}_value`, t(`dev.about.stat_${n}_value`)),
     label: pc(`stat_${n}_label`, t(`dev.about.stat_${n}_label`)),
   }));
+
+  // Block-mode pilot: once an editor publishes /about as a block page in the
+  // CMS, that tree renders instead of the hardcoded sections below. Until then
+  // `cmsPage` is null and nothing about this page changes.
+  useCmsSeo(cmsPage, t("dev.about.hero_title"));
+  if (cmsPage) {
+    return (
+      <DevLayout title={cmsPage.title ?? t("dev.about.hero_title")}>
+        <BlockRenderer blocks={cmsPage.blocks} tokens={cmsPage.tokens} />
+      </DevLayout>
+    );
+  }
 
   return (
     <DevLayout title={t("dev.about.hero_title")}>

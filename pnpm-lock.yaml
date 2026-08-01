@@ -285,6 +285,9 @@ importers:
       '@workspace/api-zod':
         specifier: workspace:*
         version: link:../../lib/api-zod
+      '@workspace/cms-blocks':
+        specifier: workspace:*
+        version: link:../../lib/cms-blocks
       '@workspace/db':
         specifier: workspace:*
         version: link:../../lib/db
@@ -409,6 +412,9 @@ importers:
       '@workspace/address':
         specifier: workspace:*
         version: link:../../lib/address
+      '@workspace/cms-blocks':
+        specifier: workspace:*
+        version: link:../../lib/cms-blocks
       '@workspace/design-tokens':
         specifier: workspace:*
         version: link:../../lib/design-tokens
@@ -1002,6 +1008,9 @@ importers:
       '@workspace/address':
         specifier: workspace:*
         version: link:../../lib/address
+      '@workspace/cms-blocks':
+        specifier: workspace:*
+        version: link:../../lib/cms-blocks
       '@workspace/design-tokens':
         specifier: workspace:*
         version: link:../../lib/design-tokens
@@ -1405,6 +1414,8 @@ importers:
       zod:
         specifier: 'catalog:'
         version: 3.25.76
+
+  lib/cms-blocks: {}
 
   lib/db:
     dependencies:

@@ -102,7 +102,13 @@ import SaleInquiries from "@/pages/listings/SaleInquiries";
 import WebsiteContentList from "@/pages/content/WebsiteContentList";
 import WebsiteContentDetail from "@/pages/content/WebsiteContentDetail";
 import PageTranslations from "@/pages/content/PageTranslations";
-import MediaLibrary from "@/pages/content/MediaLibrary";
+import MediaLibrary from "@/pages/cms/CmsMedia";
+import CmsPagesList from "@/pages/cms/CmsPagesList";
+import CmsPageBuilder from "@/pages/cms/CmsPageBuilder";
+import CmsBlog from "@/pages/cms/CmsBlog";
+import CmsCompany from "@/pages/cms/CmsCompany";
+import CmsDesign from "@/pages/cms/CmsDesign";
+import CmsBlockTemplates from "@/pages/cms/CmsBlockTemplates";
 import KnowledgeBase from "@/pages/ai/KnowledgeBase";
 import Conversations from "@/pages/ai/Conversations";
 import ChatWidgetSettings from "@/pages/ai/ChatWidgetSettings";
@@ -288,16 +294,33 @@ function Router() {
       <Route path="/services/new" component={ServiceDetail} />
       <Route path="/services/:id" component={ServiceDetail} />
 
-      {/* ── CONTENT / BLOG ────────────────────────────── */}
-      <Route path="/content/blog" component={BlogList} />
-      <Route path="/content/blog-categories" component={BlogCategories} />
-      <Route path="/content/blog/new" component={BlogDetail} />
-      <Route path="/content/blog/:id" component={BlogDetail} />
-      <Route path="/content/listings" component={SaleListingsList} />
-      <Route path="/content/sale-inquiries" component={SaleInquiries} />
-      <Route path="/content/listings/new" component={SaleListingDetail} />
-      <Route path="/content/listings/:id" component={SaleListingDetail} />
-      <Route path="/content/media" component={MediaLibrary} />
+      {/* ── CMS ───────────────────────────────────────── */}
+      <Route path="/cms/pages" component={CmsPagesList} />
+      <Route path="/cms/pages/:id" component={CmsPageBuilder} />
+      <Route path="/cms/blog" component={CmsBlog} />
+      <Route path="/cms/blog/new" component={BlogDetail} />
+      <Route path="/cms/blog/:id" component={BlogDetail} />
+      <Route path="/cms/listings" component={SaleListingsList} />
+      <Route path="/cms/listings/new" component={SaleListingDetail} />
+      <Route path="/cms/listings/:id" component={SaleListingDetail} />
+      <Route path="/cms/sale-inquiries" component={SaleInquiries} />
+      <Route path="/cms/company" component={CmsCompany} />
+      <Route path="/cms/media" component={MediaLibrary} />
+      <Route path="/cms/design" component={CmsDesign} />
+      <Route path="/cms/blocks" component={CmsBlockTemplates} />
+
+      {/* Legacy /content/* addresses stay working — bookmarks and old links
+          redirect into the CMS group rather than 404ing. The fixed-field page
+          editor is still reachable while pages are migrated to blocks. */}
+      <Route path="/content/blog"><Redirect to="/cms/blog" /></Route>
+      <Route path="/content/blog-categories"><Redirect to="/cms/blog" /></Route>
+      <Route path="/content/blog/new"><Redirect to="/cms/blog/new" /></Route>
+      <Route path="/content/blog/:id">{(p) => <Redirect to={`/cms/blog/${p.id}`} />}</Route>
+      <Route path="/content/listings"><Redirect to="/cms/listings" /></Route>
+      <Route path="/content/sale-inquiries"><Redirect to="/cms/sale-inquiries" /></Route>
+      <Route path="/content/listings/new"><Redirect to="/cms/listings/new" /></Route>
+      <Route path="/content/listings/:id">{(p) => <Redirect to={`/cms/listings/${p.id}`} />}</Route>
+      <Route path="/content/media"><Redirect to="/cms/media" /></Route>
       <Route path="/content/pages" component={WebsiteContentList} />
       <Route path="/content/pages/:pageKey" component={WebsiteContentDetail} />
       <Route path="/content/page-translations" component={PageTranslations} />

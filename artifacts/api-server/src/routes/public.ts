@@ -29,7 +29,12 @@ import {
   blogCategoriesTable,
   saleListingsTable,
   saleInquiriesTable,
+  cmsSitesTable,
+  cmsPagesTable,
+  cmsPageTranslationsTable,
+  cmsSiteSettingsTable,
 } from "@workspace/db";
+import { normaliseBody, resolveTokens } from "@workspace/cms-blocks";
 import { ingestReservations } from "../lib/channels/reservations.js";
 import { insertLeadWithGeneratedRef } from "../lib/leadRef.js";
 import { sendLeadNotificationEmail } from "../lib/email.js";
@@ -1080,6 +1085,10 @@ router.get("/v1/public/blog", async (req, res): Promise<void> => {
     eq(blogPostsTable.status, "Published"),
   ];
   if (category) conditions.push(eq(blogPostsTable.category, category));
+  // Each public site runs its own blog. `?site=` is the current split; the
+  // older `exclude_category=Homestay` form still works for cached clients.
+  const site = req.query["site"] ? String(req.query["site"]) : "";
+  if (site) conditions.push(eq(blogPostsTable.site_key, site));
   // The guest (www) blog passes exclude_category=Homestay so homestay-only posts
   // stay on the homestay site and don't leak into the guest "All" listing. The
   // OR-isNull keeps uncategorised posts visible (ne() alone drops NULL rows).
@@ -1126,6 +1135,104 @@ router.get("/v1/public/page-contents/:pageKey/:language", async (req, res): Prom
     return;
   }
   res.json({ page_key: pageKey, language, ...row });
+});
+
+/* ───────────────────────────────────────────────────────
+   Public read of the block-based CMS. Returns a page's block tree for ONE
+   locale, plus the site's design tokens so the renderer can style it. Only
+   published pages/locales are served; the locale falls back
+   [requested → site default → en] the same way the rest of the guest API does.
+──────────────────────────────────────────────────────── */
+router.get("/v1/public/cms/pages/:siteKey/:slug", async (req, res): Promise<void> => {
+  const siteKey = String(req.params["siteKey"]);
+  const rawSlug = String(req.params["slug"] ?? "");
+  const slug = rawSlug === "-" ? "" : rawSlug;
+  const requested = String(req.query["lang"] ?? "");
+
+  const [site] = await db.select().from(cmsSitesTable).where(eq(cmsSitesTable.site_key, siteKey));
+  const [page] = await db
+    .select()
+    .from(cmsPagesTable)
+    .where(
+      and(
+        eq(cmsPagesTable.site_key, siteKey),
+        eq(cmsPagesTable.slug, slug),
+        eq(cmsPagesTable.status, "Published"),
+        isNull(cmsPagesTable.deleted_at),
+      ),
+    );
+  if (!page || page.render_mode !== "blocks") {
+    // Not a block page — the caller keeps its built-in/legacy rendering.
+    res.setHeader("Cache-Control", "no-store");
+    res.status(404).json({ error: "Not a published block page" });
+    return;
+  }
+
+  const rows = await db
+    .select()
+    .from(cmsPageTranslationsTable)
+    .where(
+      and(
+        eq(cmsPageTranslationsTable.page_id, page.id),
+        eq(cmsPageTranslationsTable.status, "Published"),
+      ),
+    );
+  const defaultLocale = site?.default_locale ?? "en";
+  const order = [requested, defaultLocale, "en"].filter(Boolean);
+  const chosen =
+    order.map((l) => rows.find((r) => r.locale === l)).find(Boolean) ?? rows[0];
+  if (!chosen) {
+    res.setHeader("Cache-Control", "no-store");
+    res.status(404).json({ error: "No published translation" });
+    return;
+  }
+
+  const [settings] = await db
+    .select()
+    .from(cmsSiteSettingsTable)
+    .where(eq(cmsSiteSettingsTable.site_key, siteKey));
+
+  res.setHeader("Cache-Control", "public, max-age=60");
+  res.json({
+    slug: page.slug,
+    site_key: page.site_key,
+    locale: chosen.locale,
+    title: chosen.title ?? page.title,
+    seo: {
+      title: chosen.seo_title ?? page.seo_title,
+      description: chosen.seo_description ?? page.seo_description,
+      keywords: chosen.seo_keywords ?? page.seo_keywords,
+      image: page.seo_image_url,
+    },
+    body: normaliseBody(chosen.body_json),
+    tokens: resolveTokens(settings?.design_tokens),
+    nav: { header: settings?.nav_header ?? [], footer: settings?.nav_footer ?? [] },
+  });
+});
+
+/** The site's published block pages — used to build navigation and sitemaps. */
+router.get("/v1/public/cms/pages/:siteKey", async (req, res): Promise<void> => {
+  const siteKey = String(req.params["siteKey"]);
+  const rows = await db
+    .select({
+      slug: cmsPagesTable.slug,
+      title: cmsPagesTable.title,
+      is_home: cmsPagesTable.is_home,
+      nav_hidden: cmsPagesTable.nav_hidden,
+      sort_order: cmsPagesTable.sort_order,
+    })
+    .from(cmsPagesTable)
+    .where(
+      and(
+        eq(cmsPagesTable.site_key, siteKey),
+        eq(cmsPagesTable.status, "Published"),
+        eq(cmsPagesTable.render_mode, "blocks"),
+        isNull(cmsPagesTable.deleted_at),
+      ),
+    )
+    .orderBy(asc(cmsPagesTable.sort_order));
+  res.setHeader("Cache-Control", "public, max-age=60");
+  res.json(rows);
 });
 
 /* ───────────────────────────────────────────────────────

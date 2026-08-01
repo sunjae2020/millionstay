@@ -9,15 +9,15 @@ import { formatDate } from "@/lib/dateFormat";
 
 const BASE = getApiBase();
 
-// Million Homestay blog. Shares the same blog_posts store as the guest site but
-// only surfaces posts tagged with the dedicated "Homestay" category. The page
+// Million Homestay blog. Posts are scoped by `site_key=homestay` (each site runs
+// its own blog); the old "Homestay category" split was migrated into it. The page
 // exists at /blog but is intentionally kept out of the main nav (HomestayNavbar)
 // — it's reached via direct link / footer / SEO for now.
 export const HOMESTAY_BLOG_CATEGORY = "Homestay";
 
 
 async function fetchHomestayPosts() {
-  const qs = new URLSearchParams({ category: HOMESTAY_BLOG_CATEGORY });
+  const qs = new URLSearchParams({ site: "homestay" });
   const res = await fetch(`${BASE}/api/v1/public/blog?${qs}`);
   if (!res.ok) throw new Error("Failed to fetch posts");
   const json = await res.json();

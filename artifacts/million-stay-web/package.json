@@ -15,6 +15,7 @@
     "@stripe/stripe-js": "^9.1.0",
     "@types/leaflet": "^1.9.21",
     "@workspace/address": "workspace:*",
+    "@workspace/cms-blocks": "workspace:*",
     "@workspace/design-tokens": "workspace:*",
     "i18next": "^26.0.3",
     "leaflet": "^1.9.4",

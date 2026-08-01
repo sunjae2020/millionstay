@@ -9,11 +9,13 @@ import * as z from "zod/v4";
 
 const CreateBody = z.object({
   name: z.string().min(1).max(60),
+  site_key: z.string().optional(),
   sort_order: z.number().int().optional(),
   is_active: z.boolean().optional(),
 });
 const UpdateBody = z.object({
   name: z.string().min(1).max(60).optional(),
+  site_key: z.string().optional(),
   sort_order: z.number().int().optional(),
   is_active: z.boolean().optional(),
 });
@@ -21,10 +23,13 @@ const IdParams = z.object({ id: z.coerce.number().int() });
 
 const router: IRouter = Router();
 
-router.get("/v1/blog-categories", async (_req, res): Promise<void> => {
+router.get("/v1/blog-categories", async (req, res): Promise<void> => {
+  // Categories belong to one site's blog; ?site= scopes the list.
+  const site = req.query["site"] ? String(req.query["site"]) : "";
   const rows = await db
     .select()
     .from(blogCategoriesTable)
+    .where(site ? eq(blogCategoriesTable.site_key, site) : undefined)
     .orderBy(asc(blogCategoriesTable.sort_order), asc(blogCategoriesTable.name));
   res.json({ data: rows });
 });

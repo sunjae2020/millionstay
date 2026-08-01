@@ -47,6 +47,7 @@ import {
   KeyRound,
   BarChart3,
   Palette,
+  LayoutTemplate,
   Plug,
   LogOut,
   Menu,
@@ -189,16 +190,18 @@ function getNav(
       ],
     },
     {
-      label: t("nav.content"),
+      // CMS — every website-content surface lives under one group.
+      label: t("nav.cms"),
       icon: Newspaper,
       defaultOpen: true,
       items: [
-        { href: "/content/blog", label: t("nav.blog_posts"), icon: Newspaper },
-        { href: "/content/blog-categories", label: t("nav.blog_categories"), icon: Tag },
-        { href: "/content/listings", label: t("nav.sale_listings"), icon: Building2 },
-        { href: "/content/pages", label: t("nav.website_pages"), icon: Globe },
-        { href: "/content/media", label: t("nav.media_library"), icon: Images },
-        { href: "/content/page-translations", label: t("nav.page_translations"), icon: Languages },
+        { href: "/cms/pages", label: t("nav.cms_pages"), icon: Globe },
+        { href: "/cms/blog", label: t("nav.cms_blog"), icon: Newspaper },
+        { href: "/cms/listings", label: t("nav.sale_listings"), icon: Building2 },
+        { href: "/cms/company", label: t("nav.cms_company"), icon: Building2 },
+        { href: "/cms/media", label: t("nav.cms_media"), icon: Images },
+        { href: "/cms/design", label: t("nav.cms_design"), icon: Palette },
+        { href: "/cms/blocks", label: t("nav.cms_blocks"), icon: LayoutTemplate },
       ],
     },
     {
