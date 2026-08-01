@@ -165,14 +165,15 @@ CREATE TABLE IF NOT EXISTS cms_media_assets (
 CREATE INDEX IF NOT EXISTS cms_media_assets_folder_idx ON cms_media_assets (folder);
 
 -- ── Seed: sites ────────────────────────────────────────────────────────────
+-- Labels and hosts are TENANT-specific: seeded blank here and filled per
+-- instance by scripts/seed-cms-sites.mjs (from tenants/<name>/config.env) or by
+-- an admin in CMS -> Pages -> site settings. Never hardcode one tenant's brand
+-- or domain into a migration every instance runs.
 INSERT INTO cms_sites (site_key, label, host, locales, default_locale, sort_order)
 VALUES
-  ('www',      'Guest site',   'https://millionstay.com.au',
-   '["en","ko","ja","th","vi","zh"]'::jsonb, 'en', 1),
-  ('homestay', 'Homestay',     'https://homestay.millionstay.com',
-   '["en","ja","ko","th","zh"]'::jsonb,      'en', 2),
-  ('dev',      'Development',  '',
-   '["ko","en","ja","th","vi","zh"]'::jsonb, 'ko', 3)
+  ('www',      'Guest site',  NULL, '["en","ko","ja","th","vi","zh"]'::jsonb, 'en', 1),
+  ('homestay', 'Homestay',    NULL, '["en","ja","ko","th","zh"]'::jsonb,      'en', 2),
+  ('dev',      'Development', NULL, '["ko","en","ja","th","vi","zh"]'::jsonb, 'ko', 3)
 ON CONFLICT (site_key) DO NOTHING;
 
 INSERT INTO cms_site_settings (site_key) VALUES ('www'), ('homestay'), ('dev')

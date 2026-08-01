@@ -36,10 +36,15 @@ const router: IRouter = Router();
 
 // ── Sites ──────────────────────────────────────────────────────────────────
 
-router.get("/v1/cms/sites", async (_req, res): Promise<void> => {
+router.get("/v1/cms/sites", async (req, res): Promise<void> => {
+  // Inactive sites are hidden by default: a development-only instance should
+  // not offer a guest/homestay site it does not run. `?all=1` includes them so
+  // the site-settings screen can turn one back on.
+  const includeInactive = ["1", "true"].includes(String(req.query["all"] ?? ""));
   const rows = await db
     .select()
     .from(cmsSitesTable)
+    .where(includeInactive ? undefined : eq(cmsSitesTable.is_active, true))
     .orderBy(asc(cmsSitesTable.sort_order), asc(cmsSitesTable.id));
   res.json(rows);
 });

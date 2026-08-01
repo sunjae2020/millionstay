@@ -5,7 +5,8 @@ import { DevLayout } from "@/components/development/DevLayout";
 import { BrandMark } from "@/components/brand-mark";
 import { usePageContent } from "@/lib/usePageContent";
 import { useCmsPage, useCmsSeo } from "@/lib/useCmsPage";
-import { BlockRenderer } from "@/components/cms/BlockRenderer";
+import { BlockRenderer } from "@workspace/cms-blocks/react";
+import { useCmsBlockData } from "@/lib/useCmsBlockData";
 
 // 메트하임 소개 (About Metheim) — brand story, logo meaning, image gallery, vision,
 // values and headline numbers. Content-only, CMS-editable per-locale via
@@ -23,6 +24,7 @@ export default function DevAbout() {
   const { t } = useTranslation();
   const pc = usePageContent("dev-about");
   const cmsPage = useCmsPage("dev", "about");
+  const cmsData = useCmsBlockData(cmsPage?.blocks ?? [], "dev");
 
   const VALUES = [
     { icon: Building2, title: pc("value_1_title", t("dev.about.value_1_title")), body: pc("value_1_body", t("dev.about.value_1_body")) },
@@ -48,7 +50,7 @@ export default function DevAbout() {
   if (cmsPage) {
     return (
       <DevLayout title={cmsPage.title ?? t("dev.about.hero_title")}>
-        <BlockRenderer blocks={cmsPage.blocks} tokens={cmsPage.tokens} />
+        <BlockRenderer blocks={cmsPage.blocks} tokens={cmsPage.tokens} data={cmsData} />
       </DevLayout>
     );
   }

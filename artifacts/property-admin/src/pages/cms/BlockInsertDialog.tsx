@@ -6,7 +6,8 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Search, LayoutTemplate } from "lucide-react";
 import { apiFetch } from "@/lib/apiFetch";
-import { BLOCK_CATEGORIES, type BlockCategory } from "@workspace/cms-blocks";
+import { BLOCK_CATEGORIES, resolveTokens, type BlockCategory, type DesignTokens } from "@workspace/cms-blocks";
+import { BlockPreview } from "./BlockPreview";
 
 // The "UI Blocks" catalog modal. Options come from the API so a site can
 // override a block's name/description/default props without a code change.
@@ -35,6 +36,18 @@ export function BlockInsertDialog({
   const { t } = useTranslation();
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState<string>("_all");
+
+  // Previews use the site's tokens so the picker shows the real thing.
+  const { data: settings } = useQuery({
+    queryKey: ["cms-site-settings", siteKey],
+    queryFn: async () => {
+      const res = await apiFetch(`/api/v1/cms/site-settings/${siteKey}`);
+      if (!res.ok) throw new Error("Failed to load settings");
+      return res.json();
+    },
+    enabled: open && Boolean(siteKey),
+  });
+  const tokens: DesignTokens = resolveTokens(settings?.design_tokens);
 
   const { data: catalog = [] } = useQuery<CatalogEntry[]>({
     queryKey: ["cms-block-catalog", siteKey],
@@ -95,8 +108,10 @@ export function BlockInsertDialog({
                 onPick(entry.type, entry.defaultProps);
                 onOpenChange(false);
               }}
-              className="text-left rounded-lg border p-3 hover:border-primary hover:bg-primary/5 transition-colors"
+              className="text-left rounded-lg border overflow-hidden hover:border-primary hover:bg-primary/5 transition-colors"
             >
+              <BlockPreview type={entry.type} props={entry.defaultProps} tokens={tokens} height={112} />
+              <div className="p-3">
               <div className="flex items-start justify-between gap-2">
                 <span className="font-medium text-sm">{entry.name}</span>
                 {entry.isCustom && (
@@ -109,6 +124,7 @@ export function BlockInsertDialog({
               <Badge variant="outline" className="text-[10px] px-1 py-0 mt-2 font-normal">
                 {t(`cms.category_${entry.category.toLowerCase()}`, { defaultValue: entry.category })}
               </Badge>
+              </div>
             </button>
           ))}
           {filtered.length === 0 && (

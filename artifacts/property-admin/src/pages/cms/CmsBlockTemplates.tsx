@@ -12,7 +12,8 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "
 import { LayoutTemplate, Save, Trash2, Info, Loader2 } from "lucide-react";
 import { apiFetch } from "@/lib/apiFetch";
 import { useToast } from "@/hooks/use-toast";
-import { BLOCK_SPEC_LIST } from "@workspace/cms-blocks";
+import { BLOCK_SPEC_LIST, resolveTokens, type DesignTokens } from "@workspace/cms-blocks";
+import { BlockPreview } from "./BlockPreview";
 import { useCmsSites } from "./useCmsSites";
 import { SiteSwitcher } from "./CmsPagesList";
 
@@ -38,6 +39,19 @@ export default function CmsBlockTemplates() {
   const { sites, siteKey, setSiteKey } = useCmsSites();
   const [editing, setEditing] = useState<{ type: string; template: BlockTemplate | null } | null>(null);
   const [draft, setDraft] = useState({ name: "", description: "", defaultProps: "{}" });
+
+  // Previews render with the site's own design tokens, so what staff see here
+  // is what the block will look like once published.
+  const { data: settings } = useQuery({
+    queryKey: ["cms-site-settings", siteKey],
+    queryFn: async () => {
+      const res = await apiFetch(`/api/v1/cms/site-settings/${siteKey}`);
+      if (!res.ok) throw new Error("Failed to load settings");
+      return res.json();
+    },
+    enabled: Boolean(siteKey),
+  });
+  const tokens: DesignTokens = resolveTokens(settings?.design_tokens);
 
   const { data: templates = [], isLoading } = useQuery<BlockTemplate[]>({
     queryKey: ["cms-block-templates"],
@@ -138,6 +152,11 @@ export default function CmsBlockTemplates() {
               const override = overrideFor.get(spec.type);
               return (
                 <Card key={spec.type} className={override ? "border-primary/40" : ""}>
+                  <BlockPreview
+                    type={spec.type}
+                    props={(override?.default_props as Record<string, unknown>) ?? spec.defaultProps}
+                    tokens={tokens}
+                  />
                   <CardContent className="pt-4">
                     <div className="flex items-start justify-between gap-2">
                       <span className="font-medium text-sm">{override?.name ?? spec.name}</span>

@@ -5779,9 +5779,6 @@
     "field_slug_hint": "The path after the domain. Leave empty for the homepage.",
     "field_site": "Site",
     "field_site_hint": "Each site runs its own pages and blog.",
-    "site_www": "Guest site",
-    "site_homestay": "Homestay",
-    "site_dev": "Development",
     "tab_body": "Content",
     "tab_seo": "SEO",
     "tab_settings": "Settings",
@@ -5928,6 +5925,14 @@
     "preset_description": "Description",
     "preset_default_props": "Starting content (JSON)",
     "preset_props_hint": "Applied when an editor inserts this block.",
-    "invalid_json": "That is not valid JSON."
+    "invalid_json": "That is not valid JSON.",
+    "site_settings": "Site settings",
+    "site_settings_hint": "Each site's public name, address and languages. These are your organisation's own details — they appear in the CMS and on the published pages.",
+    "site_label": "Site name",
+    "site_label_placeholder": "Your company or site name",
+    "site_host": "Public address",
+    "site_locales": "Languages",
+    "site_default_locale": "Default language",
+    "site_active": "In use"
   }
 }

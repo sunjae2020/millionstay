@@ -5779,9 +5779,6 @@
     "field_slug_hint": "ドメイン以降のパスです。ホームページの場合は空欄にしてください。",
     "field_site": "サイト",
     "field_site_hint": "各サイトは独自のページとブログを持ちます。",
-    "site_www": "ゲストサイト",
-    "site_homestay": "ホームステイ",
-    "site_dev": "開発",
     "tab_body": "コンテンツ",
     "tab_seo": "SEO",
     "tab_settings": "設定",
@@ -5928,6 +5925,14 @@
     "preset_description": "説明",
     "preset_default_props": "初期コンテンツ（JSON）",
     "preset_props_hint": "編集者がこのブロックを挿入する際に適用されます。",
-    "invalid_json": "有効なJSONではありません。"
+    "invalid_json": "有効なJSONではありません。",
+    "site_settings": "サイト設定",
+    "site_settings_hint": "各サイトの公開名・アドレス・言語です。自社の情報であり、CMSと公開ページにそのまま表示されます。",
+    "site_label": "サイト名",
+    "site_label_placeholder": "会社名またはサイト名",
+    "site_host": "公開アドレス",
+    "site_locales": "言語",
+    "site_default_locale": "既定の言語",
+    "site_active": "使用中"
   }
 }

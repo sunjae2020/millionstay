@@ -9,12 +9,13 @@ import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Plus, Search, Globe, Layers } from "lucide-react";
+import { Plus, Search, Globe, Layers, Settings2 } from "lucide-react";
 import { apiFetch } from "@/lib/apiFetch";
 import { formatDate } from "@/lib/date";
 import { DataTable, type ColumnDef } from "@/components/ui/data-table";
 import { useToast } from "@/hooks/use-toast";
 import { useCmsSites } from "./useCmsSites";
+import { SiteSettingsDialog } from "./SiteSettingsDialog";
 
 // The CMS pages register. Every public page of every site lives here; the
 // per-locale bodies are edited in the builder (/cms/pages/:id).
@@ -57,6 +58,7 @@ export default function CmsPagesList() {
   const [showDeleted, setShowDeleted] = useState(false);
   const [createOpen, setCreateOpen] = useState(false);
   const [draft, setDraft] = useState({ title: "", slug: "" });
+  const [siteSettingsOpen, setSiteSettingsOpen] = useState(false);
 
   const { data: pages = [], isLoading } = useQuery<CmsPage[]>({
     queryKey: ["cms-pages", siteKey, search, status, showDeleted],
@@ -182,10 +184,16 @@ export default function CmsPagesList() {
         }
         subtitle={t("cms.pages_subtitle", { count: pages.length })}
         actions={
-          <Button onClick={() => setCreateOpen(true)}>
-            <Plus className="h-4 w-4 mr-2" />
-            {t("cms.new_page")}
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button variant="outline" onClick={() => setSiteSettingsOpen(true)}>
+              <Settings2 className="h-4 w-4 mr-2" />
+              {t("cms.site_settings")}
+            </Button>
+            <Button onClick={() => setCreateOpen(true)}>
+              <Plus className="h-4 w-4 mr-2" />
+              {t("cms.new_page")}
+            </Button>
+          </div>
         }
       />
 
@@ -237,6 +245,8 @@ export default function CmsPagesList() {
           }
         />
       </div>
+
+      <SiteSettingsDialog open={siteSettingsOpen} onOpenChange={setSiteSettingsOpen} />
 
       <Dialog open={createOpen} onOpenChange={setCreateOpen}>
         <DialogContent>
@@ -297,7 +307,8 @@ export function SiteSwitcher({
             value === site.site_key ? "bg-white shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground"
           }`}
         >
-          <span>{t(`cms.site_${site.site_key}`, { defaultValue: site.label })}</span>
+          {/* The label is tenant data — never a hardcoded product name. */}
+          <span>{site.label || site.site_key}</span>
           {site.host && (
             <Badge variant="outline" className="text-[10px] px-1.5 py-0 font-normal">
               {site.host.replace(/^https?:\/\//, "")}

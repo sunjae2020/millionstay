@@ -449,7 +449,7 @@ export default function BlogDetail() {
                 <SelectContent>
                   {cmsSites.map((site) => (
                     <SelectItem key={site.site_key} value={site.site_key}>
-                      {t(`cms.site_${site.site_key}`, { defaultValue: site.label })}
+                      {site.label || site.site_key}
                     </SelectItem>
                   ))}
                 </SelectContent>

@@ -5779,9 +5779,6 @@
     "field_slug_hint": "域名之后的路径。留空表示首页。",
     "field_site": "站点",
     "field_site_hint": "每个站点拥有各自的页面和博客。",
-    "site_www": "访客站点",
-    "site_homestay": "民宿",
-    "site_dev": "开发环境",
     "tab_body": "内容",
     "tab_seo": "SEO",
     "tab_settings": "设置",
@@ -5928,6 +5925,14 @@
     "preset_description": "描述",
     "preset_default_props": "初始内容（JSON）",
     "preset_props_hint": "当编辑者插入该区块时将应用此内容。",
-    "invalid_json": "该内容不是有效的 JSON。"
+    "invalid_json": "该内容不是有效的 JSON。",
+    "site_settings": "站点设置",
+    "site_settings_hint": "各站点的公开名称、地址与语言。这些是贵公司的信息，会显示在 CMS 和已发布页面上。",
+    "site_label": "站点名称",
+    "site_label_placeholder": "公司名称或站点名称",
+    "site_host": "公开地址",
+    "site_locales": "语言",
+    "site_default_locale": "默认语言",
+    "site_active": "使用中"
   }
 }

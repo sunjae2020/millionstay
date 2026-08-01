@@ -5779,9 +5779,6 @@
     "field_slug_hint": "เส้นทางหลังชื่อโดเมน เว้นว่างไว้สำหรับหน้าแรก",
     "field_site": "ไซต์",
     "field_site_hint": "แต่ละไซต์มีหน้าและบล็อกของตัวเอง",
-    "site_www": "เว็บไซต์สำหรับผู้เข้าพัก",
-    "site_homestay": "โฮมสเตย์",
-    "site_dev": "สำหรับพัฒนา",
     "tab_body": "เนื้อหา",
     "tab_seo": "SEO",
     "tab_settings": "การตั้งค่า",
@@ -5928,6 +5925,14 @@
     "preset_description": "คำอธิบาย",
     "preset_default_props": "เนื้อหาเริ่มต้น (JSON)",
     "preset_props_hint": "นำไปใช้เมื่อผู้แก้ไขแทรกบล็อกนี้",
-    "invalid_json": "นี่ไม่ใช่ JSON ที่ถูกต้อง"
+    "invalid_json": "นี่ไม่ใช่ JSON ที่ถูกต้อง",
+    "site_settings": "ตั้งค่าเว็บไซต์",
+    "site_settings_hint": "ชื่อสาธารณะ ที่อยู่ และภาษาของแต่ละเว็บไซต์ ข้อมูลนี้เป็นของบริษัทคุณและจะแสดงใน CMS และหน้าที่เผยแพร่",
+    "site_label": "ชื่อเว็บไซต์",
+    "site_label_placeholder": "ชื่อบริษัทหรือชื่อเว็บไซต์",
+    "site_host": "ที่อยู่สาธารณะ",
+    "site_locales": "ภาษา",
+    "site_default_locale": "ภาษาเริ่มต้น",
+    "site_active": "ใช้งานอยู่"
   }
 }

@@ -1,17 +1,19 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
+import { Layout } from "@/components/Layout";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import BlogList from "@/pages/blog/BlogList";
 import BlogCategories from "@/pages/blog/BlogCategories";
 
 // The blog is one CMS screen with two tabs (posts / categories) instead of the
-// two separate sidebar entries it used to have.
+// two separate sidebar entries it used to have. The embedded children skip
+// their own <Layout>, so this screen supplies the sidebar chrome once.
 export default function CmsBlog() {
   const { t } = useTranslation();
   const [tab, setTab] = useState(() => localStorage.getItem("cms.blogTab") ?? "posts");
 
   return (
-    <div className="cms-blog">
+    <Layout>
       <Tabs
         value={tab}
         onValueChange={(v) => {
@@ -19,8 +21,8 @@ export default function CmsBlog() {
           localStorage.setItem("cms.blogTab", v);
         }}
       >
-        {/* The tab strip floats above the embedded page's own header. */}
-        <div className="border-b bg-white px-6 pt-4">
+        {/* The tab strip sits above the embedded page's own header. */}
+        <div className="border-b bg-background px-6 pt-4">
           <TabsList>
             <TabsTrigger value="posts">{t("cms.blog_tab_posts")}</TabsTrigger>
             <TabsTrigger value="categories">{t("cms.blog_tab_categories")}</TabsTrigger>
@@ -33,6 +35,6 @@ export default function CmsBlog() {
           <BlogCategories embedded />
         </TabsContent>
       </Tabs>
-    </div>
+    </Layout>
   );
 }

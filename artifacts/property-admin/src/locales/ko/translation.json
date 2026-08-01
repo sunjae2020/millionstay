@@ -5779,9 +5779,6 @@
     "field_slug_hint": "도메인 뒤에 붙는 경로입니다. 홈페이지는 비워 두세요.",
     "field_site": "사이트",
     "field_site_hint": "사이트마다 페이지와 블로그를 따로 운영합니다.",
-    "site_www": "게스트 사이트",
-    "site_homestay": "홈스테이",
-    "site_dev": "개발 사이트",
     "tab_body": "본문",
     "tab_seo": "SEO",
     "tab_settings": "설정",
@@ -5928,6 +5925,14 @@
     "preset_description": "설명",
     "preset_default_props": "기본 내용 (JSON)",
     "preset_props_hint": "블록을 삽입할 때 이 내용으로 시작합니다.",
-    "invalid_json": "올바른 JSON이 아닙니다."
+    "invalid_json": "올바른 JSON이 아닙니다.",
+    "site_settings": "사이트 설정",
+    "site_settings_hint": "각 사이트의 공개 이름·주소·언어입니다. 우리 회사 정보이며 CMS와 발행된 페이지에 그대로 표시됩니다.",
+    "site_label": "사이트 이름",
+    "site_label_placeholder": "회사명 또는 사이트명",
+    "site_host": "공개 주소",
+    "site_locales": "언어",
+    "site_default_locale": "기본 언어",
+    "site_active": "사용 중"
   }
 }

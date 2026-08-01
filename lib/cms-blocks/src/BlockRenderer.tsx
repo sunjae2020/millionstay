@@ -1,12 +1,6 @@
-import { Link } from "wouter";
-import {
-  sanitiseHtml,
-  styleToCss,
-  tokensToCssVars,
-  type Block,
-  type BlockImage,
-  type DesignTokens,
-} from "@workspace/cms-blocks";
+import { sanitiseHtml } from "./sanitise";
+import { styleToCss, tokensToCssVars, type DesignTokens } from "./tokens";
+import type { Block, BlockImage } from "./types";
 
 // ---------------------------------------------------------------------------
 // The public renderer for CMS block pages. One component per block type, driven
@@ -17,24 +11,62 @@ import {
 // a raw colour or pixel value, which is what keeps pages visually consistent.
 // ---------------------------------------------------------------------------
 
-export function BlockRenderer({ blocks, tokens }: { blocks: Block[]; tokens: DesignTokens }) {
+/**
+ * Rows the data-backed blocks render. The host app fetches them (it owns the API
+ * base and auth) and hands them in, which keeps this package free of any
+ * network or routing dependency.
+ */
+export interface BlockDataItem {
+  id: string | number;
+  title: string;
+  subtitle?: string;
+  description?: string;
+  imageUrl?: string;
+  href?: string;
+  meta?: string;
+}
+
+export interface BlockData {
+  "space-listings"?: BlockDataItem[];
+  "sale-listings"?: BlockDataItem[];
+  "blog-posts"?: BlockDataItem[];
+}
+
+export function BlockRenderer({
+  blocks,
+  tokens,
+  data,
+}: {
+  blocks: Block[];
+  tokens: DesignTokens;
+  data?: BlockData;
+}) {
   return (
     <div style={tokensToCssVars(tokens) as React.CSSProperties} className="cms-page">
       {blocks.filter((b) => !b.hidden).map((block) => (
-        <BlockView key={block.id} block={block} tokens={tokens} />
+        <BlockView key={block.id} block={block} tokens={tokens} data={data} />
       ))}
     </div>
   );
 }
 
-function BlockView({ block, tokens }: { block: Block; tokens: DesignTokens }) {
+function BlockView({
+  block,
+  tokens,
+  data,
+}: {
+  block: Block;
+  tokens: DesignTokens;
+  data?: BlockData;
+}) {
   const style = styleToCss(block.style, tokens) as React.CSSProperties;
   const contained = (block.style?.width ?? "contained") === "contained";
-  const inner = <BlockBody block={block} tokens={tokens} />;
 
   return (
     <section style={style} className="w-full">
-      <div className={contained ? "mx-auto max-w-6xl px-4 sm:px-6" : "w-full"}>{inner}</div>
+      <div className={contained ? "mx-auto max-w-6xl px-4 sm:px-6" : "w-full"}>
+        <BlockBody block={block} tokens={tokens} data={data} />
+      </div>
     </section>
   );
 }
@@ -83,14 +115,16 @@ function CtaButton({ label, href }: { label: string; href: string }) {
     borderRadius: "var(--cms-radius)",
   } as React.CSSProperties;
   if (!href) return <span className={className} style={style}>{label}</span>;
-  return href.startsWith("http") ? (
-    <a className={className} style={style} href={href} target="_blank" rel="noopener noreferrer">
+  const external = /^https?:/i.test(href);
+  return (
+    <a
+      className={className}
+      style={style}
+      href={href}
+      {...(external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
+    >
       {label}
     </a>
-  ) : (
-    <Link href={href} className={className} style={style}>
-      {label}
-    </Link>
   );
 }
 
@@ -115,7 +149,15 @@ const GRID_COLS: Record<string, string> = {
 
 // ── per-type rendering ─────────────────────────────────────────────────────
 
-function BlockBody({ block, tokens }: { block: Block; tokens: DesignTokens }) {
+function BlockBody({
+  block,
+  tokens,
+  data,
+}: {
+  block: Block;
+  tokens: DesignTokens;
+  data?: BlockData;
+}) {
   const p = block.props;
 
   switch (block.type) {
@@ -128,7 +170,7 @@ function BlockBody({ block, tokens }: { block: Block; tokens: DesignTokens }) {
             {(block.children ?? [])
               .filter((c) => !c.hidden)
               .map((child) => (
-                <BlockView key={child.id} block={child} tokens={tokens} />
+                <BlockView key={child.id} block={child} tokens={tokens} data={data} />
               ))}
           </div>
         </div>
@@ -540,16 +582,43 @@ function BlockBody({ block, tokens }: { block: Block; tokens: DesignTokens }) {
       );
     }
 
-    // Data-backed blocks are rendered by dedicated components that fetch live
-    // rows; until those are wired the heading still renders so the page reads.
+    // Data-backed blocks: the host app supplies the rows, this renders them.
     case "space-listings":
     case "sale-listings":
-    case "blog-posts":
+    case "blog-posts": {
+      const items = (data?.[block.type] ?? []).slice(0, Number(p["limit"]) || 6);
       return (
         <div>
           <Heading className="text-center">{str(p["title"])}</Heading>
+          {items.length === 0 ? (
+            <p className="mt-4 text-center text-sm opacity-60">{str(p["emptyText"]) || "—"}</p>
+          ) : (
+            <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+              {items.map((item) => (
+                <a
+                  key={item.id}
+                  href={item.href ?? "#"}
+                  className="block border overflow-hidden hover:opacity-90 transition-opacity"
+                  style={{ borderRadius: "var(--cms-radius)" }}
+                >
+                  {item.imageUrl && (
+                    <img src={item.imageUrl} alt="" loading="lazy" className="w-full h-40 object-cover" />
+                  )}
+                  <div className="p-4">
+                    {item.meta && <p className="text-xs opacity-60">{item.meta}</p>}
+                    <p className="font-semibold mt-0.5">{item.title}</p>
+                    {item.subtitle && <p className="text-sm opacity-75 mt-0.5">{item.subtitle}</p>}
+                    {item.description && (
+                      <p className="text-sm opacity-70 mt-2 line-clamp-2">{item.description}</p>
+                    )}
+                  </div>
+                </a>
+              ))}
+            </div>
+          )}
         </div>
       );
+    }
 
     default:
       return null;

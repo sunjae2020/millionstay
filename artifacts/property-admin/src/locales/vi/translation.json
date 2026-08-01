@@ -5779,9 +5779,6 @@
     "field_slug_hint": "Đường dẫn sau tên miền. Để trống nếu là trang chủ.",
     "field_site": "Trang web",
     "field_site_hint": "Mỗi trang web có các trang và blog riêng.",
-    "site_www": "Trang khách",
-    "site_homestay": "Homestay",
-    "site_dev": "Phát triển",
     "tab_body": "Nội dung",
     "tab_seo": "SEO",
     "tab_settings": "Cài đặt",
@@ -5928,6 +5925,14 @@
     "preset_description": "Mô tả",
     "preset_default_props": "Nội dung khởi tạo (JSON)",
     "preset_props_hint": "Được áp dụng khi biên tập viên chèn khối này.",
-    "invalid_json": "Đây không phải là JSON hợp lệ."
+    "invalid_json": "Đây không phải là JSON hợp lệ.",
+    "site_settings": "Cài đặt trang",
+    "site_settings_hint": "Tên công khai, địa chỉ và ngôn ngữ của từng trang. Đây là thông tin của công ty bạn và sẽ hiển thị trong CMS cũng như trên các trang đã xuất bản.",
+    "site_label": "Tên trang",
+    "site_label_placeholder": "Tên công ty hoặc tên trang",
+    "site_host": "Địa chỉ công khai",
+    "site_locales": "Ngôn ngữ",
+    "site_default_locale": "Ngôn ngữ mặc định",
+    "site_active": "Đang dùng"
   }
 }
