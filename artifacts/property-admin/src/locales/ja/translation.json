@@ -1833,7 +1833,8 @@
     "placeholder_max_occupancy": "例: 2",
     "placeholder_floor_number": "例: 3",
     "placeholder_floor_area": "例: 25.5",
-    "placeholder_landlord_account": "アカウントID"
+    "placeholder_landlord_account": "アカウントID",
+    "tab_documents": "書類"
   },
   "space_option": {
     "new": "新規スペースオプション",
@@ -5532,7 +5533,9 @@
     "email": "メールを送信",
     "close": "閉じる",
     "new_tab": "新しいタブで開く",
-    "open_record": "レコードへ移動"
+    "open_record": "レコードへ移動",
+    "no_inline": "ブラウザでプレビューできない形式です。",
+    "no_inline_hint": "画面に表示できるのはPDFと画像のみです。ダウンロードして開いてください — {{name}}"
   },
   "error_boundary": {
     "title": "問題が発生しました",
@@ -5634,7 +5637,9 @@
     },
     "entity": {
       "contract": "契約",
-      "contact": "個人"
+      "contact": "個人",
+      "space": "住戸",
+      "account": "会社・組織"
     },
     "source": {
       "filename": "ファイル名から",
@@ -5653,7 +5658,17 @@
       "monthly_rent": "月額賃料",
       "reference": "文書番号",
       "notes": "備考"
-    }
+    },
+    "subtitle2": "既存の書類をまとめてアップロードできます。ファイル形式に制限はなく、PDFと写真は自動で読み取り・照合されます。それ以外の形式は手動で指定して添付してください。確認を押すまで添付されません。",
+    "searchIn": {
+      "contract": "契約を検索…",
+      "contact": "人物を検索…",
+      "space": "住戸を検索…",
+      "account": "会社・組織を検索…"
+    },
+    "noMatchHint": "自動で一致するレコードが見つかりませんでした。下で住戸・契約・人物・会社から対象を選び、手動で添付してください。",
+    "noPreviewHint": "この形式はプレビューできません。ダウンロードして開いてください。添付はそのまま可能です。",
+    "manualNeeded": "自動で読み取れないファイルです — 手動で添付先を指定してください。"
   },
   "contract_docs": {
     "section": "契約書類",

@@ -86,6 +86,39 @@ const DOC_TYPES = [
 /** Identity documents may only be filed against a person. */
 const PERSON_ONLY = new Set<string>(["id_document", "visa_document"]);
 
+/**
+ * Records a reviewer may file against, and the lookup that finds each one.
+ *
+ * Mirrors the server's `FILEABLE_ENTITIES`. The matcher only ever proposes a
+ * contract or a person, so unit and organisation are here for the case this
+ * screen exists for: nothing was matched (or the wrong thing was) and the
+ * reviewer files the document by hand — a 등기부등본 or 관리비 내역서 belongs to
+ * a 호수, not to whichever lease happened to be on it that year.
+ */
+const FILE_TARGETS = [
+  { value: "contract", path: "contracts" },
+  { value: "contact", path: "contacts" },
+  { value: "space", path: "spaces" },
+  { value: "account", path: "accounts" },
+] as const;
+
+type FileTarget = (typeof FILE_TARGETS)[number]["value"];
+
+const LOOKUP_PATH = Object.fromEntries(
+  FILE_TARGETS.map((e) => [e.value, e.path]),
+) as Record<FileTarget, string>;
+
+/**
+ * Types a browser renders inline. Any file type may be uploaded — a .docx or a
+ * .zip is stored and filed like anything else — but only these can be shown in
+ * the preview modal, so the screen says so rather than opening a blank pane.
+ */
+function isPreviewable(mime: string | null): boolean {
+  if (!mime) return true; // unknown — let the preview try rather than block it
+  const m = mime.toLowerCase();
+  return m.startsWith("application/pdf") || m.startsWith("image/") || m.startsWith("text/plain");
+}
+
 const STATUS_STYLES: Record<string, string> = {
   pending: "bg-gray-100 text-gray-600",
   scanned: "bg-green-100 text-green-700",
@@ -135,7 +168,7 @@ export default function DocumentIntake() {
   const [busy, setBusy] = useState<string | null>(null);
 
   // Reviewer overrides for the selected item, seeded from the suggestion.
-  const [entityType, setEntityType] = useState<"contract" | "contact">("contract");
+  const [entityType, setEntityType] = useState<FileTarget>("contract");
   const [entityId, setEntityId] = useState<number | null>(null);
   const [docType, setDocType] = useState<string>("other");
   const [search, setSearch] = useState("");
@@ -165,9 +198,9 @@ export default function DocumentIntake() {
   useEffect(() => {
     if (!selected) return;
     const suggestedType =
-      selected.suggested_entity_type === "contact" ? "contact"
-      : selected.suggested_entity_type === "contract" ? "contract"
-      : PERSON_ONLY.has(selected.detected_doc_type ?? "") ? "contact" : "contract";
+      FILE_TARGETS.some((e) => e.value === selected.suggested_entity_type)
+        ? (selected.suggested_entity_type as FileTarget)
+        : PERSON_ONLY.has(selected.detected_doc_type ?? "") ? "contact" : "contract";
     setEntityType(suggestedType);
     setEntityId(selected.suggested_entity_id ?? null);
     setDocType(selected.detected_doc_type ?? "other");
@@ -179,7 +212,7 @@ export default function DocumentIntake() {
     queryKey: ["intake-lookup", entityType, search],
     queryFn: () =>
       apiJson<LookupOption[]>(
-        `/api/v1/lookup/${entityType === "contact" ? "contacts" : "contracts"}?q=${encodeURIComponent(search)}`,
+        `/api/v1/lookup/${LOOKUP_PATH[entityType]}?q=${encodeURIComponent(search)}`,
       ),
     enabled: Boolean(selected),
   });
@@ -314,8 +347,8 @@ export default function DocumentIntake() {
       <PageHeader
         title={t("intake.title", "Bulk document intake")}
         subtitle={t(
-          "intake.subtitle",
-          "Upload existing paperwork in bulk. Each file is read, matched to a record, and filed only after you confirm it.",
+          "intake.subtitle2",
+          "Upload existing paperwork in bulk — any file type. PDFs and photos are read and matched automatically; anything else is parked for you to file by hand. Nothing is attached until you confirm it.",
         )}
       />
 
@@ -440,9 +473,16 @@ export default function DocumentIntake() {
                       {item.match_reason && (
                         <span className="mt-1 block truncate text-xs text-muted-foreground">{item.match_reason}</span>
                       )}
-                      {item.scan_error && (
+                      {/* A file we simply cannot read (a .docx, a .zip) is not an
+                          error — it is waiting for a person, so it must not be
+                          dressed up in red like a failed scan. */}
+                      {item.scan_error && item.status === "review" ? (
+                        <span className="mt-1 block truncate text-xs text-amber-700">
+                          {t("intake.manualNeeded", "Cannot be read automatically — file it by hand.")}
+                        </span>
+                      ) : item.scan_error ? (
                         <span className="mt-1 block truncate text-xs text-red-600">{item.scan_error}</span>
-                      )}
+                      ) : null}
                     </span>
                   </button>
                 </li>
@@ -467,6 +507,15 @@ export default function DocumentIntake() {
                     {selected.scan_source && ` · ${t(`intake.source.${selected.scan_source}`, selected.scan_source)}`}
                     {selected.confidence != null && ` · ${Math.round(selected.confidence * 100)}%`}
                   </p>
+                  {/* Stored and filed either way — only the in-browser view is limited. */}
+                  {!isPreviewable(selected.mime_type) && (
+                    <p className="mt-1 text-xs text-amber-700">
+                      {t(
+                        "intake.noPreviewHint",
+                        "This file type cannot be previewed — download it to open it. It can still be filed.",
+                      )}
+                    </p>
+                  )}
                 </div>
                 <div className="flex shrink-0 gap-1">
                   <Button
@@ -476,6 +525,7 @@ export default function DocumentIntake() {
                       openPreview({
                         title: selected.file_name,
                         filename: selected.file_name,
+                        mimeType: selected.mime_type,
                         source: { kind: "api", path: selected.file_url },
                       })
                     }
@@ -524,6 +574,18 @@ export default function DocumentIntake() {
                 </p>
               ) : (
                 <div className="space-y-3">
+                  {/* No proposal at all — an unreadable file, or a page with
+                      nothing on it that identifies a record. Filing it by hand
+                      below is the intended path, not a workaround. */}
+                  {!selected.candidates.length && !selected.suggested_entity_id && (
+                    <p className="rounded border bg-muted/40 p-2 text-xs text-muted-foreground">
+                      {t(
+                        "intake.noMatchHint",
+                        "No record was matched automatically. Pick what this document belongs to below — a unit, a contract, a person or an organisation — and file it by hand.",
+                      )}
+                    </p>
+                  )}
+
                   {/* Runner-up matches: one click instead of a search. */}
                   {selected.candidates.length > 0 && (
                     <div>
@@ -570,12 +632,15 @@ export default function DocumentIntake() {
                       <span className="text-muted-foreground">{t("intake.entityTypeLabel", "File against")}</span>
                       <Select
                         value={entityType}
-                        onValueChange={(v) => { setEntityType(v as "contract" | "contact"); setEntityId(null); }}
+                        onValueChange={(v) => { setEntityType(v as FileTarget); setEntityId(null); }}
                       >
                         <SelectTrigger><SelectValue /></SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="contract">{t("intake.entity.contract", "Contract")}</SelectItem>
-                          <SelectItem value="contact">{t("intake.entity.contact", "Person")}</SelectItem>
+                          {FILE_TARGETS.map((e) => (
+                            <SelectItem key={e.value} value={e.value}>
+                              {t(`intake.entity.${e.value}`, e.value)}
+                            </SelectItem>
+                          ))}
                         </SelectContent>
                       </Select>
                     </label>
@@ -583,7 +648,7 @@ export default function DocumentIntake() {
 
                   <div className="space-y-1">
                     <Input
-                      placeholder={t("intake.searchRecord", "Search for a record…")}
+                      placeholder={t(`intake.searchIn.${entityType}`, t("intake.searchRecord", "Search for a record…"))}
                       value={search}
                       onChange={(e) => setSearch(e.target.value)}
                     />

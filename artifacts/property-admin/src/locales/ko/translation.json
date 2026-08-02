@@ -1833,7 +1833,8 @@
     "placeholder_max_occupancy": "예: 2",
     "placeholder_floor_number": "예: 3",
     "placeholder_floor_area": "예: 25.5",
-    "placeholder_landlord_account": "계정 ID"
+    "placeholder_landlord_account": "계정 ID",
+    "tab_documents": "서류"
   },
   "space_option": {
     "new": "새 공간 옵션",
@@ -5532,7 +5533,9 @@
     "email": "이메일 보내기",
     "close": "닫기",
     "new_tab": "새 탭에서 열기",
-    "open_record": "레코드로 이동"
+    "open_record": "레코드로 이동",
+    "no_inline": "브라우저에서 미리볼 수 없는 형식입니다.",
+    "no_inline_hint": "PDF와 이미지만 화면에 표시됩니다. 내려받아 확인하세요 — {{name}}"
   },
   "error_boundary": {
     "title": "문제가 발생했습니다",
@@ -5634,7 +5637,9 @@
     },
     "entity": {
       "contract": "계약",
-      "contact": "인물"
+      "contact": "인물",
+      "space": "호수(세대)",
+      "account": "회사·조직"
     },
     "source": {
       "filename": "파일명 기준",
@@ -5653,7 +5658,17 @@
       "monthly_rent": "월세",
       "reference": "문서번호",
       "notes": "비고"
-    }
+    },
+    "subtitle2": "기존 서류를 한꺼번에 올리세요. 파일 형식에는 제한이 없고, PDF와 사진은 자동으로 판독해 해당 레코드를 찾아 줍니다. 나머지 형식은 직접 지정해 첨부하면 됩니다. 확인을 눌러야 실제로 첨부됩니다.",
+    "searchIn": {
+      "contract": "계약 검색…",
+      "contact": "인물 검색…",
+      "space": "호수 검색…",
+      "account": "회사·조직 검색…"
+    },
+    "noMatchHint": "자동으로 찾은 레코드가 없습니다. 아래에서 호수·계약·인물·회사 중 해당 대상을 직접 골라 첨부하세요.",
+    "noPreviewHint": "이 형식은 미리보기를 지원하지 않습니다. 내려받아 확인하세요. 첨부는 그대로 할 수 있습니다.",
+    "manualNeeded": "자동 판독이 안 되는 파일입니다 — 직접 지정해 첨부하세요."
   },
   "contract_docs": {
     "section": "계약 서류",

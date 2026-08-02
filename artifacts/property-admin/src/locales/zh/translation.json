@@ -1833,7 +1833,8 @@
     "placeholder_max_occupancy": "例如 2",
     "placeholder_floor_number": "例如 3",
     "placeholder_floor_area": "例如 25.5",
-    "placeholder_landlord_account": "账户 ID"
+    "placeholder_landlord_account": "账户 ID",
+    "tab_documents": "文件"
   },
   "space_option": {
     "new": "新建空间选项",
@@ -5532,7 +5533,9 @@
     "email": "发送邮件",
     "close": "关闭",
     "new_tab": "在新标签页中打开",
-    "open_record": "前往记录"
+    "open_record": "前往记录",
+    "no_inline": "该文件格式无法在浏览器中预览。",
+    "no_inline_hint": "此处仅能显示 PDF 和图片。请下载后打开 — {{name}}"
   },
   "error_boundary": {
     "title": "出现问题",
@@ -5634,7 +5637,9 @@
     },
     "entity": {
       "contract": "合同",
-      "contact": "个人"
+      "contact": "个人",
+      "space": "房号（单元）",
+      "account": "公司/机构"
     },
     "source": {
       "filename": "来自文件名",
@@ -5653,7 +5658,17 @@
       "monthly_rent": "月租",
       "reference": "文件编号",
       "notes": "备注"
-    }
+    },
+    "subtitle2": "可批量上传既有文件，不限文件格式。PDF 和照片会自动识别并匹配记录，其他格式请手动指定后归档。确认后才会真正附加。",
+    "searchIn": {
+      "contract": "搜索合同…",
+      "contact": "搜索人员…",
+      "space": "搜索房号…",
+      "account": "搜索公司/机构…"
+    },
+    "noMatchHint": "未自动匹配到记录。请在下方选择该文件所属的房号、合同、人员或公司，手动归档。",
+    "noPreviewHint": "该格式无法预览，请下载后查看。仍可正常归档。",
+    "manualNeeded": "该文件无法自动识别 — 请手动指定归档位置。"
   },
   "contract_docs": {
     "section": "合同文件",

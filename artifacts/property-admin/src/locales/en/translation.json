@@ -1833,7 +1833,8 @@
     "placeholder_max_occupancy": "e.g. 2",
     "placeholder_floor_number": "e.g. 3",
     "placeholder_floor_area": "e.g. 25.5",
-    "placeholder_landlord_account": "Account ID"
+    "placeholder_landlord_account": "Account ID",
+    "tab_documents": "Documents"
   },
   "space_option": {
     "new": "New Space Option",
@@ -5532,7 +5533,9 @@
     "email": "Send email",
     "close": "Close",
     "new_tab": "Open in new tab",
-    "open_record": "Go to record"
+    "open_record": "Go to record",
+    "no_inline": "This file type cannot be previewed in the browser.",
+    "no_inline_hint": "Only PDFs and images render here. Download it to open the file — {{name}}"
   },
   "error_boundary": {
     "title": "Something went wrong",
@@ -5634,7 +5637,9 @@
     },
     "entity": {
       "contract": "Contract",
-      "contact": "Person"
+      "contact": "Person",
+      "space": "Unit",
+      "account": "Organisation"
     },
     "source": {
       "filename": "From filename",
@@ -5653,7 +5658,17 @@
       "monthly_rent": "Monthly rent",
       "reference": "Reference",
       "notes": "Notes"
-    }
+    },
+    "subtitle2": "Upload existing paperwork in bulk — any file type. PDFs and photos are read and matched automatically; anything else is parked for you to file by hand. Nothing is attached until you confirm it.",
+    "searchIn": {
+      "contract": "Search contracts…",
+      "contact": "Search people…",
+      "space": "Search units…",
+      "account": "Search organisations…"
+    },
+    "noMatchHint": "No record was matched automatically. Pick what this document belongs to below — a unit, a contract, a person or an organisation — and file it by hand.",
+    "noPreviewHint": "This file type cannot be previewed — download it to open it. It can still be filed.",
+    "manualNeeded": "Cannot be read automatically — file it by hand."
   },
   "contract_docs": {
     "section": "Contract documents",

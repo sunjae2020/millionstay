@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import { useLocation } from "wouter";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Loader2, Printer, Download, Mail, X, ExternalLink, AlertTriangle, FolderOpen, ArrowUpRight } from "lucide-react";
+import { Loader2, Printer, Download, Mail, X, ExternalLink, AlertTriangle, FileQuestion, FolderOpen, ArrowUpRight } from "lucide-react";
 import { apiFetch } from "@/lib/apiFetch";
 import { DocumentEmailDialog, type DocumentEmailTarget } from "@/components/DocumentEmailDialog";
 
@@ -40,6 +40,15 @@ export interface DocumentPreviewConfig {
   /** Filename used by the Download button. */
   filename: string;
   source: DocumentPreviewSource;
+  /**
+   * Content type, when the caller already knows it.
+   *
+   * Only PDFs and images render inline; a Word/Excel/HWP/ZIP attachment handed
+   * to an iframe either shows a blank pane or triggers a surprise download —
+   * bulk-uploaded paperwork is not all PDFs. For `api` sources this is inferred
+   * from the fetched blob, so it is only needed for `url` sources.
+   */
+  mimeType?: string | null;
   /**
    * Optional — only documents that have a recipient (invoice, quote, contract,
    * receipt, settlement …) get an email button.
@@ -90,12 +99,22 @@ export function DocumentPreviewDialog({ config, onClose }: Props) {
   // Filename the server put in Content-Disposition — the API owns the
   // 문서이름-고객이름_YYYYMMDD convention, so prefer it over the caller's guess.
   const [serverFilename, setServerFilename] = useState<string | null>(null);
+  /** What the bytes actually are — decides whether the iframe can show them. */
+  const [contentType, setContentType] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [emailBusy, setEmailBusy] = useState(false);
   const [emailTarget, setEmailTarget] = useState<DocumentEmailTarget | null>(null);
 
   const open = config !== null;
+  // An unknown type is treated as renderable: server-rendered PDFs are the
+  // common case, and a missing Content-Type must not hide a document that
+  // would have displayed perfectly well.
+  const inlineRenderable =
+    !contentType ||
+    contentType.startsWith("application/pdf") ||
+    contentType.startsWith("image/") ||
+    contentType.startsWith("text/plain");
   const source = config?.source ?? null;
   const sourceKey = source
     ? source.kind === "api"
@@ -112,6 +131,7 @@ export function DocumentPreviewDialog({ config, onClose }: Props) {
     if (source.kind === "url") {
       setObjectUrl(source.href);
       setServerFilename(null);
+      setContentType(config?.mimeType ?? null);
       setError(null);
       setLoading(false);
       return;
@@ -121,6 +141,7 @@ export function DocumentPreviewDialog({ config, onClose }: Props) {
     setError(null);
     setObjectUrl(null);
     setServerFilename(null);
+    setContentType(config?.mimeType ?? null);
     void (async () => {
       try {
         const res = await apiFetch(source.path, source.init);
@@ -132,6 +153,9 @@ export function DocumentPreviewDialog({ config, onClose }: Props) {
         const blob = await res.blob();
         if (cancelled) return;
         created = URL.createObjectURL(blob);
+        // The blob's own type is the honest answer — a caller's hint can be
+        // stale, and an intake upload can be any file the office had.
+        setContentType(blob.type || config?.mimeType || null);
         setObjectUrl(created);
         if (fromHeader) setServerFilename(fromHeader);
       } catch (err) {
@@ -156,6 +180,7 @@ export function DocumentPreviewDialog({ config, onClose }: Props) {
       setEmailTarget(null);
       setObjectUrl(null);
       setServerFilename(null);
+      setContentType(null);
       setError(null);
       setEmailBusy(false);
     }
@@ -253,13 +278,31 @@ export function DocumentPreviewDialog({ config, onClose }: Props) {
               <p className="text-xs">{error}</p>
             </div>
           )}
-          {!loading && !error && objectUrl && (
+          {!loading && !error && objectUrl && inlineRenderable && (
             <iframe
               ref={frameRef}
               src={objectUrl}
               title={config?.title ?? "document"}
               className="w-full h-full border-0 bg-white"
             />
+          )}
+          {/* Word, Excel, HWP, ZIP … — stored and downloadable, but with no
+              in-browser renderer. Say so instead of handing the iframe a file
+              it will either blank on or quietly download. */}
+          {!loading && !error && objectUrl && !inlineRenderable && (
+            <div className="h-full flex flex-col items-center justify-center gap-2 px-6 text-center text-muted-foreground">
+              <FileQuestion className="h-8 w-8" />
+              <p className="text-sm font-medium text-foreground">
+                {t("doc_preview.no_inline", "This file type cannot be previewed in the browser.")}
+              </p>
+              <p className="text-xs">
+                {t(
+                  "doc_preview.no_inline_hint",
+                  "Only PDFs and images render here. Download it to open the file — {{name}}",
+                  { name: config?.filename ?? "" },
+                )}
+              </p>
+            </div>
           )}
         </div>
 
@@ -272,7 +315,7 @@ export function DocumentPreviewDialog({ config, onClose }: Props) {
               </a>
             </Button>
           )}
-          <Button variant="outline" size="sm" onClick={handlePrint} disabled={!objectUrl}>
+          <Button variant="outline" size="sm" onClick={handlePrint} disabled={!objectUrl || !inlineRenderable}>
             <Printer className="h-4 w-4 mr-1.5" />
             {t("doc_preview.print", "Print")}
           </Button>

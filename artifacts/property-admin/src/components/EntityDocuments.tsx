@@ -257,6 +257,9 @@ export default function EntityDocuments({ entityType, entityId, defaultDocType =
                       onClick={() => openPreview({
                         title: d.file_name,
                         filename: d.file_name,
+                        // Uploads are not all PDFs — the dialog needs the type
+                        // to know whether it can render it inline at all.
+                        mimeType: d.mime_type,
                         source: { kind: "api", path: d.file_url },
                       })}
                       className="text-primary hover:underline inline-flex items-center gap-1 text-xs">

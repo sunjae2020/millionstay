@@ -1833,7 +1833,8 @@
     "placeholder_max_occupancy": "vd: 2",
     "placeholder_floor_number": "vd: 3",
     "placeholder_floor_area": "vd: 25.5",
-    "placeholder_landlord_account": "Mã tài khoản"
+    "placeholder_landlord_account": "Mã tài khoản",
+    "tab_documents": "Tài liệu"
   },
   "space_option": {
     "new": "Tùy chọn không gian mới",
@@ -5532,7 +5533,9 @@
     "email": "Gửi email",
     "close": "Đóng",
     "new_tab": "Mở trong tab mới",
-    "open_record": "Đến bản ghi"
+    "open_record": "Đến bản ghi",
+    "no_inline": "Không thể xem trước định dạng tệp này trong trình duyệt.",
+    "no_inline_hint": "Chỉ PDF và hình ảnh hiển thị được ở đây. Tải xuống để mở tệp — {{name}}"
   },
   "error_boundary": {
     "title": "Đã xảy ra lỗi",
@@ -5634,7 +5637,9 @@
     },
     "entity": {
       "contract": "Hợp đồng",
-      "contact": "Cá nhân"
+      "contact": "Cá nhân",
+      "space": "Căn hộ",
+      "account": "Tổ chức"
     },
     "source": {
       "filename": "Từ tên tệp",
@@ -5653,7 +5658,17 @@
       "monthly_rent": "Tiền thuê tháng",
       "reference": "Số hiệu",
       "notes": "Ghi chú"
-    }
+    },
+    "subtitle2": "Tải hàng loạt giấy tờ hiện có, không giới hạn định dạng tệp. PDF và ảnh được đọc và khớp hồ sơ tự động; các định dạng khác bạn tự chọn nơi lưu. Chỉ khi bạn xác nhận, tài liệu mới thực sự được đính kèm.",
+    "searchIn": {
+      "contract": "Tìm hợp đồng…",
+      "contact": "Tìm người…",
+      "space": "Tìm căn hộ…",
+      "account": "Tìm tổ chức…"
+    },
+    "noMatchHint": "Không tự khớp được hồ sơ nào. Hãy chọn nơi tài liệu thuộc về ở bên dưới — căn hộ, hợp đồng, người hoặc tổ chức — rồi lưu thủ công.",
+    "noPreviewHint": "Định dạng này không xem trước được — hãy tải xuống để mở. Vẫn có thể lưu vào hồ sơ bình thường.",
+    "manualNeeded": "Không thể đọc tự động — hãy tự chọn nơi lưu."
   },
   "contract_docs": {
     "section": "Tài liệu hợp đồng",

@@ -27,7 +27,7 @@ import {
   getGetSpaceAvailabilityQueryKey,
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, Save, CalendarDays, Images, Plus, Trash2, PackagePlus, Copy, Check, RefreshCw, CalendarClock, Languages } from "lucide-react";
+import { ArrowLeft, Save, CalendarDays, Images, Plus, Trash2, PackagePlus, Copy, Check, RefreshCw, CalendarClock, Languages, FileText } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -47,6 +47,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { SpacePhotoManager } from "@/components/SpacePhotoManager";
 import { ChannelSyncPanel } from "@/components/ChannelSyncPanel";
 import { ContentTranslationsPanel } from "@/components/ContentTranslationsPanel";
+import EntityDocuments from "@/components/EntityDocuments";
 import { Link } from "wouter";
 import { cn } from "@/lib/utils";
 import { format, parseISO, startOfMonth, endOfMonth, addMonths, getDay } from "date-fns";
@@ -653,6 +654,11 @@ export default function SpaceDetail() {
             {!isNew && (
               <TabsTrigger value="services" className="gap-1.5">
                 <PackagePlus className="h-3.5 w-3.5" /> {t("space.tab_services")}
+              </TabsTrigger>
+            )}
+            {!isNew && (
+              <TabsTrigger value="documents" className="gap-1.5">
+                <FileText className="h-3.5 w-3.5" /> {t("space.tab_documents", "서류")}
               </TabsTrigger>
             )}
             {!isNew && (
@@ -1445,6 +1451,15 @@ export default function SpaceDetail() {
                   </DialogFooter>
                 </DialogContent>
               </Dialog>
+            </TabsContent>
+          )}
+
+          {/* Paperwork that belongs to the unit itself (등기부등본, 관리비 내역,
+              점검 결과 …) rather than to a lease on it — and where a document
+              filed straight onto this 호수 from bulk intake shows up. */}
+          {!isNew && id && (
+            <TabsContent value="documents">
+              <EntityDocuments entityType="space" entityId={id} defaultDocType="property_document" />
             </TabsContent>
           )}
 
