@@ -35,7 +35,7 @@ import { isCloudinaryConfigured, uploadToCloudinary, cldFolder } from "../utils/
 import { logAction } from "../utils/auditLog";
 import { htmlToPdf, PdfUnavailableError } from "../lib/documents/pdf";
 import { resolveCompanyInfo } from "../lib/documents/companyInfo";
-import { buildDocumentFilename, setDocumentDownloadHeaders } from "../lib/documents/filename";
+import { DOC_CODES, issueDocumentFilename, sanitisePartyName, setDocumentDownloadHeaders } from "../lib/documents/filename";
 import { normalizeLang, t } from "../lib/documents/i18n";
 import {
   buildUnitInspectionHtml,
@@ -736,16 +736,34 @@ adminRouter.delete("/v1/inspections/:id", async (req, res): Promise<void> => {
   }
 });
 
+/** 세대점검표 파일명 — 세입자명(없으면 호실) 기준. */
+async function inspectionFilename(report: Inspection): Promise<string> {
+  const meta = (report.meta ?? {}) as { tenant_name?: string | null; unit_no?: string | null };
+  return issueDocumentFilename({
+    kind: "inspection",
+    entityType: "inspection",
+    entityId: report.id,
+    party: [meta.tenant_name, meta.unit_no],
+    issueDate: report.created_at ?? null,
+  });
+}
+
+/** 빈 양식은 발행 대상이 없으므로 순번 없이 서식명으로 이름 붙인다. */
+function blankFormFilename(templateKey: string): string {
+  return `${DOC_CODES.sample}-${sanitisePartyName(getInspectionTemplate(templateKey).key)}_blank.pdf`;
+}
+
 /**
  * Render a report (or a blank form) as PDF / HTML preview.
  *
- * The download name follows the app-wide 문서이름-고객이름_YYYYMMDD convention;
+ * The download name follows the app-wide 문서코드-이름_YYYYMMDD순번 convention;
  * a blank form has no tenant, so it is named after the form itself.
  */
 async function renderInspectionPdf(
   res: any,
   data: InspectionDocInput | null,
   templateKey: string | null,
+  filename: string,
   format: string,
   hiddenCodes?: Set<string>,
   lang = "ko",
@@ -755,11 +773,7 @@ async function renderInspectionPdf(
   if (format === "html") { res.setHeader("Content-Type", "text/html; charset=utf-8"); res.send(html); return; }
   try {
     const pdf = await htmlToPdf(html);
-    const docLang = normalizeLang(lang);
-    setDocumentDownloadHeaders(res, buildDocumentFilename({
-      docName: t(docLang, "doctype.inspection"),
-      customerName: data ? data.meta.tenant_name : t(docLang, "doctype.blank_form"),
-    }));
+    setDocumentDownloadHeaders(res, filename);
     res.setHeader("Content-Length", String(pdf.length));
     res.send(pdf);
   } catch (err) {
@@ -777,7 +791,7 @@ adminRouter.get("/v1/inspection-form/blank.pdf", async (req, res): Promise<void>
   try {
     const templateKey = typeof req.query.template === "string" ? req.query.template : DEFAULT_INSPECTION_TEMPLATE_KEY;
     const hidden = await hiddenCodesFor(getInspectionTemplate(templateKey).key);
-    await renderInspectionPdf(res, null, templateKey, String(req.query.format ?? ""), hidden, reqLang(req));
+    await renderInspectionPdf(res, null, templateKey, blankFormFilename(templateKey), String(req.query.format ?? ""), hidden, reqLang(req));
   } catch (err: any) {
     fail(res, 500, "PDF_FAILED", err.message);
   }
@@ -788,7 +802,7 @@ adminRouter.get("/v1/inspections/:id/document.pdf", async (req, res): Promise<vo
   try {
     const report = await loadInspection(Number(req.params.id));
     if (!report) { fail(res, 404, "NOT_FOUND", "Inspection not found"); return; }
-    await renderInspectionPdf(res, toDocInput(report), report.template_key, String(req.query.format ?? ""), undefined, reqLang(req));
+    await renderInspectionPdf(res, toDocInput(report), report.template_key, await inspectionFilename(report), String(req.query.format ?? ""), undefined, reqLang(req));
   } catch (err: any) {
     fail(res, 500, "PDF_FAILED", err.message);
   }
@@ -967,7 +981,7 @@ publicRouter.get("/v1/public/unit-inspections/:token/document.pdf", async (req, 
   try {
     const found = await resolveToken(String(req.params.token), reqLang(req));
     if (!found) { res.status(404).send("Not found"); return; }
-    await renderInspectionPdf(res, toDocInput(found.report), found.report.template_key, String(req.query.format ?? ""), undefined, reqLang(req));
+    await renderInspectionPdf(res, toDocInput(found.report), found.report.template_key, await inspectionFilename(found.report), String(req.query.format ?? ""), undefined, reqLang(req));
   } catch (err: any) {
     res.status(500).send("Failed to render document");
   }

@@ -195,6 +195,13 @@ gates it, so keep it green. Two notable classes were fixed:
   assumed), so `pdf.ts` passes zeros. Every page gets the same 32px top/bottom
   margin as the 32px horizontal padding; `@page :first` drops the top margin so
   the brand bar still bleeds to the edge of page 1.
+- **Issued documents are named by one rule:** `<코드3자리>-<이름>_<YYYYMMDD><순번>`
+  (`CTR-김용식_20260803A.pdf`). Always via `issueDocumentFilename()` +
+  `setDocumentDownloadHeaders()` in `lib/documents/filename.ts` — never assemble
+  `` `${ref}.pdf` `` in a route. Register a new document's 3-letter code in
+  `DOC_CODES` first; the A…Z9 suffix is allocated per person-day and stored, so a
+  re-rendered document keeps its name. See
+  [docs/DOCUMENT_NAMING_RULE.md](docs/DOCUMENT_NAMING_RULE.md).
 - **Money columns** (`invoices.amount`, `promotions.discount_amount`) are
   `numeric(10,2)` → Drizzle returns **strings**; wrap with `Number()` before math.
 - **Lookup endpoints** return `{ id, display, ...extra }` consistently.

@@ -93,6 +93,11 @@ export interface IntakeScanResult {
  * market is filed under whichever the person doing the filing typed that day.
  */
 const NAME_TYPE_RULES: Array<[RegExp, IntakeDocType]> = [
+  // 우리가 발행한 문서는 이름 앞에 문서코드가 붙는다 (filename.ts DOC_CODES):
+  // CTR-김용식_20260803A.pdf. 서명받아 되돌아온 스캔본의 가장 확실한 단서다.
+  [/^(CTR|SGN)-/i, "contract"],
+  [/^INV-/i, "tax_invoice"],
+  [/^RCP-/i, "receipt"],
   [/임대차계약|전세계약|월세계약|lease|tenancy/i, "contract"],
   [/등기부|건축물대장|토지대장|title.?deed|register/i, "property_document"],
   [/세금계산서|tax.?invoice/i, "tax_invoice"],
@@ -144,6 +149,15 @@ function personNameFromName(name: string): string | undefined {
   return candidate;
 }
 
+/** 발행 파일명의 `_YYYYMMDD` — 연도만 짚는 것보다 정확한 날짜 단서다. */
+function issuedDateFromName(name: string): string | undefined {
+  const m = /_(\d{4})(\d{2})(\d{2})(?:[A-Z]\d?)?(?:\.|$|[-_])/.exec(name);
+  if (!m) return undefined;
+  const [, y, mo, d] = m;
+  if (Number(mo) < 1 || Number(mo) > 12 || Number(d) < 1 || Number(d) > 31) return undefined;
+  return `${y}-${mo}-${d}`;
+}
+
 /** A 4-digit year in a plausible range, used only as a weak date hint. */
 function yearFromName(name: string): string | undefined {
   const m = /\b(19[89]\d|20[0-4]\d)\b/.exec(name);
@@ -164,10 +178,12 @@ export function scanFileName(fileName: string): IntakeScanResult | null {
   const fields: IntakeFields = {};
   const unit = unitFromName(fileName);
   const party = personNameFromName(fileName);
+  const issued = issuedDateFromName(fileName);
   const year = yearFromName(fileName);
   if (unit) fields.unit_label = unit;
   if (party) fields.party_name = party;
-  if (year) fields.document_date = `${year}-01-01`;
+  if (issued) fields.document_date = issued;
+  else if (year) fields.document_date = `${year}-01-01`;
 
   if (!unit && !party) return null;
 

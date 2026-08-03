@@ -19,7 +19,7 @@ import { formatFirstName, formatLastName } from "../lib/nameFormat.js";
 import { signPartnerJWT, requireHomestayAuth, invalidatePartnerCache, type PartnerAuthPayload } from "../middlewares/requirePartnerAuth.js";
 import { createSigningRequest } from "../services/contractSigning.js";
 import { renderApplicationPdf } from "../services/applicationDocs.js";
-import { buildDocumentFilename } from "../lib/documents/filename.js";
+import { issueDocumentFilename } from "../lib/documents/filename.js";
 import { hostApplicationToDoc } from "../lib/documents/applicationPdf.js";
 import { normalizeLang } from "../lib/documents/i18n.js";
 import { getAckRule } from "../lib/applicationEmails.js";
@@ -267,7 +267,16 @@ homestayPublicRouter.post("/v1/public/homestay-host-applications", async (req, r
         let attachments: Array<{ filename: string; content: Buffer }> | undefined;
         if (rule.attach_pdf) {
           const pdf = await renderApplicationPdf(hostApplicationToDoc(appRow!, undefined, { signed: false, lang: normalizeLang(body?.lang) }));
-          if (pdf) attachments = [{ filename: buildDocumentFilename({ docName: "Host Family Application", customerName: `${first_name ?? ""} ${last_name ?? ""}`.trim() }), content: pdf }];
+          if (pdf) {
+            const filename = await issueDocumentFilename({
+              kind: "application",
+              entityType: "homestay_host_application",
+              entityId: appRow!.id,
+              party: [`${first_name ?? ""} ${last_name ?? ""}`.trim()],
+              issueDate: appRow!.created_at,
+            });
+            attachments = [{ filename, content: pdf }];
+          }
         }
         await sendHomestayHostEmail({ to: email, toName: first_name, applicationRef: application_ref, kind: "received", attachments });
       })().catch((e) => console.error("[homestay] received email failed:", e));

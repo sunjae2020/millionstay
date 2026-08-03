@@ -21,6 +21,11 @@ export interface FreezeArgs {
   /** Retention key + classification: tax_invoice | receipt | contract | quote. */
   docType: string;
   ref: string;
+  /**
+   * 파일명 규칙(filename.ts)으로 이미 정해진 이름. 스냅샷은 여기에 버전만
+   * 덧붙인다 — 주면 `CTR-김용식_20260803A-v2.pdf`, 안 주면 종전처럼 ref 기준.
+   */
+  baseName?: string | null;
   pdf: Buffer;
   uploadedBy?: number | null;
 }
@@ -50,7 +55,8 @@ export async function freezeDocument(args: FreezeArgs): Promise<FrozenSnapshot |
   const version = existing.reduce((m, r) => Math.max(m, r.version ?? 0), 0) + 1;
 
   const up = await uploadPrivateToCloudinary(args.pdf, { format: "pdf" });
-  const file_name = `${args.ref}-v${version}.pdf`;
+  const base = (args.baseName ?? args.ref).replace(/\.[A-Za-z0-9]{1,5}$/, "");
+  const file_name = `${base}-v${version}.pdf`;
   const [row] = await db.insert(documentsTable).values({
     entity_type: args.entityType,
     entity_id: args.entityId,

@@ -43,7 +43,7 @@ import {
 import { readStoredCompanyInfo } from "../lib/documents/companyInfo";
 import { paymentInfoTable } from "@workspace/db";
 import { htmlToPdf, PdfUnavailableError } from "../lib/documents/pdf";
-import { buildDocumentFilename, setDocumentDownloadHeaders } from "../lib/documents/filename";
+import { issueDocumentFilename, setDocumentDownloadHeaders } from "../lib/documents/filename";
 import { formatPostalAddress } from "@workspace/address";
 import { resolveCompanyInfo, resolveIssuerCountry } from "../lib/documents/companyInfo";
 import { normalizeLang, t, type DocLang } from "../lib/documents/i18n";
@@ -1189,6 +1189,20 @@ export async function renderContractPdf(
   return mergePdfs(parts);
 }
 
+/** 계약서 파일명 — 세입자명 기준, 발행일은 계약 작성일. */
+async function contractFilename(
+  id: number,
+  built: { doc: { tenant_name?: string | null; created_at: string | Date | null } },
+): Promise<string> {
+  return issueDocumentFilename({
+    kind: "contract",
+    entityType: "contract",
+    entityId: id,
+    party: [built.doc.tenant_name],
+    issueDate: built.doc.created_at,
+  });
+}
+
 /**
  * Render a contract as a branded agreement document.
  *   GET /v1/contracts/:id/pdf  [?format=html]
@@ -1206,9 +1220,7 @@ router.get("/v1/contracts/:id/pdf", async (req, res): Promise<void> => {
   if (asHtml) { res.type("html").send(await renderContractHtml(built, false, lang)); return; }
   try {
     const pdf = await renderContractPdf(built, lang);
-    setDocumentDownloadHeaders(res, buildDocumentFilename({
-      docName: t(lang, "doctype.contract"), customerName: built.doc.tenant_name,
-    }));
+    setDocumentDownloadHeaders(res, await contractFilename(id, built));
     res.setHeader("Content-Length", String(pdf.length));
     res.send(pdf);
   } catch (err) {
@@ -1268,7 +1280,7 @@ router.post("/v1/contracts/:id/email", async (req, res): Promise<void> => {
     amountLabel,
     note: copy.note ?? t(lang, "email.note.reviewAgreement"),
     subject: copy.subject,
-    pdf, filename: buildDocumentFilename({ docName: t(lang, "doctype.contract"), customerName: built.doc.tenant_name }),
+    pdf, filename: await contractFilename(id, built),
   });
 
   await db.insert(emailLogsTable).values({
@@ -1279,7 +1291,7 @@ router.post("/v1/contracts/:id/email", async (req, res): Promise<void> => {
 
   if (!result.ok) { res.status(result.skipped ? 503 : 502).json({ error: result.error ?? "Send failed" }); return; }
   // Freeze an immutable snapshot of exactly what was emailed (best-effort).
-  await freezeDocument({ entityType: "contract", entityId: id, docType: snapshotDocType("contract"), ref: built.doc.contract_ref, pdf }).catch(() => null);
+  await freezeDocument({ entityType: "contract", entityId: id, docType: snapshotDocType("contract"), ref: built.doc.contract_ref, baseName: await contractFilename(id, built), pdf }).catch(() => null);
   await db.update(contractsTable).set({ status: "Sent", sent_at: new Date(), updated_at: new Date() })
     .where(and(eq(contractsTable.id, id), eq(contractsTable.status, "Draft")));
   res.json({ ok: true, id: result.id, to });
@@ -1300,7 +1312,7 @@ router.post("/v1/contracts/:id/freeze", async (req, res): Promise<void> => {
     if (err instanceof PdfUnavailableError) { res.status(503).json({ error: err.message }); return; }
     res.status(500).json({ error: "Failed to generate PDF" }); return;
   }
-  const snap = await freezeDocument({ entityType: "contract", entityId: id, docType: snapshotDocType("contract"), ref: built.doc.contract_ref, pdf });
+  const snap = await freezeDocument({ entityType: "contract", entityId: id, docType: snapshotDocType("contract"), ref: built.doc.contract_ref, baseName: await contractFilename(id, built), pdf });
   if (!snap) { res.status(503).json({ error: "Document storage not configured" }); return; }
   res.json({ ok: true, ...snap });
 });
@@ -1589,7 +1601,7 @@ router.post("/v1/contracts/:id/signed-scan", scanUpload.single("file"), async (r
         const pdf = await renderContractPdf(built, lang);
         frozen = await freezeDocument({
           entityType: "contract", entityId: id,
-          docType: snapshotDocType("contract"), ref: built.doc.contract_ref, pdf,
+          docType: snapshotDocType("contract"), ref: built.doc.contract_ref, baseName: await contractFilename(id, built), pdf,
         });
       }
     } catch (err) {

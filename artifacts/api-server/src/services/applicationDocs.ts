@@ -22,7 +22,7 @@ import {
 } from "@workspace/db";
 import { buildServiceBriefHtml } from "../lib/documents/serviceBrief.js";
 import { htmlToPdf, PdfUnavailableError } from "../lib/documents/pdf.js";
-import { buildDocumentFilename } from "../lib/documents/filename.js";
+import { issueDocumentFilename } from "../lib/documents/filename.js";
 import { normalizeLang, type DocLang } from "../lib/documents/i18n.js";
 import {
   buildApplicationHtml,
@@ -365,8 +365,32 @@ function logMeta(contextType: string): { entityType: string; templateCode: strin
   return { entityType: "homestay_student_request", templateCode: "document.homestay_student_application" };
 }
 
+/**
+ * 서명 문서의 파일명 — 신청서는 APL, 서명된 계약서는 SGN. 이름은 신청인 기준이며,
+ * 없으면 서명 요청에 걸린 서명자 이름을 쓴다.
+ */
+export async function docFilenameForSigning(
+  signing: Pick<SigningRow, "context_type" | "context_id" | "signers" | "signed_at" | "created_at">,
+  partyName?: string | null,
+): Promise<string> {
+  const isApplication =
+    signing.context_type === "student_app" ||
+    signing.context_type === "host_app" ||
+    signing.context_type === "short_term_app";
+  const signerName = Array.isArray(signing.signers)
+    ? (signing.signers as Array<{ name?: string }>).find((x) => x?.name)?.name ?? null
+    : null;
+  return issueDocumentFilename({
+    kind: isApplication ? "application" : "signed_contract",
+    entityType: signing.context_type,
+    entityId: signing.context_id,
+    party: [partyName, signerName],
+    issueDate: signing.signed_at ?? signing.created_at,
+  });
+}
+
 export async function emailApplicationPdf(
-  signing: Pick<SigningRow, "context_type" | "context_id">,
+  signing: Pick<SigningRow, "context_type" | "context_id" | "signers" | "signed_at" | "created_at">,
   pdf: Buffer,
   recipients: ResolvedRecipients,
   select: RecipientSelection,
@@ -379,7 +403,7 @@ export async function emailApplicationPdf(
     : signing.context_type === "contract" ? "Accommodation Agreement"
     : "Student Application";
   const { entityType, templateCode } = logMeta(signing.context_type);
-  const filename = buildDocumentFilename({ docName: docTypeLabel, customerName: recipients.applicant?.name });
+  const filename = await docFilenameForSigning(signing, recipients.applicant?.name);
   const targets: Array<{ email: string; name?: string }> = [];
   if (select.applicant && recipients.applicant) targets.push(recipients.applicant);
   if (select.host && recipients.host) targets.push(recipients.host);
@@ -505,7 +529,13 @@ export async function sendServiceBriefs(placementId: number, ref: string): Promi
       const result = await sendDocumentEmail({
         to: email, toName: name, lang: "en",
         docTypeLabel: "Service Assignment", ref: `${ref}-SVC-${svc.id}`,
-        pdf, filename: buildDocumentFilename({ docName: "Service Assignment", customerName: name ?? studentLabel }),
+        pdf, filename: await issueDocumentFilename({
+          kind: "brief",
+          entityType: "homestay_placement_service",
+          entityId: svc.id,
+          party: [name, studentLabel],
+          issueDate: svc.scheduled_at,
+        }),
         note: "You've been assigned a service for this placement. The brief is attached. It contains only the information required to perform and bill your service — please keep the student's details confidential.",
       });
       if (result.ok) sent.push(email);

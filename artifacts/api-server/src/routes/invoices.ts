@@ -16,7 +16,7 @@ import { freezeDocument, snapshotDocType } from "../lib/documents/freeze";
 import { formatDocMoney } from "../lib/documents/theme";
 import { sendDocumentEmail, resolveDocEmailCopy } from "../lib/email";
 import { accountRecipients, parseRecipients, toRecipientsResponse } from "../lib/documents/recipients";
-import { buildDocumentFilename, setDocumentDownloadHeaders } from "../lib/documents/filename.js";
+import { issueDocumentFilename, setDocumentDownloadHeaders } from "../lib/documents/filename.js";
 import { formatPostalAddress } from "@workspace/address";
 import { getStripe } from "./stripe";
 import { postInvoicePaid } from "../lib/billing/gl";
@@ -361,7 +361,7 @@ router.get("/v1/invoices/:id/pdf", async (req, res): Promise<void> => {
     return;
   }
 
-  await sendPdf(res, html, { docName: t(lang, "doctype.invoice"), customerName: docInput.account_name });
+  await sendPdf(res, html, await invoiceFilename(id, docInput, "invoice"));
 });
 
 /**
@@ -380,18 +380,37 @@ router.get("/v1/invoices/:id/receipt/pdf", async (req, res): Promise<void> => {
   const html = buildReceiptHtml(docInput, await resolveCompanyInfo(lang), !asHtml, lang, terms);
 
   if (asHtml) { res.type("html").send(html); return; }
-  await sendPdf(res, html, { docName: t(lang, "doctype.receipt"), customerName: docInput.account_name });
+  await sendPdf(res, html, await invoiceFilename(id, docInput, "receipt"));
 });
+
+/**
+ * 파일명 규칙(INV-이름_YYYYMMDDA)을 인보이스와 영수증에 적용한다. 청구 대상은
+ * 계정명, 발행일은 인보이스 발행일 / 수납일.
+ */
+async function invoiceFilename(
+  id: number,
+  docInput: InvoiceDocInput,
+  kind: "invoice" | "receipt",
+): Promise<string> {
+  return issueDocumentFilename({
+    kind,
+    entityType: "invoice",
+    entityId: id,
+    variant: kind === "receipt" ? "receipt" : "",
+    party: [docInput.account_name],
+    issueDate: kind === "receipt" ? (docInput.paid_at ?? docInput.created_at) : docInput.created_at,
+  });
+}
 
 /** Render HTML to PDF and stream it, mapping renderer failures to HTTP codes. */
 async function sendPdf(
   res: import("express").Response,
   html: string,
-  naming: { docName: string; customerName?: string | null },
+  filename: string,
 ): Promise<void> {
   try {
     const pdf = await htmlToPdf(html);
-    setDocumentDownloadHeaders(res, buildDocumentFilename(naming));
+    setDocumentDownloadHeaders(res, filename);
     res.setHeader("Content-Length", String(pdf.length));
     res.send(pdf);
   } catch (err) {
@@ -451,10 +470,7 @@ async function emailInvoiceDocument(req: import("express").Request, res: import(
     note: copy.note ?? fallbackNote,
     subject: copy.subject,
     pdf,
-    filename: buildDocumentFilename({
-      docName: t(lang, kind === "receipt" ? "doctype.receipt" : "doctype.invoice"),
-      customerName: docInput.account_name,
-    }),
+    filename: await invoiceFilename(id, docInput, kind),
   });
 
   await db.insert(emailLogsTable).values({
@@ -469,7 +485,7 @@ async function emailInvoiceDocument(req: import("express").Request, res: import(
   await freezeDocument({
     entityType: "invoice", entityId: id,
     docType: snapshotDocType("invoice", kind === "receipt" ? "receipt" : undefined),
-    ref: docInput.invoice_ref, pdf,
+    ref: docInput.invoice_ref, baseName: await invoiceFilename(id, docInput, kind), pdf,
   }).catch(() => null);
 
   // Sending an invoice advances Draft → Sent.
@@ -522,7 +538,7 @@ async function freezeInvoiceDocument(req: import("express").Request, res: import
   const snap = await freezeDocument({
     entityType: "invoice", entityId: id,
     docType: snapshotDocType("invoice", kind === "receipt" ? "receipt" : undefined),
-    ref: docInput.invoice_ref, pdf,
+    ref: docInput.invoice_ref, baseName: await invoiceFilename(id, docInput, kind), pdf,
   });
   if (!snap) { res.status(503).json({ error: "Document storage not configured" }); return; }
   res.json({ ok: true, ...snap });

@@ -8,7 +8,7 @@ import { keywordCondition, accountIdsByName, dateRangeConditions, yearConditions
 import { deletedFilter, makeBulkDelete, makeBulkRestore } from "../lib/softDelete";
 import { buildQuoteHtml, type QuoteDocInput } from "../lib/documents/quoteDocument";
 import { htmlToPdf, PdfUnavailableError } from "../lib/documents/pdf";
-import { buildDocumentFilename, setDocumentDownloadHeaders } from "../lib/documents/filename";
+import { issueDocumentFilename, setDocumentDownloadHeaders } from "../lib/documents/filename";
 import { resolveCompanyInfo } from "../lib/documents/companyInfo";
 import { normalizeLang, t } from "../lib/documents/i18n";
 import { resolveTemplateBody } from "../lib/documents/templateEngine";
@@ -271,6 +271,17 @@ async function buildQuoteDocInput(id: number): Promise<QuoteDocInput | null> {
   };
 }
 
+/** 견적서 파일명 — 수신처(계정/리드)명 기준. 공실 견적은 대상 공간명으로 대체된다. */
+async function quoteFilename(id: number, docInput: QuoteDocInput): Promise<string> {
+  return issueDocumentFilename({
+    kind: "quote",
+    entityType: "quote",
+    entityId: id,
+    party: [docInput.party_name, (docInput as { space_name?: string | null }).space_name],
+    issueDate: docInput.created_at,
+  });
+}
+
 // ── PDF / preview ──────────────────────────────────────────────────────
 router.get("/v1/quotes/:id/pdf", async (req, res): Promise<void> => {
   const id = Number(req.params.id);
@@ -287,9 +298,7 @@ router.get("/v1/quotes/:id/pdf", async (req, res): Promise<void> => {
   if (asHtml) { res.type("html").send(html); return; }
   try {
     const pdf = await htmlToPdf(html);
-    setDocumentDownloadHeaders(res, buildDocumentFilename({
-      docName: t(lang, "doctype.quote"), customerName: docInput.party_name,
-    }));
+    setDocumentDownloadHeaders(res, await quoteFilename(id, docInput));
     res.setHeader("Content-Length", String(pdf.length));
     res.send(pdf);
   } catch (err) {
@@ -334,7 +343,7 @@ router.post("/v1/quotes/:id/email", async (req, res): Promise<void> => {
     to, toName: docInput.party_name, lang, docTypeLabel: t(lang, "doctype.quote"), ref: docInput.quote_ref,
     amountLabel: `${Number(docInput.total ?? 0).toLocaleString("en-AU", { minimumFractionDigits: 2 })} ${docInput.currency || DEFAULT_CURRENCY}`,
     note: docInput.valid_until ? t(lang, "email.note.validUntil", { date: docInput.valid_until }) : null,
-    pdf, filename: buildDocumentFilename({ docName: t(lang, "doctype.quote"), customerName: docInput.party_name }),
+    pdf, filename: await quoteFilename(id, docInput),
   });
 
   await db.insert(emailLogsTable).values({
@@ -345,7 +354,7 @@ router.post("/v1/quotes/:id/email", async (req, res): Promise<void> => {
 
   if (!result.ok) { res.status(result.skipped ? 503 : 502).json({ error: result.error ?? "Send failed" }); return; }
   // Freeze an immutable snapshot of exactly what was emailed (best-effort).
-  await freezeDocument({ entityType: "quote", entityId: id, docType: snapshotDocType("quote"), ref: docInput.quote_ref, pdf }).catch(() => null);
+  await freezeDocument({ entityType: "quote", entityId: id, docType: snapshotDocType("quote"), ref: docInput.quote_ref, baseName: await quoteFilename(id, docInput), pdf }).catch(() => null);
   await db.update(quotesTable).set({ status: "Sent", sent_at: new Date(), updated_at: new Date() })
     .where(and(eq(quotesTable.id, id), eq(quotesTable.status, "Draft")));
   res.json({ ok: true, id: result.id, to });
@@ -366,7 +375,7 @@ router.post("/v1/quotes/:id/freeze", async (req, res): Promise<void> => {
     if (err instanceof PdfUnavailableError) { res.status(503).json({ error: err.message }); return; }
     res.status(500).json({ error: "Failed to generate PDF" }); return;
   }
-  const snap = await freezeDocument({ entityType: "quote", entityId: id, docType: snapshotDocType("quote"), ref: docInput.quote_ref, pdf });
+  const snap = await freezeDocument({ entityType: "quote", entityId: id, docType: snapshotDocType("quote"), ref: docInput.quote_ref, baseName: await quoteFilename(id, docInput), pdf });
   if (!snap) { res.status(503).json({ error: "Document storage not configured" }); return; }
   res.json({ ok: true, ...snap });
 });
