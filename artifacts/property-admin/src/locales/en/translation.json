@@ -4882,7 +4882,15 @@
     "toast_published": "Template published",
     "toast_test_sent": "Test email sent",
     "toast_created": "Template created",
-    "error": "Something went wrong"
+    "error": "Something went wrong",
+    "col_category": "Group",
+    "cat_common": "Common",
+    "cat_customer": "Customers & tenants",
+    "cat_owner": "Owners",
+    "cat_partner": "Partners",
+    "cat_host": "Service hosts",
+    "cat_staff": "Internal staff",
+    "cat_marketing": "Marketing"
   },
   "homestayBilling": {
     "title": "Homestay Billing",

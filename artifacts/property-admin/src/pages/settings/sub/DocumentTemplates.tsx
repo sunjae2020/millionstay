@@ -36,6 +36,20 @@ const KINDS = [
   { key: "pdf", icon: FileType },
 ] as const;
 
+/**
+ * 수신자 그룹 (docs/EMAIL_TEMPLATE_SPEC.md §2). category 는 "누가 받는가" 를 담고,
+ * 업무 도메인은 key 의 `<domain>.` 접두사가 담는다 — 두 축으로 탐색된다.
+ * 라벨은 i18n `documentTemplate.cat_<slug>`.
+ */
+const CATEGORIES = ["common", "customer", "owner", "partner", "host", "staff", "marketing"] as const;
+type Category = (typeof CATEGORIES)[number];
+
+/** key 의 `<domain>.<event>` 중 도메인 부분. 점이 없는 레거시 키는 null. */
+function keyDomain(key: string): string | null {
+  const i = key.indexOf(".");
+  return i > 0 ? key.slice(0, i) : null;
+}
+
 function statusBadge(s: string): string {
   if (s === "published") return "bg-green-100 text-green-700 border-green-200";
   if (s === "draft") return "bg-amber-100 text-amber-700 border-amber-200";
@@ -110,6 +124,7 @@ function CreateDialog({ kind, open, onOpenChange }: { kind: Kind; open: boolean;
 export default function DocumentTemplates() {
   const { t } = useTranslation();
   const [kind, setKind] = useState<Kind>("email");
+  const [cat, setCat] = useState<Category | "all">("all");
   const [createOpen, setCreateOpen] = useState(false);
   const [q, setQ] = useState("");
 
@@ -122,13 +137,22 @@ export default function DocumentTemplates() {
     },
   });
 
-  // 템플릿은 종류별로 수십 개다 — 이름·키·설명을 한 키워드로 훑는다.
+  // 실제로 존재하는 카테고리만 칩으로 보여준다 (테넌트마다 쓰는 그룹이 다르다).
+  const presentCats = useMemo(() => {
+    const seen = new Set(rows.map((r) => r.category ?? "common"));
+    return CATEGORIES.filter((c) => seen.has(c));
+  }, [rows]);
+
+  // 템플릿은 종류별로 수십 개다 — 수신자 그룹으로 좁힌 뒤 이름·키·설명을 키워드로 훑는다.
   const filtered = useMemo(() => {
     const term = q.trim().toLowerCase();
-    if (!term) return rows;
-    return rows.filter((r) =>
-      [r.name, r.key, r.description, r.category].some((v) => String(v ?? "").toLowerCase().includes(term)));
-  }, [rows, q]);
+    return rows.filter((r) => {
+      if (cat !== "all" && (r.category ?? "common") !== cat) return false;
+      if (!term) return true;
+      return [r.name, r.key, r.description, r.category].some((v) =>
+        String(v ?? "").toLowerCase().includes(term));
+    });
+  }, [rows, q, cat]);
 
   const columns: ColumnDef<TemplateRow>[] = useMemo(() => [
     {
@@ -146,6 +170,23 @@ export default function DocumentTemplates() {
       key: "key",
       header: t("documentTemplate.col_key"),
       cell: (r) => <span className="font-mono text-xs text-muted-foreground">{r.key}</span>,
+    },
+    {
+      key: "category",
+      header: t("documentTemplate.col_category"),
+      sortAccessor: (r) => `${r.category ?? "common"} ${keyDomain(r.key) ?? ""}`,
+      cell: (r) => {
+        const c = r.category ?? "common";
+        const domain = keyDomain(r.key);
+        return (
+          <>
+            <span className="text-xs">
+              {CATEGORIES.includes(c as Category) ? t(`documentTemplate.cat_${c}`) : c}
+            </span>
+            {domain && <div className="font-mono text-[11px] text-muted-foreground">{domain}</div>}
+          </>
+        );
+      },
     },
     {
       key: "locales",
@@ -207,6 +248,28 @@ export default function DocumentTemplates() {
             );
           })}
         </div>
+
+        {/* 수신자 그룹 필터 — 147개 규모에서 종류 탭만으로는 목록이 무너진다. */}
+        {presentCats.length > 1 && (
+          <div className="flex flex-wrap gap-2 mb-4">
+            {(["all", ...presentCats] as const).map((c) => {
+              const active = cat === c;
+              const count = c === "all" ? rows.length : rows.filter((r) => (r.category ?? "common") === c).length;
+              return (
+                <button
+                  key={c}
+                  onClick={() => setCat(c as Category | "all")}
+                  className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs border transition-colors ${
+                    active ? "bg-primary/10 text-primary border-primary/20" : "bg-white text-muted-foreground border-border hover:bg-muted/50"
+                  }`}
+                >
+                  {c === "all" ? t("common.all") : t(`documentTemplate.cat_${c}`)}
+                  <span className="text-[10px] opacity-70">{count}</span>
+                </button>
+              );
+            })}
+          </div>
+        )}
 
         <DataTable
           tableKey="document-templates"
