@@ -18,7 +18,13 @@ import { formatMoney } from "@/lib/currency";
 import { formatDate } from "@/lib/date";
 
 interface FinanceSummary {
+  /** Gross — everything received, including money owed onward to owners/partners. */
   total_revenue: number;
+  total_gross_receipts?: number;
+  monthly_gross_receipts?: number;
+  /** Net (실 매출) — the retained legs, i.e. what is actually ours. */
+  total_net_revenue?: number;
+  monthly_net_revenue?: number;
   monthly_revenue: number;
   sent_count: number;
   paid_count: number;
@@ -154,7 +160,15 @@ export default function FinanceTab() {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <KpiCard label={t("dash_finance.total_revenue_settled")} value={summary ? fmt(summary.total_revenue) : "—"} icon={DollarSign} accent="green" sublabel={t("dash_finance.all_paid_invoices")} />
+        {/* What we actually earned, not what passed through us: gross receipts
+            include the owner's rent and partner costs, most of which is not ours. */}
+        <KpiCard
+          label={t("dash_finance.net_revenue")}
+          value={summary ? fmt(summary.total_net_revenue ?? 0) : "—"}
+          icon={DollarSign}
+          accent="green"
+          sublabel={summary ? t("dash_finance.gross_receipts_sub", { amount: fmt(summary.total_gross_receipts ?? summary.total_revenue) }) : t("dash_finance.all_paid_invoices")}
+        />
         <KpiCard label={t("dash_finance.sent_invoices")} value={summary?.sent_count ?? "—"} icon={FileText} accent="amber" sublabel={t("dash_finance.awaiting_payment")} />
         <KpiCard label={t("dash_finance.paid_this_month")} value={summary?.paid_count ?? "—"} icon={CheckCircle} accent="brand" sublabel={currentMonthLabel} />
         <KpiCard label={t("dash_finance.overdue_invoices")} value={summary?.overdue_count ?? "—"} icon={Clock} accent={summary?.overdue_count ? "red" : "slate"} sublabel={t("dash_finance.past_due_date")} trend={summary?.overdue_count ? t("dash_finance.follow_up") : undefined} trendType="down" />

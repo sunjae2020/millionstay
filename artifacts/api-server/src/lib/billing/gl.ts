@@ -13,8 +13,24 @@ import { and, desc, eq, gte, lte } from "drizzle-orm";
 import { db, journalEntriesTable, journalLinesTable, invoiceLineItemsTable } from "@workspace/db";
 
 // ── Fixed chart of accounts ────────────────────────────────────────────────
+// Codes are OWNED BY THIS APP. AusBridge runs the same design on its own codes
+// (its 2100 is Accounts Payable, ours is Deposits Held) — never copy account
+// codes across the two apps, map by ROLE instead.
+// See docs/proposals/ACCOUNTING_UNIFIED_SPEC.md §1.
 export const ACCOUNTS = {
   CASH: { code: "1000", name: "Cash/Bank" },
+  // Raised when an invoice is ISSUED, cleared when it is PAID. Without this the
+  // ledger has no notion of money owed to us, so AR aging can't exist.
+  ACCOUNTS_RECEIVABLE: { code: "1100", name: "Accounts Receivable" },
+  // Rent forwarded to the property owner (집주인 렌트). Kept SEPARATE from
+  // contractor expense so property cost and service cost don't blend — mixing
+  // them makes per-contract margin analysis impossible.
+  //
+  // 5300 deliberately matches 임차료 in the standard Korean chart of accounts,
+  // which already means "rent paid to a lessor". 5200 was the obvious next
+  // number but is 급여 (payroll) there — posting owner rent to it would bury
+  // the single largest cost line inside salaries.
+  OWNER_RENT_COST: { code: "5300", name: "Owner Rent Cost" },
   REVENUE: { code: "4000", name: "Revenue" },
   COMMISSION_EXPENSE: { code: "5000", name: "Agent Commission Expense" },
   COMMISSION_PAYABLE: { code: "2000", name: "Commission Payable" },
@@ -138,10 +154,90 @@ export async function postEntry(input: PostEntryInput): Promise<typeof journalEn
 }
 
 /**
- * Dr Cash / Cr Revenue (+ Cr Deposits Held for the deposit portion) when an
- * invoice is paid. Refundable security-deposit line items (line_type="deposit")
- * are credited to the Deposits Held liability account instead of Revenue so they
- * are never booked as income (H-402).
+ * Split an invoice's total into its refundable-deposit portion and the rest.
+ * Deposit line items (line_type="deposit") are a liability, never income (H-402).
+ * Best-effort: if the line items can't be read, treats the whole amount as revenue.
+ */
+async function splitDepositPortion(invoiceId: number, amount: number): Promise<{ deposit: number; revenue: number }> {
+  let deposit = 0;
+  try {
+    const lineItems = await db
+      .select({ line_type: invoiceLineItemsTable.line_type, total_amount: invoiceLineItemsTable.total_amount })
+      .from(invoiceLineItemsTable)
+      .where(eq(invoiceLineItemsTable.invoice_id, invoiceId));
+    const raw = lineItems
+      .filter((l) => l.line_type === "deposit")
+      .reduce((s, l) => s + Number(l.total_amount ?? 0), 0);
+    deposit = Math.max(0, Math.min(round2(raw), amount));
+  } catch (e) {
+    console.error(`[gl] could not read line items for invoice #${invoiceId}:`, e);
+  }
+  return { deposit, revenue: round2(amount - deposit) };
+}
+
+/** True when this invoice already raised a receivable (so payment clears AR, not Revenue). */
+async function hasIssuedEntry(invoiceId: number): Promise<boolean> {
+  try {
+    const [row] = await db
+      .select({ id: journalEntriesTable.id })
+      .from(journalEntriesTable)
+      .where(eq(journalEntriesTable.posting_key, `invoice_issued:${invoiceId}`))
+      .limit(1);
+    return !!row;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Dr Accounts Receivable / Cr Revenue (+ Cr Deposits Held) when an invoice is
+ * ISSUED. This is what makes money-owed-to-us exist in the ledger — without it
+ * there is no AR balance and no aging report.
+ *
+ * Pairs with postInvoicePaid, which then clears AR against Cash. Invoices that
+ * never went through issue (imported rent ledgers, legacy rows) still settle
+ * correctly — postInvoicePaid falls back to crediting Revenue directly.
+ */
+export async function postInvoiceIssued(args: {
+  id: number;
+  amount: number;
+  currency: string;
+  issuedAt?: string | null;
+}): Promise<typeof journalEntriesTable.$inferSelect | null> {
+  const amount = round2(args.amount || 0);
+  if (amount <= 0) return null;
+  const entryDate = args.issuedAt ? args.issuedAt.slice(0, 10) : sydneyToday();
+  const { deposit, revenue } = await splitDepositPortion(args.id, amount);
+
+  const creditLines: PostingLine[] = [];
+  if (deposit > 0) {
+    creditLines.push({ account_code: ACCOUNTS.DEPOSIT_HELD.code, account_name: ACCOUNTS.DEPOSIT_HELD.name, debit: 0, credit: deposit });
+  }
+  if (revenue > 0) {
+    creditLines.push({ account_code: ACCOUNTS.REVENUE.code, account_name: ACCOUNTS.REVENUE.name, debit: 0, credit: revenue });
+  }
+
+  return postEntry({
+    postingKey: `invoice_issued:${args.id}`,
+    entryDate,
+    description: `Invoice issued #${args.id}`,
+    sourceType: "invoice",
+    sourceId: args.id,
+    currency: args.currency || "AUD",
+    lines: [
+      { account_code: ACCOUNTS.ACCOUNTS_RECEIVABLE.code, account_name: ACCOUNTS.ACCOUNTS_RECEIVABLE.name, debit: amount, credit: 0 },
+      ...creditLines,
+    ],
+  });
+}
+
+/**
+ * Dr Cash / Cr Accounts Receivable when a previously-issued invoice is paid.
+ *
+ * When NO issue entry exists (imported rent ledgers, legacy invoices, invoices
+ * paid straight from Draft), falls back to the original posting — Dr Cash /
+ * Cr Revenue (+ Cr Deposits Held for the deposit portion) — so those flows keep
+ * booking revenue exactly as before and AR never goes negative.
  */
 export async function postInvoicePaid(args: {
   id: number;
@@ -153,31 +249,23 @@ export async function postInvoicePaid(args: {
   if (amount <= 0) return null;
   const entryDate = args.paidAt ? args.paidAt.slice(0, 10) : sydneyToday();
 
-  // Sum the refundable-deposit line items for this invoice (clamped to the paid
-  // amount) so the credit split always balances against Dr Cash.
-  let depositAmount = 0;
-  try {
-    const lineItems = await db
-      .select({ line_type: invoiceLineItemsTable.line_type, total_amount: invoiceLineItemsTable.total_amount })
-      .from(invoiceLineItemsTable)
-      .where(eq(invoiceLineItemsTable.invoice_id, args.id));
-    const rawDeposit = lineItems
-      .filter((l) => l.line_type === "deposit")
-      .reduce((s, l) => s + Number(l.total_amount ?? 0), 0);
-    depositAmount = Math.min(round2(rawDeposit), amount);
-    if (depositAmount < 0) depositAmount = 0;
-  } catch (e) {
-    // Best-effort: if line items can't be read, fall back to all-revenue posting.
-    console.error(`[gl] postInvoicePaid: could not read line items for invoice #${args.id}:`, e);
-  }
-  const revenueAmount = round2(amount - depositAmount);
-
   const creditLines: PostingLine[] = [];
-  if (depositAmount > 0) {
-    creditLines.push({ account_code: ACCOUNTS.DEPOSIT_HELD.code, account_name: ACCOUNTS.DEPOSIT_HELD.name, debit: 0, credit: depositAmount });
-  }
-  if (revenueAmount > 0) {
-    creditLines.push({ account_code: ACCOUNTS.REVENUE.code, account_name: ACCOUNTS.REVENUE.name, debit: 0, credit: revenueAmount });
+  if (await hasIssuedEntry(args.id)) {
+    // Receivable already recognised at issue — payment just clears it.
+    creditLines.push({
+      account_code: ACCOUNTS.ACCOUNTS_RECEIVABLE.code,
+      account_name: ACCOUNTS.ACCOUNTS_RECEIVABLE.name,
+      debit: 0,
+      credit: amount,
+    });
+  } else {
+    const { deposit, revenue } = await splitDepositPortion(args.id, amount);
+    if (deposit > 0) {
+      creditLines.push({ account_code: ACCOUNTS.DEPOSIT_HELD.code, account_name: ACCOUNTS.DEPOSIT_HELD.name, debit: 0, credit: deposit });
+    }
+    if (revenue > 0) {
+      creditLines.push({ account_code: ACCOUNTS.REVENUE.code, account_name: ACCOUNTS.REVENUE.name, debit: 0, credit: revenue });
+    }
   }
 
   return postEntry({
@@ -327,6 +415,77 @@ export async function postPartnerPayoutPaid(args: {
     currency: args.currency || "AUD",
     lines: [
       { account_code: ACCOUNTS.CONTRACTOR_PAYABLE.code, account_name: ACCOUNTS.CONTRACTOR_PAYABLE.name, debit: amount, credit: 0 },
+      { account_code: ACCOUNTS.CASH.code, account_name: ACCOUNTS.CASH.name, debit: 0, credit: amount },
+    ],
+  });
+}
+
+// ── Provider settlement postings (집주인 · 파트너 · 에이전트 분배) ──────────
+//
+// One receipt fans out into settlement legs (see lib/billing/payout.ts). Each
+// leg posts twice: cost/payable on approval, payable/cash on payment. Which
+// account pair applies is decided by WHO is being paid.
+
+export type SettlementPartyType = "landlord" | "service_host" | "agent";
+
+/** Cost + payable account pair for a settlement leg's payee. */
+export function settlementAccounts(partyType: string): { cost: { code: string; name: string }; payable: { code: string; name: string } } {
+  switch (partyType) {
+    case "landlord":
+      return { cost: ACCOUNTS.OWNER_RENT_COST, payable: ACCOUNTS.CONTRACTOR_PAYABLE };
+    case "agent":
+      return { cost: ACCOUNTS.COMMISSION_EXPENSE, payable: ACCOUNTS.COMMISSION_PAYABLE };
+    case "service_host":
+    default:
+      return { cost: ACCOUNTS.CONTRACTOR_EXPENSE, payable: ACCOUNTS.CONTRACTOR_PAYABLE };
+  }
+}
+
+/** Dr <cost> / Cr <payable> when a settlement leg is approved. */
+export async function postSettlementApproved(args: {
+  id: number;
+  partyType: string;
+  amount: number;
+  currency: string;
+  approvedAt?: string | null;
+}): Promise<typeof journalEntriesTable.$inferSelect | null> {
+  const amount = round2(args.amount || 0);
+  if (amount <= 0) return null;
+  const { cost, payable } = settlementAccounts(args.partyType);
+  return postEntry({
+    postingKey: `settlement_approved:${args.id}`,
+    entryDate: args.approvedAt ? args.approvedAt.slice(0, 10) : sydneyToday(),
+    description: `Settlement approved #${args.id} (${args.partyType})`,
+    sourceType: "provider_settlement",
+    sourceId: args.id,
+    currency: args.currency || "AUD",
+    lines: [
+      { account_code: cost.code, account_name: cost.name, debit: amount, credit: 0 },
+      { account_code: payable.code, account_name: payable.name, debit: 0, credit: amount },
+    ],
+  });
+}
+
+/** Dr <payable> / Cr Cash when a settlement leg is actually paid out. */
+export async function postSettlementPaid(args: {
+  id: number;
+  partyType: string;
+  amount: number;
+  currency: string;
+  paidAt?: string | null;
+}): Promise<typeof journalEntriesTable.$inferSelect | null> {
+  const amount = round2(args.amount || 0);
+  if (amount <= 0) return null;
+  const { payable } = settlementAccounts(args.partyType);
+  return postEntry({
+    postingKey: `settlement_paid:${args.id}`,
+    entryDate: args.paidAt ? args.paidAt.slice(0, 10) : sydneyToday(),
+    description: `Settlement paid #${args.id} (${args.partyType})`,
+    sourceType: "provider_settlement",
+    sourceId: args.id,
+    currency: args.currency || "AUD",
+    lines: [
+      { account_code: payable.code, account_name: payable.name, debit: amount, credit: 0 },
       { account_code: ACCOUNTS.CASH.code, account_name: ACCOUNTS.CASH.name, debit: 0, credit: amount },
     ],
   });

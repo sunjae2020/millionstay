@@ -2,6 +2,7 @@ import { Router, type IRouter } from "express";
 import { db, propertiesTable, spacesTable, contactsTable, accountsTable, bookingsTable, leadsTable, tasksTable, invoicesTable, contractsTable, workOrdersTable, systemLogsTable, homestayPlacementsTable, homestayStudentRequestsTable, homestayPlacementPaymentsTable, agentCommissionLedgerTable } from "@workspace/db";
 import { eq, count, and, gte, lte, lt, sql, desc, isNull, inArray } from "drizzle-orm";
 import { listEntries, trialBalance } from "../lib/billing/gl";
+import { netRevenueBetween, netRevenueTotal } from "../lib/billing/payout";
 import { countableUnitFilter } from "../lib/unitScope";
 
 const router: IRouter = Router();
@@ -71,7 +72,10 @@ router.get("/v1/dashboard/overview/kpis", async (_req, res) => {
       db.select({ amount: invoicesTable.amount }).from(invoicesTable).where(and(eq(invoicesTable.status, "Paid"), gte(invoicesTable.created_at, new Date(monthStart)), lt(invoicesTable.created_at, new Date(nextMonth)))),
     ]);
 
+    // Gross = every cent received. Net = what is actually ours once owner rent,
+    // partner cost and agent referral have been split off (the retained legs).
     const monthlyRevenue = paidInvoices.reduce((sum, i) => sum + Number(i.amount ?? 0), 0);
+    const monthlyNetRevenue = await netRevenueBetween(new Date(monthStart), new Date(nextMonth));
     const totalSpacesNum = Number(totalSpaces.count);
     const occupiedNum = Number(occupiedSpaces.count);
     const occupancyPct = totalSpacesNum > 0 ? Math.round((occupiedNum / totalSpacesNum) * 100) : 0;
@@ -83,7 +87,10 @@ router.get("/v1/dashboard/overview/kpis", async (_req, res) => {
       total_spaces: totalSpacesNum,
       occupied_spaces: occupiedNum,
       occupancy_pct: occupancyPct,
+      // Kept for continuity, but it is gross turnover, not earnings.
       monthly_revenue: Math.round(monthlyRevenue * 100) / 100,
+      monthly_gross_receipts: Math.round(monthlyRevenue * 100) / 100,
+      monthly_net_revenue: monthlyNetRevenue,
     });
   } catch (err) {
     res.status(500).json({ error: "Failed to fetch KPIs" });
@@ -120,9 +127,19 @@ router.get("/v1/finance/summary", async (req, res) => {
       return due ? due < new Date().toISOString().slice(0, 10) : false;
     }).length;
 
+    // Net = the retained legs (실 매출); gross = everything that came in.
+    const [netTotal, netMonth] = await Promise.all([
+      netRevenueTotal(),
+      netRevenueBetween(new Date(monthStart), new Date(nextMonth)),
+    ]);
+
     res.json({
       total_revenue: Math.round(totalRevenue * 100) / 100,
       monthly_revenue: Math.round(monthRevenue * 100) / 100,
+      total_gross_receipts: Math.round(totalRevenue * 100) / 100,
+      monthly_gross_receipts: Math.round(monthRevenue * 100) / 100,
+      total_net_revenue: netTotal,
+      monthly_net_revenue: netMonth,
       sent_count: sentCount,
       paid_count: paidCount,
       draft_count: draftCount,
@@ -199,7 +216,7 @@ router.get("/v1/finance/rent-arrears", async (_req, res) => {
 router.get("/v1/finance/revenue/monthly", async (req, res) => {
   try {
     const months = Number((req.query as any).months) || 6;
-    const result: { month: string; revenue: number; invoice_count: number }[] = [];
+    const result: { month: string; revenue: number; net_revenue: number; invoice_count: number }[] = [];
     const now = new Date();
     for (let i = months - 1; i >= 0; i--) {
       // Compute month windows in UTC to avoid timezone-induced month shifts/overlaps.
@@ -209,7 +226,13 @@ router.get("/v1/finance/revenue/monthly", async (req, res) => {
       const rows = await db.select({ amount: invoicesTable.amount })
         .from(invoicesTable)
         .where(and(eq(invoicesTable.status, "Paid"), gte(invoicesTable.created_at, startD), lt(invoicesTable.created_at, endD)));
-      result.push({ month: monthStr, revenue: Math.round(rows.reduce((s, r) => s + Number(r.amount ?? 0), 0) * 100) / 100, invoice_count: rows.length });
+      // `revenue` stays gross for chart continuity; net is the retained legs.
+      result.push({
+        month: monthStr,
+        revenue: Math.round(rows.reduce((s, r) => s + Number(r.amount ?? 0), 0) * 100) / 100,
+        net_revenue: await netRevenueBetween(startD, endD),
+        invoice_count: rows.length,
+      });
     }
     res.json(result);
   } catch (err) {

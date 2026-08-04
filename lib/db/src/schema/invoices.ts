@@ -37,6 +37,19 @@ export const invoiceLineItemsTable = pgTable("invoice_line_items", {
   // "revenue" (default) posts to GL Revenue; "deposit" posts to the Deposits Held
   // liability account so refundable security deposits are never booked as revenue (H-402).
   line_type: text("line_type").notNull().default("revenue"),
+  // WHAT is being charged — the base selector for percent-based payout terms.
+  // Only "rent" lines feed a landlord/agent `percent_of_rent` calculation, so a
+  // one-off charge that rides along on a rent invoice (move-in cleaning, a
+  // break fee, late interest) never inflates what we forward to the owner.
+  //   rent    월세 — the ONLY base for percent_of_rent
+  //   vat     부가세 (taxable contracts only)
+  //   deposit 보증금 (kept in step with line_type="deposit")
+  //   other   기타 — 입주청소비 · 위약금 · 연체이자 등 일회성
+  // There is deliberately NO maintenance/utility value: 관리비 and 공과금 are paid
+  // by the tenant directly to the management office / utility companies, so they
+  // never appear on our invoices. If that ever changes, the business model
+  // changed too — update docs/proposals/ACCOUNTING_UNIFIED_SPEC.md first.
+  charge_kind: text("charge_kind").notNull().default("rent"),
   quantity: numeric("quantity", { precision: 10, scale: 2 }).notNull().default("1"),
   unit_amount: numeric("unit_amount", { precision: 10, scale: 2 }).notNull().default("0"),
   total_amount: numeric("total_amount", { precision: 10, scale: 2 }).notNull().default("0"),

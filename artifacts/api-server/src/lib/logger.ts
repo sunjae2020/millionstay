@@ -42,6 +42,12 @@ export const logger = pino({
       "*.bank_account_number",
       "*.bank_bsb",
       "*.bank_name",
+      // Bank reconciliation rows (bank_accounts / bank_transactions): the
+      // account identifiers travel together with statement lines, so a logged
+      // row would expose the account they belong to.
+      "*.bank_accounts",
+      "*.bank_account_id",
+      "*.account_number",
       "*.dob",
       "*.date_of_birth",
       "*.passport_expiry",

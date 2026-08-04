@@ -22,12 +22,13 @@ import {
 } from "@workspace/api-client-react";
 import { LookupSelect } from "@/components/LookupSelect";
 import { AccountLookupSelect } from "@/components/AccountLookupSelect";
-import { ArrowLeft, Save, Trash2, CalendarDays, Plus, Pencil, List, FileDown, Eye, Mail, Receipt, ClipboardList, Wallet, Check, FileSignature, FileText } from "lucide-react";
+import { ArrowLeft, Save, Trash2, CalendarDays, Plus, Pencil, List, FileDown, Eye, Mail, Receipt, ClipboardList, Wallet, Check, FileSignature, FileText, Scale } from "lucide-react";
 import { apiFetch } from "@/lib/apiFetch";
 import { useToast } from "@/hooks/use-toast";
 import { DocumentVersions } from "@/components/DocumentVersions";
 import { HomestaySignatureCard } from "@/components/HomestaySignatureCard";
 import ContractInspections from "@/components/ContractInspections";
+import SettlementBoard from "@/components/SettlementBoard";
 import ContractDocuments from "@/components/ContractDocuments";
 import { DocumentPreviewDialog, useDocumentPreview } from "@/components/DocumentPreviewDialog";
 import {
@@ -1184,6 +1185,7 @@ export default function ContractDetail() {
             {[
               { id: "line-items", label: `${t('contract.tab_line_items')}${lineItems.length ? ` (${lineItems.length})` : ""}`, icon: <List className="w-3.5 h-3.5" /> },
               { id: "related-costs", label: `${t('contract.tab_related_costs')}${relatedCosts.length ? ` (${relatedCosts.length})` : ""}`, icon: <Receipt className="w-3.5 h-3.5" /> },
+              { id: "settlement", label: t('settlement.tab_title'), icon: <Scale className="w-3.5 h-3.5" /> },
               { id: "rent-ledger", label: `${t('contract.tab_rent_ledger')}${rentInvoices.length ? ` (${rentInvoices.length})` : ""}`, icon: <Wallet className="w-3.5 h-3.5" /> },
               { id: "schedule", label: `${t('contract.tab_schedule')}${schedules.length ? ` (${schedules.length})` : ""}`, icon: <CalendarDays className="w-3.5 h-3.5" /> },
               { id: "inspections", label: t('inspection.tab_title'), icon: <ClipboardList className="w-3.5 h-3.5" /> },
@@ -1442,6 +1444,10 @@ export default function ContractDetail() {
               </div>
             </div>
           )}
+
+          {/* 정산 — who this contract's receipts get split between, and what
+              was left for us after each split. */}
+          {activeTab === "settlement" && <SettlementBoard contractId={id!} />}
 
           {activeTab === "schedule" && (
             <div className="space-y-3">

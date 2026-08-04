@@ -19,7 +19,8 @@ import { accountRecipients, parseRecipients, toRecipientsResponse } from "../lib
 import { issueDocumentFilename, setDocumentDownloadHeaders } from "../lib/documents/filename.js";
 import { formatPostalAddress } from "@workspace/address";
 import { getStripe } from "./stripe";
-import { postInvoicePaid } from "../lib/billing/gl";
+import { postInvoicePaid, postInvoiceIssued } from "../lib/billing/gl";
+import { generateSettlementsForInvoice } from "../lib/billing/payout";
 import { deletedFilter, makeBulkDelete, makeBulkRestore } from "../lib/softDelete";
 import {
   CreateInvoiceBody,
@@ -253,6 +254,9 @@ router.post("/v1/invoices/:id/send", async (req, res): Promise<void> => {
     .returning();
   if (!row) { res.status(400).json({ error: "Invoice not in Draft status" }); return; }
   await logAction({ entityType: "invoice", entityId: row.id, action: "STATUS_CHANGE", oldValue: { status: "Draft" }, newValue: { status: "Sent" } });
+  // Raise the receivable (Dr AR / Cr Revenue). Without this the ledger has no
+  // record of money owed to us, so nothing can age. Best-effort — never blocks.
+  void postInvoiceIssued({ id: row.id, amount: Number(row.amount), currency: row.currency, issuedAt: new Date().toISOString() });
   const [result] = await enrichInvoices([row]);
   res.json(result);
 });
@@ -271,6 +275,9 @@ router.post("/v1/invoices/:id/pay", async (req, res): Promise<void> => {
   await logAction({ entityType: "invoice", entityId: row.id, action: "PAYMENT", oldValue: { status: "open" }, newValue: { status: "Paid", payment_method: parsed.data.payment_method } });
   // Auto-post the GL entry (best-effort; never blocks or alters the response).
   void postInvoicePaid({ id: row.id, amount: Number(row.amount), currency: row.currency, paidAt: paidAt.toISOString() });
+  // Fan the receipt out into payout legs (집주인 / 파트너 / 에이전트 + 유보).
+  // Also best-effort: a settlement failure must never fail a payment.
+  void generateSettlementsForInvoice(row.id);
   const [result] = await enrichInvoices([row]);
   res.json(result);
 });
