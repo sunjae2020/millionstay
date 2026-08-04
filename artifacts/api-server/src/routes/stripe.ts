@@ -5,6 +5,7 @@ import { and, eq } from "drizzle-orm";
 import { logAction } from "../utils/auditLog";
 import { createCommissionForPlacement } from "../lib/homestay/commission";
 import { postInvoicePaid, postPlacementPaymentPaid } from "../lib/billing/gl";
+import { generateSettlementsForInvoice } from "../lib/billing/payout";
 import { createRentScheduleForPlacement } from "../lib/homestay/rentSchedule";
 import { notifyPlacementActivated } from "../lib/homestay/notify";
 import { formatPersonName } from "../lib/nameFormat";
@@ -69,7 +70,11 @@ router.post("/v1/stripe/webhook", async (req, res): Promise<void> => {
             newValue: { status: "Paid", stripe_payment_intent: pi.id, amount: pi.amount },
           });
           // Auto-post the GL entry (best-effort; never blocks the webhook).
-          if (inv) void postInvoicePaid({ id: inv.id, amount: Number(inv.amount), currency: inv.currency, paidAt: now.toISOString() });
+          if (inv) {
+            void postInvoicePaid({ id: inv.id, amount: Number(inv.amount), currency: inv.currency, paidAt: now.toISOString() });
+            void generateSettlementsForInvoice(inv.id);
+            void generateSettlementsForInvoice(inv.id);
+          }
         }
         console.log(`[Stripe] payment_intent.succeeded: ${pi.id}`);
         break;

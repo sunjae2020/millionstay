@@ -186,6 +186,8 @@ function getNav(
         { href: "/finance/commissions", label: t("nav.commission"), icon: Percent },
         { href: "/finance/recurring", label: t("nav.recurring"), icon: RefreshCw },
         { href: "/finance/exchange-rates", label: t("nav.exchange_rates"), icon: DollarSign },
+        { href: "/finance/pay-run", label: t("nav.pay_run"), icon: Wallet },
+        { href: "/finance/bank", label: t("nav.bank_reconciliation"), icon: Landmark },
         { href: "/finance/journal", label: t("nav.journal"), icon: BookOpen },
       ],
     },

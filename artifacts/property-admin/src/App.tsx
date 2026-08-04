@@ -73,6 +73,8 @@ import ReceiptList from "@/pages/finance/ReceiptList";
 import RecurringScheduleList from "@/pages/finance/RecurringScheduleList";
 import ExchangeRateList from "@/pages/finance/ExchangeRateList";
 import Journal from "@/pages/finance/Journal";
+import PayRun from "@/pages/finance/PayRun";
+import BankReconciliation from "@/pages/finance/BankReconciliation";
 import CommissionList from "@/pages/crm/CommissionList";
 import CommissionDetail from "@/pages/crm/CommissionDetail";
 
@@ -361,6 +363,8 @@ function Router() {
       <Route path="/finance/recurring" component={RecurringScheduleList} />
       <Route path="/finance/exchange-rates" component={ExchangeRateList} />
       <Route path="/finance/journal" component={Journal} />
+      <Route path="/finance/pay-run" component={PayRun} />
+      <Route path="/finance/bank" component={BankReconciliation} />
 
       {/* ── SETTINGS HUB ──────────────────────────────── */}
       <Route path="/settings" component={Settings} />
