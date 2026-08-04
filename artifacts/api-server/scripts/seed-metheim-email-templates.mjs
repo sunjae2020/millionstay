@@ -119,7 +119,7 @@ const COMMON = [
         subject: "계정이 개설되었습니다",
         body:
           `<p class="lead">{{recipient}} 님, 환영합니다.</p>` +
-          `<p>{{product_label}} 계정이 개설됐습니다. 아래 정보로 로그인하실 수 있습니다.</p>` +
+          `<p>{{product_label}} 계정이 개설되었습니다. 아래 정보로 로그인하실 수 있습니다.</p>` +
           `<table class="kv"><tr><td class="k">아이디</td><td>{{login_id}}</td></tr></table>` +
           `<a class="btn" href="{{url}}">로그인하기</a>` +
           `<p>처음 로그인하시면 비밀번호를 바꾸고 연락처를 확인해 주세요. 이후 계약·청구·문의 내역을 한곳에서 보실 수 있습니다.</p>` +
@@ -383,6 +383,433 @@ const COMMON = [
       },
     },
   },
+  {
+    key: "account.registration_request",
+    name: "가입 요청 접수 (관리자 알림)",
+    description: "외부에서 계정 개설을 요청했을 때 담당자에게 가는 내부 알림. 고객에게 가지 않는다.",
+    vars: vars("applicant_name", "applicant_email", "applicant_phone", "product_label", "date", "url"),
+    tr: {
+      ko: {
+        subject: "새 가입 요청이 접수되었습니다",
+        body:
+          `<p class="lead">새 가입 요청이 들어왔습니다.</p>` +
+          `<table class="kv">` +
+          `<tr><td class="k">이름</td><td>{{applicant_name}}</td></tr>` +
+          `<tr><td class="k">이메일</td><td>{{applicant_email}}</td></tr>` +
+          `<tr><td class="k">연락처</td><td>{{applicant_phone}}</td></tr>` +
+          `<tr><td class="k">대상</td><td>{{product_label}}</td></tr>` +
+          `<tr><td class="k">접수 일시</td><td>{{date}}</td></tr></table>` +
+          `<a class="btn" href="{{url}}">관리자에서 확인하기</a>` +
+          `<p class="muted">승인하거나 반려하면 신청자에게 자동으로 안내 메일이 나갑니다.</p>`,
+      },
+      en: {
+        subject: "New access request",
+        body:
+          `<p class="lead">A new access request has come in.</p>` +
+          `<table class="kv">` +
+          `<tr><td class="k">Name</td><td>{{applicant_name}}</td></tr>` +
+          `<tr><td class="k">Email</td><td>{{applicant_email}}</td></tr>` +
+          `<tr><td class="k">Phone</td><td>{{applicant_phone}}</td></tr>` +
+          `<tr><td class="k">For</td><td>{{product_label}}</td></tr>` +
+          `<tr><td class="k">Received</td><td>{{date}}</td></tr></table>` +
+          `<a class="btn" href="{{url}}">Open in admin</a>` +
+          `<p class="muted">Approving or declining sends the applicant a notice automatically.</p>`,
+      },
+      ja: {
+        subject: "新しい利用申請が届きました",
+        body:
+          `<p class="lead">新しい利用申請が届きました。</p>` +
+          `<table class="kv">` +
+          `<tr><td class="k">氏名</td><td>{{applicant_name}}</td></tr>` +
+          `<tr><td class="k">メール</td><td>{{applicant_email}}</td></tr>` +
+          `<tr><td class="k">電話</td><td>{{applicant_phone}}</td></tr>` +
+          `<tr><td class="k">対象</td><td>{{product_label}}</td></tr>` +
+          `<tr><td class="k">受付日時</td><td>{{date}}</td></tr></table>` +
+          `<a class="btn" href="{{url}}">管理画面で確認する</a>` +
+          `<p class="muted">承認または却下すると、申請者へ自動でご案内が送信されます。</p>`,
+      },
+      zh: {
+        subject: "收到新的开通申请",
+        body:
+          `<p class="lead">收到一份新的开通申请。</p>` +
+          `<table class="kv">` +
+          `<tr><td class="k">姓名</td><td>{{applicant_name}}</td></tr>` +
+          `<tr><td class="k">邮箱</td><td>{{applicant_email}}</td></tr>` +
+          `<tr><td class="k">电话</td><td>{{applicant_phone}}</td></tr>` +
+          `<tr><td class="k">申请对象</td><td>{{product_label}}</td></tr>` +
+          `<tr><td class="k">接收时间</td><td>{{date}}</td></tr></table>` +
+          `<a class="btn" href="{{url}}">在后台查看</a>` +
+          `<p class="muted">通过或驳回后，系统会自动向申请人发送通知。</p>`,
+      },
+      th: {
+        subject: "มีคำขอเปิดใช้งานใหม่",
+        body:
+          `<p class="lead">มีคำขอเปิดใช้งานเข้ามาใหม่</p>` +
+          `<table class="kv">` +
+          `<tr><td class="k">ชื่อ</td><td>{{applicant_name}}</td></tr>` +
+          `<tr><td class="k">อีเมล</td><td>{{applicant_email}}</td></tr>` +
+          `<tr><td class="k">โทรศัพท์</td><td>{{applicant_phone}}</td></tr>` +
+          `<tr><td class="k">สำหรับ</td><td>{{product_label}}</td></tr>` +
+          `<tr><td class="k">เวลาที่รับ</td><td>{{date}}</td></tr></table>` +
+          `<a class="btn" href="{{url}}">เปิดในระบบผู้ดูแล</a>` +
+          `<p class="muted">เมื่ออนุมัติหรือปฏิเสธ ระบบจะส่งการแจ้งเตือนให้ผู้ยื่นคำขอโดยอัตโนมัติ</p>`,
+      },
+      vi: {
+        subject: "Có yêu cầu mở tài khoản mới",
+        body:
+          `<p class="lead">Vừa có một yêu cầu mở tài khoản mới.</p>` +
+          `<table class="kv">` +
+          `<tr><td class="k">Họ tên</td><td>{{applicant_name}}</td></tr>` +
+          `<tr><td class="k">Email</td><td>{{applicant_email}}</td></tr>` +
+          `<tr><td class="k">Điện thoại</td><td>{{applicant_phone}}</td></tr>` +
+          `<tr><td class="k">Dành cho</td><td>{{product_label}}</td></tr>` +
+          `<tr><td class="k">Thời gian nhận</td><td>{{date}}</td></tr></table>` +
+          `<a class="btn" href="{{url}}">Mở trong trang quản trị</a>` +
+          `<p class="muted">Khi duyệt hoặc từ chối, hệ thống sẽ tự động gửi thông báo cho người yêu cầu.</p>`,
+      },
+    },
+  },
+
+  // ── 문서 커버 노트 (style: note) ────────────────────────────────────────────
+  // sendDocumentEmail 의 고정 커버 안에 escape 되어 들어가는 평문 한두 문장.
+  // 기존 email.invoice / email.receipt / email.contract 와 같은 형식이다.
+  {
+    key: "doc.quote",
+    name: "견적서 — 발송 이메일",
+    description: "견적서 PDF 를 첨부해 보낼 때 커버에 들어가는 안내 문장.",
+    style: "note",
+    vars: vars("ref", "amount", "valid_until"),
+    tr: {
+      ko: { body: "요청하신 견적서를 첨부해 드립니다. 이 견적은 {{valid_until}}까지 유효하며 기간이 지나면 금액이 달라질 수 있습니다." },
+      en: { body: "Please find the quote you asked for attached. It is valid until {{valid_until}}; after that the amounts may change." },
+      ja: { body: "ご依頼いただいたお見積書を添付いたします。有効期限は {{valid_until}} で、期限を過ぎますと金額が変わる場合がございます。" },
+      zh: { body: "随附您所需的报价单。本报价有效期至 {{valid_until}}，逾期后金额可能会有变动。" },
+      th: { body: "แนบใบเสนอราคาตามที่ท่านขอมาด้วย ใบเสนอราคานี้มีผลถึงวันที่ {{valid_until}} หลังจากนั้นราคาอาจเปลี่ยนแปลง" },
+      vi: { body: "Vui lòng xem báo giá đính kèm theo yêu cầu của Quý khách. Báo giá có hiệu lực đến ngày {{valid_until}}; sau thời hạn này, số tiền có thể thay đổi." },
+    },
+  },
+  {
+    key: "doc.statement",
+    name: "거래명세서·정산서 — 발송 이메일",
+    description: "기간별 거래 내역서나 정산서를 첨부할 때의 커버 문장.",
+    style: "note",
+    vars: vars("ref", "period", "amount"),
+    tr: {
+      ko: { body: "{{period}} 거래 내역서를 첨부해 드립니다. 내역에 다른 점이 있으면 알려 주세요. 확인해 드리겠습니다." },
+      en: { body: "Attached is your statement for {{period}}. If anything doesn't match your records, let us know and we'll check it." },
+      ja: { body: "{{period}} のお取引明細書を添付いたします。ご記録と異なる点がございましたら、お知らせいただければ確認いたします。" },
+      zh: { body: "随附 {{period}} 的交易明细表。如与您的记录有出入，请告知我们，我们会为您核对。" },
+      th: { body: "แนบใบแสดงรายการของงวด {{period}} มาด้วย หากมีรายการใดไม่ตรงกับบันทึกของท่าน กรุณาแจ้งให้ทราบ เราจะตรวจสอบให้" },
+      vi: { body: "Đính kèm là bảng kê giao dịch kỳ {{period}}. Nếu có khoản nào không khớp với ghi chép của Quý khách, xin báo để chúng tôi kiểm tra." },
+    },
+  },
+  {
+    key: "doc.generic",
+    name: "일반 문서 — 발송 이메일",
+    description: "전용 커버가 없는 문서를 보낼 때 쓰는 기본 문장.",
+    style: "note",
+    vars: vars("ref", "doc_label"),
+    tr: {
+      ko: { body: "요청하신 {{doc_label}}을(를) 첨부해 드립니다. 내용을 확인하시고 궁금한 점이 있으면 회신해 주세요." },
+      en: { body: "Attached is the {{doc_label}} you asked for. Have a look and reply to this email if anything needs clarifying." },
+      ja: { body: "ご依頼の {{doc_label}} を添付いたします。ご確認のうえ、ご不明な点がございましたらご返信ください。" },
+      zh: { body: "随附您所需的{{doc_label}}。请查收，如有疑问欢迎回复本邮件。" },
+      th: { body: "แนบ{{doc_label}}ตามที่ท่านขอมาด้วย กรุณาตรวจสอบ หากมีข้อสงสัยสามารถตอบกลับอีเมลนี้ได้" },
+      vi: { body: "Đính kèm là {{doc_label}} theo yêu cầu của Quý khách. Xin kiểm tra và phản hồi email này nếu cần làm rõ điều gì." },
+    },
+  },
+
+  // ── 약속 (방문·상담·점검) ───────────────────────────────────────────────────
+  {
+    key: "appointment.confirmed",
+    name: "약속 확정",
+    description: "방문·상담·점검 약속이 잡혔을 때. 캘린더 초대(.ics)가 함께 첨부된다.",
+    vars: vars("recipient", "purpose", "date", "location", "contact_name", "contact_phone"),
+    tr: {
+      ko: {
+        subject: "{{purpose}} 일정이 확정되었습니다",
+        body:
+          `<p class="lead">{{recipient}} 님, 안녕하세요.</p>` +
+          `<p>{{purpose}} 일정이 아래와 같이 확정되었습니다.</p>` +
+          `<table class="kv">` +
+          `<tr><td class="k">일시</td><td>{{date}}</td></tr>` +
+          `<tr><td class="k">장소</td><td>{{location}}</td></tr>` +
+          `<tr><td class="k">담당</td><td>{{contact_name}} ({{contact_phone}})</td></tr></table>` +
+          `<p>첨부한 캘린더 파일을 열면 일정에 바로 등록됩니다.</p>` +
+          `<p class="muted">시간을 바꾸셔야 하면 하루 전까지 담당자에게 연락해 주세요.</p>`,
+      },
+      en: {
+        subject: "Your {{purpose}} is confirmed",
+        body:
+          `<p class="lead">Hi {{recipient}},</p>` +
+          `<p>Your {{purpose}} is confirmed for the time below.</p>` +
+          `<table class="kv">` +
+          `<tr><td class="k">When</td><td>{{date}}</td></tr>` +
+          `<tr><td class="k">Where</td><td>{{location}}</td></tr>` +
+          `<tr><td class="k">Contact</td><td>{{contact_name}} ({{contact_phone}})</td></tr></table>` +
+          `<p>Open the attached calendar file to add it to your diary.</p>` +
+          `<p class="muted">If you need a different time, please reach your contact at least a day ahead.</p>`,
+      },
+      ja: {
+        subject: "{{purpose}} の日程が確定いたしました",
+        body:
+          `<p class="lead">{{recipient}} 様</p>` +
+          `<p>{{purpose}} の日程が下記のとおり確定いたしました。</p>` +
+          `<table class="kv">` +
+          `<tr><td class="k">日時</td><td>{{date}}</td></tr>` +
+          `<tr><td class="k">場所</td><td>{{location}}</td></tr>` +
+          `<tr><td class="k">担当</td><td>{{contact_name}}（{{contact_phone}}）</td></tr></table>` +
+          `<p>添付のカレンダーファイルを開くと、そのままご予定に登録できます。</p>` +
+          `<p class="muted">日時のご変更が必要な場合は、前日までに担当者へご連絡ください。</p>`,
+      },
+      zh: {
+        subject: "{{purpose}}时间已确认",
+        body:
+          `<p class="lead">{{recipient}} 您好，</p>` +
+          `<p>您的{{purpose}}已按以下时间确认。</p>` +
+          `<table class="kv">` +
+          `<tr><td class="k">时间</td><td>{{date}}</td></tr>` +
+          `<tr><td class="k">地点</td><td>{{location}}</td></tr>` +
+          `<tr><td class="k">联系人</td><td>{{contact_name}}（{{contact_phone}}）</td></tr></table>` +
+          `<p>打开随附的日历文件即可加入您的日程。</p>` +
+          `<p class="muted">如需改期，请至少提前一天联系上述联系人。</p>`,
+      },
+      th: {
+        subject: "ยืนยันนัดหมาย{{purpose}}แล้ว",
+        body:
+          `<p class="lead">เรียน คุณ{{recipient}}</p>` +
+          `<p>นัดหมาย{{purpose}}ของท่านได้รับการยืนยันตามรายละเอียดด้านล่าง</p>` +
+          `<table class="kv">` +
+          `<tr><td class="k">วันเวลา</td><td>{{date}}</td></tr>` +
+          `<tr><td class="k">สถานที่</td><td>{{location}}</td></tr>` +
+          `<tr><td class="k">ผู้ประสานงาน</td><td>{{contact_name}} ({{contact_phone}})</td></tr></table>` +
+          `<p>เปิดไฟล์ปฏิทินที่แนบมาเพื่อเพิ่มลงในตารางนัดของท่านได้ทันที</p>` +
+          `<p class="muted">หากต้องการเปลี่ยนเวลา กรุณาติดต่อผู้ประสานงานล่วงหน้าอย่างน้อยหนึ่งวัน</p>`,
+      },
+      vi: {
+        subject: "Đã xác nhận lịch {{purpose}}",
+        body:
+          `<p class="lead">Kính gửi {{recipient}},</p>` +
+          `<p>Lịch {{purpose}} của Quý khách đã được xác nhận như sau.</p>` +
+          `<table class="kv">` +
+          `<tr><td class="k">Thời gian</td><td>{{date}}</td></tr>` +
+          `<tr><td class="k">Địa điểm</td><td>{{location}}</td></tr>` +
+          `<tr><td class="k">Người phụ trách</td><td>{{contact_name}} ({{contact_phone}})</td></tr></table>` +
+          `<p>Mở tệp lịch đính kèm để thêm vào lịch của Quý khách.</p>` +
+          `<p class="muted">Nếu cần đổi giờ, xin liên hệ người phụ trách trước ít nhất một ngày.</p>`,
+      },
+    },
+  },
+  {
+    key: "appointment.reminder",
+    name: "약속 전일 리마인더",
+    description: "약속 하루 전 보내는 확인 메일. 준비물과 변경 방법을 함께 알린다.",
+    vars: vars("recipient", "purpose", "date", "location", "contact_name", "contact_phone"),
+    tr: {
+      ko: {
+        subject: "내일 {{purpose}} 일정 안내",
+        body:
+          `<p class="lead">{{recipient}} 님, 안녕하세요.</p>` +
+          `<p>내일 예정된 {{purpose}} 일정을 다시 한번 알려 드립니다.</p>` +
+          `<table class="kv">` +
+          `<tr><td class="k">일시</td><td>{{date}}</td></tr>` +
+          `<tr><td class="k">장소</td><td>{{location}}</td></tr></table>` +
+          `<p>신분증을 지참해 주시고 약속 시간보다 조금 일찍 도착하시면 좋습니다.</p>` +
+          `<p class="muted">사정이 생기셨다면 {{contact_name}} ({{contact_phone}})으로 연락 주세요.</p>`,
+      },
+      en: {
+        subject: "Reminder: your {{purpose}} is tomorrow",
+        body:
+          `<p class="lead">Hi {{recipient}},</p>` +
+          `<p>A quick reminder about your {{purpose}} tomorrow.</p>` +
+          `<table class="kv">` +
+          `<tr><td class="k">When</td><td>{{date}}</td></tr>` +
+          `<tr><td class="k">Where</td><td>{{location}}</td></tr></table>` +
+          `<p>Please bring photo ID, and arriving a few minutes early helps.</p>` +
+          `<p class="muted">If something has come up, contact {{contact_name}} on {{contact_phone}}.</p>`,
+      },
+      ja: {
+        subject: "明日の {{purpose}} についてのご案内",
+        body:
+          `<p class="lead">{{recipient}} 様</p>` +
+          `<p>明日ご予定の {{purpose}} について、改めてご案内いたします。</p>` +
+          `<table class="kv">` +
+          `<tr><td class="k">日時</td><td>{{date}}</td></tr>` +
+          `<tr><td class="k">場所</td><td>{{location}}</td></tr></table>` +
+          `<p>身分証をご持参のうえ、お時間より少し早めにお越しいただけますと幸いです。</p>` +
+          `<p class="muted">ご都合が変わりましたら、{{contact_name}}（{{contact_phone}}）までご連絡ください。</p>`,
+      },
+      zh: {
+        subject: "提醒：明天的{{purpose}}",
+        body:
+          `<p class="lead">{{recipient}} 您好，</p>` +
+          `<p>提醒您明天的{{purpose}}安排。</p>` +
+          `<table class="kv">` +
+          `<tr><td class="k">时间</td><td>{{date}}</td></tr>` +
+          `<tr><td class="k">地点</td><td>{{location}}</td></tr></table>` +
+          `<p>请携带身份证件，建议提前几分钟到达。</p>` +
+          `<p class="muted">如临时有变，请联系 {{contact_name}}（{{contact_phone}}）。</p>`,
+      },
+      th: {
+        subject: "แจ้งเตือน: นัดหมาย{{purpose}}พรุ่งนี้",
+        body:
+          `<p class="lead">เรียน คุณ{{recipient}}</p>` +
+          `<p>ขอแจ้งเตือนนัดหมาย{{purpose}}ของท่านในวันพรุ่งนี้อีกครั้ง</p>` +
+          `<table class="kv">` +
+          `<tr><td class="k">วันเวลา</td><td>{{date}}</td></tr>` +
+          `<tr><td class="k">สถานที่</td><td>{{location}}</td></tr></table>` +
+          `<p>กรุณานำบัตรประจำตัวมาด้วย และควรมาถึงก่อนเวลาเล็กน้อย</p>` +
+          `<p class="muted">หากมีเหตุจำเป็น กรุณาติดต่อ {{contact_name}} ที่ {{contact_phone}}</p>`,
+      },
+      vi: {
+        subject: "Nhắc lịch: {{purpose}} vào ngày mai",
+        body:
+          `<p class="lead">Kính gửi {{recipient}},</p>` +
+          `<p>Chúng tôi xin nhắc lại lịch {{purpose}} của Quý khách vào ngày mai.</p>` +
+          `<table class="kv">` +
+          `<tr><td class="k">Thời gian</td><td>{{date}}</td></tr>` +
+          `<tr><td class="k">Địa điểm</td><td>{{location}}</td></tr></table>` +
+          `<p>Xin mang theo giấy tờ tùy thân và đến sớm vài phút.</p>` +
+          `<p class="muted">Nếu có việc đột xuất, xin liên hệ {{contact_name}} theo số {{contact_phone}}.</p>`,
+      },
+    },
+  },
+  {
+    key: "appointment.rescheduled",
+    name: "약속 변경",
+    description: "약속 일시나 장소가 바뀌었을 때. 이전 일정과 새 일정을 나란히 보여 준다.",
+    vars: vars("recipient", "purpose", "old_date", "date", "location", "reason", "contact_name", "contact_phone"),
+    tr: {
+      ko: {
+        subject: "{{purpose}} 일정이 변경되었습니다",
+        body:
+          `<p class="lead">{{recipient}} 님, 안녕하세요.</p>` +
+          `<p>{{reason}} 사유로 {{purpose}} 일정을 옮기게 되었습니다. 불편을 드려 죄송합니다.</p>` +
+          `<table class="kv">` +
+          `<tr><td class="k">기존 일시</td><td>{{old_date}}</td></tr>` +
+          `<tr><td class="k">변경 일시</td><td>{{date}}</td></tr>` +
+          `<tr><td class="k">장소</td><td>{{location}}</td></tr></table>` +
+          `<p class="muted">새 일정이 어려우시면 {{contact_name}} ({{contact_phone}})으로 알려 주세요. 다시 잡아 드리겠습니다.</p>`,
+      },
+      en: {
+        subject: "Your {{purpose}} has moved",
+        body:
+          `<p class="lead">Hi {{recipient}},</p>` +
+          `<p>We've had to move your {{purpose}} — {{reason}}. Sorry for the disruption.</p>` +
+          `<table class="kv">` +
+          `<tr><td class="k">Was</td><td>{{old_date}}</td></tr>` +
+          `<tr><td class="k">Now</td><td>{{date}}</td></tr>` +
+          `<tr><td class="k">Where</td><td>{{location}}</td></tr></table>` +
+          `<p class="muted">If the new time doesn't work, tell {{contact_name}} on {{contact_phone}} and we'll find another.</p>`,
+      },
+      ja: {
+        subject: "{{purpose}} の日程を変更いたしました",
+        body:
+          `<p class="lead">{{recipient}} 様</p>` +
+          `<p>{{reason}} のため、{{purpose}} の日程を変更させていただきました。ご不便をおかけし申し訳ございません。</p>` +
+          `<table class="kv">` +
+          `<tr><td class="k">変更前</td><td>{{old_date}}</td></tr>` +
+          `<tr><td class="k">変更後</td><td>{{date}}</td></tr>` +
+          `<tr><td class="k">場所</td><td>{{location}}</td></tr></table>` +
+          `<p class="muted">新しい日時がご都合に合わない場合は、{{contact_name}}（{{contact_phone}}）までお知らせください。改めて調整いたします。</p>`,
+      },
+      zh: {
+        subject: "{{purpose}}时间已变更",
+        body:
+          `<p class="lead">{{recipient}} 您好，</p>` +
+          `<p>因{{reason}}，我们调整了您的{{purpose}}时间，给您带来不便，深表歉意。</p>` +
+          `<table class="kv">` +
+          `<tr><td class="k">原时间</td><td>{{old_date}}</td></tr>` +
+          `<tr><td class="k">新时间</td><td>{{date}}</td></tr>` +
+          `<tr><td class="k">地点</td><td>{{location}}</td></tr></table>` +
+          `<p class="muted">如果新时间不合适，请告知 {{contact_name}}（{{contact_phone}}），我们会为您重新安排。</p>`,
+      },
+      th: {
+        subject: "เปลี่ยนแปลงนัดหมาย{{purpose}}",
+        body:
+          `<p class="lead">เรียน คุณ{{recipient}}</p>` +
+          `<p>เนื่องจาก{{reason}} เราจำเป็นต้องเลื่อนนัดหมาย{{purpose}}ของท่าน ต้องขออภัยในความไม่สะดวก</p>` +
+          `<table class="kv">` +
+          `<tr><td class="k">เวลาเดิม</td><td>{{old_date}}</td></tr>` +
+          `<tr><td class="k">เวลาใหม่</td><td>{{date}}</td></tr>` +
+          `<tr><td class="k">สถานที่</td><td>{{location}}</td></tr></table>` +
+          `<p class="muted">หากเวลาใหม่ไม่สะดวก กรุณาแจ้ง {{contact_name}} ที่ {{contact_phone}} เราจะจัดเวลาให้ใหม่</p>`,
+      },
+      vi: {
+        subject: "Lịch {{purpose}} đã được dời",
+        body:
+          `<p class="lead">Kính gửi {{recipient}},</p>` +
+          `<p>Vì {{reason}}, chúng tôi phải dời lịch {{purpose}} của Quý khách. Xin thành thật xin lỗi vì sự bất tiện này.</p>` +
+          `<table class="kv">` +
+          `<tr><td class="k">Giờ cũ</td><td>{{old_date}}</td></tr>` +
+          `<tr><td class="k">Giờ mới</td><td>{{date}}</td></tr>` +
+          `<tr><td class="k">Địa điểm</td><td>{{location}}</td></tr></table>` +
+          `<p class="muted">Nếu giờ mới không thuận tiện, xin báo {{contact_name}} theo số {{contact_phone}} để chúng tôi sắp xếp lại.</p>`,
+      },
+    },
+  },
+  {
+    key: "appointment.cancelled",
+    name: "약속 취소",
+    description: "약속이 취소됐을 때. 사유와 재예약 방법을 함께 안내한다.",
+    vars: vars("recipient", "purpose", "date", "reason", "contact_name", "contact_phone", "url"),
+    tr: {
+      ko: {
+        subject: "{{purpose}} 일정이 취소되었습니다",
+        body:
+          `<p class="lead">{{recipient}} 님, 안녕하세요.</p>` +
+          `<p>{{date}}에 예정되어 있던 {{purpose}} 일정이 취소되었습니다. 사유는 {{reason}}입니다.</p>` +
+          `<p>다시 잡으시려면 아래에서 편한 시간을 골라 주세요.</p>` +
+          `<a class="btn" href="{{url}}">새 일정 잡기</a>` +
+          `<p class="muted">직접 상의하고 싶으시면 {{contact_name}} ({{contact_phone}})으로 연락 주셔도 됩니다.</p>`,
+      },
+      en: {
+        subject: "Your {{purpose}} has been cancelled",
+        body:
+          `<p class="lead">Hi {{recipient}},</p>` +
+          `<p>The {{purpose}} booked for {{date}} has been cancelled — {{reason}}.</p>` +
+          `<p>To book again, pick a time that suits you below.</p>` +
+          `<a class="btn" href="{{url}}">Book a new time</a>` +
+          `<p class="muted">You're also welcome to call {{contact_name}} on {{contact_phone}} to sort it out directly.</p>`,
+      },
+      ja: {
+        subject: "{{purpose}} の日程を取り消しました",
+        body:
+          `<p class="lead">{{recipient}} 様</p>` +
+          `<p>{{date}} に予定しておりました {{purpose}} を取り消しいたしました。理由は {{reason}} です。</p>` +
+          `<p>改めてご予約いただく場合は、下記からご都合のよいお時間をお選びください。</p>` +
+          `<a class="btn" href="{{url}}">新しい日程を予約する</a>` +
+          `<p class="muted">直接ご相談をご希望の場合は、{{contact_name}}（{{contact_phone}}）までお電話ください。</p>`,
+      },
+      zh: {
+        subject: "{{purpose}}已取消",
+        body:
+          `<p class="lead">{{recipient}} 您好，</p>` +
+          `<p>原定于 {{date}} 的{{purpose}}已取消，原因是{{reason}}。</p>` +
+          `<p>如需重新预约，请在下方选择方便的时间。</p>` +
+          `<a class="btn" href="{{url}}">重新预约</a>` +
+          `<p class="muted">您也可以直接致电 {{contact_name}}（{{contact_phone}}）与我们商议。</p>`,
+      },
+      th: {
+        subject: "ยกเลิกนัดหมาย{{purpose}}",
+        body:
+          `<p class="lead">เรียน คุณ{{recipient}}</p>` +
+          `<p>นัดหมาย{{purpose}}ที่กำหนดไว้วันที่ {{date}} ได้ถูกยกเลิก เนื่องจาก{{reason}}</p>` +
+          `<p>หากต้องการนัดใหม่ กรุณาเลือกเวลาที่สะดวกด้านล่าง</p>` +
+          `<a class="btn" href="{{url}}">นัดหมายใหม่</a>` +
+          `<p class="muted">หรือจะติดต่อ {{contact_name}} ที่ {{contact_phone}} เพื่อพูดคุยโดยตรงก็ได้</p>`,
+      },
+      vi: {
+        subject: "Lịch {{purpose}} đã bị hủy",
+        body:
+          `<p class="lead">Kính gửi {{recipient}},</p>` +
+          `<p>Lịch {{purpose}} dự kiến ngày {{date}} đã bị hủy, lý do là {{reason}}.</p>` +
+          `<p>Để đặt lại, xin Quý khách chọn thời gian thuận tiện bên dưới.</p>` +
+          `<a class="btn" href="{{url}}">Đặt lịch mới</a>` +
+          `<p class="muted">Quý khách cũng có thể gọi {{contact_name}} theo số {{contact_phone}} để trao đổi trực tiếp.</p>`,
+      },
+    },
+  },
 ];
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -395,13 +822,28 @@ const CATALOGUE = [
 // ─────────────────────────────────────────────────────────────────────────────
 // 시드 실행
 // ─────────────────────────────────────────────────────────────────────────────
+/**
+ * 본문 형식은 두 가지다 — 발송 경로가 다르므로 섞으면 안 된다.
+ *
+ *   style: "shell" (기본)
+ *     renderEmailShell() 카드 안쪽에 그대로 들어가는 HTML 조각.
+ *     셸 클래스(lead/box/btn/muted/kv)를 쓴다. 제목 필수.
+ *
+ *   style: "note"
+ *     sendDocumentEmail() 의 고정 커버 안에 **escape 되어** 삽입되는 평문 한두 문장.
+ *     HTML 을 쓰면 태그가 글자로 노출된다. 제목은 생략 가능(로케일 기본 제목 사용).
+ *     기존 email.invoice / email.receipt / email.contract 가 이 형식이다.
+ */
 function validate(rows) {
   const problems = [];
   const seen = new Set();
   const BANNED = /<!DOCTYPE|<style|#[0-9a-fA-F]{6}\b|MillionStay|Metheim|<img/i;
+  const SHELL_CLASSES = /class="(lead|box|label|ref|amount|btn|muted|kv|k)"/g;
+  const ALLOWED_TAGS = /<\/?(p|b|strong|em|ul|ol|li|a|br|h2|table|tr|td|div)\b/gi;
 
   for (const t of rows) {
     const id = `${t.kind}/${t.key}`;
+    const style = t.style ?? "shell";
     if (seen.has(id)) problems.push(`${id}: 중복 키`);
     seen.add(id);
     if (!/^[a-z][a-z0-9_]*\.[a-z][a-z0-9_]*$/.test(t.key)) {
@@ -409,14 +851,26 @@ function validate(rows) {
     }
     for (const loc of LOCALES) {
       const tr = t.tr[loc];
-      if (!tr?.subject?.trim() || !tr?.body?.trim()) {
-        problems.push(`${id}: ${loc} 로케일 누락`);
-        continue;
+      if (!tr?.body?.trim()) { problems.push(`${id}: ${loc} 본문 누락`); continue; }
+      if (style === "shell" && !tr.subject?.trim()) {
+        problems.push(`${id}: ${loc} 제목 누락 (shell 형식은 제목 필수)`);
       }
       if (BANNED.test(tr.body)) {
         problems.push(`${id}: ${loc} 본문에 셸이 소유해야 할 요소(DOCTYPE/style/색/로고/브랜드명)가 있음`);
       }
+      if (style === "note" && /<[a-z/]/i.test(tr.body)) {
+        problems.push(`${id}: ${loc} note 형식에 HTML 태그가 있음 — 커버에 escape 되어 태그가 그대로 보인다`);
+      }
+      if (style === "shell") {
+        const stray = tr.body.replace(ALLOWED_TAGS, "").match(/<[a-z][a-z0-9]*/gi);
+        if (stray) problems.push(`${id}: ${loc} 허용되지 않은 태그 ${[...new Set(stray)].join(", ")}`);
+        // 셸이 제공하지 않는 class 를 쓰면 스타일이 먹지 않는다.
+        const classes = [...tr.body.matchAll(/class="([^"]+)"/g)].map((m) => m[1]);
+        const bad = classes.filter((c) => !/^(lead|box|label|ref|amount|btn|muted|kv|k)$/.test(c));
+        if (bad.length) problems.push(`${id}: ${loc} 셸에 없는 class ${[...new Set(bad)].join(", ")}`);
+      }
     }
+    void SHELL_CLASSES;
   }
   return problems;
 }
