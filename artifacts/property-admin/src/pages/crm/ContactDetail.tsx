@@ -21,6 +21,7 @@ import { ContactMediaPanel, type PendingCards } from "@/components/ContactMediaP
 import { apiFetch, apiJson } from "@/lib/apiFetch";
 import { LinkContactAccountDialog } from "@/components/LinkContactAccountDialog";
 import { accountTypeLabel } from "@/lib/accountTypes";
+import { useToast } from "@/hooks/use-toast";
 import { formatPersonName } from "@/lib/nameFormat";
 import { COUNTRIES, normaliseCountry, defaultCountry } from "@/lib/countries";
 import { KoreanAddressSearch } from "@/components/KoreanAddressSearch";
@@ -108,10 +109,14 @@ function ExpiryWarning({ label, dateStr }: { label: string; dateStr?: string | n
 export default function ContactDetail() {
   const { t } = useTranslation();
   const params = useParams<{ id: string }>();
-  const isNew = params.id === "new";
+  // `/account/contacts/new` matches its own literal route, so no `:id` param is
+  // bound there — treat a missing id as "new" too, or the save falls through to
+  // a PUT on contact 0.
+  const isNew = !params.id || params.id === "new";
   const id = isNew ? null : parseInt(params.id ?? "0", 10);
   const [, navigate] = useLocation();
   const qc = useQueryClient();
+  const { toast } = useToast();
 
   const { data: contact, isLoading } = useGetContact(
     id!, { query: { enabled: !isNew && !!id, queryKey: getGetContactQueryKey(id!) } }
@@ -233,6 +238,13 @@ export default function ContactDetail() {
         qc.invalidateQueries({ queryKey: getListContactsQueryKey() });
         navigate("/crm/contacts");
       },
+      onError: (err) => {
+        toast({
+          title: t("common.error"),
+          description: err instanceof Error ? err.message : String(err),
+          variant: "destructive",
+        });
+      },
     },
   });
 
@@ -243,6 +255,13 @@ export default function ContactDetail() {
         qc.invalidateQueries({ queryKey: getListContactsQueryKey() });
         if (id) qc.invalidateQueries({ queryKey: getGetContactQueryKey(id) });
         navigate("/crm/contacts");
+      },
+      onError: (err) => {
+        toast({
+          title: t("common.error"),
+          description: err instanceof Error ? err.message : String(err),
+          variant: "destructive",
+        });
       },
     },
   });
@@ -272,6 +291,7 @@ export default function ContactDetail() {
   const onSubmit = (values: ContactForm) => {
     const data = {
       ...values,
+      email: values.email || null,
       date_of_birth: values.date_of_birth || null,
       nationality: values.nationality || null,
       gender: values.gender || null,
@@ -375,9 +395,8 @@ export default function ContactDetail() {
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                     <div className="grid gap-1.5">
-                      <Label>{t('contact.label_email')} *</Label>
-                      <Input {...register("email", { required: true })} type="email" />
-                      {errors.email && <p className="text-xs text-destructive">{t('common.field_required')}</p>}
+                      <Label>{t('contact.label_email')}</Label>
+                      <Input {...register("email")} type="email" />
                     </div>
                     <div className="grid gap-1.5">
                       <Label>{t('contact.label_mobile')}</Label>

@@ -37,7 +37,7 @@ export default function QuoteDetail() {
   const [, navigate] = useLocation();
   const qc = useQueryClient();
   const { toast } = useToast();
-  const isNew = id === "new";
+  const isNew = !id || id === "new";
 
   const [accountId, setAccountId] = useState<number | null>(null);
   const [leadId, setLeadId] = useState<number | null>(null);

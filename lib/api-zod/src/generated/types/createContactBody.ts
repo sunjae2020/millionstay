@@ -13,7 +13,8 @@ export interface CreateContactBody {
   title?: string | null;
   /** @nullable */
   other_name?: string | null;
-  email: string;
+  /** @nullable */
+  email?: string | null;
   /** @nullable */
   mobile_number?: string | null;
   /** @nullable */

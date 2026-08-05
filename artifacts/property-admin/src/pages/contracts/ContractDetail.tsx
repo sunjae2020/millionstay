@@ -142,7 +142,7 @@ export default function ContractDetail() {
   const { id } = useParams<{ id: string }>();
   const [, navigate] = useLocation();
   const qc = useQueryClient();
-  const isNew = id === "new";
+  const isNew = !id || id === "new";
   // Tenant default currency from branding settings (Metheim → KRW; MillionStay → AUD).
   const { currency: brandCurrency } = useBrand();
 

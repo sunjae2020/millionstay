@@ -57,7 +57,7 @@ export default function InvoiceDetail() {
   const { id } = useParams<{ id: string }>();
   const [, navigate] = useLocation();
   const qc = useQueryClient();
-  const isNew = id === "new";
+  const isNew = !id || id === "new";
 
   const [payOpen, setPayOpen] = useState(false);
   const [payMethod, setPayMethod] = useState("BankTransfer");

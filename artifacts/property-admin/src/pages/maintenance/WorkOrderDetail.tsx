@@ -82,7 +82,7 @@ export default function WorkOrderDetail() {
   const qc = useQueryClient();
   const { t } = useTranslation();
   const { currency, currencyPosition } = useBrand();
-  const isNew = id === "new";
+  const isNew = !id || id === "new";
 
   const { data: wo, refetch } = useGetWorkOrder(Number(id), {
     query: { enabled: !isNew, queryKey: getGetWorkOrderQueryKey(Number(id)) },

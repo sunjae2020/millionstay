@@ -70,7 +70,7 @@ export default function ContractProductDetail() {
   const { id } = useParams<{ id: string }>();
   const [, navigate] = useLocation();
   const qc = useQueryClient();
-  const isNew = id === "new";
+  const isNew = !id || id === "new";
   const { currency: brandCurrency } = useBrand();
 
   const { data: product, refetch } = useGetContractProduct(Number(id), {
