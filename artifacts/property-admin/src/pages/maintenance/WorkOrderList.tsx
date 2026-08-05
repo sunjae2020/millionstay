@@ -43,8 +43,12 @@ export default function WorkOrderList() {
   const [showDeleted, setShowDeleted] = useState(false);
   const qc = useQueryClient();
 
+  // ?space_id=N — arriving from a space's 하자보수 tab, scoped to that unit.
+  const spaceIdFilter = new URLSearchParams(window.location.search).get("space_id");
+
   const params: ListWorkOrdersParams & Record<string, string | undefined> = {
     q: q || undefined,
+    ...(spaceIdFilter ? { space_id: spaceIdFilter } : {}),
     status: status === ALL ? undefined : status,
     priority: priority === ALL ? undefined : priority,
     category: category === ALL ? undefined : category,

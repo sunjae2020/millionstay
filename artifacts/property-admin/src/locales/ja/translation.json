@@ -390,7 +390,8 @@
     "year_value": "{{year}}年",
     "all_years": "すべての年度",
     "all_types": "すべての種類",
-    "search_ph_generic": "検索..."
+    "search_ph_generic": "検索...",
+    "uploading": "アップロード中…"
   },
   "lang": {
     "label": "言語",
@@ -1854,7 +1855,11 @@
     "placeholder_floor_area": "例: 25.5",
     "placeholder_landlord_account": "アカウントID",
     "tab_documents": "書類",
-    "tab_defects": "不具合履歴"
+    "tab_defects": "不具合履歴",
+    "tab_work_orders": "修繕",
+    "work_orders_open_list": "サービス＆建物管理で開く",
+    "work_orders_new": "修繕を登録",
+    "work_orders_empty": "このスペースの修繕案件はまだありません。"
   },
   "space_option": {
     "new": "新規スペースオプション",
@@ -2415,7 +2420,8 @@
     "label_business_end": "営業終了時刻 (0-23)",
     "search_account_placeholder": "アカウントを検索…",
     "search_service_placeholder": "サービスを検索…",
-    "section_admin": "管理"
+    "section_admin": "管理",
+    "name_required": "名前を入力してください。"
   },
   "receipt": {
     "no_receipts": "領収書が見つかりません",
@@ -5082,7 +5088,9 @@
     "mark_paid": "支払済みにする"
   },
   "service_host_photos": {
-    "empty": "ジョブ写真がありません"
+    "empty": "ジョブ写真がありません",
+    "title": "写真",
+    "upload": "写真をアップロード"
   },
   "service_host_cs": {
     "empty": "このパートナーの問い合わせはありません",

@@ -69,12 +69,18 @@ export default function ServiceHostDetail() {
     });
   }, [host, reset]);
 
-  const createMutation = useCreateServiceHost({
-    mutation: { onSuccess: () => { qc.invalidateQueries({ queryKey: getListServiceHostsQueryKey({}) }); setLocation("/booking/service-hosts"); } },
-  });
-  const updateMutation = useUpdateServiceHost({
-    mutation: { onSuccess: () => { qc.invalidateQueries({ queryKey: getListServiceHostsQueryKey({}) }); setLocation("/booking/service-hosts"); } },
-  });
+  // Save errors used to be swallowed, so a rejected write looked like "nothing
+  // happened". Surface them next to the Save button instead.
+  const [saveError, setSaveError] = useState<string | null>(null);
+  const onSaved = () => {
+    setSaveError(null);
+    qc.invalidateQueries({ queryKey: getListServiceHostsQueryKey({}) });
+    setLocation("/booking/service-hosts");
+  };
+  const onSaveError = (e: any) => setSaveError(e?.message ?? t("common.save_failed", "저장에 실패했습니다."));
+
+  const createMutation = useCreateServiceHost({ mutation: { onSuccess: onSaved, onError: onSaveError } });
+  const updateMutation = useUpdateServiceHost({ mutation: { onSuccess: onSaved, onError: onSaveError } });
 
   const [tab, setTab] = useState("overview");
   const [specialties, setSpecialties] = useState<string[]>([]);
@@ -82,8 +88,13 @@ export default function ServiceHostDetail() {
   const toggleSpecialty = (s: string) => setSpecialties((prev) => prev.includes(s) ? prev.filter((x) => x !== s) : [...prev, s]);
 
   const onSubmit = (data: FormData) => {
+    if (!data.name.trim()) { setSaveError(t("service_host.name_required", "이름을 입력하세요.")); return; }
     const payload: any = {
       ...data,
+      name: data.name.trim(),
+      // Empty date inputs must go over the wire as null — "" is not a date.
+      from_date: data.from_date || null,
+      to_date: data.to_date || null,
       business_start_hour: data.business_start_hour ? Number(data.business_start_hour) : null,
       business_end_hour: data.business_end_hour ? Number(data.business_end_hour) : null,
       specialties, // Phase 3 auto-dispatch — passed through to the backend.
@@ -106,6 +117,9 @@ export default function ServiceHostDetail() {
           </div>
         }
       />
+      {saveError && (
+        <div className="mx-6 mt-4 rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">{saveError}</div>
+      )}
       {!isNew && (
         <div className="flex border-b gap-1 px-6">
           {[

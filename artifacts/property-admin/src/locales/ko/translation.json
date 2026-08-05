@@ -390,7 +390,8 @@
     "year_value": "{{year}}년",
     "all_years": "전체 연도",
     "all_types": "전체 유형",
-    "search_ph_generic": "검색..."
+    "search_ph_generic": "검색...",
+    "uploading": "업로드 중…"
   },
   "lang": {
     "label": "언어",
@@ -1854,7 +1855,11 @@
     "placeholder_floor_area": "예: 25.5",
     "placeholder_landlord_account": "계정 ID",
     "tab_documents": "서류",
-    "tab_defects": "하자 이력"
+    "tab_defects": "하자 이력",
+    "tab_work_orders": "하자보수",
+    "work_orders_open_list": "서비스 & 건물관리에서 보기",
+    "work_orders_new": "하자보수 등록",
+    "work_orders_empty": "이 공간에 등록된 하자보수 건이 없습니다."
   },
   "space_option": {
     "new": "새 공간 옵션",
@@ -2415,7 +2420,8 @@
     "label_business_end": "영업 종료 시각 (0-23)",
     "search_account_placeholder": "계정 검색…",
     "search_service_placeholder": "서비스 검색…",
-    "section_admin": "관리"
+    "section_admin": "관리",
+    "name_required": "이름을 입력하세요."
   },
   "receipt": {
     "no_receipts": "영수증이 없습니다",
@@ -5082,7 +5088,9 @@
     "mark_paid": "지급완료 처리"
   },
   "service_host_photos": {
-    "empty": "업로드된 잡 사진이 없습니다"
+    "empty": "업로드된 잡 사진이 없습니다",
+    "title": "사진",
+    "upload": "사진 업로드"
   },
   "service_host_cs": {
     "empty": "이 파트너의 문의 티켓이 없습니다",

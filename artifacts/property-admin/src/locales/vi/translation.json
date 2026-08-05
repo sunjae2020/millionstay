@@ -390,7 +390,8 @@
     "year_value": "Năm {{year}}",
     "all_years": "Tất cả năm",
     "all_types": "Tất cả loại",
-    "search_ph_generic": "Tìm kiếm..."
+    "search_ph_generic": "Tìm kiếm...",
+    "uploading": "Đang tải lên…"
   },
   "lang": {
     "label": "Ngôn ngữ",
@@ -1854,7 +1855,11 @@
     "placeholder_floor_area": "vd: 25.5",
     "placeholder_landlord_account": "Mã tài khoản",
     "tab_documents": "Tài liệu",
-    "tab_defects": "Lịch sử lỗi"
+    "tab_defects": "Lịch sử lỗi",
+    "tab_work_orders": "Sửa chữa",
+    "work_orders_open_list": "Mở trong Dịch vụ & Quản lý tòa nhà",
+    "work_orders_new": "Tạo yêu cầu sửa chữa",
+    "work_orders_empty": "Chưa có yêu cầu sửa chữa nào cho không gian này."
   },
   "space_option": {
     "new": "Tùy chọn không gian mới",
@@ -2415,7 +2420,8 @@
     "label_business_end": "Giờ kết thúc làm việc (0-23)",
     "search_account_placeholder": "Tìm kiếm tài khoản…",
     "search_service_placeholder": "Tìm kiếm dịch vụ…",
-    "section_admin": "Quản trị"
+    "section_admin": "Quản trị",
+    "name_required": "Vui lòng nhập tên."
   },
   "receipt": {
     "no_receipts": "Không tìm thấy hóa đơn nào",
@@ -5082,7 +5088,9 @@
     "mark_paid": "Đánh dấu đã thanh toán"
   },
   "service_host_photos": {
-    "empty": "Chưa có ảnh công việc nào"
+    "empty": "Chưa có ảnh công việc nào",
+    "title": "Ảnh",
+    "upload": "Tải ảnh lên"
   },
   "service_host_cs": {
     "empty": "Không có yêu cầu hỗ trợ nào từ đối tác này",

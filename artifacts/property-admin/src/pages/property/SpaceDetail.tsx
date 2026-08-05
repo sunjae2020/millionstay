@@ -49,13 +49,14 @@ import { ChannelSyncPanel } from "@/components/ChannelSyncPanel";
 import { ContentTranslationsPanel } from "@/components/ContentTranslationsPanel";
 import EntityDocuments from "@/components/EntityDocuments";
 import { SpaceDefectsPanel } from "@/components/SpaceDefectsPanel";
+import { SpaceWorkOrdersPanel } from "@/components/SpaceWorkOrdersPanel";
 import { Link } from "wouter";
 import { cn } from "@/lib/utils";
 import { format, parseISO, startOfMonth, endOfMonth, addMonths, getDay } from "date-fns";
 import { formatDateTime } from "@/lib/date";
 import { useBrand } from "@/contexts/ThemeContext";
 import { formatMoney } from "@/lib/currency";
-import { AlertTriangle, ChevronLeft, ChevronRight } from "lucide-react";
+import { AlertTriangle, ChevronLeft, ChevronRight, Wrench } from "lucide-react";
 
 interface SpaceForm {
   name: string;
@@ -665,6 +666,11 @@ export default function SpaceDetail() {
             {!isNew && (
               <TabsTrigger value="defects" className="gap-1.5">
                 <AlertTriangle className="h-3.5 w-3.5" /> {t("space.tab_defects")}
+              </TabsTrigger>
+            )}
+            {!isNew && (
+              <TabsTrigger value="work-orders" className="gap-1.5">
+                <Wrench className="h-3.5 w-3.5" /> {t("space.tab_work_orders", "하자보수")}
               </TabsTrigger>
             )}
             {!isNew && (
@@ -1473,6 +1479,13 @@ export default function SpaceDetail() {
           {!isNew && id && (
             <TabsContent value="defects">
               <SpaceDefectsPanel spaceId={id} />
+            </TabsContent>
+          )}
+
+          {/* 하자보수 — 서비스 & 건물관리 work orders raised against this space. */}
+          {!isNew && id && (
+            <TabsContent value="work-orders">
+              <SpaceWorkOrdersPanel spaceId={id} />
             </TabsContent>
           )}
 

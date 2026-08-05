@@ -1,11 +1,13 @@
 import { Router, type IRouter } from "express";
+import multer from "multer";
 import { DEFAULT_CURRENCY } from "../lib/currency";
-import { eq, ilike, and, inArray, desc, sql, isNull, SQL } from "drizzle-orm";
+import { eq, ilike, and, or, inArray, desc, sql, isNull, SQL } from "drizzle-orm";
 import {
   db, serviceHostsTable, accountsTable, bookingServicesTable, bookingsTable,
   workOrdersTable, bookingServicePhotosTable, csTicketsTable, partnerUsersTable,
-  partnerPayoutsTable,
+  partnerPayoutsTable, serviceHostPhotosTable,
 } from "@workspace/db";
+import { isCloudinaryConfigured, uploadToCloudinary, cldFolder, deleteFromCloudinary } from "../utils/cloudinary";
 import {
   ListServiceHostsQueryParams,
   CreateServiceHostBody,
@@ -19,7 +21,31 @@ import { logAction } from "../utils/auditLog";
 import { keywordCondition, accountIdsByName } from "../lib/listSearch";
 const router: IRouter = Router();
 
+const photoUpload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 15 * 1024 * 1024 } });
+
 const num = (v: unknown): number => Number(v ?? 0);
+
+// The admin form posts every field it renders, so untouched date inputs arrive as
+// "" — which Postgres rejects for a `date` column ("invalid input syntax"). Blank
+// text is likewise a blank, not a value. Normalise before the write.
+const blankToNull = (v: unknown): string | null => (typeof v === "string" && v.trim() === "" ? null : (v as string | null));
+
+/** specialties (auto-dispatch) is not in the generated zod schema — read it off the raw body. */
+function normalizeSpecialties(raw: unknown): string[] | undefined {
+  if (!Array.isArray(raw)) return undefined;
+  return raw.map((s: unknown) => String(s).trim().toLowerCase()).filter(Boolean);
+}
+
+/** Shared shaping for POST/PUT: blank dates → null, blank notes → null, specialties merged in. */
+function shapeHostWrite(data: Record<string, unknown>, body: any): Record<string, unknown> {
+  const out: Record<string, unknown> = { ...data };
+  for (const k of ["from_date", "to_date", "description"]) {
+    if (k in out) out[k] = blankToNull(out[k]);
+  }
+  const specialties = normalizeSpecialties(body?.specialties);
+  if (specialties) out["specialties"] = specialties;
+  return out;
+}
 
 // service_hosts.id → this host's booking_service ids (jobs) — the join spine for
 // photos and job earnings.
@@ -74,7 +100,12 @@ router.post("/v1/service-hosts", async (req, res): Promise<void> => {
     res.status(400).json({ error: parsed.error.message });
     return;
   }
-  const [row] = await db.insert(serviceHostsTable).values(parsed.data).returning();
+  if (!parsed.data.name.trim()) {
+    res.status(400).json({ error: "name is required" });
+    return;
+  }
+  const values = shapeHostWrite({ ...parsed.data, name: parsed.data.name.trim() }, req.body) as typeof serviceHostsTable.$inferInsert;
+  const [row] = await db.insert(serviceHostsTable).values(values).returning();
   const [account] = row.account_id
     ? await db.select().from(accountsTable).where(eq(accountsTable.id, row.account_id))
     : [null];
@@ -102,12 +133,11 @@ router.put("/v1/service-hosts/:id", async (req, res): Promise<void> => {
   // so callers can update e.g. only `specialties` without re-sending `name`.
   const bodyParsed = CreateServiceHostBody.partial().safeParse(req.body);
   if (!bodyParsed.success) { res.status(400).json({ error: bodyParsed.error.message }); return; }
-  const updateSet: Record<string, unknown> = { ...bodyParsed.data };
-  // specialties (Phase 3 auto-dispatch) — not in the shared zod schema, so read
-  // it directly. Normalised to a lowercase string array.
-  if (Array.isArray(req.body?.specialties)) {
-    updateSet.specialties = req.body.specialties.map((s: unknown) => String(s).trim().toLowerCase()).filter(Boolean);
+  if (bodyParsed.data.name !== undefined && !bodyParsed.data.name.trim()) {
+    res.status(400).json({ error: "name is required" });
+    return;
   }
+  const updateSet = shapeHostWrite(bodyParsed.data, req.body);
   const [row] = await db.update(serviceHostsTable).set(updateSet).where(eq(serviceHostsTable.id, paramParsed.data.id)).returning();
   if (!row) { res.status(404).json({ error: "Not found" }); return; }
   const [account] = row.account_id
@@ -159,29 +189,104 @@ router.get("/v1/service-hosts/:id/jobs", async (req, res): Promise<void> => {
   } catch (err: any) { res.status(500).json({ error: err.message }); }
 });
 
-// GET /:id/photos — job photos uploaded for this host's booking services.
+// GET /:id/photos — job photos (booking_service_photos) merged with photos
+// uploaded straight onto the host from the admin detail tab.
 router.get("/v1/service-hosts/:id/photos", async (req, res): Promise<void> => {
   try {
-    const bsIds = await hostBookingServiceIds(Number(req.params.id));
-    if (!bsIds.length) { res.json({ data: [] }); return; }
-    const photos = await db.select().from(bookingServicePhotosTable)
-      .where(inArray(bookingServicePhotosTable.booking_service_id, bsIds))
-      .orderBy(desc(bookingServicePhotosTable.id));
-    res.json({ data: photos });
+    const hostId = Number(req.params.id);
+    const bsIds = await hostBookingServiceIds(hostId);
+    const jobPhotos = bsIds.length
+      ? await db.select().from(bookingServicePhotosTable)
+          .where(inArray(bookingServicePhotosTable.booking_service_id, bsIds))
+          .orderBy(desc(bookingServicePhotosTable.id))
+      : [];
+    const own = await db.select().from(serviceHostPhotosTable)
+      .where(eq(serviceHostPhotosTable.service_host_id, hostId))
+      .orderBy(desc(serviceHostPhotosTable.id));
+    // `source` lets the UI offer delete only on host-owned photos — job photos
+    // belong to the booking evidence trail and must not be removed from here.
+    res.json({
+      data: [
+        ...own.map((p) => ({ ...p, source: "host" as const })),
+        ...jobPhotos.map((p) => ({ ...p, source: "job" as const })),
+      ],
+    });
   } catch (err: any) { res.status(500).json({ error: err.message }); }
 });
 
-// GET /:id/cs-tickets — tickets this host opened (via its partner users).
+// POST /:id/photos — upload a photo onto the host. Accepts either a multipart
+// `image` file (→ Cloudinary) or a JSON body with an existing `url`.
+router.post("/v1/service-hosts/:id/photos", photoUpload.single("image"), async (req, res): Promise<void> => {
+  try {
+    const hostId = Number(req.params.id);
+    const [host] = await db.select({ id: serviceHostsTable.id }).from(serviceHostsTable).where(eq(serviceHostsTable.id, hostId)).limit(1);
+    if (!host) { res.status(404).json({ error: "Service host not found" }); return; }
+
+    let url: string | null = typeof req.body?.url === "string" && req.body.url.trim() ? req.body.url.trim() : null;
+    let cloudinaryId: string | null = null;
+    let thumbnailUrl: string | null = null;
+    if (!url && req.file) {
+      if (!isCloudinaryConfigured()) { res.status(503).json({ error: "Image upload is not configured" }); return; }
+      const result = await uploadToCloudinary(req.file.buffer, { folder: cldFolder("service-hosts") });
+      url = result.secure_url;
+      cloudinaryId = result.public_id ?? null;
+      thumbnailUrl = result.secure_url.replace("/upload/", "/upload/c_fill,w_400,h_400/");
+    }
+    if (!url) { res.status(400).json({ error: "Provide an image file or a url." }); return; }
+
+    const [row] = await db.insert(serviceHostPhotosTable).values({
+      service_host_id: hostId,
+      file_url: url,
+      thumbnail_url: thumbnailUrl,
+      cloudinary_id: cloudinaryId,
+      caption: typeof req.body?.caption === "string" && req.body.caption.trim() ? req.body.caption.trim() : null,
+      uploaded_by_type: "admin",
+      uploaded_by_id: (req as any).user?.id ?? null,
+    }).returning();
+    void logAction({ entityType: "service_host", entityId: hostId, action: "UPDATE", actorId: (req as any).user?.id ?? null, newValue: { photo_id: row!.id } });
+    res.status(201).json({ data: row });
+  } catch (err: any) { res.status(500).json({ error: err.message }); }
+});
+
+// DELETE /:id/photos/:photoId — host-owned photos only (job photos are evidence).
+router.delete("/v1/service-hosts/:id/photos/:photoId", async (req, res): Promise<void> => {
+  try {
+    const [row] = await db.delete(serviceHostPhotosTable)
+      .where(and(
+        eq(serviceHostPhotosTable.id, Number(req.params.photoId)),
+        eq(serviceHostPhotosTable.service_host_id, Number(req.params.id)),
+      )).returning();
+    if (!row) { res.status(404).json({ error: "Not found" }); return; }
+    if (row.cloudinary_id) { try { await deleteFromCloudinary(row.cloudinary_id); } catch { /* asset may already be gone */ } }
+    res.json({ ok: true });
+  } catch (err: any) { res.status(500).json({ error: err.message }); }
+});
+
+// GET /:id/cs-tickets — tickets this host opened (via its partner users) PLUS
+// customer tickets that turned into a work order dispatched to this host. Without
+// the second half the tab is empty for every host that never used the portal,
+// even when it is actively working the tickets.
 router.get("/v1/service-hosts/:id/cs-tickets", async (req, res): Promise<void> => {
   try {
-    const [host] = await db.select({ account_id: serviceHostsTable.account_id }).from(serviceHostsTable).where(eq(serviceHostsTable.id, Number(req.params.id))).limit(1);
+    const hostId = Number(req.params.id);
+    const [host] = await db.select({ account_id: serviceHostsTable.account_id }).from(serviceHostsTable).where(eq(serviceHostsTable.id, hostId)).limit(1);
     const puIds = await hostPartnerUserIds(host?.account_id ?? null);
-    if (!puIds.length) { res.json({ data: [] }); return; }
+    const woRows = await db.select({ id: workOrdersTable.id }).from(workOrdersTable)
+      .where(and(eq(workOrdersTable.service_host_id, hostId), isNull(workOrdersTable.deleted_at)));
+    const woIds = woRows.map((r) => r.id);
+    if (!puIds.length && !woIds.length) { res.json({ data: [] }); return; }
+
+    const where: SQL[] = [];
+    if (puIds.length) where.push(inArray(csTicketsTable.partner_user_id, puIds));
+    if (woIds.length) where.push(inArray(csTicketsTable.work_order_id, woIds));
     const tickets = await db.select({
       id: csTicketsTable.id, ticket_ref: csTicketsTable.ticket_ref, subject: csTicketsTable.subject,
       category: csTicketsTable.category, status: csTicketsTable.status, priority: csTicketsTable.priority,
+      work_order_id: csTicketsTable.work_order_id, requester_type: csTicketsTable.requester_type,
       created_at: csTicketsTable.created_at,
-    }).from(csTicketsTable).where(inArray(csTicketsTable.partner_user_id, puIds)).orderBy(desc(csTicketsTable.id));
+    }).from(csTicketsTable)
+      .where(and(isNull(csTicketsTable.deleted_at), where.length > 1 ? or(...where)! : where[0]!))
+      .orderBy(desc(csTicketsTable.id));
     res.json({ data: tickets });
   } catch (err: any) { res.status(500).json({ error: err.message }); }
 });

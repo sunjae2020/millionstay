@@ -390,7 +390,8 @@
     "year_value": "{{year}}年",
     "all_years": "全部年份",
     "all_types": "全部类型",
-    "search_ph_generic": "搜索..."
+    "search_ph_generic": "搜索...",
+    "uploading": "上传中…"
   },
   "lang": {
     "label": "语言",
@@ -1854,7 +1855,11 @@
     "placeholder_floor_area": "例如 25.5",
     "placeholder_landlord_account": "账户 ID",
     "tab_documents": "文件",
-    "tab_defects": "缺陷记录"
+    "tab_defects": "缺陷记录",
+    "tab_work_orders": "缺陷维修",
+    "work_orders_open_list": "在服务与楼宇管理中查看",
+    "work_orders_new": "新建维修工单",
+    "work_orders_empty": "该空间暂无维修工单。"
   },
   "space_option": {
     "new": "新建空间选项",
@@ -2415,7 +2420,8 @@
     "label_business_end": "营业结束时间 (0-23)",
     "search_account_placeholder": "搜索账户…",
     "search_service_placeholder": "搜索服务…",
-    "section_admin": "管理"
+    "section_admin": "管理",
+    "name_required": "请输入名称。"
   },
   "receipt": {
     "no_receipts": "没有收据",
@@ -5082,7 +5088,9 @@
     "mark_paid": "标记已付"
   },
   "service_host_photos": {
-    "empty": "暂无作业照片"
+    "empty": "暂无作业照片",
+    "title": "照片",
+    "upload": "上传照片"
   },
   "service_host_cs": {
     "empty": "该合作方暂无客服工单",

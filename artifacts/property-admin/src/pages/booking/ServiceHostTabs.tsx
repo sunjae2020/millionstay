@@ -1,10 +1,10 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Link } from "wouter";
 import { useTranslation } from "react-i18next";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiJson } from "@/lib/apiFetch";
 import { Button } from "@/components/ui/button";
-import { Briefcase, Wrench, Receipt, Plus, Camera, Headphones } from "lucide-react";
+import { Briefcase, Wrench, Receipt, Plus, Camera, Headphones, Upload, Trash2 } from "lucide-react";
 import { useBrand } from "@/contexts/ThemeContext";
 import { formatMoney } from "@/lib/currency";
 
@@ -145,17 +145,73 @@ function Stat({ label, value, accent }: { label: string; value: string; accent?:
 /* ── Photos ──────────────────────────────────────────────────────────────── */
 export function ServiceHostPhotos({ hostId }: { hostId: string }) {
   const { t } = useTranslation();
+  const qc = useQueryClient();
+  const fileRef = useRef<HTMLInputElement>(null);
+  const [error, setError] = useState<string | null>(null);
   const { data } = useQuery<{ data: any[] }>({ queryKey: ["sh-photos", hostId], queryFn: () => apiJson(`/api/v1/service-hosts/${hostId}/photos`) });
   const photos = data?.data ?? [];
-  if (photos.length === 0) return <div className="rounded-lg border bg-white p-8 text-center text-muted-foreground"><Camera className="w-7 h-7 mx-auto mb-2 text-gray-300" />{t("service_host_photos.empty", "No job photos yet")}</div>;
+
+  // apiJson omits the JSON content-type for FormData bodies, so the browser
+  // writes the multipart boundary itself.
+  const upload = useMutation({
+    mutationFn: async (files: FileList) => {
+      for (const file of Array.from(files)) {
+        const fd = new FormData();
+        fd.append("image", file);
+        await apiJson(`/api/v1/service-hosts/${hostId}/photos`, { method: "POST", body: fd });
+      }
+    },
+    onSuccess: () => { setError(null); qc.invalidateQueries({ queryKey: ["sh-photos", hostId] }); },
+    onError: (e: any) => setError(e?.message ?? t("common.error", "Something went wrong")),
+  });
+  const remove = useMutation({
+    mutationFn: (photoId: number) => apiJson(`/api/v1/service-hosts/${hostId}/photos/${photoId}`, { method: "DELETE" }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["sh-photos", hostId] }),
+    onError: (e: any) => setError(e?.message ?? t("common.error", "Something went wrong")),
+  });
+
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-      {photos.map((p) => (
-        <a key={p.id} href={p.file_url} target="_blank" rel="noreferrer" className="block group">
-          <img src={p.thumbnail_url ?? p.file_url} alt={p.caption ?? ""} className="w-full aspect-square object-cover rounded-lg border" />
-          {p.caption && <p className="text-xs text-muted-foreground mt-1 truncate">{p.caption}</p>}
-        </a>
-      ))}
+    <div className="space-y-3">
+      <div className="flex items-center justify-between">
+        <h3 className="text-sm font-semibold flex items-center gap-1.5"><Camera className="w-4 h-4 text-primary" />{t("service_host_photos.title", "사진")} ({photos.length})</h3>
+        <div>
+          <input
+            ref={fileRef} type="file" accept="image/*" multiple className="hidden"
+            onChange={(e) => { if (e.target.files?.length) upload.mutate(e.target.files); e.target.value = ""; }}
+          />
+          <Button size="sm" variant="outline" disabled={upload.isPending} onClick={() => fileRef.current?.click()}>
+            <Upload className="w-3.5 h-3.5 mr-1" />
+            {upload.isPending ? t("common.uploading", "업로드 중…") : t("service_host_photos.upload", "사진 업로드")}
+          </Button>
+        </div>
+      </div>
+      {error && <p className="text-sm text-red-600">{error}</p>}
+      {photos.length === 0 ? (
+        <div className="rounded-lg border bg-white p-8 text-center text-muted-foreground">
+          <Camera className="w-7 h-7 mx-auto mb-2 text-gray-300" />{t("service_host_photos.empty", "No job photos yet")}
+        </div>
+      ) : (
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          {photos.map((p) => (
+            <div key={`${p.source ?? "job"}-${p.id}`} className="relative group">
+              <a href={p.file_url} target="_blank" rel="noreferrer" className="block">
+                <img src={p.thumbnail_url ?? p.file_url} alt={p.caption ?? ""} className="w-full aspect-square object-cover rounded-lg border" />
+                {p.caption && <p className="text-xs text-muted-foreground mt-1 truncate">{p.caption}</p>}
+              </a>
+              {/* Job photos are booking evidence — only host-owned uploads are removable. */}
+              {p.source === "host" && (
+                <button
+                  type="button" title={t("common.delete", "삭제")}
+                  onClick={() => remove.mutate(p.id)}
+                  className="absolute top-1.5 right-1.5 rounded-full bg-white/90 border p-1 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-50"
+                >
+                  <Trash2 className="w-3.5 h-3.5 text-red-600" />
+                </button>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

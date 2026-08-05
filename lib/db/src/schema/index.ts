@@ -12,6 +12,7 @@ export * from "./account_contacts";
 export * from "./tasks";
 export * from "./leads";
 export * from "./service_hosts";
+export * from "./service_host_photos";
 export * from "./bookings";
 export * from "./products";
 export * from "./contracts";

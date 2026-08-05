@@ -4,7 +4,7 @@ import { formatDate } from "@/lib/date";
 import { useBrand } from "@/contexts/ThemeContext";
 import { formatMoney } from "@/lib/currency";
 import { useForm, Controller } from "react-hook-form";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import {
   useGetWorkOrder,
@@ -88,7 +88,16 @@ export default function WorkOrderDetail() {
     query: { enabled: !isNew, queryKey: getGetWorkOrderQueryKey(Number(id)) },
   });
 
-  const { register, handleSubmit, reset, control } = useForm<FormData>({
+  // Opened from a space's 하자보수 tab as /maintenance/work-orders/new?space_id=N —
+  // prefill the space (and its property) so the unit is never mis-keyed.
+  const prefillSpaceId = isNew ? Number(new URLSearchParams(window.location.search).get("space_id")) || null : null;
+  const { data: prefillSpace } = useQuery<any>({
+    queryKey: ["wo-prefill-space", prefillSpaceId],
+    queryFn: () => apiJson(`/api/v1/spaces/${prefillSpaceId}`),
+    enabled: !!prefillSpaceId,
+  });
+
+  const { register, handleSubmit, reset, control, setValue } = useForm<FormData>({
     defaultValues: {
       property_id: null, space_id: null, title: "", description: "",
       priority: "Normal", category: "", assigned_contact_id: null,
@@ -97,6 +106,12 @@ export default function WorkOrderDetail() {
       assigned_user_id: null, attendee_contact_id: null, location_note: "", access_method: "",
     },
   });
+
+  useEffect(() => {
+    if (!prefillSpace) return;
+    setValue("space_id", prefillSpace.id ?? prefillSpaceId);
+    if (prefillSpace.property_id) setValue("property_id", prefillSpace.property_id);
+  }, [prefillSpace, prefillSpaceId, setValue]);
 
   useEffect(() => {
     if (wo) {
@@ -381,7 +396,7 @@ export default function WorkOrderDetail() {
                     value={field.value}
                     onChange={field.onChange}
                     placeholder={t('workorder.ph_space_search')}
-                    displayValue={(wo as any)?.space_name ?? null}
+                    displayValue={(wo as any)?.space_name ?? prefillSpace?.name ?? null}
                   />
                 )} />
               </div>

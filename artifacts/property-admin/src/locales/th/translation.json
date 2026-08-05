@@ -390,7 +390,8 @@
     "year_value": "ปี {{year}}",
     "all_years": "ทุกปี",
     "all_types": "ทุกประเภท",
-    "search_ph_generic": "ค้นหา..."
+    "search_ph_generic": "ค้นหา...",
+    "uploading": "กำลังอัปโหลด…"
   },
   "lang": {
     "label": "ภาษา",
@@ -1854,7 +1855,11 @@
     "placeholder_floor_area": "เช่น 25.5",
     "placeholder_landlord_account": "รหัสบัญชี",
     "tab_documents": "เอกสาร",
-    "tab_defects": "ประวัติข้อบกพร่อง"
+    "tab_defects": "ประวัติข้อบกพร่อง",
+    "tab_work_orders": "งานซ่อมบำรุง",
+    "work_orders_open_list": "เปิดในบริการและการจัดการอาคาร",
+    "work_orders_new": "เพิ่มงานซ่อมบำรุง",
+    "work_orders_empty": "ยังไม่มีงานซ่อมบำรุงสำหรับพื้นที่นี้"
   },
   "space_option": {
     "new": "ตัวเลือกพื้นที่ใหม่",
@@ -2415,7 +2420,8 @@
     "label_business_end": "เวลาสิ้นสุดทำการ (0-23)",
     "search_account_placeholder": "ค้นหาบัญชี…",
     "search_service_placeholder": "ค้นหาบริการ…",
-    "section_admin": "ผู้ดูแล"
+    "section_admin": "ผู้ดูแล",
+    "name_required": "กรุณากรอกชื่อ"
   },
   "receipt": {
     "no_receipts": "ไม่พบใบเสร็จ",
@@ -5082,7 +5088,9 @@
     "mark_paid": "ทำเครื่องหมายจ่ายแล้ว"
   },
   "service_host_photos": {
-    "empty": "ยังไม่มีรูปงาน"
+    "empty": "ยังไม่มีรูปงาน",
+    "title": "รูปภาพ",
+    "upload": "อัปโหลดรูปภาพ"
   },
   "service_host_cs": {
     "empty": "ไม่มีตั๋วจากพาร์ทเนอร์นี้",

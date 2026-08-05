@@ -390,7 +390,8 @@
     "year_value": "{{year}}",
     "all_years": "All years",
     "all_types": "All types",
-    "search_ph_generic": "Search..."
+    "search_ph_generic": "Search...",
+    "uploading": "Uploading…"
   },
   "lang": {
     "label": "Language",
@@ -1854,7 +1855,11 @@
     "placeholder_floor_area": "e.g. 25.5",
     "placeholder_landlord_account": "Account ID",
     "tab_documents": "Documents",
-    "tab_defects": "Defect history"
+    "tab_defects": "Defect history",
+    "tab_work_orders": "Maintenance",
+    "work_orders_open_list": "Open in Service & Building",
+    "work_orders_new": "New maintenance job",
+    "work_orders_empty": "No maintenance jobs for this space yet."
   },
   "space_option": {
     "new": "New Space Option",
@@ -2415,7 +2420,8 @@
     "label_business_end": "Business End Hour (0-23)",
     "search_account_placeholder": "Search accounts…",
     "search_service_placeholder": "Search services…",
-    "section_admin": "Admin"
+    "section_admin": "Admin",
+    "name_required": "Name is required."
   },
   "receipt": {
     "no_receipts": "No receipts found",
@@ -5082,7 +5088,9 @@
     "mark_paid": "Mark paid"
   },
   "service_host_photos": {
-    "empty": "No job photos yet"
+    "empty": "No job photos yet",
+    "title": "Photos",
+    "upload": "Upload photos"
   },
   "service_host_cs": {
     "empty": "No support tickets from this partner",
