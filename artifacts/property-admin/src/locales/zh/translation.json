@@ -1462,7 +1462,21 @@
     "btn_resend_confirmation": "重新发送确认邮件",
     "confirmation_sent": "已发送确认邮件",
     "confirmation_ok": "确认邮件已发送至 {{to}}",
-    "confirmation_failed": "无法发送确认邮件。"
+    "confirmation_failed": "无法发送确认邮件。",
+    "section_photos": "照片",
+    "photos_unit": "张",
+    "label_photo_kind": "照片类型",
+    "photo_kind_before": "施工前",
+    "photo_kind_after": "施工后",
+    "label_photo_caption": "说明",
+    "ph_photo_caption": "例如：卫生间漏水、客厅维修后",
+    "photos_dropzone": "将照片拖放到此处，或点击选择",
+    "photos_formats": "JPG、PNG、WEBP · 每张最大 10MB",
+    "photos_staged_hint": "所选照片将在保存工单时一并上传。",
+    "photos_upload_n": "上传 {{count}} 张",
+    "photos_empty": "暂无照片。",
+    "photos_upload_failed": "上传失败",
+    "photos_delete_confirm": "删除这张照片？"
   },
   "csticket": {
     "search_placeholder": "搜索工单...",

@@ -1462,7 +1462,21 @@
     "btn_resend_confirmation": "確定メール再送",
     "confirmation_sent": "確定メール送信済み",
     "confirmation_ok": "{{to}} に確定メールを送信しました",
-    "confirmation_failed": "確定メールを送信できませんでした。"
+    "confirmation_failed": "確定メールを送信できませんでした。",
+    "section_photos": "写真",
+    "photos_unit": "枚",
+    "label_photo_kind": "写真の種類",
+    "photo_kind_before": "作業前",
+    "photo_kind_after": "作業後",
+    "label_photo_caption": "説明",
+    "ph_photo_caption": "例: 浴室の水漏れ、リビング補修後",
+    "photos_dropzone": "写真をドラッグ＆ドロップ、またはクリックして選択",
+    "photos_formats": "JPG、PNG、WEBP · 1枚10MBまで",
+    "photos_staged_hint": "選択した写真は作業指示の保存時にアップロードされます。",
+    "photos_upload_n": "{{count}}枚アップロード",
+    "photos_empty": "写真がまだありません。",
+    "photos_upload_failed": "アップロードに失敗しました",
+    "photos_delete_confirm": "この写真を削除しますか？"
   },
   "csticket": {
     "search_placeholder": "チケットを検索...",

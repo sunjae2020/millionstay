@@ -1462,7 +1462,21 @@
     "btn_resend_confirmation": "확정 메일 재발송",
     "confirmation_sent": "확정 메일 발송",
     "confirmation_ok": "{{to}} 으로 확정 메일을 보냈습니다",
-    "confirmation_failed": "확정 메일을 보내지 못했습니다."
+    "confirmation_failed": "확정 메일을 보내지 못했습니다.",
+    "section_photos": "사진",
+    "photos_unit": "장",
+    "label_photo_kind": "사진 구분",
+    "photo_kind_before": "작업 전",
+    "photo_kind_after": "작업 후",
+    "label_photo_caption": "설명",
+    "ph_photo_caption": "예: 욕실 누수, 거실 보수 완료",
+    "photos_dropzone": "사진을 끌어다 놓거나 클릭해서 선택하세요",
+    "photos_formats": "JPG, PNG, WEBP · 장당 10MB까지",
+    "photos_staged_hint": "선택한 사진은 작업지시를 저장할 때 함께 업로드됩니다.",
+    "photos_upload_n": "{{count}}장 업로드",
+    "photos_empty": "등록된 사진이 없습니다.",
+    "photos_upload_failed": "업로드에 실패했습니다",
+    "photos_delete_confirm": "이 사진을 삭제할까요?"
   },
   "csticket": {
     "search_placeholder": "티켓 검색...",

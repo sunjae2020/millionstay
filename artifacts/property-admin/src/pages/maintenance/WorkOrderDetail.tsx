@@ -29,6 +29,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { ArrowLeft, Trash2, Save, Send, ShieldAlert, CheckCircle2, Clock, CalendarClock, Mail } from "lucide-react";
 import { useState } from "react";
 import { apiJson } from "@/lib/apiFetch";
+import { WorkOrderPhotos, uploadStagedPhotos, type StagedPhoto } from "@/components/WorkOrderPhotos";
 
 /** ISO instant → the "YYYY-MM-DDTHH:mm" a datetime-local input expects (local tz). */
 function toLocalInput(value: string | null | undefined): string {
@@ -143,7 +144,22 @@ export default function WorkOrderDetail() {
     if (!isNew) qc.invalidateQueries({ queryKey: getGetWorkOrderQueryKey(Number(id)) });
   };
 
-  const createMutation = useCreateWorkOrder({ mutation: { onSuccess: (d) => { invalidate(); navigate(`/maintenance/work-orders/${d.id}`); } } });
+  // 신규 등록 화면에서 고른 사진은 작업지시가 생기기 전이라 로컬에 담아뒀다가 저장 직후 올린다.
+  const [stagedPhotos, setStagedPhotos] = useState<StagedPhoto[]>([]);
+
+  const createMutation = useCreateWorkOrder({
+    mutation: {
+      onSuccess: async (d) => {
+        if (stagedPhotos.length > 0) {
+          try { await uploadStagedPhotos(Number(d.id), stagedPhotos); } catch { /* 사진 실패로 작업지시 생성을 되돌리지는 않는다 */ }
+          stagedPhotos.forEach((p) => URL.revokeObjectURL(p.previewUrl));
+          setStagedPhotos([]);
+        }
+        invalidate();
+        navigate(`/maintenance/work-orders/${d.id}`);
+      },
+    },
+  });
   const updateMutation = useUpdateWorkOrder({ mutation: { onSuccess: () => { invalidate(); refetch(); } } });
   const startMutation = useStartWorkOrder({ mutation: { onSuccess: () => { invalidate(); refetch(); } } });
   const reviewMutation = useReviewWorkOrder({ mutation: { onSuccess: () => { invalidate(); refetch(); } } });
@@ -545,6 +561,13 @@ export default function WorkOrderDetail() {
               </p>
             </div>
           )}
+
+          {/* 사진 — 요청/완료 증빙 (신규는 저장 시 함께 업로드) */}
+          <WorkOrderPhotos
+            workOrderId={isNew ? undefined : Number(id)}
+            staged={stagedPhotos}
+            onStagedChange={setStagedPhotos}
+          />
 
           {/* Notes */}
           <div className="border rounded-lg bg-white p-4 sm:p-6">

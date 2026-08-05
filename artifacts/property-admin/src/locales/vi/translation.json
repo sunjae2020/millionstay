@@ -1462,7 +1462,21 @@
     "btn_resend_confirmation": "Gửi lại xác nhận",
     "confirmation_sent": "Đã gửi xác nhận",
     "confirmation_ok": "Đã gửi email xác nhận tới {{to}}",
-    "confirmation_failed": "Không gửi được email xác nhận."
+    "confirmation_failed": "Không gửi được email xác nhận.",
+    "section_photos": "Ảnh",
+    "photos_unit": "ảnh",
+    "label_photo_kind": "Loại ảnh",
+    "photo_kind_before": "Trước khi làm",
+    "photo_kind_after": "Sau khi làm",
+    "label_photo_caption": "Chú thích",
+    "ph_photo_caption": "VD: Rò nước nhà tắm, phòng khách sau sửa chữa",
+    "photos_dropzone": "Kéo và thả ảnh vào đây, hoặc nhấp để chọn",
+    "photos_formats": "JPG, PNG, WEBP · tối đa 10MB mỗi ảnh",
+    "photos_staged_hint": "Các ảnh này sẽ được tải lên khi bạn lưu lệnh công việc.",
+    "photos_upload_n": "Tải lên {{count}} ảnh",
+    "photos_empty": "Chưa có ảnh nào.",
+    "photos_upload_failed": "Tải lên thất bại",
+    "photos_delete_confirm": "Xóa ảnh này?"
   },
   "csticket": {
     "search_placeholder": "Tìm kiếm phiếu hỗ trợ...",

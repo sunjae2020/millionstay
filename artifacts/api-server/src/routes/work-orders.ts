@@ -447,31 +447,54 @@ router.get("/v1/work-orders/:id/photos", async (req, res): Promise<void> => {
   res.json({ success: true, data: rows });
 });
 
-// Accepts either a multipart `image` file (uploaded to Cloudinary) or a JSON body
-// with an existing `url`. Fields: kind (before|after), caption, uploaded_by_type.
-router.post("/v1/work-orders/:id/photos", upload.single("image"), async (req, res): Promise<void> => {
+// Accepts multipart files (field `image` or `images`, several at a time) uploaded
+// to Cloudinary, or a JSON body with an existing `url`.
+// Fields: kind (before|after), caption, uploaded_by_type.
+router.post("/v1/work-orders/:id/photos", upload.any(), async (req, res): Promise<void> => {
   try {
     const id = Number(req.params.id);
     const [wo] = await db.select({ id: workOrdersTable.id }).from(workOrdersTable).where(eq(workOrdersTable.id, id));
     if (!wo) { res.status(404).json({ success: false, error: { code: "NOT_FOUND", message: "Work order not found" } }); return; }
 
-    let url: string | null = typeof req.body?.url === "string" ? req.body.url : null;
-    if (!url && req.file) {
-      if (!isCloudinaryConfigured()) { res.status(503).json({ success: false, error: { code: "NOT_CONFIGURED", message: "Image upload not configured" } }); return; }
-      const result = await uploadToCloudinary(req.file.buffer, { folder: cldFolder("work-orders") });
-      url = result.secure_url;
-    }
-    if (!url) { res.status(400).json({ success: false, error: { code: "NO_IMAGE", message: "Provide an image file or a url." } }); return; }
-
     const kind = req.body?.kind === "before" ? "before" : "after";
     const uploaded_by_type = req.body?.uploaded_by_type === "partner" ? "partner" : "admin";
-    const [row] = await db.insert(workOrderPhotosTable).values({
-      work_order_id: id, url, kind, uploaded_by_type, caption: req.body?.caption ?? null,
-    }).returning();
-    res.status(201).json({ success: true, data: row });
+    const caption = req.body?.caption || null;
+
+    const files = ((req.files as Express.Multer.File[] | undefined) ?? [])
+      .filter((f) => f.fieldname === "image" || f.fieldname === "images");
+    const urls: string[] = [];
+
+    if (files.length > 0) {
+      if (!isCloudinaryConfigured()) { res.status(503).json({ success: false, error: { code: "NOT_CONFIGURED", message: "Image upload not configured" } }); return; }
+      for (const file of files) {
+        const result = await uploadToCloudinary(file.buffer, { folder: cldFolder("work-orders") });
+        urls.push(result.secure_url);
+      }
+    } else if (typeof req.body?.url === "string" && req.body.url) {
+      urls.push(req.body.url);
+    }
+    if (urls.length === 0) { res.status(400).json({ success: false, error: { code: "NO_IMAGE", message: "Provide an image file or a url." } }); return; }
+
+    const rows = await db.insert(workOrderPhotosTable).values(
+      urls.map((url) => ({ work_order_id: id, url, kind, uploaded_by_type, caption })),
+    ).returning();
+    void logAction({ entityType: "work_order", entityId: id, action: "UPDATE", actorId: (req as any).user?.id ?? null, newValue: { photos_added: rows.length, kind } });
+    // `data` stays a single row for existing single-file callers; `items` carries them all.
+    res.status(201).json({ success: true, data: rows[0], items: rows });
   } catch (err: any) {
     res.status(500).json({ success: false, error: { code: "UPLOAD_FAILED", message: err.message } });
   }
+});
+
+router.delete("/v1/work-orders/:id/photos/:photoId", async (req, res): Promise<void> => {
+  const id = Number(req.params.id);
+  const photoId = Number(req.params.photoId);
+  const [row] = await db.delete(workOrderPhotosTable)
+    .where(and(eq(workOrderPhotosTable.id, photoId), eq(workOrderPhotosTable.work_order_id, id)))
+    .returning();
+  if (!row) { res.status(404).json({ success: false, error: { code: "NOT_FOUND", message: "Photo not found" } }); return; }
+  void logAction({ entityType: "work_order", entityId: id, action: "UPDATE", actorId: (req as any).user?.id ?? null, oldValue: { photo_removed: row.url } });
+  res.json({ success: true, data: { id: photoId } });
 });
 
 router.post("/v1/work-orders/:id/cancel", async (req, res): Promise<void> => {

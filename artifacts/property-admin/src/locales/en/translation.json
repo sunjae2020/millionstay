@@ -1462,7 +1462,21 @@
     "btn_resend_confirmation": "Resend confirmation",
     "confirmation_sent": "Confirmation sent",
     "confirmation_ok": "Confirmation sent to {{to}}",
-    "confirmation_failed": "Could not send the confirmation email."
+    "confirmation_failed": "Could not send the confirmation email.",
+    "section_photos": "Photos",
+    "photos_unit": "photo(s)",
+    "label_photo_kind": "Photo type",
+    "photo_kind_before": "Before",
+    "photo_kind_after": "After",
+    "label_photo_caption": "Caption",
+    "ph_photo_caption": "e.g. Bathroom leak, living room after repair",
+    "photos_dropzone": "Drag & drop photos here, or click to choose",
+    "photos_formats": "JPG, PNG, WEBP · up to 10MB each",
+    "photos_staged_hint": "These photos are uploaded when you save the work order.",
+    "photos_upload_n": "Upload {{count}}",
+    "photos_empty": "No photos yet.",
+    "photos_upload_failed": "Upload failed",
+    "photos_delete_confirm": "Delete this photo?"
   },
   "csticket": {
     "search_placeholder": "Search tickets...",

@@ -1462,7 +1462,21 @@
     "btn_resend_confirmation": "ส่งอีเมลยืนยันอีกครั้ง",
     "confirmation_sent": "ส่งอีเมลยืนยันแล้ว",
     "confirmation_ok": "ส่งอีเมลยืนยันไปที่ {{to}} แล้ว",
-    "confirmation_failed": "ไม่สามารถส่งอีเมลยืนยันได้"
+    "confirmation_failed": "ไม่สามารถส่งอีเมลยืนยันได้",
+    "section_photos": "รูปภาพ",
+    "photos_unit": "รูป",
+    "label_photo_kind": "ประเภทรูปภาพ",
+    "photo_kind_before": "ก่อนดำเนินการ",
+    "photo_kind_after": "หลังดำเนินการ",
+    "label_photo_caption": "คำอธิบาย",
+    "ph_photo_caption": "เช่น น้ำรั่วในห้องน้ำ, ห้องนั่งเล่นหลังซ่อม",
+    "photos_dropzone": "ลากและวางรูปภาพที่นี่ หรือคลิกเพื่อเลือก",
+    "photos_formats": "JPG, PNG, WEBP · ไม่เกิน 10MB ต่อรูป",
+    "photos_staged_hint": "รูปภาพเหล่านี้จะถูกอัปโหลดเมื่อคุณบันทึกใบสั่งงาน",
+    "photos_upload_n": "อัปโหลด {{count}} รูป",
+    "photos_empty": "ยังไม่มีรูปภาพ",
+    "photos_upload_failed": "อัปโหลดไม่สำเร็จ",
+    "photos_delete_confirm": "ลบรูปภาพนี้หรือไม่?"
   },
   "csticket": {
     "search_placeholder": "ค้นหาตั๋ว...",
