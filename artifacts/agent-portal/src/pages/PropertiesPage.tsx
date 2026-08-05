@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { Layout } from "@/components/Layout";
 import { apiGet } from "@/lib/api";
 import { MapPin, Home, Search } from "lucide-react";
+import { matchesQuery } from "@/lib/search";
 
 interface Space {
   id: number;
@@ -43,12 +44,12 @@ export default function PropertiesPage() {
   });
 
   const groups = Array.from(propertyMap.values()).filter((g) => {
-    if (!search) return true;
-    const q = search.toLowerCase();
-    return (
-      g.property?.name?.toLowerCase().includes(q) ||
-      g.property?.city?.toLowerCase().includes(q) ||
-      g.property?.state?.toLowerCase().includes(q)
+    return matchesQuery(
+      search,
+      g.property?.name,
+      g.property?.address,
+      g.property?.city,
+      g.property?.state,
     );
   });
 

@@ -1,6 +1,7 @@
 import { Router, type IRouter } from "express";
 import multer from "multer";
 import { eq, and, or, desc, sql, ilike, inArray, isNull } from "drizzle-orm";
+import { keywordCondition } from "../lib/listSearch";
 import {
   db,
   bookingsTable,
@@ -152,14 +153,15 @@ router.get("/v1/agent/bookings", requireAgentAuth, async (req, res): Promise<voi
   if (statusFilter) conds.push(eq(bookingsTable.booking_status, statusFilter));
   if (q) {
     conds.push(
-      or(
-        ilike(bookingsTable.booking_ref, `%${q}%`),
-        ilike(contactsTable.first_name, `%${q}%`),
-        ilike(contactsTable.last_name, `%${q}%`),
-        ilike(contactsTable.email, `%${q}%`),
-        ilike(propertiesTable.name, `%${q}%`),
-        ilike(spacesTable.name, `%${q}%`),
-      )!,
+      keywordCondition(
+        q,
+        [
+          bookingsTable.booking_ref, contactsTable.email, contactsTable.mobile_number,
+          propertiesTable.name, spacesTable.name,
+        ],
+        [],
+        [{ first: contactsTable.first_name, last: contactsTable.last_name }],
+      ),
     );
   }
   const whereExpr = and(...conds);

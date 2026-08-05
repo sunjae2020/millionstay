@@ -55,11 +55,17 @@ router.get("/v1/contacts", async (req, res): Promise<void> => {
   if (status) conditions.push(eq(contactsTable.status, status));
   // 이름·이메일·휴대폰에 더해 회사명·직함·사무실 번호·SNS 로도 찾는다(명함에서 넘어온 축).
   if (search) {
-    conditions.push(keywordCondition(search, [
-      contactsTable.first_name, contactsTable.last_name, contactsTable.other_name,
-      contactsTable.email, contactsTable.mobile_number, contactsTable.office_number,
-      contactsTable.company_name, contactsTable.job_title, contactsTable.sns_id,
-    ]));
+    conditions.push(keywordCondition(
+      search,
+      [
+        contactsTable.other_name, contactsTable.email, contactsTable.mobile_number,
+        contactsTable.office_number, contactsTable.company_name, contactsTable.job_title,
+        contactsTable.department, contactsTable.nationality, contactsTable.sns_id,
+      ],
+      [],
+      // 성·이름을 붙여 쓴 "조수민" 으로도 찾혀야 한다.
+      [{ first: contactsTable.first_name, last: contactsTable.last_name }],
+    ));
   }
   const rows = await db.select().from(contactsTable)
     .where(and(...conditions))

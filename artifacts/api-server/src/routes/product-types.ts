@@ -1,5 +1,6 @@
 import { Router, type IRouter } from "express";
 import { eq, ilike, asc, isNull, inArray, and } from "drizzle-orm";
+import { keywordCondition } from "../lib/listSearch";
 import { db, productTypesTable } from "@workspace/db";
 import { deletedFilter, makeBulkDelete, makeBulkRestore } from "../lib/softDelete";
 
@@ -11,7 +12,7 @@ router.get("/v1/product-types", async (req, res): Promise<void> => {
     const rows = await db
       .select()
       .from(productTypesTable)
-      .where(and(deletedFilter(productTypesTable.deleted_at, req), q ? ilike(productTypesTable.name, `%${q}%`) : undefined))
+      .where(and(deletedFilter(productTypesTable.deleted_at, req), q ? keywordCondition(q, [productTypesTable.name, productTypesTable.description]) : undefined))
       .orderBy(asc(productTypesTable.name));
     res.json({ success: true, data: rows, meta: { total: rows.length } });
   } catch {

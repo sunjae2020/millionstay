@@ -16,6 +16,7 @@ import { KpiCard, DashCard, Pill } from "@/components/dashboard/DashboardKit";
 import { useBrand } from "@/contexts/ThemeContext";
 import { formatMoney } from "@/lib/currency";
 import { formatDate } from "@/lib/date";
+import { matchesQuery } from "@/lib/search";
 
 interface FinanceSummary {
   /** Gross — everything received, including money owed onward to owners/partners. */
@@ -115,7 +116,7 @@ export default function FinanceTab() {
 
   const filtered = enrichedInvoices.filter(i => {
     const matchStatus = statusFilter === "All" || i.effective_status === statusFilter;
-    const matchSearch = !search || i.invoice_ref?.toLowerCase().includes(search.toLowerCase()) || (i as any).account_name?.toLowerCase()?.includes(search.toLowerCase());
+    const matchSearch = matchesQuery(search, i.invoice_ref, (i as any).account_name, i.amount, (i as any).description);
     return matchStatus && matchSearch;
   });
   const pageCount = Math.ceil(filtered.length / PER_PAGE);

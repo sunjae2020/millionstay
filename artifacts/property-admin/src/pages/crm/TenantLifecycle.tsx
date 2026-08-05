@@ -14,6 +14,7 @@ import { DataTable, ACTIONS_KEY, type ColumnDef } from "@/components/ui/data-tab
 import { useBrand } from "@/contexts/ThemeContext";
 import { formatMoney } from "@/lib/currency";
 import { formatDate } from "@/lib/date";
+import { matchesQuery } from "@/lib/search";
 
 type LifecycleStage = "MovingIn" | "Residing" | "MovingOut" | "Completed" | "All";
 
@@ -243,7 +244,7 @@ export default function TenantLifecycle() {
 
   const filtered = tenants.filter(t => {
     const matchStage = stageFilter === "All" || t.stage === stageFilter;
-    const matchSearch = !search || t.contactName.toLowerCase().includes(search.toLowerCase()) || t.bookingRef.toLowerCase().includes(search.toLowerCase()) || (t.spaceName?.toLowerCase().includes(search.toLowerCase()) ?? false);
+    const matchSearch = matchesQuery(search, t.contactName, t.bookingRef, t.spaceName, t.stage);
     return matchStage && matchSearch;
   });
 

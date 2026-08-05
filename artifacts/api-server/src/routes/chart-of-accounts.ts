@@ -1,5 +1,6 @@
 import { Router, type IRouter } from "express";
 import { eq, ilike, asc, or, and } from "drizzle-orm";
+import { keywordCondition } from "../lib/listSearch";
 import { db, chartOfAccountsTable } from "@workspace/db";
 import { deletedFilter, makeBulkDelete, makeBulkRestore } from "../lib/softDelete";
 
@@ -63,7 +64,7 @@ router.get("/v1/chart-of-accounts", async (req, res): Promise<void> => {
       .where(
         and(
           deletedFilter(chartOfAccountsTable.deleted_at, req),
-          q ? or(ilike(chartOfAccountsTable.code, `%${q}%`), ilike(chartOfAccountsTable.name, `%${q}%`)) : undefined,
+          q ? keywordCondition(q, [chartOfAccountsTable.code, chartOfAccountsTable.name, chartOfAccountsTable.account_type, chartOfAccountsTable.description]) : undefined,
           account_type ? eq(chartOfAccountsTable.account_type, account_type) : undefined,
         ),
       )

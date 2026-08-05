@@ -2,6 +2,7 @@ import { Router, type IRouter } from "express";
 import { DEFAULT_CURRENCY } from "../lib/currency";
 import multer from "multer";
 import { eq, and, or, ilike, desc, inArray, isNull, isNotNull, gte, lte, sql } from "drizzle-orm";
+import { keywordCondition } from "../lib/listSearch";
 import {
   db,
   bookingsTable,
@@ -325,13 +326,12 @@ router.get("/v1/owner/bookings", requireOwnerAuth, async (req, res): Promise<voi
   if (statusFilter) conds.push(eq(bookingsTable.booking_status, statusFilter));
   if (q) {
     conds.push(
-      or(
-        ilike(bookingsTable.booking_ref, `%${q}%`),
-        ilike(contactsTable.first_name, `%${q}%`),
-        ilike(contactsTable.last_name, `%${q}%`),
-        ilike(propertiesTable.name, `%${q}%`),
-        ilike(spacesTable.name, `%${q}%`),
-      )!,
+      keywordCondition(
+        q,
+        [bookingsTable.booking_ref, propertiesTable.name, spacesTable.name],
+        [],
+        [{ first: contactsTable.first_name, last: contactsTable.last_name }],
+      ),
     );
   }
   // Date-range overlap: a booking with an open-ended (null) check-out is always ongoing.
@@ -1219,13 +1219,12 @@ router.get("/v1/owner/site/inquiries", requireOwnerAuth, async (req, res): Promi
   if (statusFilter) conds.push(eq(leadsTable.lead_status, statusFilter));
   if (q) {
     conds.push(
-      or(
-        ilike(leadsTable.first_name, `%${q}%`),
-        ilike(leadsTable.last_name, `%${q}%`),
-        ilike(leadsTable.email, `%${q}%`),
-        ilike(leadsTable.lead_ref, `%${q}%`),
-        ilike(leadsTable.message, `%${q}%`),
-      )!,
+      keywordCondition(
+        q,
+        [leadsTable.email, leadsTable.phone, leadsTable.lead_ref, leadsTable.message],
+        [],
+        [{ first: leadsTable.first_name, last: leadsTable.last_name }],
+      ),
     );
   }
   const whereExpr = and(...conds);

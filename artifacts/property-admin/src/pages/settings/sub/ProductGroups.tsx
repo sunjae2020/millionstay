@@ -11,6 +11,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Layers, Plus, Search, Pencil, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiFetch } from "@/lib/apiFetch";
+import { matchesQuery } from "@/lib/search";
 
 const API = "/api/v1/product-groups";
 
@@ -38,7 +39,7 @@ export default function ProductGroupsPage() {
 
   const { data: groups = [], isLoading } = useQuery({ queryKey: ["product-groups", showDeleted], queryFn: () => fetchGroups(showDeleted) });
 
-  const filtered = groups.filter((g) => !q || g.name.toLowerCase().includes(q.toLowerCase()));
+  const filtered = groups.filter((g) => matchesQuery(q, g.name, (g as any).description));
 
   const columns: ColumnDef<ProductGroup>[] = useMemo(() => [
     {

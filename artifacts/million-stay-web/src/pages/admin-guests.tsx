@@ -6,6 +6,7 @@ import { formatDate } from "@/lib/dateFormat";
 import { Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { getApiBase } from "@/lib/api-base";
+import { matchesQuery } from "@/lib/search";
 
 const API = getApiBase();
 const ADMIN_KEY = "ms_admin_key";
@@ -32,13 +33,15 @@ export default function AdminGuests() {
       .finally(() => setLoading(false));
   }, [setLocation]);
 
-  const filtered = guests.filter((g) => {
-    const q = search.toLowerCase();
-    return !q
-      || `${g.firstName} ${g.lastName}`.toLowerCase().includes(q)
-      || g.email.toLowerCase().includes(q)
-      || (g.nationality ?? "").toLowerCase().includes(q);
-  });
+  const filtered = guests.filter((g) => matchesQuery(
+    search,
+    g.firstName,
+    g.lastName,
+    `${g.lastName}${g.firstName}`,
+    `${g.firstName}${g.lastName}`,
+    g.email,
+    g.nationality,
+  ));
 
   return (
     <AdminLayout>

@@ -12,6 +12,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Tag, Plus, Search, Pencil, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiFetch } from "@/lib/apiFetch";
+import { matchesQuery } from "@/lib/search";
 
 const API = "/api/v1/product-types";
 
@@ -39,7 +40,7 @@ export default function ProductTypesPage() {
 
   const { data: types = [], isLoading } = useQuery({ queryKey: ["product-types", showDeleted], queryFn: () => fetchTypes(showDeleted) });
 
-  const filtered = types.filter((ty) => !q || ty.name.toLowerCase().includes(q.toLowerCase()) || ty.description?.toLowerCase().includes(q.toLowerCase()));
+  const filtered = types.filter((ty) => matchesQuery(q, ty.name, ty.description));
 
   const columns: ColumnDef<ProductType>[] = useMemo(() => [
     {

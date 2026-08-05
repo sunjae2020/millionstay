@@ -13,6 +13,7 @@
 import { Router, type IRouter } from "express";
 import { DEFAULT_CURRENCY } from "../lib/currency";
 import { and, desc, eq, isNull, ilike, sql } from "drizzle-orm";
+import { columnMatches } from "../lib/listSearch";
 import {
   db,
   homestayPlacementsTable,
@@ -108,7 +109,7 @@ homestayPlacementAdminRouter.get("/v1/homestay-placements", async (req, res): Pr
     const { limit, offset, page, q } = parsePageParams(req.query);
     const conds = [isNull(homestayPlacementsTable.deleted_at)];
     if (status && status !== "all") conds.push(eq(homestayPlacementsTable.status, status));
-    if (q) conds.push(ilike(homestayPlacementsTable.placement_ref, `%${q}%`));
+    if (q) conds.push(columnMatches(homestayPlacementsTable.placement_ref, q));
     const whereExpr = and(...conds);
     const [{ total }] = await db
       .select({ total: sql<number>`count(*)::int` })

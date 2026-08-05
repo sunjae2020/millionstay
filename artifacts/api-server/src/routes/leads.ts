@@ -37,10 +37,15 @@ router.get("/v1/leads", async (req, res): Promise<void> => {
   if (status) conditions.push(eq(leadsTable.status, status));
   // 이름·연락처에 더해 문의번호와 문의 내용으로도 찾는다.
   if (search) {
-    conditions.push(keywordCondition(search, [
-      leadsTable.first_name, leadsTable.last_name, leadsTable.email,
-      leadsTable.phone, leadsTable.lead_ref, leadsTable.message,
-    ]));
+    conditions.push(keywordCondition(
+      search,
+      [
+        leadsTable.email, leadsTable.phone, leadsTable.lead_ref,
+        leadsTable.nationality, leadsTable.lead_source, leadsTable.message,
+      ],
+      [],
+      [{ first: leadsTable.first_name, last: leadsTable.last_name }],
+    ));
   }
 
   const rows = await db

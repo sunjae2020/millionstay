@@ -1,5 +1,6 @@
 import { Router, type IRouter } from "express";
 import { eq, ilike, asc, isNull, inArray, and } from "drizzle-orm";
+import { columnMatches } from "../lib/listSearch";
 import { db, productGroupsTable } from "@workspace/db";
 import { deletedFilter, makeBulkDelete, makeBulkRestore } from "../lib/softDelete";
 
@@ -11,7 +12,7 @@ router.get("/v1/product-groups", async (req, res): Promise<void> => {
     const rows = await db
       .select()
       .from(productGroupsTable)
-      .where(and(deletedFilter(productGroupsTable.deleted_at, req), q ? ilike(productGroupsTable.name, `%${q}%`) : undefined))
+      .where(and(deletedFilter(productGroupsTable.deleted_at, req), q ? columnMatches(productGroupsTable.name, q) : undefined))
       .orderBy(asc(productGroupsTable.display_order), asc(productGroupsTable.name));
     res.json({ success: true, data: rows, meta: { total: rows.length } });
   } catch {

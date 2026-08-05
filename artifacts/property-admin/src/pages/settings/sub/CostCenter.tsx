@@ -14,6 +14,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Wallet, Plus, Search, Pencil, Trash2, Sparkles } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiFetch } from "@/lib/apiFetch";
+import { matchesQuery } from "@/lib/search";
 
 const API = "/api/v1/chart-of-accounts";
 
@@ -61,7 +62,7 @@ export default function CostCenterPage() {
 
   const { data: accounts = [], isLoading } = useQuery({ queryKey: ["chart-of-accounts", showDeleted], queryFn: () => fetchAccounts(showDeleted) });
 
-  const filtered = accounts.filter((a) => !q || a.code.toLowerCase().includes(q.toLowerCase()) || a.name.toLowerCase().includes(q.toLowerCase()));
+  const filtered = accounts.filter((a) => matchesQuery(q, a.code, a.name, (a as any).account_type, (a as any).description));
 
   const columns: ColumnDef<Account>[] = useMemo(() => [
     {

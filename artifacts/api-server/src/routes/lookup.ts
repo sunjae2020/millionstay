@@ -1,5 +1,6 @@
 import { Router, type IRouter } from "express";
 import { ilike, and, eq, isNull, SQL, asc } from "drizzle-orm";
+import { keywordCondition, columnMatches } from "../lib/listSearch";
 import { db, contactsTable, accountsTable, commissionsTable, paymentInfoTable, spacesTable, suburbsTable, propertiesTable, accommodationCatalogTable, productGroupsTable, productTypesTable, contractTypesTable, usersTable } from "@workspace/db";
 
 import { formatPersonName } from "../lib/nameFormat";
@@ -10,12 +11,12 @@ router.get("/v1/lookup/contacts", async (req, res): Promise<void> => {
   const q = (req.query["q"] as string) || "";
   const conditions: SQL[] = [];
   if (q) {
-    const { or } = await import("drizzle-orm");
-    conditions.push(or(
-      ilike(contactsTable.first_name, `%${q}%`),
-      ilike(contactsTable.last_name, `%${q}%`),
-      ilike(contactsTable.email, `%${q}%`),
-    )!);
+    conditions.push(keywordCondition(
+      q,
+      [contactsTable.email, contactsTable.mobile_number, contactsTable.company_name],
+      [],
+      [{ first: contactsTable.first_name, last: contactsTable.last_name }],
+    ));
   }
   const rows = await db.select({
     id: contactsTable.id,
@@ -39,8 +40,9 @@ router.get("/v1/lookup/accounts", async (req, res): Promise<void> => {
   if (q) {
     const { or } = await import("drizzle-orm");
     conditions.push(or(
-      ilike(accountsTable.name, `%${q}%`),
-      ilike(accountsTable.account_email, `%${q}%`),
+      columnMatches(accountsTable.name, q),
+      columnMatches(accountsTable.account_email, q),
+      columnMatches(accountsTable.biz_registration_no, q),
     )!);
   }
   const rows = await db.select({
@@ -70,12 +72,12 @@ router.get("/v1/lookup/admin-users", async (req, res): Promise<void> => {
     eq(usersTable.is_active, true),
   ];
   if (q) {
-    const { or } = await import("drizzle-orm");
-    conditions.push(or(
-      ilike(usersTable.first_name, `%${q}%`),
-      ilike(usersTable.last_name, `%${q}%`),
-      ilike(usersTable.email, `%${q}%`),
-    )!);
+    conditions.push(keywordCondition(
+      q,
+      [usersTable.email],
+      [],
+      [{ first: usersTable.first_name, last: usersTable.last_name }],
+    ));
   }
   const rows = await db.select({
     id: usersTable.id,
@@ -100,7 +102,7 @@ router.get("/v1/lookup/commissions", async (req, res): Promise<void> => {
     commission_rate: commissionsTable.commission_rate,
     commission_amount: commissionsTable.commission_amount,
   }).from(commissionsTable)
-    .where(q ? ilike(commissionsTable.name, `%${q}%`) : undefined)
+    .where(q ? columnMatches(commissionsTable.name, q) : undefined)
     .limit(20);
   res.json(rows.map((r) => ({
     id: r.id,
@@ -119,7 +121,7 @@ router.get("/v1/lookup/payment-info", async (req, res): Promise<void> => {
     bsb_number: paymentInfoTable.bsb_number,
     bank_name: paymentInfoTable.bank_name,
   }).from(paymentInfoTable)
-    .where(q ? ilike(paymentInfoTable.name, `%${q}%`) : undefined)
+    .where(q ? columnMatches(paymentInfoTable.name, q) : undefined)
     .limit(20);
   res.json(rows.map((r) => ({
     id: r.id,
@@ -134,7 +136,7 @@ router.get("/v1/lookup/spaces", async (req, res): Promise<void> => {
   const property_id = req.query["property_id"] ? parseInt(req.query["property_id"] as string, 10) : null;
   const conditions: SQL[] = [];
   if (property_id) conditions.push(eq(spacesTable.property_id, property_id));
-  if (q) conditions.push(ilike(spacesTable.name, `%${q}%`));
+  if (q) conditions.push(keywordCondition(q, [spacesTable.name, spacesTable.custom_type_name]));
 
   const rows = await db.select({
     id: spacesTable.id,
@@ -163,7 +165,7 @@ router.get("/v1/lookup/suburbs", async (req, res): Promise<void> => {
     state: suburbsTable.state,
     postcode: suburbsTable.postcode,
   }).from(suburbsTable)
-    .where(q ? ilike(suburbsTable.name, `%${q}%`) : undefined)
+    .where(q ? keywordCondition(q, [suburbsTable.name, suburbsTable.area_name, suburbsTable.postcode]) : undefined)
     .limit(20);
   res.json(rows.map((r) => ({
     id: r.id,
@@ -176,7 +178,7 @@ router.get("/v1/lookup/product-groups", async (req, res): Promise<void> => {
   const rows = await db
     .select({ id: productGroupsTable.id, name: productGroupsTable.name })
     .from(productGroupsTable)
-    .where(q ? ilike(productGroupsTable.name, `%${q}%`) : undefined)
+    .where(q ? columnMatches(productGroupsTable.name, q) : undefined)
     .orderBy(asc(productGroupsTable.name))
     .limit(50);
   res.json(rows.map(r => ({ id: r.id, display: r.name })));
@@ -187,7 +189,7 @@ router.get("/v1/lookup/product-types", async (req, res): Promise<void> => {
   const rows = await db
     .select({ id: productTypesTable.id, name: productTypesTable.name })
     .from(productTypesTable)
-    .where(q ? ilike(productTypesTable.name, `%${q}%`) : undefined)
+    .where(q ? columnMatches(productTypesTable.name, q) : undefined)
     .orderBy(asc(productTypesTable.name))
     .limit(50);
   res.json(rows.map(r => ({ id: r.id, display: r.name })));
@@ -198,7 +200,7 @@ router.get("/v1/lookup/products", async (req, res): Promise<void> => {
   const rows = await db
     .select({ id: accommodationCatalogTable.id, name: accommodationCatalogTable.name, price: accommodationCatalogTable.price })
     .from(accommodationCatalogTable)
-    .where(q ? ilike(accommodationCatalogTable.name, `%${q}%`) : undefined)
+    .where(q ? columnMatches(accommodationCatalogTable.name, q) : undefined)
     .orderBy(asc(accommodationCatalogTable.name))
     .limit(20);
   res.json(rows.map(r => ({
@@ -212,7 +214,7 @@ router.get("/v1/lookup/contract-types", async (req, res): Promise<void> => {
   const rows = await db
     .select({ id: contractTypesTable.id, name: contractTypesTable.name })
     .from(contractTypesTable)
-    .where(q ? ilike(contractTypesTable.name, `%${q}%`) : undefined)
+    .where(q ? columnMatches(contractTypesTable.name, q) : undefined)
     .orderBy(asc(contractTypesTable.name))
     .limit(20);
   res.json(rows.map(r => ({ id: r.id, display: r.name })));

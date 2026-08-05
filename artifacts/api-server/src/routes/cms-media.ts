@@ -1,5 +1,6 @@
 import { Router, type IRouter } from "express";
 import { and, asc, desc, eq, ilike, inArray, isNull, or, sql, type SQL } from "drizzle-orm";
+import { columnMatches } from "../lib/listSearch";
 import { db, cmsMediaAssetsTable } from "@workspace/db";
 import * as z from "zod/v4";
 import { listCloudinaryResources, isCloudinaryConfigured } from "../utils/cloudinary.js";
@@ -42,8 +43,8 @@ router.get("/v1/cms/media/assets", async (req, res): Promise<void> => {
   if (q) {
     conditions.push(
       or(
-        ilike(cmsMediaAssetsTable.alt_text, `%${q}%`),
-        ilike(cmsMediaAssetsTable.public_id, `%${q}%`),
+        columnMatches(cmsMediaAssetsTable.alt_text, q),
+        columnMatches(cmsMediaAssetsTable.public_id, q),
       )!,
     );
   }

@@ -17,6 +17,7 @@ import { Package, Plus, Search, Pencil, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiFetch } from "@/lib/apiFetch";
 import { ADDON_CATEGORY_OPTIONS, ADDON_UNIT_OPTIONS } from "@/lib/accommodationOptions";
+import { matchesQuery } from "@/lib/search";
 
 const API = "/api/v1/addon-services";
 
@@ -59,8 +60,7 @@ export default function AddonServicesPage() {
 
   const { data: services = [], isLoading } = useQuery({ queryKey: ["addon-services", showDeleted], queryFn: () => fetchServices(showDeleted) });
 
-  const filtered = services.filter((s) =>
-    !q || s.name.toLowerCase().includes(q.toLowerCase()) || s.code.toLowerCase().includes(q.toLowerCase()));
+  const filtered = services.filter((s) => matchesQuery(q, s.name, s.code, (s as any).category, (s as any).description));
 
   const columns: ColumnDef<AddonService>[] = useMemo(() => [
     {

@@ -10,6 +10,7 @@ import { Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 
 import { getApiBase } from "@/lib/api-base";
+import { matchesQuery } from "@/lib/search";
 const API = getApiBase();
 const ADMIN_KEY = "ms_admin_key";
 function getKey() { return localStorage.getItem(ADMIN_KEY) ?? ""; }
@@ -41,11 +42,16 @@ export default function AdminBookings() {
   }, [setLocation]);
 
   const filtered = bookings.filter((b) => {
-    const q = search.toLowerCase();
-    const matchSearch = !q || b.bookingRef.toLowerCase().includes(q)
-      || `${b.guestFirstName} ${b.guestLastName}`.toLowerCase().includes(q)
-      || b.guestEmail.toLowerCase().includes(q)
-      || (b.spaceName ?? "").toLowerCase().includes(q);
+    const matchSearch = matchesQuery(
+      search,
+      b.bookingRef,
+      b.guestFirstName,
+      b.guestLastName,
+      `${b.guestLastName}${b.guestFirstName}`,
+      `${b.guestFirstName}${b.guestLastName}`,
+      b.guestEmail,
+      b.spaceName,
+    );
     const matchStatus = statusFilter === "All" || b.contractStatus === statusFilter;
     return matchSearch && matchStatus;
   });

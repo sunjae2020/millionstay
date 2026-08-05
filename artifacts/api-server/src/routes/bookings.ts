@@ -1,7 +1,7 @@
 import { Router, type IRouter } from "express";
 import { DEFAULT_CURRENCY } from "../lib/currency";
 import { eq, ne, ilike, and, between, gte, lte, SQL, or, isNull, inArray } from "drizzle-orm";
-import { periodOverlapConditions, yearOverlapConditions, distinctYears } from "../lib/listSearch";
+import { periodOverlapConditions, yearOverlapConditions, distinctYears, keywordCondition } from "../lib/listSearch";
 import {
   db,
   bookingsTable,
@@ -814,7 +814,7 @@ router.patch("/v1/bookings/:id/documents/:doc_id/reject", async (req, res): Prom
 
 router.get("/v1/lookup/bookings", async (req, res): Promise<void> => {
   const { q } = req.query as Record<string, string>;
-  const conditions = q ? [ilike(bookingsTable.booking_ref, `%${q}%`)] : [];
+  const conditions = q ? [keywordCondition(q, [bookingsTable.booking_ref, bookingsTable.name])] : [];
   const rows = await db.select({
     id: bookingsTable.id,
     booking_ref: bookingsTable.booking_ref,

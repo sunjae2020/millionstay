@@ -5,6 +5,7 @@ import {
   contactsTable, propertiesTable, spacesTable, workOrdersTable, documentsTable,
 } from "@workspace/db";
 import { and, eq, ilike, inArray, notInArray, isNull, or, sql, desc } from "drizzle-orm";
+import { columnMatches } from "../lib/listSearch";
 import { listSnapshots } from "../lib/documents/freeze";
 import { calcRetentionDate } from "../lib/retention";
 import { CONTRACT_CHECKLIST, evaluateChecklist } from "../lib/documents/checklist";
@@ -66,7 +67,7 @@ router.get("/v1/documents", async (req, res): Promise<void> => {
   // ── Invoices + Receipts ──────────────────────────────────────────────
   if (wantsType("Invoice") || wantsType("Receipt")) {
     const invConds: any[] = [isNull(invoicesTable.deleted_at)];
-    if (q) invConds.push(ilike(invoicesTable.invoice_ref, `%${q}%`));
+    if (q) invConds.push(columnMatches(invoicesTable.invoice_ref, q));
     const invoices = await db.select().from(invoicesTable).where(and(...invConds)).orderBy(desc(invoicesTable.id));
 
     const accIds = invoices.map(i => i.account_id).filter(Boolean) as number[];
@@ -104,7 +105,7 @@ router.get("/v1/documents", async (req, res): Promise<void> => {
   // ── Contracts ────────────────────────────────────────────────────────
   if (wantsType("Contract")) {
     const cConds: any[] = [isNull(contractsTable.deleted_at)];
-    if (q) cConds.push(ilike(contractsTable.contract_ref, `%${q}%`));
+    if (q) cConds.push(columnMatches(contractsTable.contract_ref, q));
     const contracts = await db.select().from(contractsTable).where(and(...cConds)).orderBy(desc(contractsTable.id));
 
     const accIds = contracts.map(c => c.tenant_account_id).filter(Boolean) as number[];
@@ -130,7 +131,7 @@ router.get("/v1/documents", async (req, res): Promise<void> => {
   // ── Quotes ───────────────────────────────────────────────────────────
   if (wantsType("Quote")) {
     const qConds: any[] = [isNull(quotesTable.deleted_at)];
-    if (q) qConds.push(ilike(quotesTable.quote_ref, `%${q}%`));
+    if (q) qConds.push(columnMatches(quotesTable.quote_ref, q));
     const quotes = await db.select().from(quotesTable).where(and(...qConds)).orderBy(desc(quotesTable.id));
     const accMap = await accountNameMap(quotes.map(x => x.account_id).filter(Boolean) as number[]);
     for (const x of quotes) {
@@ -548,9 +549,10 @@ router.get("/v1/documents/library", async (req, res): Promise<void> => {
         // Tags are jsonb, so they are matched as text — a substring hit inside
         // the serialised array is exactly the "does any keyword contain this?"
         // the search box promises, without a second index to maintain.
-        ilike(documentsTable.file_name, `%${q.trim()}%`),
-        ilike(documentsTable.title, `%${q.trim()}%`),
-        ilike(documentsTable.doc_ref, `%${q.trim()}%`),
+        columnMatches(documentsTable.file_name, q.trim()),
+        columnMatches(documentsTable.title, q.trim()),
+        columnMatches(documentsTable.doc_ref, q.trim()),
+        columnMatches(documentsTable.doc_type, q.trim()),
         sql`${documentsTable.tags}::text ILIKE ${`%${q.trim()}%`}`,
       )
     : null;

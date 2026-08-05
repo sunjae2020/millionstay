@@ -12,6 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { FileText, Plus, Search, Pencil } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { matchesQuery } from "@/lib/search";
 
 async function fetchContractTypes(showDeleted: boolean) {
   const res = await fetch(showDeleted ? "/api/v1/contract-types?deleted=only" : "/api/v1/contract-types");
@@ -37,9 +38,7 @@ export default function ContractTypesPage() {
 
   const { data: types = [], isLoading } = useQuery({ queryKey: ["contract-types", showDeleted], queryFn: () => fetchContractTypes(showDeleted) });
 
-  const filtered = (types as any[]).filter((ct: any) =>
-    !q || ct.name.toLowerCase().includes(q.toLowerCase())
-  );
+  const filtered = (types as any[]).filter((ct: any) => matchesQuery(q, ct.name, ct.description, ct.contract_security));
 
   const columns: ColumnDef<any>[] = useMemo(() => [
     {

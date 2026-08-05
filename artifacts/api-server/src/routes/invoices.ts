@@ -4,7 +4,7 @@ import { db, invoicesTable, invoiceLineItemsTable, bookingsTable, contractsTable
 import { eq, ilike, and, asc, isNull, inArray } from "drizzle-orm";
 import { z } from "zod";
 import { logAction } from "../utils/auditLog";
-import { keywordCondition, accountIdsByName, dateRangeConditions, yearConditions, distinctYears } from "../lib/listSearch";
+import { keywordCondition, accountIdsByName, dateRangeConditions, yearConditions, distinctYears, columnMatches } from "../lib/listSearch";
 import { getRateToAud } from "../lib/rateSnapshot";
 import { buildInvoiceHtml, type InvoiceDocInput } from "../lib/documents/invoiceDocument";
 import { buildReceiptHtml } from "../lib/documents/receiptDocument";
@@ -616,7 +616,7 @@ router.post("/v1/invoices/:id/checkout", async (req, res): Promise<void> => {
 
 router.get("/v1/lookup/invoices", async (req, res): Promise<void> => {
   const { q } = req.query as Record<string, string>;
-  const conditions = q ? [ilike(invoicesTable.invoice_ref, `%${q}%`)] : [];
+  const conditions = q ? [columnMatches(invoicesTable.invoice_ref, q)] : [];
   const rows = await db.select({ id: invoicesTable.id, invoice_ref: invoicesTable.invoice_ref, status: invoicesTable.status })
     .from(invoicesTable)
     .where(conditions.length > 0 ? and(...conditions) : undefined)

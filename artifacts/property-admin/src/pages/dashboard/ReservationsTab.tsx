@@ -26,6 +26,7 @@ import { KpiCard, DashCard, Pill } from "@/components/dashboard/DashboardKit";
 import { useBrand } from "@/contexts/ThemeContext";
 import { formatMoney, SUPPORTED_CURRENCIES } from "@/lib/currency";
 import { formatDate } from "@/lib/date";
+import { matchesQuery } from "@/lib/search";
 
 const STATUS_COLORS: Record<string, { bg: string; text: string; border: string }> = {
   Draft:           { bg: "#f8fafc", text: "#64748b", border: "#cbd5e1" },
@@ -570,9 +571,12 @@ export default function ReservationsTab() {
 
   const filteredBookings = (bookings ?? []).filter(b => {
     const matchStatus = statusFilter === "All" || b.booking_status === statusFilter;
-    const matchSearch = !search || (
-      b.booking_ref?.toLowerCase().includes(search.toLowerCase()) ||
-      (b as any).contact_name?.toLowerCase()?.includes(search.toLowerCase())
+    const matchSearch = matchesQuery(
+      search,
+      b.booking_ref,
+      (b as any).contact_name,
+      (b as any).space_name,
+      (b as any).property_name,
     );
     return matchStatus && matchSearch;
   });

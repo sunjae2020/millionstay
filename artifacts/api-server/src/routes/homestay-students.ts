@@ -7,6 +7,7 @@
 // is admin-brokered (Phase 5), so no portal login is created here.
 import { Router, type IRouter } from "express";
 import { and, desc, eq, ilike, isNull, or, sql } from "drizzle-orm";
+import { keywordCondition } from "../lib/listSearch";
 import { db, homestayStudentRequestsTable, homestayHostApplicationsTable, homestayHostAvailabilityTable, accountsTable, usersTable } from "@workspace/db";
 import { generateStudentRef } from "../lib/homestayRef.js";
 import { createSigningRequest, type SignerSpec } from "../services/contractSigning.js";
@@ -172,12 +173,18 @@ homestayStudentAdminRouter.get("/v1/homestay-student-requests", async (req, res)
     const { limit, offset, page, q } = parsePageParams(req.query);
     const conds = [isNull(homestayStudentRequestsTable.deleted_at)];
     if (status && status !== "all") conds.push(eq(homestayStudentRequestsTable.status, status));
-    if (q) conds.push(or(
-      ilike(homestayStudentRequestsTable.student_first_name, `%${q}%`),
-      ilike(homestayStudentRequestsTable.student_last_name, `%${q}%`),
-      ilike(homestayStudentRequestsTable.student_email, `%${q}%`),
-      ilike(homestayStudentRequestsTable.request_ref, `%${q}%`),
-    )!);
+    if (q) conds.push(keywordCondition(
+      q,
+      [
+        homestayStudentRequestsTable.student_email, homestayStudentRequestsTable.student_phone,
+        homestayStudentRequestsTable.request_ref, homestayStudentRequestsTable.nationality,
+      ],
+      [],
+      [{
+        first: homestayStudentRequestsTable.student_first_name,
+        last: homestayStudentRequestsTable.student_last_name,
+      }],
+    ));
     const whereExpr = and(...conds);
     const [{ total }] = await db
       .select({ total: sql<number>`count(*)::int` })

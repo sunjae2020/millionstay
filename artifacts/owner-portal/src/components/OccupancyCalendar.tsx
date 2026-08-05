@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { apiGet, apiPost, apiDelete, ApiError } from "@/lib/api";
 import { formatMoney } from "@/lib/money";
 import { ChevronLeft, ChevronRight, Ban, Sun, RotateCcw, CalendarOff, Search } from "lucide-react";
+import { matchesQuery } from "@/lib/search";
 
 /* ── types ── */
 interface SpaceLite { id: number; name: string; space_type: string | null; status: string }
@@ -90,7 +91,7 @@ export function OccupancyCalendar() {
   // When searching, list matching spaces across ALL properties; otherwise the
   // current property's spaces.
   const spaceOptions = useMemo(() => {
-    if (sq) return allSpaces.filter((s) => `${s.property_name} ${s.name}`.toLowerCase().includes(sq));
+    if (sq) return allSpaces.filter((s) => matchesQuery(sq, s.property_name, s.name, `${s.property_name}${s.name}`));
     return spacesForProperty.map((s) => ({ ...s, property_id: propertyId ?? 0, property_name: "" }));
   }, [allSpaces, spacesForProperty, propertyId, sq]);
 

@@ -4,10 +4,7 @@ import { db, contractsTable, accountsTable, spacesTable, propertiesTable, contra
 import { eq, ilike, and, or, like, desc, isNull, inArray, gte, lte, sql } from "drizzle-orm";
 import multer from "multer";
 import { logAction } from "../utils/auditLog";
-import {
-  keywordCondition, accountIdsByName, spaceIdsByName,
-  yearOverlapConditions, periodOverlapConditions, distinctYears, distinctValues,
-} from "../lib/listSearch";
+import { keywordCondition, accountIdsByName, spaceIdsByName, yearOverlapConditions, periodOverlapConditions, distinctYears, distinctValues, columnMatches } from "../lib/listSearch";
 import { documentsTable } from "@workspace/db";
 import { cldFolder, fetchPrivateAsset, isCloudinaryConfigured, uploadPrivateToCloudinary } from "../utils/cloudinary";
 import { calcRetentionDate } from "../lib/retention";
@@ -1949,7 +1946,7 @@ router.post("/v1/contracts/generate-rent-invoices", async (req, res): Promise<vo
 
 router.get("/v1/lookup/contracts", async (req, res): Promise<void> => {
   const { q } = req.query as Record<string, string>;
-  const conditions = q ? [ilike(contractsTable.contract_ref, `%${q}%`)] : [];
+  const conditions = q ? [columnMatches(contractsTable.contract_ref, q)] : [];
   const rows = await db.select({ id: contractsTable.id, contract_ref: contractsTable.contract_ref, status: contractsTable.status })
     .from(contractsTable)
     .where(conditions.length > 0 ? and(...conditions) : undefined)

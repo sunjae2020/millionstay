@@ -1,5 +1,6 @@
 import { Router, type IRouter } from "express";
 import { eq, ilike, asc, and, isNull, inArray } from "drizzle-orm";
+import { keywordCondition } from "../lib/listSearch";
 import { db, rentalFeeSchedulesTable, contractsTable, contractRelatedCostsTable, spacesTable, accountsTable } from "@workspace/db";
 import { deletedFilter, makeBulkDelete, makeBulkRestore } from "../lib/softDelete";
 
@@ -26,7 +27,7 @@ router.get("/v1/rental-fee-schedules", async (req, res): Promise<void> => {
       .where(
         and(
           deletedFilter(rentalFeeSchedulesTable.deleted_at, req),
-          q ? ilike(rentalFeeSchedulesTable.type_label, `%${q}%`) : undefined,
+          q ? keywordCondition(q, [rentalFeeSchedulesTable.type_label, rentalFeeSchedulesTable.note]) : undefined,
           status ? eq(rentalFeeSchedulesTable.status, status) : undefined,
         ),
       )

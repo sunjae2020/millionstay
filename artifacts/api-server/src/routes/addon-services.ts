@@ -1,5 +1,6 @@
 import { Router, type IRouter } from "express";
 import { eq, ilike, asc, isNull, inArray, and } from "drizzle-orm";
+import { keywordCondition } from "../lib/listSearch";
 import { db, addonServicesTable } from "@workspace/db";
 import { deletedFilter, makeBulkDelete, makeBulkRestore } from "../lib/softDelete";
 
@@ -20,7 +21,7 @@ router.get("/v1/addon-services", async (req, res): Promise<void> => {
     const rows = await db
       .select()
       .from(addonServicesTable)
-      .where(and(deletedFilter(addonServicesTable.deleted_at, req), q ? ilike(addonServicesTable.name, `%${q}%`) : undefined))
+      .where(and(deletedFilter(addonServicesTable.deleted_at, req), q ? keywordCondition(q, [addonServicesTable.name, addonServicesTable.code, addonServicesTable.category, addonServicesTable.description]) : undefined))
       .orderBy(asc(addonServicesTable.sort_order), asc(addonServicesTable.name));
     res.json({ success: true, data: rows, meta: { total: rows.length } });
   } catch {

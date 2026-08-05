@@ -3,6 +3,7 @@ import { DEFAULT_CURRENCY } from "../lib/currency";
 import bcrypt from "bcryptjs";
 import multer from "multer";
 import { eq, and, isNull, desc, ilike, or, inArray, sql } from "drizzle-orm";
+import { keywordCondition } from "../lib/listSearch";
 import {
   db,
   homestayHostApplicationsTable,
@@ -485,12 +486,15 @@ homestayAdminRouter.get("/v1/homestay-applications", async (req, res): Promise<v
     const { limit, offset, page, q } = parsePageParams(req.query);
     const conds = [isNull(homestayHostApplicationsTable.deleted_at)];
     if (status && status !== "all") conds.push(eq(homestayHostApplicationsTable.status, status));
-    if (q) conds.push(or(
-      ilike(homestayHostApplicationsTable.first_name, `%${q}%`),
-      ilike(homestayHostApplicationsTable.last_name, `%${q}%`),
-      ilike(homestayHostApplicationsTable.email, `%${q}%`),
-      ilike(homestayHostApplicationsTable.application_ref, `%${q}%`),
-    )!);
+    if (q) conds.push(keywordCondition(
+      q,
+      [
+        homestayHostApplicationsTable.email, homestayHostApplicationsTable.phone,
+        homestayHostApplicationsTable.application_ref, homestayHostApplicationsTable.suburb,
+      ],
+      [],
+      [{ first: homestayHostApplicationsTable.first_name, last: homestayHostApplicationsTable.last_name }],
+    ));
     const whereExpr = and(...conds);
     const [{ total }] = await db
       .select({ total: sql<number>`count(*)::int` })

@@ -7,6 +7,7 @@
 // (gated by Settings → Application Emails → short_term) and notify ops.
 import { Router, type IRouter } from "express";
 import { and, desc, eq, ilike, isNull, or, sql } from "drizzle-orm";
+import { keywordCondition } from "../lib/listSearch";
 import { db, shortTermApplicationsTable, usersTable } from "@workspace/db";
 import { generateShortTermRef } from "../lib/homestayRef.js";
 import { createSigningRequest, type SignerSpec } from "../services/contractSigning.js";
@@ -124,12 +125,15 @@ shortTermAdminRouter.get("/v1/short-term-applications", async (req, res): Promis
     const { limit, offset, page, q } = parsePageParams(req.query);
     const conds = [isNull(shortTermApplicationsTable.deleted_at)];
     if (status && status !== "all") conds.push(eq(shortTermApplicationsTable.status, status));
-    if (q) conds.push(or(
-      ilike(shortTermApplicationsTable.first_name, `%${q}%`),
-      ilike(shortTermApplicationsTable.last_name, `%${q}%`),
-      ilike(shortTermApplicationsTable.email, `%${q}%`),
-      ilike(shortTermApplicationsTable.request_ref, `%${q}%`),
-    )!);
+    if (q) conds.push(keywordCondition(
+      q,
+      [
+        shortTermApplicationsTable.email, shortTermApplicationsTable.phone,
+        shortTermApplicationsTable.request_ref, shortTermApplicationsTable.nationality,
+      ],
+      [],
+      [{ first: shortTermApplicationsTable.first_name, last: shortTermApplicationsTable.last_name }],
+    ));
     const whereExpr = and(...conds);
     const [{ total }] = await db
       .select({ total: sql<number>`count(*)::int` })

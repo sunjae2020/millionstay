@@ -1,5 +1,6 @@
 import { Router, type IRouter } from "express";
 import { and, asc, desc, eq, inArray, isNull, isNotNull, ilike, or, type SQL } from "drizzle-orm";
+import { keywordCondition } from "../lib/listSearch";
 import {
   db,
   cmsSitesTable,
@@ -282,7 +283,7 @@ router.get("/v1/cms/pages", async (req, res): Promise<void> => {
   const q = req.query["q"] ? String(req.query["q"]).trim() : "";
   if (q) {
     conditions.push(
-      or(ilike(cmsPagesTable.title, `%${q}%`), ilike(cmsPagesTable.slug, `%${q}%`))!,
+      keywordCondition(q, [cmsPagesTable.title, cmsPagesTable.slug, cmsPagesTable.template_key]),
     );
   }
 
