@@ -1,4 +1,4 @@
--- 0041 — 마케팅 · 이메일 캠페인 (marketing / email campaigns)
+-- 0044 — 마케팅 · 이메일 캠페인 (marketing / email campaigns)
 --
 -- Outbound partner-development module: cold prospect ledger, lists, drip
 -- campaigns, a send queue, an append-only event ledger and a bounce/complaint
