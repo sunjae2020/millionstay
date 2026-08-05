@@ -40,6 +40,10 @@ import TenantLifecycle from "@/pages/crm/TenantLifecycle";
 import TaskList from "@/pages/sales/TaskList";
 import ProspectList from "@/pages/marketing/ProspectList";
 import ProspectDetail from "@/pages/marketing/ProspectDetail";
+import MarketingDashboard from "@/pages/marketing/MarketingDashboard";
+import MarketingLists from "@/pages/marketing/MarketingLists";
+import CampaignList from "@/pages/marketing/CampaignList";
+import CampaignDetail from "@/pages/marketing/CampaignDetail";
 import TaskDetail from "@/pages/sales/TaskDetail";
 import LeadList from "@/pages/sales/LeadList";
 import LeadDetail from "@/pages/sales/LeadDetail";
@@ -233,6 +237,10 @@ function Router() {
       <Route path="/account/leads/:id" component={LeadDetail} />
 
       <Route path="/account/tasks" component={TaskList} />
+      <Route path="/marketing/dashboard" component={MarketingDashboard} />
+      <Route path="/marketing/lists" component={MarketingLists} />
+      <Route path="/marketing/campaigns" component={CampaignList} />
+      <Route path="/marketing/campaigns/:id" component={CampaignDetail} />
       <Route path="/marketing/prospects" component={ProspectList} />
       <Route path="/marketing/prospects/:id" component={ProspectDetail} />
       <Route path="/account/tasks/new" component={TaskDetail} />

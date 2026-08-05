@@ -33,6 +33,7 @@ import { shortTermPublicRouter } from "./routes/short-term";
 import pageContentsRouter from "./routes/page-contents";
 import mediaRouter from "./routes/media";
 import privacyRouter from "./routes/privacy";
+import marketingWebhooksRouter from "./routes/marketing-webhooks";
 import chatRouter from "./routes/chat";
 import knowledgeRouter from "./routes/knowledge";
 import externalApiRouter from "./routes/external-api";
@@ -190,6 +191,14 @@ app.use(
   express.raw({ type: "application/json" }),
 );
 
+// Same reason as Stripe above: the Svix signature covers the exact bytes Resend
+// sent, so this path must keep its raw body. express.json() would consume it and
+// every signature check would fail.
+app.use(
+  "/api/v1/marketing/webhooks/resend",
+  express.raw({ type: "application/json" }),
+);
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -242,6 +251,10 @@ app.use("/api", homestayStudentPublicRouter);
 app.use("/api", shortTermPublicRouter);
 app.use("/api", chatRouter);
 app.use("/api", privacyRouter);
+// Resend campaign event webhook — the caller is Resend, not an admin, so it is
+// mounted before requireAuth and authenticates by Svix signature instead. It
+// parses its own raw body (the signature covers the exact bytes).
+app.use("/api", marketingWebhooksRouter);
 // External third-party API — authenticates with issued API Key + Secret
 // (requireApiKey inside the router), NOT the admin JWT. Mounted before the
 // requireAuth guard so it is never caught by admin authentication.

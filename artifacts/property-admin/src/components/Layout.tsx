@@ -130,7 +130,10 @@ function getNav(
       icon: Megaphone,
       defaultOpen: false,
       items: [
+        { href: "/marketing/dashboard", label: t("nav.marketing_dashboard"), icon: BarChart3 },
         { href: "/marketing/prospects", label: t("nav.prospects"), icon: Target },
+        { href: "/marketing/lists", label: t("nav.marketing_lists"), icon: Users },
+        { href: "/marketing/campaigns", label: t("nav.campaigns"), icon: Megaphone },
       ],
     },
     {

@@ -189,3 +189,246 @@ export async function commitImport(file: File, opts: CommitImportOptions): Promi
   if (!res.ok) throw new Error(json.error ?? "Import failed");
   return json.data;
 }
+
+/* ── Lists / segments ──────────────────────────────────────────────────── */
+
+export interface MarketingList {
+  id: number;
+  name: string;
+  description: string;
+  list_type: "static" | "dynamic";
+  filter_criteria: Record<string, unknown> | null;
+  member_count: number;
+  status: string;
+  deleted_at: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export async function listMarketingLists(): Promise<MarketingList[]> {
+  const res = await apiJson<Envelope<MarketingList[]>>("/api/v1/marketing/lists");
+  return res.data;
+}
+
+export async function getMarketingList(id: number): Promise<MarketingList & { members: Prospect[] }> {
+  const res = await apiJson<Envelope<MarketingList & { members: Prospect[] }>>(`/api/v1/marketing/lists/${id}`);
+  return res.data;
+}
+
+export async function createMarketingList(body: Partial<MarketingList>): Promise<MarketingList> {
+  const res = await apiJson<Envelope<MarketingList>>("/api/v1/marketing/lists", {
+    method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body),
+  });
+  return res.data;
+}
+
+export async function updateMarketingList(id: number, body: Partial<MarketingList>): Promise<MarketingList> {
+  const res = await apiJson<Envelope<MarketingList>>(`/api/v1/marketing/lists/${id}`, {
+    method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body),
+  });
+  return res.data;
+}
+
+export async function deleteMarketingList(id: number): Promise<void> {
+  await apiJson(`/api/v1/marketing/lists/${id}`, { method: "DELETE" });
+}
+
+export async function previewSegment(criteria: Record<string, unknown>): Promise<number> {
+  const res = await apiJson<Envelope<{ count: number }>>("/api/v1/marketing/lists/preview", {
+    method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(criteria),
+  });
+  return res.data.count;
+}
+
+export async function addListMembers(id: number, prospectIds: number[]): Promise<number> {
+  const res = await apiJson<Envelope<{ member_count: number }>>(`/api/v1/marketing/lists/${id}/members`, {
+    method: "POST", headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ prospect_ids: prospectIds }),
+  });
+  return res.data.member_count;
+}
+
+/* ── Campaigns ─────────────────────────────────────────────────────────── */
+
+export interface CampaignStep {
+  id: number;
+  campaign_id: number;
+  step_no: number;
+  name: string;
+  template_code: string | null;
+  subject: string;
+  body_html: string;
+  delay_days: number;
+  delay_hours: number;
+  stop_on: string;
+}
+
+export interface Campaign {
+  id: number;
+  name: string;
+  description: string;
+  status: string;
+  list_id: number | null;
+  from_email: string;
+  from_name: string;
+  reply_to: string;
+  language_code: string;
+  is_advertising: boolean;
+  throttle_per_hour: number;
+  send_window_start: string;
+  send_window_end: string;
+  timezone: string;
+  scheduled_at: string | null;
+  total_recipients: number;
+  sent_count: number;
+  delivered_count: number;
+  opened_count: number;
+  clicked_count: number;
+  bounced_count: number;
+  deleted_at: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CampaignDetail extends Campaign {
+  steps: CampaignStep[];
+  list: MarketingList | null;
+}
+
+export interface BuildResult {
+  audience: number;
+  recipients: number;
+  excluded: Record<string, number>;
+  excluded_total: number;
+}
+
+export interface CampaignPreview {
+  subject: string;
+  html: string;
+  text: string;
+  variables: string[];
+  sample_prospect: { id: number; company_name: string; email: string } | null;
+}
+
+export interface CampaignStats {
+  campaign: { id: number; name: string; status: string };
+  total_recipients: number;
+  sent: number; delivered: number; opened: number; clicked: number;
+  replied: number; bounced: number; unsubscribed: number; converted: number;
+  rates: Record<string, number>;
+}
+
+export interface CampaignRecipient {
+  id: number;
+  prospect_id: number;
+  company_name: string;
+  email: string;
+  recipient_status: string;
+  current_step: number;
+  next_send_at: string | null;
+  open_count: number;
+  click_count: number;
+  skip_reason: string;
+  error_message: string;
+}
+
+export async function listCampaigns(): Promise<Campaign[]> {
+  const res = await apiJson<Envelope<Campaign[]>>("/api/v1/marketing/campaigns");
+  return res.data;
+}
+
+export async function getCampaign(id: number): Promise<CampaignDetail> {
+  const res = await apiJson<Envelope<CampaignDetail>>(`/api/v1/marketing/campaigns/${id}`);
+  return res.data;
+}
+
+export async function createCampaign(body: Partial<Campaign>): Promise<Campaign> {
+  const res = await apiJson<Envelope<Campaign>>("/api/v1/marketing/campaigns", {
+    method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body),
+  });
+  return res.data;
+}
+
+export async function updateCampaign(id: number, body: Partial<Campaign>): Promise<Campaign> {
+  const res = await apiJson<Envelope<Campaign>>(`/api/v1/marketing/campaigns/${id}`, {
+    method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body),
+  });
+  return res.data;
+}
+
+export async function saveStep(campaignId: number, step: Partial<CampaignStep>): Promise<CampaignStep> {
+  const path = step.id
+    ? `/api/v1/marketing/campaigns/${campaignId}/steps/${step.id}`
+    : `/api/v1/marketing/campaigns/${campaignId}/steps`;
+  const res = await apiJson<Envelope<CampaignStep>>(path, {
+    method: step.id ? "PATCH" : "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(step),
+  });
+  return res.data;
+}
+
+export async function deleteStep(campaignId: number, stepId: number): Promise<void> {
+  await apiJson(`/api/v1/marketing/campaigns/${campaignId}/steps/${stepId}`, { method: "DELETE" });
+}
+
+export async function buildCampaign(id: number): Promise<BuildResult> {
+  const res = await apiJson<Envelope<BuildResult>>(`/api/v1/marketing/campaigns/${id}/build`, { method: "POST" });
+  return res.data;
+}
+
+export async function previewCampaign(id: number, stepId?: number): Promise<CampaignPreview> {
+  const res = await apiJson<Envelope<CampaignPreview>>(`/api/v1/marketing/campaigns/${id}/preview`, {
+    method: "POST", headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ step_id: stepId ?? null }),
+  });
+  return res.data;
+}
+
+export async function testSendCampaign(id: number, to: string, stepId?: number): Promise<void> {
+  await apiJson(`/api/v1/marketing/campaigns/${id}/test-send`, {
+    method: "POST", headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ to, step_id: stepId ?? null }),
+  });
+}
+
+export async function campaignAction(
+  id: number,
+  action: "schedule" | "pause" | "resume" | "cancel",
+  body?: Record<string, unknown>,
+): Promise<Campaign> {
+  const res = await apiJson<Envelope<Campaign>>(`/api/v1/marketing/campaigns/${id}/${action}`, {
+    method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body ?? {}),
+  });
+  return res.data;
+}
+
+export async function getCampaignStats(id: number): Promise<CampaignStats> {
+  const res = await apiJson<Envelope<CampaignStats>>(`/api/v1/marketing/campaigns/${id}/stats`);
+  return res.data;
+}
+
+export async function getCampaignRecipients(id: number): Promise<CampaignRecipient[]> {
+  const res = await apiJson<Envelope<CampaignRecipient[]>>(`/api/v1/marketing/campaigns/${id}/recipients`);
+  return res.data;
+}
+
+export async function markReplied(campaignId: number, recipientId: number): Promise<void> {
+  await apiJson(`/api/v1/marketing/campaigns/${campaignId}/recipients/${recipientId}/mark-replied`, { method: "POST" });
+}
+
+/* ── Dashboard ─────────────────────────────────────────────────────────── */
+
+export interface MarketingDashboard {
+  prospects: number;
+  prospects_by_status: Array<{ status: string; count: number }>;
+  prospects_by_segment: Array<{ segment: string; count: number }>;
+  live_campaigns: number;
+  recent_campaigns: Campaign[];
+  event_totals: Array<{ event_type: string; count: number }>;
+}
+
+export async function getMarketingDashboard(): Promise<MarketingDashboard> {
+  const res = await apiJson<Envelope<MarketingDashboard>>("/api/v1/marketing/dashboard");
+  return res.data;
+}

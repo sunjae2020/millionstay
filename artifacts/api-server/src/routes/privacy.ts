@@ -6,8 +6,16 @@
  * and channel.
  */
 import { Router, type IRouter } from "express";
-import { db, marketingConsentsTable } from "@workspace/db";
-import { and, eq } from "drizzle-orm";
+import {
+  db,
+  marketingConsentsTable,
+  prospectsTable,
+  campaignRecipientsTable,
+  campaignEventsTable,
+  campaignSendsTable,
+  emailCampaignsTable,
+} from "@workspace/db";
+import { and, desc, eq, inArray, sql } from "drizzle-orm";
 import { verifyUnsubscribeToken } from "../lib/unsubscribeToken";
 import { getPrivacyContactEmail } from "../lib/companyContact";
 import { getCompanyInfo } from "../lib/documents/theme";
@@ -57,6 +65,73 @@ async function applyOptOut(email: string, channel: "email" | "sms", req: any) {
       ip_address: ip,
       user_agent: ua?.slice(0, 512) ?? null,
     });
+  }
+
+  if (channel === "email") await stopCampaignsFor(lc, now);
+}
+
+/**
+ * Withdrawing consent has to reach the campaign machinery too, not just the
+ * consent table. The send worker re-checks consent before every message, so this
+ * is belt-and-braces — but without it a queued recipient stays "pending" forever
+ * and the prospect keeps showing as an active target on every screen.
+ */
+async function stopCampaignsFor(email: string, now: Date): Promise<void> {
+  try {
+    const [prospect] = await db
+      .select({ id: prospectsTable.id })
+      .from(prospectsTable)
+      .where(sql`lower(${prospectsTable.email}) = ${email}`)
+      .limit(1);
+
+    await db
+      .update(campaignRecipientsTable)
+      .set({ recipient_status: "unsubscribed", skip_reason: "unsubscribed", updated_at: now })
+      .where(
+        and(
+          sql`lower(${campaignRecipientsTable.email}) = ${email}`,
+          inArray(campaignRecipientsTable.recipient_status, ["pending", "sending"]),
+        ),
+      );
+
+    if (prospect) {
+      await db
+        .update(prospectsTable)
+        .set({ prospect_status: "unsubscribed", updated_at: now })
+        .where(eq(prospectsTable.id, prospect.id));
+    }
+
+    // Attribute the opt-out to the campaign whose message prompted it — the most
+    // recent send to this address. Without this the event carries no campaign and
+    // every campaign's unsubscribe rate reads as zero, which is precisely the
+    // number an operator needs to see when a message is landing badly.
+    const [lastSend] = await db
+      .select({ campaign_id: campaignSendsTable.campaign_id, recipient_id: campaignSendsTable.recipient_id })
+      .from(campaignSendsTable)
+      .where(sql`lower(${campaignSendsTable.email}) = ${email}`)
+      .orderBy(desc(campaignSendsTable.id))
+      .limit(1);
+
+    await db.insert(campaignEventsTable).values({
+      campaign_id: lastSend?.campaign_id ?? null,
+      recipient_id: lastSend?.recipient_id ?? null,
+      prospect_id: prospect?.id ?? null,
+      email,
+      event_type: "unsubscribed",
+      detail: "unsubscribe_link",
+      occurred_at: now,
+    });
+
+    if (lastSend?.campaign_id) {
+      await db
+        .update(emailCampaignsTable)
+        .set({ unsubscribed_count: sql`${emailCampaignsTable.unsubscribed_count} + 1`, updated_at: now })
+        .where(eq(emailCampaignsTable.id, lastSend.campaign_id));
+    }
+  } catch (err) {
+    // The opt-out itself has already been recorded — that is the part that must
+    // not fail. Downstream bookkeeping problems are logged, not raised.
+    console.error("[privacy] failed to stop campaigns after unsubscribe:", err instanceof Error ? err.message : err);
   }
 }
 
