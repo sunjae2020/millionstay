@@ -69,6 +69,8 @@ import {
   GraduationCap,
   Handshake,
   Images,
+  Megaphone,
+  Target,
 } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 
@@ -121,6 +123,14 @@ function getNav(
       defaultOpen: false,
       items: [
         { href: "/cs/tickets", label: t("nav.cs_tickets"), icon: HeadphonesIcon },
+      ],
+    },
+    {
+      label: t("nav.marketing"),
+      icon: Megaphone,
+      defaultOpen: false,
+      items: [
+        { href: "/marketing/prospects", label: t("nav.prospects"), icon: Target },
       ],
     },
     {
