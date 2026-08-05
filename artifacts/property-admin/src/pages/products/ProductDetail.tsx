@@ -55,7 +55,7 @@ export default function ProductDetail() {
   const [, navigate] = useLocation();
   const { toast } = useToast();
   const qc = useQueryClient();
-  const isNew = id === "new";
+  const isNew = !id || id === "new";
 
   const [accSvcs, setAccSvcs] = useState<AccSvc[]>([]);
   const [catalogSvcs, setCatalogSvcs] = useState<CatalogSvc[]>([]);

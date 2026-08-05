@@ -62,7 +62,7 @@ function BoolRadio({ label, name, control }: { label: string; name: keyof Policy
 export default function SpacePolicyDetail() {
   const { t } = useTranslation();
   const params = useParams<{ id: string }>();
-  const isNew = params.id === "new";
+  const isNew = !params.id || params.id === "new";
   const id = isNew ? null : parseInt(params.id ?? "0", 10);
   const [, navigate] = useLocation();
   const qc = useQueryClient();

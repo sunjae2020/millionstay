@@ -80,7 +80,7 @@ function calcStay(checkIn: string, checkOut: string, rate: string) {
 export default function BookingDetail() {
   const { t } = useTranslation();
   const { id } = useParams<{ id: string }>();
-  const isNew = id === "new";
+  const isNew = !id || id === "new";
   const [, setLocation] = useLocation();
   const qc = useQueryClient();
   const [activeTab, setActiveTab] = useState("details");

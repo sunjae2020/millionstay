@@ -3866,7 +3866,7 @@ components:
         other_name:
           type: ["string", "null"]
         email:
-          type: string
+          type: ["string", "null"]
         mobile_number:
           type: ["string", "null"]
         office_number:
@@ -3931,7 +3931,7 @@ components:
           type: string
         updated_at:
           type: string
-      required: [id, first_name, last_name, email, portal_enabled, manual_input, status, created_at, updated_at]
+      required: [id, first_name, last_name, portal_enabled, manual_input, status, created_at, updated_at]
 
     CreateContactBody:
       type: object
@@ -3945,7 +3945,7 @@ components:
         other_name:
           type: ["string", "null"]
         email:
-          type: string
+          type: ["string", "null"]
         mobile_number:
           type: ["string", "null"]
         office_number:
@@ -4009,7 +4009,7 @@ components:
         status:
           type: string
           default: Active
-      required: [first_name, last_name, email]
+      required: [first_name, last_name]
 
     UpdateContactBody:
       type: object
@@ -4023,7 +4023,7 @@ components:
         other_name:
           type: ["string", "null"]
         email:
-          type: string
+          type: ["string", "null"]
         mobile_number:
           type: ["string", "null"]
         office_number:

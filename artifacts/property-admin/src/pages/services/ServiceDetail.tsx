@@ -71,7 +71,7 @@ export default function ServiceDetail() {
   const { toast } = useToast();
   const qc = useQueryClient();
   const { currency: brandCurrency } = useBrand();
-  const isNew = id === "new";
+  const isNew = !id || id === "new";
 
   const { data: service } = useQuery({
     queryKey: ["service", id],

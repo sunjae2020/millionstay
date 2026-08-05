@@ -39,7 +39,7 @@ interface FormData {
 export default function ServiceHostDetail() {
   const { t } = useTranslation();
   const { id } = useParams<{ id: string }>();
-  const isNew = id === "new";
+  const isNew = !id || id === "new";
   const [, setLocation] = useLocation();
   const qc = useQueryClient();
 

@@ -88,7 +88,7 @@ export default function SpaceDetail() {
   const { t } = useTranslation();
   const { currency, currencyPosition } = useBrand();
   const params = useParams<{ id: string }>();
-  const isNew = params.id === "new";
+  const isNew = !params.id || params.id === "new";
   const id = isNew ? null : parseInt(params.id ?? "0", 10);
   const [, navigate] = useLocation();
   const qc = useQueryClient();
