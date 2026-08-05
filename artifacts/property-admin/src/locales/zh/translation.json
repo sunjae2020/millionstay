@@ -2424,7 +2424,8 @@
     "search_account_placeholder": "搜索账户…",
     "search_service_placeholder": "搜索服务…",
     "section_admin": "管理",
-    "name_required": "请输入名称。"
+    "name_required": "请输入名称。",
+    "photo_upload_failed": "合作伙伴已保存，但照片上传失败："
   },
   "receipt": {
     "no_receipts": "没有收据",
@@ -5093,7 +5094,9 @@
   "service_host_photos": {
     "empty": "暂无作业照片",
     "title": "照片",
-    "upload": "上传照片"
+    "upload": "上传照片",
+    "add": "添加照片",
+    "new_hint": "保存时会一并上传所选照片。"
   },
   "service_host_cs": {
     "empty": "该合作方暂无客服工单",

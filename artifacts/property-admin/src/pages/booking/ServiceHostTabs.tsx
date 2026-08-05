@@ -98,14 +98,15 @@ export function ServiceHostAccounting({ hostId }: { hostId: string }) {
         <h3 className="text-sm font-semibold flex items-center gap-1.5 mb-2"><Briefcase className="w-4 h-4 text-primary" />{t("service_host_acct.jobs", "Service jobs")} ({jobs.length})</h3>
         <div className="rounded-lg border bg-white overflow-x-auto">
           <ExportableTable fileName="service-host-gl-entries" className="w-full text-sm">
-            <thead className="bg-gray-50 border-b"><tr>{[t("service_host_acct.booking", "Booking"), t("common.name", "Name"), t("service_host_acct.price", "Price"), t("common.status", "Status")].map((h) => <th key={h} className="text-left px-3 py-2 font-medium text-muted-foreground">{h}</th>)}</tr></thead>
+            <thead className="bg-gray-50 border-b"><tr>{[t("service_host_acct.booking", "Booking"), t("common.name", "Name"), t("service_host_acct.price", "Price"), t("common.status", "Status"), ""].map((h, i) => <th key={h || i} className="text-left px-3 py-2 font-medium text-muted-foreground">{h}</th>)}</tr></thead>
             <tbody>
-              {jobs.length === 0 ? <tr><td colSpan={4} className="text-center py-6 text-muted-foreground">{t("service_host_acct.no_jobs", "No jobs")}</td></tr> : jobs.map((j) => (
+              {jobs.length === 0 ? <tr><td colSpan={5} className="text-center py-6 text-muted-foreground">{t("service_host_acct.no_jobs", "No jobs")}</td></tr> : jobs.map((j) => (
                 <tr key={j.id} className="border-b last:border-0">
                   <td className="px-3 py-2 font-mono text-xs">{j.booking_ref ?? `#${j.booking_id}`}</td>
                   <td className="px-3 py-2">{j.service_name ?? "—"}</td>
                   <td className="px-3 py-2">{money(j.total_price, j.currency)}</td>
                   <td className="px-3 py-2"><span className={`text-xs px-2 py-0.5 rounded-full ${chip(j.status)}`}>{j.status}</span></td>
+                  <td className="px-3 py-2 text-right"><JobPhotoUpload hostId={hostId} jobId={j.id} /></td>
                 </tr>
               ))}
             </tbody>
@@ -135,6 +136,38 @@ export function ServiceHostAccounting({ hostId }: { hostId: string }) {
         </section>
       )}
     </div>
+  );
+}
+
+/** Per-job photo upload — files land on that booking_service and show in the 사진 tab. */
+function JobPhotoUpload({ hostId, jobId }: { hostId: string; jobId: number }) {
+  const { t } = useTranslation();
+  const qc = useQueryClient();
+  const fileRef = useRef<HTMLInputElement>(null);
+  const upload = useMutation({
+    mutationFn: async (files: FileList) => {
+      for (const file of Array.from(files)) {
+        const fd = new FormData();
+        fd.append("image", file);
+        await apiJson(`/api/v1/service-hosts/${hostId}/jobs/${jobId}/photos`, { method: "POST", body: fd });
+      }
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["sh-photos", hostId] }),
+  });
+  return (
+    <>
+      <input
+        ref={fileRef} type="file" accept="image/*" multiple className="hidden"
+        onChange={(e) => { if (e.target.files?.length) upload.mutate(e.target.files); e.target.value = ""; }}
+      />
+      <button
+        type="button" disabled={upload.isPending} onClick={() => fileRef.current?.click()}
+        className="text-xs text-primary hover:underline inline-flex items-center gap-1 disabled:opacity-50"
+      >
+        <Upload className="w-3 h-3" />
+        {upload.isPending ? t("common.uploading", "업로드 중…") : t("service_host_photos.add", "사진 추가")}
+      </button>
+    </>
   );
 }
 

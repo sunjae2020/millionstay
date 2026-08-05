@@ -2424,7 +2424,8 @@
     "search_account_placeholder": "Tìm kiếm tài khoản…",
     "search_service_placeholder": "Tìm kiếm dịch vụ…",
     "section_admin": "Quản trị",
-    "name_required": "Vui lòng nhập tên."
+    "name_required": "Vui lòng nhập tên.",
+    "photo_upload_failed": "Đã lưu đối tác nhưng tải ảnh lên thất bại: "
   },
   "receipt": {
     "no_receipts": "Không tìm thấy hóa đơn nào",
@@ -5093,7 +5094,9 @@
   "service_host_photos": {
     "empty": "Chưa có ảnh công việc nào",
     "title": "Ảnh",
-    "upload": "Tải ảnh lên"
+    "upload": "Tải ảnh lên",
+    "add": "Thêm ảnh",
+    "new_hint": "Ảnh đã chọn sẽ được tải lên khi bạn lưu."
   },
   "service_host_cs": {
     "empty": "Không có yêu cầu hỗ trợ nào từ đối tác này",

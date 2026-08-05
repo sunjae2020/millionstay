@@ -2424,7 +2424,8 @@
     "search_account_placeholder": "アカウントを検索…",
     "search_service_placeholder": "サービスを検索…",
     "section_admin": "管理",
-    "name_required": "名前を入力してください。"
+    "name_required": "名前を入力してください。",
+    "photo_upload_failed": "パートナーは保存されましたが、写真のアップロードに失敗しました: "
   },
   "receipt": {
     "no_receipts": "領収書が見つかりません",
@@ -5093,7 +5094,9 @@
   "service_host_photos": {
     "empty": "ジョブ写真がありません",
     "title": "写真",
-    "upload": "写真をアップロード"
+    "upload": "写真をアップロード",
+    "add": "写真を追加",
+    "new_hint": "保存すると選択した写真もアップロードされます。"
   },
   "service_host_cs": {
     "empty": "このパートナーの問い合わせはありません",

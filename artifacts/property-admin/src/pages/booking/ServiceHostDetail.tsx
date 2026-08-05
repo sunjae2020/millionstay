@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useLocation, useParams } from "wouter";
 import { formatDateTime } from "@/lib/date";
 import { useForm, Controller } from "react-hook-form";
@@ -16,9 +16,10 @@ import {
   getListServiceHostsQueryKey, getGetServiceHostQueryKey,
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, Save } from "lucide-react";
+import { ArrowLeft, Save, Upload, Trash2 } from "lucide-react";
 import { LookupSelect } from "@/components/LookupSelect";
 import { AccountLookupSelect } from "@/components/AccountLookupSelect";
+import { apiJson } from "@/lib/apiFetch";
 
 const BASE = import.meta.env.BASE_URL;
 
@@ -69,18 +70,42 @@ export default function ServiceHostDetail() {
     });
   }, [host, reset]);
 
+  // Photos need a host id, which does not exist yet on the new-host screen. Files
+  // picked before the first save are held here and uploaded right after create.
+  const [pendingPhotos, setPendingPhotos] = useState<File[]>([]);
+  const pendingRef = useRef<HTMLInputElement>(null);
+
   // Save errors used to be swallowed, so a rejected write looked like "nothing
   // happened". Surface them next to the Save button instead.
   const [saveError, setSaveError] = useState<string | null>(null);
-  const onSaved = () => {
+  const finishSave = () => {
     setSaveError(null);
     qc.invalidateQueries({ queryKey: getListServiceHostsQueryKey({}) });
     setLocation("/booking/service-hosts");
   };
   const onSaveError = (e: any) => setSaveError(e?.message ?? t("common.save_failed", "저장에 실패했습니다."));
 
-  const createMutation = useCreateServiceHost({ mutation: { onSuccess: onSaved, onError: onSaveError } });
-  const updateMutation = useUpdateServiceHost({ mutation: { onSuccess: onSaved, onError: onSaveError } });
+  const onCreated = async (created: any) => {
+    const newId = created?.id;
+    if (newId && pendingPhotos.length) {
+      try {
+        for (const file of pendingPhotos) {
+          const fd = new FormData();
+          fd.append("image", file);
+          await apiJson(`/api/v1/service-hosts/${newId}/photos`, { method: "POST", body: fd });
+        }
+      } catch (e: any) {
+        // The host itself saved — say so rather than implying the whole save failed.
+        setSaveError(t("service_host.photo_upload_failed", "파트너는 저장됐지만 사진 업로드에 실패했습니다: ") + (e?.message ?? ""));
+        setLocation(`/booking/service-hosts/${newId}`);
+        return;
+      }
+    }
+    finishSave();
+  };
+
+  const createMutation = useCreateServiceHost({ mutation: { onSuccess: onCreated, onError: onSaveError } });
+  const updateMutation = useUpdateServiceHost({ mutation: { onSuccess: finishSave, onError: onSaveError } });
 
   const [tab, setTab] = useState("overview");
   const [specialties, setSpecialties] = useState<string[]>([]);
@@ -244,6 +269,38 @@ export default function ServiceHostDetail() {
           <h3 className="text-xs font-semibold text-primary uppercase tracking-wider border-b pb-2">{t("service_host.label_notes")}</h3>
           <Textarea {...register("description")} rows={4} placeholder={t("common.notes_placeholder")} />
         </div>
+
+        {/* On a new host there is no id to upload against yet — stage the files and
+            send them the moment the host is created. */}
+        {isNew && (
+          <div className="rounded-lg border bg-white p-6 space-y-3">
+            <h3 className="text-xs font-semibold text-primary uppercase tracking-wider border-b pb-2">{t("service_host_photos.title", "사진")}</h3>
+            <p className="text-xs text-muted-foreground">{t("service_host_photos.new_hint", "저장하면 선택한 사진이 함께 업로드됩니다.")}</p>
+            <input
+              ref={pendingRef} type="file" accept="image/*" multiple className="hidden"
+              onChange={(e) => { if (e.target.files?.length) setPendingPhotos((prev) => [...prev, ...Array.from(e.target.files!)]); e.target.value = ""; }}
+            />
+            <Button type="button" size="sm" variant="outline" onClick={() => pendingRef.current?.click()}>
+              <Upload className="w-3.5 h-3.5 mr-1" />{t("service_host_photos.upload", "사진 업로드")}
+            </Button>
+            {pendingPhotos.length > 0 && (
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                {pendingPhotos.map((f, i) => (
+                  <div key={`${f.name}-${i}`} className="relative group">
+                    <img src={URL.createObjectURL(f)} alt={f.name} className="w-full aspect-square object-cover rounded-lg border" />
+                    <button
+                      type="button" title={t("common.delete", "삭제")}
+                      onClick={() => setPendingPhotos((prev) => prev.filter((_, idx) => idx !== i))}
+                      className="absolute top-1.5 right-1.5 rounded-full bg-white/90 border p-1 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-50"
+                    >
+                      <Trash2 className="w-3.5 h-3.5 text-red-600" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
 
         <div className="rounded-lg border bg-white p-6 space-y-3">
           <h3 className="text-xs font-semibold text-primary uppercase tracking-wider border-b pb-2">{t("service_host.label_specialties", "Specialties (auto-dispatch)")}</h3>

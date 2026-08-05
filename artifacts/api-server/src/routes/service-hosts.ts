@@ -248,6 +248,42 @@ router.post("/v1/service-hosts/:id/photos", photoUpload.single("image"), async (
   } catch (err: any) { res.status(500).json({ error: err.message }); }
 });
 
+// POST /:id/jobs/:jobId/photos — attach a photo to ONE of this host's jobs, so
+// admins can file evidence on an existing job instead of only on the host.
+router.post("/v1/service-hosts/:id/jobs/:jobId/photos", photoUpload.single("image"), async (req, res): Promise<void> => {
+  try {
+    const hostId = Number(req.params.id);
+    const jobId = Number(req.params.jobId);
+    const [job] = await db.select({ id: bookingServicesTable.id }).from(bookingServicesTable)
+      .where(and(eq(bookingServicesTable.id, jobId), eq(bookingServicesTable.service_id, hostId))).limit(1);
+    if (!job) { res.status(404).json({ error: "Job not found for this service host" }); return; }
+
+    let url: string | null = typeof req.body?.url === "string" && req.body.url.trim() ? req.body.url.trim() : null;
+    let cloudinaryId: string | null = null;
+    let thumbnailUrl: string | null = null;
+    if (!url && req.file) {
+      if (!isCloudinaryConfigured()) { res.status(503).json({ error: "Image upload is not configured" }); return; }
+      const result = await uploadToCloudinary(req.file.buffer, { folder: cldFolder("jobs") });
+      url = result.secure_url;
+      cloudinaryId = result.public_id ?? null;
+      thumbnailUrl = result.secure_url.replace("/upload/", "/upload/c_fill,w_400,h_400/");
+    }
+    if (!url) { res.status(400).json({ error: "Provide an image file or a url." }); return; }
+
+    const [row] = await db.insert(bookingServicePhotosTable).values({
+      booking_service_id: jobId,
+      file_url: url,
+      thumbnail_url: thumbnailUrl,
+      cloudinary_id: cloudinaryId,
+      caption: typeof req.body?.caption === "string" && req.body.caption.trim() ? req.body.caption.trim() : null,
+      uploaded_by_type: "admin",
+      uploaded_by_id: (req as any).user?.id ?? null,
+    }).returning();
+    void logAction({ entityType: "service_host", entityId: hostId, action: "UPDATE", actorId: (req as any).user?.id ?? null, newValue: { job_id: jobId, photo_id: row!.id } });
+    res.status(201).json({ data: row });
+  } catch (err: any) { res.status(500).json({ error: err.message }); }
+});
+
 // DELETE /:id/photos/:photoId — host-owned photos only (job photos are evidence).
 router.delete("/v1/service-hosts/:id/photos/:photoId", async (req, res): Promise<void> => {
   try {

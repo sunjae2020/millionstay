@@ -2424,7 +2424,8 @@
     "search_account_placeholder": "계정 검색…",
     "search_service_placeholder": "서비스 검색…",
     "section_admin": "관리",
-    "name_required": "이름을 입력하세요."
+    "name_required": "이름을 입력하세요.",
+    "photo_upload_failed": "파트너는 저장됐지만 사진 업로드에 실패했습니다: "
   },
   "receipt": {
     "no_receipts": "영수증이 없습니다",
@@ -5093,7 +5094,9 @@
   "service_host_photos": {
     "empty": "업로드된 잡 사진이 없습니다",
     "title": "사진",
-    "upload": "사진 업로드"
+    "upload": "사진 업로드",
+    "add": "사진 추가",
+    "new_hint": "저장하면 선택한 사진이 함께 업로드됩니다."
   },
   "service_host_cs": {
     "empty": "이 파트너의 문의 티켓이 없습니다",

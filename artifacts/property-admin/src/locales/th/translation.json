@@ -2424,7 +2424,8 @@
     "search_account_placeholder": "ค้นหาบัญชี…",
     "search_service_placeholder": "ค้นหาบริการ…",
     "section_admin": "ผู้ดูแล",
-    "name_required": "กรุณากรอกชื่อ"
+    "name_required": "กรุณากรอกชื่อ",
+    "photo_upload_failed": "บันทึกพาร์ทเนอร์แล้ว แต่อัปโหลดรูปภาพไม่สำเร็จ: "
   },
   "receipt": {
     "no_receipts": "ไม่พบใบเสร็จ",
@@ -5093,7 +5094,9 @@
   "service_host_photos": {
     "empty": "ยังไม่มีรูปงาน",
     "title": "รูปภาพ",
-    "upload": "อัปโหลดรูปภาพ"
+    "upload": "อัปโหลดรูปภาพ",
+    "add": "เพิ่มรูปภาพ",
+    "new_hint": "รูปภาพที่เลือกจะถูกอัปโหลดเมื่อคุณบันทึก"
   },
   "service_host_cs": {
     "empty": "ไม่มีตั๋วจากพาร์ทเนอร์นี้",

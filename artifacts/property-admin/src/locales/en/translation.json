@@ -2424,7 +2424,8 @@
     "search_account_placeholder": "Search accounts…",
     "search_service_placeholder": "Search services…",
     "section_admin": "Admin",
-    "name_required": "Name is required."
+    "name_required": "Name is required.",
+    "photo_upload_failed": "The partner was saved, but the photo upload failed: "
   },
   "receipt": {
     "no_receipts": "No receipts found",
@@ -5093,7 +5094,9 @@
   "service_host_photos": {
     "empty": "No job photos yet",
     "title": "Photos",
-    "upload": "Upload photos"
+    "upload": "Upload photos",
+    "add": "Add photos",
+    "new_hint": "Selected photos are uploaded when you save."
   },
   "service_host_cs": {
     "empty": "No support tickets from this partner",
