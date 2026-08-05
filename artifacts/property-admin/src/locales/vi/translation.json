@@ -1853,7 +1853,8 @@
     "placeholder_floor_number": "vd: 3",
     "placeholder_floor_area": "vd: 25.5",
     "placeholder_landlord_account": "Mã tài khoản",
-    "tab_documents": "Tài liệu"
+    "tab_documents": "Tài liệu",
+    "tab_defects": "Lịch sử lỗi"
   },
   "space_option": {
     "new": "Tùy chọn không gian mới",
@@ -6102,5 +6103,34 @@
     "create_entry_hint": "Dùng cho phí ngân hàng, lãi hoặc khoản chuyển chưa ghi nhận.",
     "counter_account": "Chọn tài khoản",
     "btn_create_entry": "Ghi sổ và đối chiếu"
+  },
+  "defect": {
+    "title": "Lịch sử lỗi",
+    "desc": "Các lỗi được ghi nhận cho căn hộ này, tiến độ xử lý và nhà thầu phụ trách.",
+    "btn_add": "Thêm lỗi",
+    "btn_add_photo": "Thêm ảnh",
+    "empty": "Chưa có lỗi nào được ghi nhận",
+    "dialog_add": "Thêm lỗi",
+    "dialog_edit": "Sửa lỗi",
+    "col_owner_name": "Chủ sở hữu",
+    "col_unit_no": "Số căn",
+    "col_type": "Loại",
+    "col_category": "Phân loại",
+    "col_flags": "Hạng mục lỗi",
+    "col_detail_item": "Hạng mục chi tiết",
+    "col_description": "Nội dung và tiến độ",
+    "col_progress_status": "Trạng thái",
+    "col_vendor_name": "Nhà thầu",
+    "col_photos": "Ảnh",
+    "col_registered_on": "Ngày ghi nhận",
+    "flag_furniture_install": "Lắp đặt nội thất",
+    "flag_registration": "Đăng ký",
+    "flag_outdoor_unit_socket": "Ổ cắm cục nóng",
+    "flag_toilet_fixing_issue": "Bồn cầu lỏng chân",
+    "placeholder_category": "VD: Lỗi thi công",
+    "placeholder_detail_item": "VD: Tủ dưới bồn rửa bị cong",
+    "placeholder_description": "Ghi nội dung phát hiện, việc đã xử lý và phần còn lại.",
+    "placeholder_vendor_name": "Đơn vị sửa chữa",
+    "photo_hint": "Có thể đính kèm ảnh từ danh sách sau khi lưu."
   }
 }

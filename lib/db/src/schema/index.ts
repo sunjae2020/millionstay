@@ -28,6 +28,7 @@ export * from "./product_groups";
 export * from "./product_types";
 export * from "./accommodation_catalog";
 export * from "./space_images";
+export * from "./space_defects";
 export * from "./users";
 export * from "./promotions";
 export * from "./guest_users";

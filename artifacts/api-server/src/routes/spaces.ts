@@ -1,6 +1,8 @@
 import { Router, type IRouter } from "express";
-import { eq, ilike, and, inArray, gte, lte, isNull, SQL } from "drizzle-orm";
-import { db, spacesTable, propertiesTable, spacePoliciesTable, spaceOptionMapsTable, spaceBlockedDatesTable, spaceAvailabilityTable, spaceServiceCatalogTable, serviceCatalogTable, accountsTable } from "@workspace/db";
+import multer from "multer";
+import { eq, ilike, and, inArray, gte, lte, isNull, desc, SQL } from "drizzle-orm";
+import { db, spacesTable, propertiesTable, spacePoliciesTable, spaceOptionMapsTable, spaceBlockedDatesTable, spaceAvailabilityTable, spaceServiceCatalogTable, serviceCatalogTable, accountsTable, spaceDefectsTable } from "@workspace/db";
+import { isCloudinaryConfigured, uploadToCloudinary, cldFolder } from "../utils/cloudinary";
 import { logAction } from "../utils/auditLog";
 import { deletedFilter, makeBulkDelete, makeBulkRestore } from "../lib/softDelete";
 import {
@@ -476,6 +478,174 @@ router.delete("/v1/spaces/:id/services/:mapId", async (req, res): Promise<void> 
     console.error(err);
     res.status(500).json({ error: "Failed to remove service from space" });
   }
+});
+
+/* ── 하자 이력 (space_defects) ───────────────────────────────────────
+   Per-unit defect history. 소유자명 / 호수 / TYPE are derived from the space
+   (and its landlord account) on read, so the ledger can't drift from the unit
+   master; only the defect-specific fields are stored. */
+
+const defectUpload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 15 * 1024 * 1024 } });
+
+/** The read-only identity strip shown above the defect table. */
+async function getSpaceDefectContext(spaceId: number) {
+  const [space] = await db.select().from(spacesTable).where(eq(spacesTable.id, spaceId));
+  if (!space) return null;
+  const [owner] = space.landlord_account_id
+    ? await db.select({ id: accountsTable.id, name: accountsTable.name })
+        .from(accountsTable).where(eq(accountsTable.id, space.landlord_account_id))
+    : [null];
+  const [parent] = space.parent_space_id
+    ? await db.select({ name: spacesTable.name }).from(spacesTable).where(eq(spacesTable.id, space.parent_space_id))
+    : [null];
+  return {
+    space_id: space.id,
+    owner_account_id: owner?.id ?? null,
+    owner_name: owner?.name ?? null,
+    unit_name: space.name,
+    // Metheim models unit *types* as parent spaces, so the parent name is the
+    // truest TYPE label; fall back to the space's own type fields.
+    type_label: parent?.name ?? space.custom_type_name ?? space.space_type ?? null,
+  };
+}
+
+function defectPhotoUrls(value: unknown): string[] {
+  return Array.isArray(value) ? value.filter((u): u is string => typeof u === "string") : [];
+}
+
+/* GET /v1/spaces/:id/defects — defect rows + the derived 소유자명/호수/TYPE strip */
+router.get("/v1/spaces/:id/defects", async (req, res): Promise<void> => {
+  const spaceId = Number(req.params.id);
+  if (!spaceId) { res.status(400).json({ error: "Invalid space id" }); return; }
+
+  const context = await getSpaceDefectContext(spaceId);
+  if (!context) { res.status(404).json({ error: "Space not found" }); return; }
+
+  const rows = await db.select().from(spaceDefectsTable)
+    .where(and(eq(spaceDefectsTable.space_id, spaceId), eq(spaceDefectsTable.status, "Active")))
+    .orderBy(desc(spaceDefectsTable.id));
+
+  res.json({ success: true, data: rows, context, meta: { total: rows.length } });
+});
+
+/* POST /v1/spaces/:id/defects — record a defect */
+router.post("/v1/spaces/:id/defects", async (req, res): Promise<void> => {
+  const spaceId = Number(req.params.id);
+  if (!spaceId) { res.status(400).json({ error: "Invalid space id" }); return; }
+
+  const b = req.body ?? {};
+  if (!b.defect_category && !b.detail_item) {
+    res.status(400).json({ error: "defect_category or detail_item is required" });
+    return;
+  }
+
+  const [row] = await db.insert(spaceDefectsTable).values({
+    space_id: spaceId,
+    defect_category: b.defect_category ?? "",
+    has_furniture_install: Boolean(b.has_furniture_install),
+    has_registration: Boolean(b.has_registration),
+    has_outdoor_unit_socket: Boolean(b.has_outdoor_unit_socket),
+    has_toilet_fixing_issue: Boolean(b.has_toilet_fixing_issue),
+    detail_item: b.detail_item ?? "",
+    description: b.description ?? "",
+    progress_status: b.progress_status || "접수",
+    vendor_name: b.vendor_name ?? "",
+    photo_urls: defectPhotoUrls(b.photo_urls),
+    status: "Active",
+  }).returning();
+
+  await logAction({ entityType: "space", entityId: spaceId, action: "ADD_DEFECT", newValue: { defect_id: row?.id } });
+  res.status(201).json({ success: true, data: row });
+});
+
+/* PATCH /v1/spaces/:id/defects/:defectId */
+router.patch("/v1/spaces/:id/defects/:defectId", async (req, res): Promise<void> => {
+  const spaceId = Number(req.params.id);
+  const defectId = Number(req.params.defectId);
+  if (!spaceId || !defectId) { res.status(400).json({ error: "Invalid ids" }); return; }
+
+  const b = req.body ?? {};
+  const [row] = await db.update(spaceDefectsTable).set({
+    ...(b.defect_category !== undefined && { defect_category: b.defect_category }),
+    ...(b.has_furniture_install !== undefined && { has_furniture_install: Boolean(b.has_furniture_install) }),
+    ...(b.has_registration !== undefined && { has_registration: Boolean(b.has_registration) }),
+    ...(b.has_outdoor_unit_socket !== undefined && { has_outdoor_unit_socket: Boolean(b.has_outdoor_unit_socket) }),
+    ...(b.has_toilet_fixing_issue !== undefined && { has_toilet_fixing_issue: Boolean(b.has_toilet_fixing_issue) }),
+    ...(b.detail_item !== undefined && { detail_item: b.detail_item }),
+    ...(b.description !== undefined && { description: b.description }),
+    ...(b.progress_status !== undefined && { progress_status: b.progress_status }),
+    ...(b.vendor_name !== undefined && { vendor_name: b.vendor_name }),
+    ...(b.photo_urls !== undefined && { photo_urls: defectPhotoUrls(b.photo_urls) }),
+    updated_at: new Date(),
+  }).where(and(eq(spaceDefectsTable.id, defectId), eq(spaceDefectsTable.space_id, spaceId))).returning();
+
+  if (!row) { res.status(404).json({ error: "Defect not found" }); return; }
+  res.json({ success: true, data: row });
+});
+
+/* DELETE /v1/spaces/:id/defects/:defectId — soft delete */
+router.delete("/v1/spaces/:id/defects/:defectId", async (req, res): Promise<void> => {
+  const spaceId = Number(req.params.id);
+  const defectId = Number(req.params.defectId);
+  if (!spaceId || !defectId) { res.status(400).json({ error: "Invalid ids" }); return; }
+
+  const [row] = await db.update(spaceDefectsTable)
+    .set({ status: "Deleted", updated_at: new Date() })
+    .where(and(eq(spaceDefectsTable.id, defectId), eq(spaceDefectsTable.space_id, spaceId)))
+    .returning();
+  if (!row) { res.status(404).json({ error: "Defect not found" }); return; }
+
+  await logAction({ entityType: "space", entityId: spaceId, action: "REMOVE_DEFECT", newValue: { defect_id: defectId } });
+  res.json({ success: true });
+});
+
+/* POST /v1/spaces/:id/defects/:defectId/photos — multipart `image`, appended to photo_urls */
+router.post("/v1/spaces/:id/defects/:defectId/photos", defectUpload.single("image"), async (req, res): Promise<void> => {
+  const spaceId = Number(req.params.id);
+  const defectId = Number(req.params.defectId);
+  if (!spaceId || !defectId) { res.status(400).json({ error: "Invalid ids" }); return; }
+
+  try {
+    const [existing] = await db.select().from(spaceDefectsTable)
+      .where(and(eq(spaceDefectsTable.id, defectId), eq(spaceDefectsTable.space_id, spaceId)));
+    if (!existing) { res.status(404).json({ error: "Defect not found" }); return; }
+
+    let url: string | null = typeof req.body?.url === "string" ? req.body.url : null;
+    if (!url && req.file) {
+      if (!isCloudinaryConfigured()) { res.status(503).json({ error: "Image upload not configured" }); return; }
+      const result = await uploadToCloudinary(req.file.buffer, { folder: cldFolder("defects") });
+      url = result.secure_url;
+    }
+    if (!url) { res.status(400).json({ error: "Provide an image file or a url" }); return; }
+
+    const [row] = await db.update(spaceDefectsTable)
+      .set({ photo_urls: [...defectPhotoUrls(existing.photo_urls), url], updated_at: new Date() })
+      .where(eq(spaceDefectsTable.id, defectId))
+      .returning();
+    res.status(201).json({ success: true, data: row, url });
+  } catch (err) {
+    console.error("[spaces] defect photo upload failed:", err);
+    res.status(500).json({ error: "Image upload failed" });
+  }
+});
+
+/* DELETE /v1/spaces/:id/defects/:defectId/photos — body { url }, detaches one photo.
+   The Cloudinary asset is left in place (defect evidence is kept for audit). */
+router.delete("/v1/spaces/:id/defects/:defectId/photos", async (req, res): Promise<void> => {
+  const spaceId = Number(req.params.id);
+  const defectId = Number(req.params.defectId);
+  const url = String(req.body?.url ?? "");
+  if (!spaceId || !defectId || !url) { res.status(400).json({ error: "Invalid ids or url" }); return; }
+
+  const [existing] = await db.select().from(spaceDefectsTable)
+    .where(and(eq(spaceDefectsTable.id, defectId), eq(spaceDefectsTable.space_id, spaceId)));
+  if (!existing) { res.status(404).json({ error: "Defect not found" }); return; }
+
+  const [row] = await db.update(spaceDefectsTable)
+    .set({ photo_urls: defectPhotoUrls(existing.photo_urls).filter((u) => u !== url), updated_at: new Date() })
+    .where(eq(spaceDefectsTable.id, defectId))
+    .returning();
+  res.json({ success: true, data: row });
 });
 
 export default router;

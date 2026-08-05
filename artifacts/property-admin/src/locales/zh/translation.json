@@ -1853,7 +1853,8 @@
     "placeholder_floor_number": "例如 3",
     "placeholder_floor_area": "例如 25.5",
     "placeholder_landlord_account": "账户 ID",
-    "tab_documents": "文件"
+    "tab_documents": "文件",
+    "tab_defects": "缺陷记录"
   },
   "space_option": {
     "new": "新建空间选项",
@@ -6102,5 +6103,34 @@
     "create_entry_hint": "用于银行手续费、利息或未记录的转账。",
     "counter_account": "选择科目",
     "btn_create_entry": "登记并对账"
+  },
+  "defect": {
+    "title": "缺陷记录",
+    "desc": "该单元登记的缺陷、处理进度以及负责的施工单位。",
+    "btn_add": "添加缺陷",
+    "btn_add_photo": "添加照片",
+    "empty": "暂无缺陷记录",
+    "dialog_add": "添加缺陷",
+    "dialog_edit": "编辑缺陷",
+    "col_owner_name": "业主",
+    "col_unit_no": "房号",
+    "col_type": "类型",
+    "col_category": "区分",
+    "col_flags": "缺陷项目",
+    "col_detail_item": "细项",
+    "col_description": "详细内容及经过",
+    "col_progress_status": "进度状态",
+    "col_vendor_name": "负责单位",
+    "col_photos": "照片",
+    "col_registered_on": "登记日期",
+    "flag_furniture_install": "家具安装",
+    "flag_registration": "登记",
+    "flag_outdoor_unit_socket": "室外机插座",
+    "flag_toilet_fixing_issue": "马桶固定不良",
+    "placeholder_category": "例：施工缺陷",
+    "placeholder_detail_item": "例：水槽下柜体变形",
+    "placeholder_description": "记录发现的问题、已处理事项与剩余事项。",
+    "placeholder_vendor_name": "负责维修的单位",
+    "photo_hint": "保存后可在列表中添加照片。"
   }
 }

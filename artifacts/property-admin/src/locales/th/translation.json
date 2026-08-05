@@ -1853,7 +1853,8 @@
     "placeholder_floor_number": "เช่น 3",
     "placeholder_floor_area": "เช่น 25.5",
     "placeholder_landlord_account": "รหัสบัญชี",
-    "tab_documents": "เอกสาร"
+    "tab_documents": "เอกสาร",
+    "tab_defects": "ประวัติข้อบกพร่อง"
   },
   "space_option": {
     "new": "ตัวเลือกพื้นที่ใหม่",
@@ -6102,5 +6103,34 @@
     "create_entry_hint": "สำหรับค่าธรรมเนียมธนาคาร ดอกเบี้ย หรือการโอนที่ยังไม่ได้บันทึก",
     "counter_account": "เลือกผังบัญชี",
     "btn_create_entry": "บันทึกและกระทบยอด"
+  },
+  "defect": {
+    "title": "ประวัติข้อบกพร่อง",
+    "desc": "ข้อบกพร่องที่แจ้งไว้สำหรับห้องนี้ ความคืบหน้า และผู้รับเหมาที่ดูแล",
+    "btn_add": "เพิ่มข้อบกพร่อง",
+    "btn_add_photo": "เพิ่มรูปภาพ",
+    "empty": "ยังไม่มีข้อบกพร่องที่บันทึกไว้",
+    "dialog_add": "เพิ่มข้อบกพร่อง",
+    "dialog_edit": "แก้ไขข้อบกพร่อง",
+    "col_owner_name": "เจ้าของ",
+    "col_unit_no": "เลขที่ห้อง",
+    "col_type": "ประเภท",
+    "col_category": "หมวด",
+    "col_flags": "รายการข้อบกพร่อง",
+    "col_detail_item": "รายการย่อย",
+    "col_description": "รายละเอียดและความคืบหน้า",
+    "col_progress_status": "สถานะ",
+    "col_vendor_name": "ผู้รับเหมา",
+    "col_photos": "รูปภาพ",
+    "col_registered_on": "วันที่บันทึก",
+    "flag_furniture_install": "ติดตั้งเฟอร์นิเจอร์",
+    "flag_registration": "การลงทะเบียน",
+    "flag_outdoor_unit_socket": "เต้ารับคอยล์ร้อน",
+    "flag_toilet_fixing_issue": "สุขภัณฑ์ยึดไม่แน่น",
+    "placeholder_category": "เช่น ข้อบกพร่องจากงานก่อสร้าง",
+    "placeholder_detail_item": "เช่น ตู้ใต้ซิงก์บิดงอ",
+    "placeholder_description": "สิ่งที่พบ สิ่งที่ดำเนินการแล้ว และสิ่งที่เหลืออยู่",
+    "placeholder_vendor_name": "บริษัทที่รับผิดชอบการซ่อม",
+    "photo_hint": "แนบรูปภาพได้จากรายการหลังจากบันทึกแล้ว"
   }
 }

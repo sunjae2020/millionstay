@@ -29,7 +29,9 @@ export async function logAction({
     | "REMOVE_SERVICE"
     | "SCHEDULE_ADD"
     | "SCHEDULE_UPDATE"
-    | "SCHEDULE_DELETE";
+    | "SCHEDULE_DELETE"
+    | "ADD_DEFECT"
+    | "REMOVE_DEFECT";
   actorId?: number | null;
   actorEmail?: string | null;
   oldValue?: object | null;

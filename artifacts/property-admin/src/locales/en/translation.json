@@ -1853,7 +1853,8 @@
     "placeholder_floor_number": "e.g. 3",
     "placeholder_floor_area": "e.g. 25.5",
     "placeholder_landlord_account": "Account ID",
-    "tab_documents": "Documents"
+    "tab_documents": "Documents",
+    "tab_defects": "Defect history"
   },
   "space_option": {
     "new": "New Space Option",
@@ -6102,5 +6103,34 @@
     "create_entry_hint": "For bank fees, interest or transfers nobody recorded.",
     "counter_account": "Select an account",
     "btn_create_entry": "Book and reconcile"
+  },
+  "defect": {
+    "title": "Defect history",
+    "desc": "Defects reported against this unit, their progress and the contractor handling them.",
+    "btn_add": "Add defect",
+    "btn_add_photo": "Add photo",
+    "empty": "No defects recorded",
+    "dialog_add": "Add defect",
+    "dialog_edit": "Edit defect",
+    "col_owner_name": "Owner",
+    "col_unit_no": "Unit no.",
+    "col_type": "Type",
+    "col_category": "Category",
+    "col_flags": "Defect items",
+    "col_detail_item": "Detail item",
+    "col_description": "Details & progress",
+    "col_progress_status": "Progress",
+    "col_vendor_name": "Contractor",
+    "col_photos": "Photos",
+    "col_registered_on": "Registered",
+    "flag_furniture_install": "Furniture install",
+    "flag_registration": "Registration",
+    "flag_outdoor_unit_socket": "Outdoor unit socket",
+    "flag_toilet_fixing_issue": "Loose toilet fixing",
+    "placeholder_category": "e.g. Construction defect",
+    "placeholder_detail_item": "e.g. Sink base panel warped",
+    "placeholder_description": "What was found, what has been done, what is left.",
+    "placeholder_vendor_name": "Company handling the repair",
+    "photo_hint": "Photos can be attached from the list once the defect is saved."
   }
 }

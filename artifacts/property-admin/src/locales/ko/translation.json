@@ -1853,7 +1853,8 @@
     "placeholder_floor_number": "예: 3",
     "placeholder_floor_area": "예: 25.5",
     "placeholder_landlord_account": "계정 ID",
-    "tab_documents": "서류"
+    "tab_documents": "서류",
+    "tab_defects": "하자 이력"
   },
   "space_option": {
     "new": "새 공간 옵션",
@@ -6102,5 +6103,34 @@
     "create_entry_hint": "은행 수수료·이자, 기록되지 않은 이체에 사용합니다.",
     "counter_account": "계정과목 선택",
     "btn_create_entry": "기표 후 대사"
+  },
+  "defect": {
+    "title": "하자 이력",
+    "desc": "이 세대에 접수된 하자와 진행 경과, 담당 업체를 관리합니다.",
+    "btn_add": "하자 추가",
+    "btn_add_photo": "사진 추가",
+    "empty": "등록된 하자가 없습니다",
+    "dialog_add": "하자 추가",
+    "dialog_edit": "하자 수정",
+    "col_owner_name": "소유자명",
+    "col_unit_no": "호수",
+    "col_type": "TYPE",
+    "col_category": "구분",
+    "col_flags": "하자 항목",
+    "col_detail_item": "세부항목",
+    "col_description": "상세 내용 및 경과",
+    "col_progress_status": "진행상태",
+    "col_vendor_name": "담당업체",
+    "col_photos": "사진",
+    "col_registered_on": "등록일",
+    "flag_furniture_install": "가구설치",
+    "flag_registration": "등록",
+    "flag_outdoor_unit_socket": "실외기소켓",
+    "flag_toilet_fixing_issue": "변기고정불량",
+    "placeholder_category": "예: 시공하자",
+    "placeholder_detail_item": "예: 싱크대 하부장 뒤틀림",
+    "placeholder_description": "확인된 내용과 조치 경과, 남은 사항을 적습니다.",
+    "placeholder_vendor_name": "보수를 맡은 업체",
+    "photo_hint": "사진은 저장한 뒤 목록에서 첨부할 수 있습니다."
   }
 }

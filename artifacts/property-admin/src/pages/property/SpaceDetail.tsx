@@ -48,6 +48,7 @@ import { SpacePhotoManager } from "@/components/SpacePhotoManager";
 import { ChannelSyncPanel } from "@/components/ChannelSyncPanel";
 import { ContentTranslationsPanel } from "@/components/ContentTranslationsPanel";
 import EntityDocuments from "@/components/EntityDocuments";
+import { SpaceDefectsPanel } from "@/components/SpaceDefectsPanel";
 import { Link } from "wouter";
 import { cn } from "@/lib/utils";
 import { format, parseISO, startOfMonth, endOfMonth, addMonths, getDay } from "date-fns";
@@ -659,6 +660,11 @@ export default function SpaceDetail() {
             {!isNew && (
               <TabsTrigger value="documents" className="gap-1.5">
                 <FileText className="h-3.5 w-3.5" /> {t("space.tab_documents", "서류")}
+              </TabsTrigger>
+            )}
+            {!isNew && (
+              <TabsTrigger value="defects" className="gap-1.5">
+                <AlertTriangle className="h-3.5 w-3.5" /> {t("space.tab_defects")}
               </TabsTrigger>
             )}
             {!isNew && (
@@ -1460,6 +1466,13 @@ export default function SpaceDetail() {
           {!isNew && id && (
             <TabsContent value="documents">
               <EntityDocuments entityType="space" entityId={id} defaultDocType="property_document" />
+            </TabsContent>
+          )}
+
+          {/* 하자 이력 — the unit's defect register (구분·유형 플래그·경과·담당업체·사진). */}
+          {!isNew && id && (
+            <TabsContent value="defects">
+              <SpaceDefectsPanel spaceId={id} />
             </TabsContent>
           )}
 

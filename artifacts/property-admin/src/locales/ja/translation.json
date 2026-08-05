@@ -1853,7 +1853,8 @@
     "placeholder_floor_number": "例: 3",
     "placeholder_floor_area": "例: 25.5",
     "placeholder_landlord_account": "アカウントID",
-    "tab_documents": "書類"
+    "tab_documents": "書類",
+    "tab_defects": "不具合履歴"
   },
   "space_option": {
     "new": "新規スペースオプション",
@@ -6102,5 +6103,34 @@
     "create_entry_hint": "銀行手数料・利息、記録されていない振替に使用します。",
     "counter_account": "勘定科目を選択",
     "btn_create_entry": "計上して照合"
+  },
+  "defect": {
+    "title": "不具合履歴",
+    "desc": "この住戸で受け付けた不具合と進捗、担当業者を管理します。",
+    "btn_add": "不具合を追加",
+    "btn_add_photo": "写真を追加",
+    "empty": "登録された不具合はありません",
+    "dialog_add": "不具合を追加",
+    "dialog_edit": "不具合を編集",
+    "col_owner_name": "所有者名",
+    "col_unit_no": "号室",
+    "col_type": "タイプ",
+    "col_category": "区分",
+    "col_flags": "不具合項目",
+    "col_detail_item": "詳細項目",
+    "col_description": "内容および経過",
+    "col_progress_status": "進捗状況",
+    "col_vendor_name": "担当業者",
+    "col_photos": "写真",
+    "col_registered_on": "登録日",
+    "flag_furniture_install": "家具設置",
+    "flag_registration": "登録",
+    "flag_outdoor_unit_socket": "室外機ソケット",
+    "flag_toilet_fixing_issue": "便器固定不良",
+    "placeholder_category": "例: 施工不良",
+    "placeholder_detail_item": "例: シンク下収納のゆがみ",
+    "placeholder_description": "確認内容・対応経過・残課題を記入します。",
+    "placeholder_vendor_name": "補修を担当する業者",
+    "photo_hint": "写真は保存後に一覧から添付できます。"
   }
 }
