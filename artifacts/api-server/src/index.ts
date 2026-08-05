@@ -15,6 +15,7 @@ import { generateRentCharges } from "./lib/homestay/monthlyBilling";
 import { generateRecurringInvoices } from "./lib/billing/recurringInvoices";
 import { generateLeaseRentInvoices } from "./lib/billing/leaseRentInvoices";
 import { checkWorkOrderSla } from "./lib/dispatch/workOrderDispatch";
+import { runCampaignSends } from "./lib/marketing/worker";
 
 const rawPort = process.env["PORT"];
 
@@ -237,6 +238,17 @@ cron.schedule(
 // Work-order SLA watchdog (Phase 3): every 10 minutes, flag dispatched work
 // orders the partner has not acknowledged past their SLA deadline as breached and
 // escalate to admin. Idempotent (only touches sla_status='pending_ack' rows).
+// Marketing campaign sends — every 5 minutes. The worker self-gates on
+// MARKETING_ENABLED (off by default, so a new instance never starts mailing by
+// surprise) and enforces each campaign's send window itself, which is why this
+// registers a plain interval rather than a business-hours schedule: a recipient
+// reached outside the window is deferred, not dropped.
+cron.schedule("*/5 * * * *", () => {
+  runCampaignSends()
+    .then((r) => { if (r.enabled && (r.sent || r.failed || r.deferred)) logger.info({ ...r }, "Cron marketing campaign sends"); })
+    .catch((err) => logger.error({ err }, "Cron marketing campaign sends failed"));
+});
+
 cron.schedule("*/10 * * * *", () => {
   checkWorkOrderSla()
     .then((r) => { if (r.breached) logger.warn({ ...r }, "Cron work-order SLA breaches"); })
