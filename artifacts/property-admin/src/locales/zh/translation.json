@@ -643,7 +643,14 @@
     "section_emergency": "紧急联系人",
     "label_emergency_name": "姓名",
     "label_emergency_phone": "联系电话",
-    "label_emergency_email": "邮箱"
+    "label_emergency_email": "邮箱",
+    "link_account": "关联账户",
+    "pick_account": "选择账户",
+    "account_link_failed": "无法关联账户",
+    "unlink_account": "取消关联",
+    "unlink_account_confirm": "要取消与该账户的关联吗？两条记录都会保留。",
+    "empty_accounts": "该联系人尚未关联任何账户",
+    "accounts_save_first": "请先保存联系人，然后再关联账户"
   },
   "account": {
     "new": "新建账户",
@@ -802,7 +809,17 @@
     "type_homestay_host": "寄宿家庭",
     "country_other": "其他（手动输入）",
     "postcode_search": "查找邮编",
-    "postcode_search_failed": "无法打开地址搜索"
+    "postcode_search_failed": "无法打开地址搜索",
+    "add_contact": "添加联系人",
+    "role_member": "负责人",
+    "contact_mode_new": "新建联系人",
+    "contact_mode_existing": "现有联系人",
+    "contact_pick_existing": "选择联系人",
+    "contact_role_label": "角色名称",
+    "contact_role_placeholder": "例如：财务负责人、现场主管",
+    "contact_link_failed": "无法关联联系人",
+    "unlink_contact": "取消关联",
+    "unlink_contact_confirm": "要将此联系人从该账户取消关联吗？联系人记录仍会保留。"
   },
   "lead": {
     "new": "新建线索",

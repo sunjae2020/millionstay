@@ -643,7 +643,14 @@
     "section_emergency": "Emergency contact",
     "label_emergency_name": "Name",
     "label_emergency_phone": "Phone",
-    "label_emergency_email": "Email"
+    "label_emergency_email": "Email",
+    "link_account": "Link account",
+    "pick_account": "Choose an account",
+    "account_link_failed": "The account could not be linked",
+    "unlink_account": "Unlink",
+    "unlink_account_confirm": "Unlink this account from the contact? Both records are kept.",
+    "empty_accounts": "This contact is not linked to any account",
+    "accounts_save_first": "Save the contact first, then link accounts"
   },
   "account": {
     "new": "New Account",
@@ -802,7 +809,17 @@
     "type_homestay_host": "Homestay Host",
     "country_other": "Other (type it in)",
     "postcode_search": "Find postcode",
-    "postcode_search_failed": "The address search could not be opened"
+    "postcode_search_failed": "The address search could not be opened",
+    "add_contact": "Add contact",
+    "role_member": "Member",
+    "contact_mode_new": "New contact",
+    "contact_mode_existing": "Existing contact",
+    "contact_pick_existing": "Choose a contact",
+    "contact_role_label": "Role label",
+    "contact_role_placeholder": "e.g. Accounts, Site manager",
+    "contact_link_failed": "The contact could not be linked",
+    "unlink_contact": "Unlink",
+    "unlink_contact_confirm": "Unlink this contact from the account? The contact record is kept."
   },
   "lead": {
     "new": "New Lead",

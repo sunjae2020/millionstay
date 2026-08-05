@@ -8,6 +8,7 @@ export * from "./commissions";
 export * from "./payment_info";
 export * from "./contacts";
 export * from "./accounts";
+export * from "./account_contacts";
 export * from "./tasks";
 export * from "./leads";
 export * from "./service_hosts";

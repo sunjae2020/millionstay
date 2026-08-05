@@ -643,7 +643,14 @@
     "section_emergency": "緊急連絡先",
     "label_emergency_name": "氏名",
     "label_emergency_phone": "連絡先",
-    "label_emergency_email": "メールアドレス"
+    "label_emergency_email": "メールアドレス",
+    "link_account": "アカウントをリンク",
+    "pick_account": "アカウントを選択",
+    "account_link_failed": "アカウントをリンクできませんでした",
+    "unlink_account": "リンク解除",
+    "unlink_account_confirm": "このアカウントとのリンクを解除しますか？どちらの記録も削除されません。",
+    "empty_accounts": "リンクされているアカウントはありません",
+    "accounts_save_first": "先に連絡先を保存してからアカウントをリンクしてください"
   },
   "account": {
     "new": "新規アカウント",
@@ -802,7 +809,17 @@
     "type_homestay_host": "ホームステイホスト",
     "country_other": "その他（直接入力）",
     "postcode_search": "郵便番号検索",
-    "postcode_search_failed": "住所検索を開けませんでした"
+    "postcode_search_failed": "住所検索を開けませんでした",
+    "add_contact": "連絡先を追加",
+    "role_member": "担当者",
+    "contact_mode_new": "新規連絡先",
+    "contact_mode_existing": "既存の連絡先",
+    "contact_pick_existing": "連絡先を選択",
+    "contact_role_label": "役割名",
+    "contact_role_placeholder": "例: 経理担当、現場責任者",
+    "contact_link_failed": "連絡先をリンクできませんでした",
+    "unlink_contact": "リンク解除",
+    "unlink_contact_confirm": "この連絡先をアカウントからリンク解除しますか？連絡先自体は削除されません。"
   },
   "lead": {
     "new": "新規リード",

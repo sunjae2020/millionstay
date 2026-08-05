@@ -1,7 +1,7 @@
 import { Router, type IRouter } from "express";
 import multer from "multer";
 import { eq, ilike, and, or, isNull, inArray, desc, SQL } from "drizzle-orm";
-import { db, contactsTable, documentsTable } from "@workspace/db";
+import { db, contactsTable, documentsTable, accountsTable, accountContactsTable } from "@workspace/db";
 import { deletedFilter, makeBulkDelete, makeBulkRestore } from "../lib/softDelete";
 import {
   isCloudinaryConfigured,
@@ -358,6 +358,113 @@ router.delete("/v1/contacts/:id/documents/:docId", async (req, res): Promise<voi
   await db.update(documentsTable).set({ deleted_at: new Date() }).where(eq(documentsTable.id, doc.id));
   await deleteFromCloudinary(doc.cloudinary_public_id);
   res.status(204).end();
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Accounts a contact belongs to (the 계정 tab, mirror of the account's 연락처 tab)
+//
+// Two sources, same as the account side: the primary/secondary slots on the
+// account row, plus the account_contacts links. `link` says how to unlink.
+// ─────────────────────────────────────────────────────────────────────────────
+
+async function loadContactAccounts(contactId: number) {
+  const [slotRows, linkRows] = await Promise.all([
+    db.select().from(accountsTable).where(and(
+      or(eq(accountsTable.primary_contact_id, contactId), eq(accountsTable.secondary_contact_id, contactId))!,
+      isNull(accountsTable.deleted_at),
+    )),
+    db.select({ role: accountContactsTable.role, account: accountsTable })
+      .from(accountContactsTable)
+      .innerJoin(accountsTable, eq(accountsTable.id, accountContactsTable.account_id))
+      .where(and(eq(accountContactsTable.contact_id, contactId), isNull(accountsTable.deleted_at)))
+      .orderBy(accountContactsTable.id),
+  ]);
+
+  const shape = (a: typeof accountsTable.$inferSelect, role: string, link: "slot" | "link") => ({
+    id: a.id,
+    name: a.name,
+    account_type: a.account_type,
+    status: a.status,
+    account_email: a.account_email,
+    account_phone: a.phone1,
+    role,
+    link,
+  });
+
+  const out = slotRows.map((a) =>
+    shape(a, a.primary_contact_id === contactId ? "Primary" : "Secondary", "slot"));
+  const seen = new Set(out.map((a) => a.id));
+  for (const row of linkRows) {
+    if (seen.has(row.account.id)) continue;
+    out.push(shape(row.account, row.role || "Member", "link"));
+  }
+  return out;
+}
+
+router.get("/v1/contacts/:id/accounts", async (req, res): Promise<void> => {
+  const parsed = GetContactParams.safeParse({ id: req.params["id"] });
+  if (!parsed.success) { res.status(400).json({ error: parsed.error.message }); return; }
+  res.json(await loadContactAccounts(parsed.data.id));
+});
+
+// POST /v1/contacts/:id/accounts { account_id, role?, as_slot? } — link this
+// contact to an existing account from the contact side.
+router.post("/v1/contacts/:id/accounts", async (req, res): Promise<void> => {
+  const parsed = GetContactParams.safeParse({ id: req.params["id"] });
+  if (!parsed.success) { res.status(400).json({ error: parsed.error.message }); return; }
+  const contactId = parsed.data.id;
+  const [contact] = await db.select({ id: contactsTable.id }).from(contactsTable)
+    .where(and(eq(contactsTable.id, contactId), isNull(contactsTable.deleted_at)));
+  if (!contact) { res.status(404).json({ error: "Not found" }); return; }
+
+  const accountId = Number(req.body?.account_id) || 0;
+  if (!accountId) { res.status(400).json({ error: "account_id is required" }); return; }
+  const [account] = await db.select({ id: accountsTable.id }).from(accountsTable)
+    .where(and(eq(accountsTable.id, accountId), isNull(accountsTable.deleted_at)));
+  if (!account) { res.status(404).json({ error: "Account not found" }); return; }
+
+  const asSlot = req.body?.as_slot as "primary" | "secondary" | undefined;
+  const role = typeof req.body?.role === "string" ? req.body.role.trim() : "";
+
+  if (asSlot === "primary" || asSlot === "secondary") {
+    await db.update(accountsTable)
+      .set(asSlot === "primary" ? { primary_contact_id: contactId } : { secondary_contact_id: contactId })
+      .where(eq(accountsTable.id, accountId));
+    await db.delete(accountContactsTable)
+      .where(and(eq(accountContactsTable.account_id, accountId), eq(accountContactsTable.contact_id, contactId)));
+  } else {
+    await db.insert(accountContactsTable)
+      .values({ account_id: accountId, contact_id: contactId, role: role || null })
+      .onConflictDoUpdate({
+        target: [accountContactsTable.account_id, accountContactsTable.contact_id],
+        set: { role: role || null },
+      });
+  }
+  res.status(201).json({ accounts: await loadContactAccounts(contactId) });
+});
+
+// DELETE /v1/contacts/:id/accounts/:accountId — unlink only; neither record is
+// deleted.
+router.delete("/v1/contacts/:id/accounts/:accountId", async (req, res): Promise<void> => {
+  const parsed = GetContactParams.safeParse({ id: req.params["id"] });
+  if (!parsed.success) { res.status(400).json({ error: parsed.error.message }); return; }
+  const contactId = parsed.data.id;
+  const accountId = Number(req.params["accountId"]) || 0;
+  if (!accountId) { res.status(400).json({ error: "Invalid account id" }); return; }
+
+  const [account] = await db.select().from(accountsTable).where(eq(accountsTable.id, accountId));
+  if (account) {
+    const patch: Record<string, null> = {};
+    if (account.primary_contact_id === contactId) patch["primary_contact_id"] = null;
+    if (account.secondary_contact_id === contactId) patch["secondary_contact_id"] = null;
+    if (Object.keys(patch).length) {
+      await db.update(accountsTable).set(patch).where(eq(accountsTable.id, accountId));
+    }
+  }
+  await db.delete(accountContactsTable)
+    .where(and(eq(accountContactsTable.account_id, accountId), eq(accountContactsTable.contact_id, contactId)));
+
+  res.json({ accounts: await loadContactAccounts(contactId) });
 });
 
 router.get("/v1/contacts/:id", async (req, res): Promise<void> => {

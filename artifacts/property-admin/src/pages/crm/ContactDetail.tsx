@@ -14,11 +14,13 @@ import {
   useGetContact, useCreateContact, useUpdateContact,
   getListContactsQueryKey, getGetContactQueryKey,
 } from "@workspace/api-client-react";
-import { useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, Save, AlertTriangle } from "lucide-react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { ArrowLeft, Save, AlertTriangle, Link2, X } from "lucide-react";
 import { Link } from "wouter";
 import { ContactMediaPanel, type PendingCards } from "@/components/ContactMediaPanel";
-import { apiFetch } from "@/lib/apiFetch";
+import { apiFetch, apiJson } from "@/lib/apiFetch";
+import { LinkContactAccountDialog } from "@/components/LinkContactAccountDialog";
+import { accountTypeLabel } from "@/lib/accountTypes";
 import { formatPersonName } from "@/lib/nameFormat";
 import { COUNTRIES, normaliseCountry, defaultCountry } from "@/lib/countries";
 import { KoreanAddressSearch } from "@/components/KoreanAddressSearch";
@@ -77,6 +79,16 @@ interface ContactForm {
   description: string;
   manual_input: boolean;
   status: string;
+}
+
+/** Row shape of GET /v1/contacts/:id/accounts. */
+interface LinkedAccount {
+  id: number;
+  name: string;
+  account_type: string;
+  status: string;
+  role: string;
+  link: "slot" | "link";
 }
 
 function ExpiryWarning({ label, dateStr }: { label: string; dateStr?: string | null }) {
@@ -166,6 +178,29 @@ export default function ContactDetail() {
       });
     }
   }, [contact, reset]);
+
+  // ── Accounts tab: which companies this person belongs to ───────────────
+  const [linkAccountOpen, setLinkAccountOpen] = useState(false);
+  const { data: linkedAccounts } = useQuery<LinkedAccount[]>({
+    queryKey: ["contact-accounts", id],
+    queryFn: () => apiJson<LinkedAccount[]>(`/api/v1/contacts/${id}/accounts`),
+    enabled: !isNew && !!id,
+  });
+
+  /** Roles are free text apart from the account's two designated slots. */
+  function accountRoleLabel(role?: string | null): string {
+    if (role === "Primary") return t('account.role_primary');
+    if (role === "Secondary") return t('account.role_secondary');
+    if (role === "Member" || !role) return t('account.role_member');
+    return role;
+  }
+
+  async function handleUnlinkAccount(accountId: number) {
+    if (!id) return;
+    if (!window.confirm(t('contact.unlink_account_confirm'))) return;
+    await apiFetch(`/api/v1/contacts/${id}/accounts/${accountId}`, { method: "DELETE" });
+    qc.invalidateQueries({ queryKey: ["contact-accounts", id] });
+  }
 
   // Business cards are scanned before the contact necessarily exists, so the
   // uploaded images are held here and attached to the record once it is saved.
@@ -605,11 +640,57 @@ export default function ContactDetail() {
             </div>
           </TabsContent>
 
+          {/* ── Accounts this person belongs to ─────────────────────── */}
           <TabsContent value="accounts">
-            <div className="p-8 text-center text-muted-foreground bg-muted/20 rounded-lg border border-dashed">
-              {t('contact.stub_accounts')}
-            </div>
+            {isNew ? (
+              <div className="p-8 text-center text-muted-foreground bg-muted/20 rounded-lg border border-dashed">
+                {t('contact.accounts_save_first')}
+              </div>
+            ) : (
+              <>
+                <div className="mb-3 flex justify-end max-w-3xl">
+                  <Button size="sm" className="gap-1.5" onClick={() => setLinkAccountOpen(true)}>
+                    <Link2 className="h-4 w-4" /> {t('contact.link_account')}
+                  </Button>
+                </div>
+                <div className="rounded-md border bg-card overflow-x-auto max-w-3xl">
+                  <table className="w-full text-sm">
+                    <thead className="bg-muted/50 border-b">
+                      <tr>
+                        <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('account.label_name')}</th>
+                        <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('account.label_type')}</th>
+                        <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('account.col_role')}</th>
+                        <th className="w-10" />
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y">
+                      {!linkedAccounts?.length ? (
+                        <tr><td colSpan={4} className="px-4 py-8 text-center text-muted-foreground text-sm">{t('contact.empty_accounts')}</td></tr>
+                      ) : (
+                        linkedAccounts.map((a) => (
+                          <tr key={a.id} className="hover:bg-muted/30 transition-colors">
+                            <td className="px-4 py-3 font-medium">
+                              <Link href={`/account/accounts/${a.id}`} className="text-primary hover:underline">{a.name}</Link>
+                            </td>
+                            <td className="px-4 py-3 text-muted-foreground">{accountTypeLabel(t, a.account_type)}</td>
+                            <td className="px-4 py-3 text-muted-foreground">{accountRoleLabel(a.role)}</td>
+                            <td className="px-2 py-3 text-right">
+                              <Button variant="ghost" size="icon" className="h-7 w-7"
+                                title={t('contact.unlink_account')}
+                                onClick={() => void handleUnlinkAccount(a.id)}>
+                                <X className="h-4 w-4" />
+                              </Button>
+                            </td>
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </>
+            )}
           </TabsContent>
+
 
           <TabsContent value="documents">
             <div className="p-8 text-center text-muted-foreground bg-muted/20 rounded-lg border border-dashed">
@@ -618,6 +699,16 @@ export default function ContactDetail() {
           </TabsContent>
         </Tabs>
       </div>
+
+      {!isNew && id && (
+        <LinkContactAccountDialog
+          contactId={id}
+          open={linkAccountOpen}
+          onOpenChange={setLinkAccountOpen}
+          linkedAccountIds={(linkedAccounts ?? []).map((a) => a.id)}
+          onSaved={() => qc.invalidateQueries({ queryKey: ["contact-accounts", id] })}
+        />
+      )}
     </Layout>
   );
 }

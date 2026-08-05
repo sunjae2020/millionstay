@@ -643,7 +643,14 @@
     "section_emergency": "ผู้ติดต่อกรณีฉุกเฉิน",
     "label_emergency_name": "ชื่อ",
     "label_emergency_phone": "เบอร์ติดต่อ",
-    "label_emergency_email": "อีเมล"
+    "label_emergency_email": "อีเมล",
+    "link_account": "เชื่อมโยงบัญชี",
+    "pick_account": "เลือกบัญชี",
+    "account_link_failed": "ไม่สามารถเชื่อมโยงบัญชีได้",
+    "unlink_account": "ยกเลิกการเชื่อมโยง",
+    "unlink_account_confirm": "ยกเลิกการเชื่อมโยงบัญชีนี้กับผู้ติดต่อหรือไม่ ข้อมูลทั้งสองจะยังคงอยู่",
+    "empty_accounts": "ผู้ติดต่อนี้ยังไม่ได้เชื่อมโยงกับบัญชีใด",
+    "accounts_save_first": "บันทึกผู้ติดต่อก่อน แล้วจึงเชื่อมโยงบัญชี"
   },
   "account": {
     "new": "บัญชีใหม่",
@@ -802,7 +809,17 @@
     "type_homestay_host": "เจ้าบ้านโฮมสเตย์",
     "country_other": "อื่น ๆ (พิมพ์เอง)",
     "postcode_search": "ค้นหารหัสไปรษณีย์",
-    "postcode_search_failed": "เปิดการค้นหาที่อยู่ไม่สำเร็จ"
+    "postcode_search_failed": "เปิดการค้นหาที่อยู่ไม่สำเร็จ",
+    "add_contact": "เพิ่มผู้ติดต่อ",
+    "role_member": "ผู้รับผิดชอบ",
+    "contact_mode_new": "ผู้ติดต่อใหม่",
+    "contact_mode_existing": "ผู้ติดต่อที่มีอยู่",
+    "contact_pick_existing": "เลือกผู้ติดต่อ",
+    "contact_role_label": "ชื่อบทบาท",
+    "contact_role_placeholder": "เช่น ฝ่ายบัญชี, ผู้จัดการหน้างาน",
+    "contact_link_failed": "ไม่สามารถเชื่อมโยงผู้ติดต่อได้",
+    "unlink_contact": "ยกเลิกการเชื่อมโยง",
+    "unlink_contact_confirm": "ยกเลิกการเชื่อมโยงผู้ติดต่อนี้กับบัญชีหรือไม่ ข้อมูลผู้ติดต่อจะยังคงอยู่"
   },
   "lead": {
     "new": "ลีดใหม่",

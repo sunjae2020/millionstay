@@ -643,7 +643,14 @@
     "section_emergency": "비상 연락처",
     "label_emergency_name": "이름",
     "label_emergency_phone": "연락처",
-    "label_emergency_email": "메일주소"
+    "label_emergency_email": "메일주소",
+    "link_account": "계정 연결",
+    "pick_account": "계정 선택",
+    "account_link_failed": "계정을 연결하지 못했습니다",
+    "unlink_account": "연결 해제",
+    "unlink_account_confirm": "이 계정과의 연결을 해제할까요? 두 기록 모두 삭제되지 않습니다.",
+    "empty_accounts": "연결된 계정이 없습니다",
+    "accounts_save_first": "연락처를 먼저 저장한 뒤 계정을 연결할 수 있습니다"
   },
   "account": {
     "new": "새 계정",
@@ -802,7 +809,17 @@
     "type_homestay_host": "홈스테이 호스트",
     "country_other": "기타 (직접 입력)",
     "postcode_search": "우편번호 찾기",
-    "postcode_search_failed": "주소 검색을 열지 못했습니다"
+    "postcode_search_failed": "주소 검색을 열지 못했습니다",
+    "add_contact": "연락처 추가",
+    "role_member": "담당자",
+    "contact_mode_new": "신규 연락처",
+    "contact_mode_existing": "기존 연락처",
+    "contact_pick_existing": "연락처 선택",
+    "contact_role_label": "역할 이름",
+    "contact_role_placeholder": "예: 회계 담당, 현장 소장",
+    "contact_link_failed": "연락처를 연결하지 못했습니다",
+    "unlink_contact": "연결 해제",
+    "unlink_contact_confirm": "이 연락처를 계정에서 연결 해제할까요? 연락처 자체는 삭제되지 않습니다."
   },
   "lead": {
     "new": "새 리드",

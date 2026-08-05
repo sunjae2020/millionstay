@@ -643,7 +643,14 @@
     "sns_telegram": "Telegram",
     "sns_instagram": "Instagram",
     "sns_facebook": "Facebook",
-    "label_emergency_email": "Email"
+    "label_emergency_email": "Email",
+    "link_account": "Liên kết tài khoản",
+    "pick_account": "Chọn tài khoản",
+    "account_link_failed": "Không thể liên kết tài khoản",
+    "unlink_account": "Hủy liên kết",
+    "unlink_account_confirm": "Hủy liên kết tài khoản này khỏi liên hệ? Cả hai hồ sơ đều được giữ lại.",
+    "empty_accounts": "Liên hệ này chưa được liên kết với tài khoản nào",
+    "accounts_save_first": "Hãy lưu liên hệ trước, sau đó liên kết tài khoản"
   },
   "account": {
     "new": "Tài khoản mới",
@@ -802,7 +809,17 @@
     "postcode_search": "Tìm mã bưu điện",
     "postcode_search_failed": "Không thể mở tìm kiếm địa chỉ",
     "col_email": "Email",
-    "label_website": "Website"
+    "label_website": "Website",
+    "add_contact": "Thêm liên hệ",
+    "role_member": "Người phụ trách",
+    "contact_mode_new": "Liên hệ mới",
+    "contact_mode_existing": "Liên hệ có sẵn",
+    "contact_pick_existing": "Chọn liên hệ",
+    "contact_role_label": "Tên vai trò",
+    "contact_role_placeholder": "VD: Kế toán, Quản lý công trường",
+    "contact_link_failed": "Không thể liên kết liên hệ",
+    "unlink_contact": "Hủy liên kết",
+    "unlink_contact_confirm": "Hủy liên kết liên hệ này khỏi tài khoản? Hồ sơ liên hệ vẫn được giữ lại."
   },
   "lead": {
     "new": "Khách hàng tiềm năng mới",

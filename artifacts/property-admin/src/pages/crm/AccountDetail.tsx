@@ -20,9 +20,10 @@ import { LookupSelect } from "@/components/LookupSelect";
 import { AccountLookupSelect } from "@/components/AccountLookupSelect";
 import { AccountIdentityPanel, type FillSource } from "@/components/AccountIdentityPanel";
 import { EntityPreviewDialog, type EntityPreview } from "@/components/EntityPreviewDialog";
+import { AddAccountContactDialog } from "@/components/AddAccountContactDialog";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiFetch, apiJson } from "@/lib/apiFetch";
-import { ArrowLeft, Save, ExternalLink, AlertTriangle, Building2, FileText, FolderUp, Eye, Upload, Trash2 } from "lucide-react";
+import { ArrowLeft, Save, ExternalLink, AlertTriangle, Building2, FileText, FolderUp, Eye, Upload, Trash2, UserPlus, X } from "lucide-react";
 import { FileDropZone, DIRECTORY_INPUT_PROPS } from "@/components/FileDropZone";
 import { Link } from "wouter";
 import { useBrand } from "@/contexts/ThemeContext";
@@ -239,6 +240,26 @@ export default function AccountDetail() {
 
   // Row → quick-look modal. One piece of state drives every tab.
   const [preview, setPreview] = useState<EntityPreview | null>(null);
+
+  // ── Contacts tab: attach / detach people ──────────────────────────────
+  const [addContactOpen, setAddContactOpen] = useState(false);
+
+  /** Roles are free text apart from the two designated slots. */
+  function contactRoleLabel(role?: string | null): string {
+    if (role === "Primary") return t('account.role_primary');
+    if (role === "Secondary") return t('account.role_secondary');
+    if (role === "Member" || !role) return t('account.role_member');
+    return role;
+  }
+
+  async function handleUnlinkContact(contactId: number) {
+    if (!id) return;
+    if (!window.confirm(t('account.unlink_contact_confirm'))) return;
+    await apiFetch(`/api/v1/accounts/${id}/contacts/${contactId}`, { method: "DELETE" });
+    qc.invalidateQueries({ queryKey: ["account-related", id] });
+    qc.invalidateQueries({ queryKey: getGetAccountQueryKey(id) });
+  }
+
 
   // Verification + provenance live outside the form: they are set by the
   // identity panel, not typed, but must ride along on save.
@@ -792,6 +813,11 @@ export default function AccountDetail() {
 
             {/* ── Contacts ────────────────────────────────────────────── */}
             <TabsContent value="contacts">
+              <div className="mb-3 flex justify-end max-w-4xl">
+                <Button size="sm" className="gap-1.5" onClick={() => setAddContactOpen(true)}>
+                  <UserPlus className="h-4 w-4" /> {t('account.add_contact')}
+                </Button>
+              </div>
               <div className="rounded-md border bg-card overflow-x-auto max-w-4xl">
                 <table className="w-full text-sm">
                   <thead className="bg-muted/50 border-b">
@@ -800,18 +826,19 @@ export default function AccountDetail() {
                       <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('account.col_role')}</th>
                       <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('account.label_email')}</th>
                       <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('account.col_phone')}</th>
+                      <th className="w-10" />
                     </tr>
                   </thead>
                   <tbody className="divide-y">
                     {!related?.contacts.length ? (
-                      <tr><td colSpan={4} className="px-4 py-8 text-center text-muted-foreground text-sm">{t('account.empty_contacts')}</td></tr>
+                      <tr><td colSpan={5} className="px-4 py-8 text-center text-muted-foreground text-sm">{t('account.empty_contacts')}</td></tr>
                     ) : (
                       related.contacts.map((c: any) => (
                         <tr key={c.id} className="hover:bg-muted/30 transition-colors cursor-pointer"
                           onClick={() => setPreview({
                             title: formatPersonName(c.first_name, c.last_name),
                             subtitle: [c.job_title, c.company_name].filter(Boolean).join(" · ") || null,
-                            badge: { label: c.role === "Primary" ? t('account.role_primary') : t('account.role_secondary') },
+                            badge: { label: contactRoleLabel(c.role) },
                             fields: [
                               { label: t('account.label_email'), value: c.email },
                               { label: t('account.col_mobile'), value: c.mobile_number },
@@ -828,11 +855,16 @@ export default function AccountDetail() {
                             detailUrl: `/crm/contacts/${c.id}`,
                           })}>
                           <td className="px-4 py-3 font-medium">{formatPersonName(c.first_name, c.last_name)}</td>
-                          <td className="px-4 py-3 text-muted-foreground">
-                            {c.role === "Primary" ? t('account.role_primary') : t('account.role_secondary')}
-                          </td>
+                          <td className="px-4 py-3 text-muted-foreground">{contactRoleLabel(c.role)}</td>
                           <td className="px-4 py-3 text-muted-foreground">{c.email ?? "—"}</td>
                           <td className="px-4 py-3 text-muted-foreground">{c.mobile_number ?? c.office_number ?? "—"}</td>
+                          <td className="px-2 py-3 text-right">
+                            <Button variant="ghost" size="icon" className="h-7 w-7"
+                              title={t('account.unlink_contact')}
+                              onClick={(e) => { e.stopPropagation(); void handleUnlinkContact(c.id); }}>
+                              <X className="h-4 w-4" />
+                            </Button>
+                          </td>
                         </tr>
                       ))
                     )}
@@ -1203,6 +1235,18 @@ export default function AccountDetail() {
         )}
       </div>
 
+      {!isNew && id && (
+        <AddAccountContactDialog
+          accountId={id}
+          open={addContactOpen}
+          onOpenChange={setAddContactOpen}
+          linkedContactIds={(related?.contacts ?? []).map((c: any) => c.id)}
+          onSaved={() => {
+            qc.invalidateQueries({ queryKey: ["account-related", id] });
+            qc.invalidateQueries({ queryKey: getGetAccountQueryKey(id) });
+          }}
+        />
+      )}
       <EntityPreviewDialog preview={preview} onClose={() => setPreview(null)} />
       <DocumentPreviewDialog config={previewConfig} onClose={closePreview} />
     </Layout>
