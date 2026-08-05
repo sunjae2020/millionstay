@@ -55,6 +55,14 @@ export interface ColumnDef<T> {
   defaultHidden?: boolean;
   /** Makes the cell inline-editable when the table is given an `editing` prop. */
   editable?: EditableConfig<T>;
+  /**
+   * Plain value for CSV export. Defaults to the rendered `cell` flattened to
+   * text — supply this when the cell is a badge/icon/link whose text differs
+   * from the underlying value (e.g. a raw date or a numeric amount).
+   */
+  csv?: (row: T) => unknown;
+  /** Default true. `false` excludes the column from CSV export. */
+  exportable?: boolean;
   headerClassName?: string;
   cellClassName?: string;
 }

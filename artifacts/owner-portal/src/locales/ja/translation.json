@@ -37,7 +37,10 @@
     "page_not_found": "ページが見つかりません",
     "switch_to_light": "ライトモードに切り替え",
     "switch_to_dark": "ダークモードに切り替え",
-    "dismiss": "閉じる"
+    "dismiss": "閉じる",
+    "export_csv": "CSVエクスポート",
+    "export_csv_count": "{{count}}件をCSVにエクスポート",
+    "export_csv_empty": "エクスポートするデータがありません"
   },
   "login": {
     "headline_1": "あなたの物件、",

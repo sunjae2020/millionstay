@@ -10,6 +10,7 @@ import { apiFetch } from "@/lib/apiFetch";
 import { useToast } from "@/hooks/use-toast";
 import { KpiCard, DashCard, Pill, ACCENT } from "@/components/dashboard/DashboardKit";
 
+import { ExportableTable } from "@/components/ui/ExportCsvButton";
 interface Listing {
   id: number;
   space_id: number;
@@ -200,7 +201,7 @@ export default function ChannelsTab() {
           </div>
         ) : (
           <div className="overflow-auto">
-            <table className="w-full text-xs">
+            <ExportableTable fileName="channels-tab" className="w-full text-xs">
               <thead className="bg-muted/50">
                 <tr>
                   {[
@@ -263,7 +264,7 @@ export default function ChannelsTab() {
                   </tr>
                 ))}
               </tbody>
-            </table>
+            </ExportableTable>
           </div>
         )}
       </DashCard>

@@ -7,6 +7,7 @@ import { AccountLookupSelect } from "@/components/AccountLookupSelect";
 import { Button } from "@/components/ui/button";
 import { Percent, Plus, Trash2 } from "lucide-react";
 
+import { ExportableTable } from "@/components/ui/ExportCsvButton";
 // Admin management of agent commission plans (per-agent rate + base). The base
 // determines what percentage_rate applies to — upfront payment, one month's rent,
 // or the Korean 환산보증금 (deposit + rent×100). See lib/homestay/commission.ts.
@@ -41,7 +42,7 @@ export default function CommissionPlansPage() {
         {creating && <PlanForm onDone={() => { setCreating(false); invalidate(); }} onCancel={() => setCreating(false)} />}
 
         <div className="rounded-lg border bg-white overflow-x-auto">
-          <table className="w-full text-sm">
+          <ExportableTable fileName="commission-plans" className="w-full text-sm">
             <thead className="bg-gray-50 border-b">
               <tr>
                 {["agent", "base", "rate", "fixed", "stack", "status", ""].map((h) => (
@@ -56,7 +57,7 @@ export default function CommissionPlansPage() {
                 <PlanRow key={p.id} plan={p} onChanged={invalidate} onDelete={() => del.mutate(p.id)} t={t} />
               ))}
             </tbody>
-          </table>
+          </ExportableTable>
         </div>
       </div>
     </Layout>

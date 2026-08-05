@@ -9,6 +9,7 @@ import { KpiCard, DashCard, ACCENT } from "@/components/dashboard/DashboardKit";
 import { useBrand } from "@/contexts/ThemeContext";
 import { formatMoney } from "@/lib/currency";
 
+import { ExportableTable } from "@/components/ui/ExportCsvButton";
 interface StatusCount { status: string; count: number }
 interface TopAgent { agent_account_id: number; name: string; total: number }
 interface HomestayOpsSummary {
@@ -145,7 +146,7 @@ export default function HomestayOpsTab() {
           </div>
         ) : (
           <div className="overflow-auto">
-            <table className="w-full text-xs">
+            <ExportableTable fileName="homestay-ops-tab" className="w-full text-xs">
               <thead className="bg-muted/50">
                 <tr>
                   <th className="px-3 py-2 text-left text-muted-foreground font-medium">{t("dash_homestay.col_agent")}</th>
@@ -160,7 +161,7 @@ export default function HomestayOpsTab() {
                   </tr>
                 ))}
               </tbody>
-            </table>
+            </ExportableTable>
           </div>
         )}
       </DashCard>

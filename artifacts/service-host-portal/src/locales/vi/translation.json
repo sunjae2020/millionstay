@@ -30,7 +30,10 @@
     "next_page": "Trang sau",
     "page_not_found": "Không tìm thấy trang",
     "switch_to_light": "Chuyển sang chế độ sáng",
-    "switch_to_dark": "Chuyển sang chế độ tối"
+    "switch_to_dark": "Chuyển sang chế độ tối",
+    "export_csv": "Xuất CSV",
+    "export_csv_count": "Xuất {{count}} dòng ra CSV",
+    "export_csv_empty": "Không có dữ liệu để xuất"
   },
   "login": {
     "headline_1": "Mang lại sự xuất sắc,",

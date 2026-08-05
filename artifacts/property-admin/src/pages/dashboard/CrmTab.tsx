@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { KpiCard, DashCard, Pill, ACCENT } from "@/components/dashboard/DashboardKit";
 import { useBrand } from "@/contexts/ThemeContext";
 
+import { ExportableTable } from "@/components/ui/ExportCsvButton";
 const LEAD_PIPELINE = ["New", "Contacted", "Qualified", "Converted"] as const;
 const PIPELINE_COLOR: Record<string, string> = {
   New: "#94a3b8", Contacted: "#3b82f6", Qualified: "#d97706", Converted: "#16a34a",
@@ -178,7 +179,7 @@ export default function CrmTab() {
           action={<Link href="/account/leads" className="text-xs text-primary hover:underline">{t("dash_crm.view_all_arrow")}</Link>}
         >
           <div className="overflow-auto">
-            <table className="w-full text-xs">
+            <ExportableTable fileName="crm-tab" className="w-full text-xs">
               <thead className="bg-muted/50">
                 <tr>
                   {[t("dash_crm.col_ref"), t("common.name"), t("dash_crm.col_source"), t("dash_crm.col_budget"), t("common.status")].map(h => (
@@ -203,7 +204,7 @@ export default function CrmTab() {
                   </tr>
                 ))}
               </tbody>
-            </table>
+            </ExportableTable>
           </div>
         </DashCard>
 

@@ -7,6 +7,7 @@ import { formatDate } from "@/lib/dateFormat";
 import { formatMoney } from "@/lib/money";
 import { DollarSign, TrendingUp, Clock, Search } from "lucide-react";
 
+import { ExportableTable } from "@/components/ui/ExportCsvButton";
 interface Invoice {
   id: number;
   booking_id: number;
@@ -135,7 +136,7 @@ export default function RevenuePage() {
                 />
               </div>
             </div>
-            <table className="w-full text-sm">
+            <ExportableTable fileName="owner-revenue" className="w-full text-sm">
               <thead className="bg-muted/50 border-b border-border">
                 <tr>
                   <th className="text-left px-4 py-3 font-medium text-muted-foreground">{t("revenue.col_invoice")}</th>
@@ -177,7 +178,7 @@ export default function RevenuePage() {
                   </tr>
                 ))}
               </tbody>
-            </table>
+            </ExportableTable>
             <TablePagination
               page={page}
               pageSize={pageSize}

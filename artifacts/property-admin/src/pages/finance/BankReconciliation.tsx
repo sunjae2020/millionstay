@@ -15,6 +15,7 @@ import { useBrand } from "@/contexts/ThemeContext";
 import { formatMoney } from "@/lib/currency";
 import { formatDate } from "@/lib/date";
 
+import { ExportableTable } from "@/components/ui/ExportCsvButton";
 // 은행 대사 — import statement lines, match them to the ledger, and see whether
 // the two actually agree.
 //
@@ -213,7 +214,7 @@ export default function BankReconciliation() {
             </div>
 
             <div className="rounded-lg border bg-white overflow-x-auto">
-              <table className="w-full text-sm">
+              <ExportableTable fileName="bank-reconciliation" className="w-full text-sm">
                 <thead className="bg-gray-50 border-b">
                   <tr>
                     {[t("bank.col_date"), t("bank.col_description"), t("bank.col_reference"), t("common.amount"), t("common.status"), ""].map((h, i) => (
@@ -263,7 +264,7 @@ export default function BankReconciliation() {
                     );
                   })}
                 </tbody>
-              </table>
+              </ExportableTable>
             </div>
           </>
         )}

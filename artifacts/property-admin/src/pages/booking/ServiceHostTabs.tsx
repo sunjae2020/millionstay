@@ -8,6 +8,7 @@ import { Briefcase, Wrench, Receipt, Plus, Camera, Headphones, Upload, Trash2 } 
 import { useBrand } from "@/contexts/ThemeContext";
 import { formatMoney } from "@/lib/currency";
 
+import { ExportableTable } from "@/components/ui/ExportCsvButton";
 // Admin service-host detail tabs (#4): jobs & payouts (GL-backed accounting),
 // photos, and CS tickets — all scoped to one service host by id.
 
@@ -71,7 +72,7 @@ export function ServiceHostAccounting({ hostId }: { hostId: string }) {
           </div>
         )}
         <div className="rounded-lg border bg-white overflow-x-auto">
-          <table className="w-full text-sm">
+          <ExportableTable fileName="service-host-payouts" className="w-full text-sm">
             <thead className="bg-gray-50 border-b"><tr>{[t("service_host_acct.ref", "Ref"), t("common.description", "Description"), t("service_host_acct.amount", "Amount"), t("common.status", "Status"), ""].map((h) => <th key={h} className="text-left px-3 py-2 font-medium text-muted-foreground">{h}</th>)}</tr></thead>
             <tbody>
               {payouts.length === 0 ? <tr><td colSpan={5} className="text-center py-6 text-muted-foreground">{t("service_host_acct.no_payouts", "No payouts yet")}</td></tr> : payouts.map((p) => (
@@ -87,7 +88,7 @@ export function ServiceHostAccounting({ hostId }: { hostId: string }) {
                 </tr>
               ))}
             </tbody>
-          </table>
+          </ExportableTable>
         </div>
         <p className="text-[11px] text-muted-foreground mt-1.5">{t("service_host_acct.gl_note", "Accrual posts Dr Contractor Expense / Cr Contractor Payable; payment posts Dr Payable / Cr Cash.")}</p>
       </section>
@@ -96,7 +97,7 @@ export function ServiceHostAccounting({ hostId }: { hostId: string }) {
       <section>
         <h3 className="text-sm font-semibold flex items-center gap-1.5 mb-2"><Briefcase className="w-4 h-4 text-primary" />{t("service_host_acct.jobs", "Service jobs")} ({jobs.length})</h3>
         <div className="rounded-lg border bg-white overflow-x-auto">
-          <table className="w-full text-sm">
+          <ExportableTable fileName="service-host-gl-entries" className="w-full text-sm">
             <thead className="bg-gray-50 border-b"><tr>{[t("service_host_acct.booking", "Booking"), t("common.name", "Name"), t("service_host_acct.price", "Price"), t("common.status", "Status")].map((h) => <th key={h} className="text-left px-3 py-2 font-medium text-muted-foreground">{h}</th>)}</tr></thead>
             <tbody>
               {jobs.length === 0 ? <tr><td colSpan={4} className="text-center py-6 text-muted-foreground">{t("service_host_acct.no_jobs", "No jobs")}</td></tr> : jobs.map((j) => (
@@ -108,7 +109,7 @@ export function ServiceHostAccounting({ hostId }: { hostId: string }) {
                 </tr>
               ))}
             </tbody>
-          </table>
+          </ExportableTable>
         </div>
       </section>
 
@@ -117,7 +118,7 @@ export function ServiceHostAccounting({ hostId }: { hostId: string }) {
         <section>
           <h3 className="text-sm font-semibold flex items-center gap-1.5 mb-2"><Wrench className="w-4 h-4 text-primary" />{t("service_host_acct.work_orders", "Work orders")} ({wos.length})</h3>
           <div className="rounded-lg border bg-white overflow-x-auto">
-            <table className="w-full text-sm">
+            <ExportableTable fileName="service-host-work-orders" className="w-full text-sm">
               <thead className="bg-gray-50 border-b"><tr>{[t("service_host_acct.ref", "Ref"), t("common.title", "Title"), t("service_host_acct.cost", "Cost"), t("common.status", "Status")].map((h) => <th key={h} className="text-left px-3 py-2 font-medium text-muted-foreground">{h}</th>)}</tr></thead>
               <tbody>
                 {wos.map((w) => (
@@ -129,7 +130,7 @@ export function ServiceHostAccounting({ hostId }: { hostId: string }) {
                   </tr>
                 ))}
               </tbody>
-            </table>
+            </ExportableTable>
           </div>
         </section>
       )}
@@ -224,7 +225,7 @@ export function ServiceHostCs({ hostId }: { hostId: string }) {
   if (tickets.length === 0) return <div className="rounded-lg border bg-white p-8 text-center text-muted-foreground"><Headphones className="w-7 h-7 mx-auto mb-2 text-gray-300" />{t("service_host_cs.empty", "No support tickets from this partner")}</div>;
   return (
     <div className="rounded-lg border bg-white overflow-x-auto">
-      <table className="w-full text-sm">
+      <ExportableTable fileName="service-host-cs-tickets" className="w-full text-sm">
         <thead className="bg-gray-50 border-b"><tr>{[t("service_host_cs.ref", "Ref"), t("service_host_cs.subject", "Subject"), t("service_host_cs.category", "Category"), t("common.status", "Status")].map((h) => <th key={h} className="text-left px-3 py-2 font-medium text-muted-foreground">{h}</th>)}</tr></thead>
         <tbody>
           {tickets.map((tk) => (
@@ -236,7 +237,7 @@ export function ServiceHostCs({ hostId }: { hostId: string }) {
             </tr>
           ))}
         </tbody>
-      </table>
+      </ExportableTable>
     </div>
   );
 }

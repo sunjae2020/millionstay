@@ -6,6 +6,7 @@ import { apiJson } from "@/lib/apiFetch";
 import { Button } from "@/components/ui/button";
 import { Wallet, Plus, Trash2 } from "lucide-react";
 
+import { ExportableTable } from "@/components/ui/ExportCsvButton";
 // Admin management of the rental commission fee RATE CARD (임대 수수료 기준표).
 // Per property TYPE: 중개수수료(부동산, +간이과세) / 자체수수료(자체 관리자, −원천징수) /
 // Working(직접 모객). This is the rule set; actual paid amounts are recorded per contract
@@ -81,7 +82,7 @@ export default function RentalFeeSchedulesPage() {
         {creating && <ScheduleForm onDone={() => { setCreating(false); invalidate(); }} onCancel={() => setCreating(false)} />}
 
         <div className="rounded-lg border bg-white overflow-x-auto">
-          <table className="w-full text-sm">
+          <ExportableTable fileName="rental-fee-schedules" className="w-full text-sm">
             <thead className="bg-gray-50 border-b">
               <tr>
                 {["type", "brokerage", "self", "working", "status", ""].map((h) => (
@@ -98,7 +99,7 @@ export default function RentalFeeSchedulesPage() {
                 <ScheduleRow key={s.id} row={s} onChanged={invalidate} onDelete={() => del.mutate(s.id)} t={t} />
               ))}
             </tbody>
-          </table>
+          </ExportableTable>
         </div>
 
         <Reconciliation />
@@ -194,7 +195,7 @@ function Reconciliation() {
       )}
 
       <div className="rounded-lg border bg-white overflow-x-auto">
-        <table className="w-full text-sm">
+        <ExportableTable fileName="rental-fee-reconciliation" className="w-full text-sm">
           <thead className="bg-gray-50 border-b">
             <tr>
               {[
@@ -229,7 +230,7 @@ function Reconciliation() {
               </tr>
             ))}
           </tbody>
-        </table>
+        </ExportableTable>
       </div>
       {rows.length > 100 && <p className="text-[11px] text-muted-foreground">{t("rental_fees.recon_truncated", "Showing the first 100 rows.")}</p>}
     </div>

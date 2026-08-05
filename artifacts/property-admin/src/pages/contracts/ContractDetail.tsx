@@ -40,6 +40,7 @@ import {
 import { useBrand } from "@/contexts/ThemeContext";
 import { SUPPORTED_CURRENCIES } from "@/lib/currency";
 
+import { ExportableTable } from "@/components/ui/ExportCsvButton";
 // Ordered so the tenant's own currency (from branding) leads; falls back to the full list.
 const CURRENCIES = SUPPORTED_CURRENCIES.map((c) => c.code);
 const CONTRACT_CATEGORIES = [
@@ -1213,7 +1214,7 @@ export default function ContractDetail() {
                 </Button>
               </div>
               <div className="rounded-lg border bg-white overflow-x-auto">
-                <table className="w-full text-sm">
+                <ExportableTable fileName="contract-line-items" className="w-full text-sm">
                   <thead className="bg-gray-50 border-b">
                     <tr>
                       {[t('common.type'), t('common.name'), t('contract.col_billing'), t('contract.col_frequency'), t('contract.col_unit_price'), t('contract.col_qty'), t('common.total'), t('contract.col_gst'), ""].map((h, hi) => (
@@ -1268,7 +1269,7 @@ export default function ContractDetail() {
                       </tr>
                     </tfoot>
                   )}
-                </table>
+                </ExportableTable>
               </div>
             </div>
           )}
@@ -1318,7 +1319,7 @@ export default function ContractDetail() {
               </div>
 
               <div className="rounded-lg border bg-white overflow-x-auto">
-                <table className="w-full text-sm">
+                <ExportableTable fileName="contract-rent-schedule" className="w-full text-sm">
                   <thead className="bg-gray-50 border-b">
                     <tr>
                       {[t('contract.col_month'), t('contract.col_invoice_ref'), t('contract.col_due_date'), t('contract.col_paid_on'),
@@ -1381,7 +1382,7 @@ export default function ContractDetail() {
                       </tr>
                     </tfoot>
                   )}
-                </table>
+                </ExportableTable>
               </div>
             </div>
           )}
@@ -1398,7 +1399,7 @@ export default function ContractDetail() {
                 </Button>
               </div>
               <div className="rounded-lg border bg-white overflow-x-auto">
-                <table className="w-full text-sm">
+                <ExportableTable fileName="contract-related-costs" className="w-full text-sm">
                   <thead className="bg-gray-50 border-b">
                     <tr>
                       {[t('contract.col_cost_type'), t('contract.col_remitted_on'), t('contract.col_payee_name'), t('common.amount'), t('contract.col_remarks'), ""].map((h, hi) => (
@@ -1440,7 +1441,7 @@ export default function ContractDetail() {
                       </tr>
                     </tfoot>
                   )}
-                </table>
+                </ExportableTable>
               </div>
             </div>
           )}
@@ -1458,7 +1459,7 @@ export default function ContractDetail() {
                 </Button>
               </div>
               <div className="rounded-lg border bg-white overflow-x-auto">
-                <table className="w-full text-sm">
+                <ExportableTable fileName="contract-schedule" className="w-full text-sm">
                   <thead className="bg-gray-50 border-b">
                     <tr>
                       {[t('common.type'), t('common.amount'), t('contract.label_currency'), t('contract.label_start'), t('contract.label_end'), t('contract.col_next_due'), t('contract.col_frequency'), t('contract.col_gst'), t('common.active'), ""].map((h, hi) => (
@@ -1501,7 +1502,7 @@ export default function ContractDetail() {
                       </tr>
                     ))}
                   </tbody>
-                </table>
+                </ExportableTable>
               </div>
             </div>
           )}

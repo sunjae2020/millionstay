@@ -37,7 +37,10 @@
     "page_not_found": "页面不存在",
     "switch_to_light": "切换到浅色模式",
     "switch_to_dark": "切换到深色模式",
-    "dismiss": "关闭"
+    "dismiss": "关闭",
+    "export_csv": "导出 CSV",
+    "export_csv_count": "导出 {{count}} 行为 CSV",
+    "export_csv_empty": "没有可导出的数据"
   },
   "login": {
     "headline_1": "您的物业,",

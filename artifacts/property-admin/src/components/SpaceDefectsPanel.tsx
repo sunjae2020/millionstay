@@ -14,6 +14,7 @@ import { formatDate } from "@/lib/date";
 import { Plus, Pencil, Trash2, ImagePlus, Loader2, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 
+import { ExportableTable } from "@/components/ui/ExportCsvButton";
 // 하자 이력 — the per-unit defect register on the space detail page.
 // Column order follows the usual defect/snag-register convention:
 // identity (derived) → classification → detail → status → responsibility → evidence.
@@ -245,7 +246,7 @@ export function SpaceDefectsPanel({ spaceId }: { spaceId: number }) {
       </div>
 
       <div className="rounded-lg border bg-card overflow-x-auto">
-        <table className="w-full text-sm">
+        <ExportableTable fileName="space-defects-panel" className="w-full text-sm">
           <thead className="bg-muted/50 border-b">
             <tr>
               {[
@@ -351,7 +352,7 @@ export function SpaceDefectsPanel({ spaceId }: { spaceId: number }) {
               );
             })}
           </tbody>
-        </table>
+        </ExportableTable>
       </div>
 
       {/* Add / edit */}

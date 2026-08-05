@@ -8,6 +8,7 @@ import { FileDropZone, DIRECTORY_INPUT_PROPS } from "@/components/FileDropZone";
 import { apiFetch, apiJson } from "@/lib/apiFetch";
 import { formatDate } from "@/lib/date";
 
+import { ExportableTable } from "@/components/ui/ExportCsvButton";
 /**
  * Settings → Organisation → Company documents.
  *
@@ -106,7 +107,7 @@ export function OrgDocuments() {
 
       <FileDropZone onFiles={(files) => void handleUpload(files)} busy={uploading}>
       <div className="rounded-md border bg-card overflow-x-auto">
-        <table className="w-full text-sm">
+        <ExportableTable fileName="org-documents" className="w-full text-sm">
           <thead className="bg-muted/50 border-b">
             <tr>
               <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("settings_org_docs.col_file")}</th>
@@ -147,7 +148,7 @@ export function OrgDocuments() {
               ))
             )}
           </tbody>
-        </table>
+        </ExportableTable>
       </div>
       </FileDropZone>
 

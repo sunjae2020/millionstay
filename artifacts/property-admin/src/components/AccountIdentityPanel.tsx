@@ -9,6 +9,7 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
 } from "@/components/ui/dialog";
 import { apiFetch, apiPost } from "@/lib/apiFetch";
+import { ExportableTable } from "@/components/ui/ExportCsvButton";
 import {
   Building2, Upload, Trash2, Sparkles, Loader2, UserRoundCheck, BadgeCheck, ShieldAlert, ShieldQuestion,
 } from "lucide-react";
@@ -397,7 +398,7 @@ export function AccountIdentityPanel({
             )}
 
             {rows.length > 0 && (
-              <table className="w-full text-sm">
+              <ExportableTable fileName="account-identity-panel" className="w-full text-sm">
                 <thead className="text-xs text-muted-foreground">
                   <tr className="border-b">
                     <th className="w-8 py-2" />
@@ -430,7 +431,7 @@ export function AccountIdentityPanel({
                     );
                   })}
                 </tbody>
-              </table>
+              </ExportableTable>
             )}
 
             {!!review?.logoCandidates.length && (

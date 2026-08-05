@@ -7,6 +7,7 @@ import { DocumentPreviewDialog, useDocumentPreview } from "@/components/Document
 import { formatDate } from "@/lib/dateFormat";
 import { FileText, Eye, Search, FileSignature, ReceiptText, FileArchive, Loader2 } from "lucide-react";
 
+import { ExportableTable } from "@/components/ui/ExportCsvButton";
 interface OwnerDocument {
   id: string;
   entity_type: string;
@@ -122,7 +123,7 @@ export default function DocumentsPage() {
         </div>
 
         <div className="overflow-x-auto">
-          <table className="w-full text-sm">
+          <ExportableTable fileName="owner-documents" className="w-full text-sm">
             <thead className="bg-muted/50 border-b border-border">
               <tr>
                 <th className="text-left px-4 py-3 font-medium text-muted-foreground">{t("documents.col_name", "Document")}</th>
@@ -176,7 +177,7 @@ export default function DocumentsPage() {
                 </tr>
               ))}
             </tbody>
-          </table>
+          </ExportableTable>
         </div>
 
         <TablePagination

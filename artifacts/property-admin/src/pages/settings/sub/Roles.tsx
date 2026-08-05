@@ -7,6 +7,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { ShieldCheck, Plus, Trash2, Lock } from "lucide-react";
 
+import { ExportableTable } from "@/components/ui/ExportCsvButton";
 type Level = "none" | "read" | "write";
 type Role = { id: number; name: string; description: string | null; is_system: boolean; permissions: Record<string, Level> };
 
@@ -83,7 +84,7 @@ export default function RolesPage() {
               )}
             </div>
             <div className="p-4 overflow-x-auto">
-              <table className="w-full text-sm">
+              <ExportableTable fileName="roles" className="w-full text-sm">
                 <tbody>
                   {resources.map((res) => {
                     const level = (role.permissions?.[res] ?? "none") as Level;
@@ -109,7 +110,7 @@ export default function RolesPage() {
                     );
                   })}
                 </tbody>
-              </table>
+              </ExportableTable>
             </div>
           </div>
         ))}

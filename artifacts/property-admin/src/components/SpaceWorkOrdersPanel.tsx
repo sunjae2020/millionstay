@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { formatDate } from "@/lib/date";
 import { ExternalLink, Plus, Wrench } from "lucide-react";
 
+import { ExportableTable } from "@/components/ui/ExportCsvButton";
 // 하자보수 — the 서비스 & 건물관리 work orders raised against ONE space.
 // Work orders already carry space_id, so this tab is the space-side view of the
 // same records. Every link opens in a new tab so the space form (which may hold
@@ -52,7 +53,7 @@ export function SpaceWorkOrdersPanel({ spaceId }: { spaceId: string | number }) 
       </div>
 
       <div className="rounded-lg border bg-white overflow-x-auto">
-        <table className="w-full text-sm">
+        <ExportableTable fileName="space-work-orders-panel" className="w-full text-sm">
           <thead className="bg-gray-50 border-b">
             <tr>
               {[
@@ -91,7 +92,7 @@ export function SpaceWorkOrdersPanel({ spaceId }: { spaceId: string | number }) 
               ))
             )}
           </tbody>
-        </table>
+        </ExportableTable>
       </div>
     </div>
   );

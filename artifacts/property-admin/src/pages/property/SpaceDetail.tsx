@@ -58,6 +58,7 @@ import { useBrand } from "@/contexts/ThemeContext";
 import { formatMoney } from "@/lib/currency";
 import { AlertTriangle, ChevronLeft, ChevronRight, Wrench } from "lucide-react";
 
+import { ExportableTable } from "@/components/ui/ExportCsvButton";
 interface SpaceForm {
   name: string;
   manual_input: boolean;
@@ -1353,7 +1354,7 @@ export default function SpaceDetail() {
                   </div>
                 ) : (
                   <div className="border rounded-lg overflow-hidden">
-                    <table className="w-full text-sm">
+                    <ExportableTable fileName="space-detail" className="w-full text-sm">
                       <thead>
                         <tr className="border-b bg-muted/40 text-xs text-muted-foreground uppercase tracking-wider">
                           <th className="px-4 py-2.5 text-left font-medium">{t("space.svc_col_service")}</th>
@@ -1405,7 +1406,7 @@ export default function SpaceDetail() {
                           </tr>
                         ))}
                       </tbody>
-                    </table>
+                    </ExportableTable>
                   </div>
                 )}
               </div>

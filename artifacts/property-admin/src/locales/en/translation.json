@@ -391,7 +391,10 @@
     "all_years": "All years",
     "all_types": "All types",
     "search_ph_generic": "Search...",
-    "uploading": "Uploading…"
+    "uploading": "Uploading…",
+    "export_csv": "Export CSV",
+    "export_csv_count": "Export {{count}} rows to CSV",
+    "export_csv_empty": "Nothing to export"
   },
   "lang": {
     "label": "Language",

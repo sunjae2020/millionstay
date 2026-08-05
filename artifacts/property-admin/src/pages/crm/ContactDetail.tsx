@@ -27,6 +27,7 @@ import { COUNTRIES, normaliseCountry, defaultCountry } from "@/lib/countries";
 import { KoreanAddressSearch } from "@/components/KoreanAddressSearch";
 import { differenceInDays, parseISO } from "date-fns";
 
+import { ExportableTable } from "@/components/ui/ExportCsvButton";
 /**
  * Messenger the SNS id belongs to. Stored as the canonical English name; the
  * label is localised, so a Korean admin picks 카카오톡 and the row reads
@@ -673,7 +674,7 @@ export default function ContactDetail() {
                   </Button>
                 </div>
                 <div className="rounded-md border bg-card overflow-x-auto max-w-3xl">
-                  <table className="w-full text-sm">
+                  <ExportableTable fileName="contact-detail" className="w-full text-sm">
                     <thead className="bg-muted/50 border-b">
                       <tr>
                         <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('account.label_name')}</th>
@@ -704,7 +705,7 @@ export default function ContactDetail() {
                         ))
                       )}
                     </tbody>
-                  </table>
+                  </ExportableTable>
                 </div>
               </>
             )}

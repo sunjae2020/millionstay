@@ -7,6 +7,7 @@ import { formatDate } from "@/lib/dateFormat";
 import { formatMoney } from "@/lib/money";
 import { DollarSign, TrendingUp, Clock, CheckCircle, Search } from "lucide-react";
 
+import { ExportableTable } from "@/components/ui/ExportCsvButton";
 interface CommissionApiData {
   account_name: string;
   commission: {
@@ -144,7 +145,7 @@ export default function CommissionPage() {
                 />
               </div>
             </div>
-            <table className="w-full text-sm">
+            <ExportableTable fileName="agent-commissions" className="w-full text-sm">
               <thead className="bg-muted/50 border-b border-border">
                 <tr>
                   <th className="text-left px-4 py-3 font-medium text-muted-foreground">{t("commission.col_ref")}</th>
@@ -181,7 +182,7 @@ export default function CommissionPage() {
                   </tr>
                 ))}
               </tbody>
-            </table>
+            </ExportableTable>
             <TablePagination
               page={page}
               pageSize={pageSize}

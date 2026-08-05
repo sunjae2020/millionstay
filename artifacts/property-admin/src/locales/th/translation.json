@@ -391,7 +391,10 @@
     "all_years": "ทุกปี",
     "all_types": "ทุกประเภท",
     "search_ph_generic": "ค้นหา...",
-    "uploading": "กำลังอัปโหลด…"
+    "uploading": "กำลังอัปโหลด…",
+    "export_csv": "ส่งออก CSV",
+    "export_csv_count": "ส่งออก {{count}} รายการเป็น CSV",
+    "export_csv_empty": "ไม่มีข้อมูลให้ส่งออก"
   },
   "lang": {
     "label": "ภาษา",

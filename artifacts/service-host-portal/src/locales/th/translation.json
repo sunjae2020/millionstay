@@ -36,7 +36,10 @@
     "next_page": "หน้าถัดไป",
     "page_not_found": "ไม่พบหน้านี้",
     "switch_to_light": "สลับเป็นโหมดสว่าง",
-    "switch_to_dark": "สลับเป็นโหมดมืด"
+    "switch_to_dark": "สลับเป็นโหมดมืด",
+    "export_csv": "ส่งออก CSV",
+    "export_csv_count": "ส่งออก {{count}} รายการเป็น CSV",
+    "export_csv_empty": "ไม่มีข้อมูลให้ส่งออก"
   },
   "login": {
     "headline_1": "ส่งมอบความเป็นเลิศ",

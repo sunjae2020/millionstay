@@ -37,6 +37,7 @@ import { formatDate } from "@/lib/date";
 import { formatPostalAddress, orderFallbackFromLang, type AddressLang } from "@workspace/address";
 import { DocumentPreviewDialog, useDocumentPreview } from "@/components/DocumentPreviewDialog";
 
+import { ExportableTable } from "@/components/ui/ExportCsvButton";
 const ACCOUNT_TYPES_WITH_FINANCE = ["SpaceOwner", "Agent", "ServiceHost", "Partner", "HomestayHost"];
 
 const CURRENCIES = SUPPORTED_CURRENCIES.map((c) => c.code);
@@ -819,7 +820,7 @@ export default function AccountDetail() {
                 </Button>
               </div>
               <div className="rounded-md border bg-card overflow-x-auto max-w-4xl">
-                <table className="w-full text-sm">
+                <ExportableTable fileName="account-contacts" className="w-full text-sm">
                   <thead className="bg-muted/50 border-b">
                     <tr>
                       <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('account.col_contact_name')}</th>
@@ -869,7 +870,7 @@ export default function AccountDetail() {
                       ))
                     )}
                   </tbody>
-                </table>
+                </ExportableTable>
               </div>
             </TabsContent>
 
@@ -910,7 +911,7 @@ export default function AccountDetail() {
                 </div>
 
                 <div className="rounded-md border bg-card overflow-x-auto">
-                  <table className="w-full text-sm">
+                  <ExportableTable fileName="account-finance" className="w-full text-sm">
                     <thead className="bg-muted/50 border-b">
                       <tr>
                         <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('account.col_date')}</th>
@@ -953,7 +954,7 @@ export default function AccountDetail() {
                         ))
                       )}
                     </tbody>
-                  </table>
+                  </ExportableTable>
                 </div>
               </div>
             </TabsContent>
@@ -962,7 +963,7 @@ export default function AccountDetail() {
             <TabsContent value="assets">
               <div className="space-y-5 max-w-4xl">
                 <div className="rounded-md border bg-card overflow-x-auto">
-                  <table className="w-full text-sm">
+                  <ExportableTable fileName="account-assets" className="w-full text-sm">
                     <thead className="bg-muted/50 border-b">
                       <tr>
                         <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('account.col_space')}</th>
@@ -1000,7 +1001,7 @@ export default function AccountDetail() {
                         ))
                       )}
                     </tbody>
-                  </table>
+                  </ExportableTable>
                 </div>
 
                 {!!related?.children.length && (
@@ -1040,7 +1041,7 @@ export default function AccountDetail() {
               </div>
               <FileDropZone onFiles={(files) => void handleDocUpload(files)} busy={uploadingDoc} className="max-w-4xl">
               <div className="rounded-md border bg-card overflow-x-auto max-w-4xl">
-                <table className="w-full text-sm">
+                <ExportableTable fileName="account-documents" className="w-full text-sm">
                   <thead className="bg-muted/50 border-b">
                     <tr>
                       <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('account.col_file')}</th>
@@ -1075,14 +1076,14 @@ export default function AccountDetail() {
                       ))
                     )}
                   </tbody>
-                </table>
+                </ExportableTable>
               </div>
               </FileDropZone>
             </TabsContent>
 
             <TabsContent value="bookings">
               <div className="rounded-md border bg-card overflow-x-auto max-w-4xl">
-                <table className="w-full text-sm">
+                <ExportableTable fileName="account-bookings" className="w-full text-sm">
                   <thead className="bg-muted/50 border-b">
                     <tr>
                       <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('account.col_booking_ref')}</th>
@@ -1127,13 +1128,13 @@ export default function AccountDetail() {
                       ))
                     )}
                   </tbody>
-                </table>
+                </ExportableTable>
               </div>
             </TabsContent>
 
             <TabsContent value="contracts">
               <div className="rounded-md border bg-card overflow-x-auto max-w-4xl">
-                <table className="w-full text-sm">
+                <ExportableTable fileName="account-contracts" className="w-full text-sm">
                   <thead className="bg-muted/50 border-b">
                     <tr>
                       <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('account.col_contract_ref')}</th>
@@ -1178,13 +1179,13 @@ export default function AccountDetail() {
                       ))
                     )}
                   </tbody>
-                </table>
+                </ExportableTable>
               </div>
             </TabsContent>
 
             <TabsContent value="invoices">
               <div className="rounded-md border bg-card overflow-x-auto max-w-4xl">
-                <table className="w-full text-sm">
+                <ExportableTable fileName="account-invoices" className="w-full text-sm">
                   <thead className="bg-muted/50 border-b">
                     <tr>
                       <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('account.col_invoice_ref')}</th>
@@ -1228,7 +1229,7 @@ export default function AccountDetail() {
                       ))
                     )}
                   </tbody>
-                </table>
+                </ExportableTable>
               </div>
             </TabsContent>
           </Tabs>

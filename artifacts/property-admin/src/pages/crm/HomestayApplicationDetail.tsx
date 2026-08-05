@@ -22,6 +22,7 @@ import { apiFetch } from "@/lib/apiFetch";
 import { HomestaySignatureCard } from "@/components/HomestaySignatureCard";
 import { HomestayStatusBadge } from "./HomestayApplications";
 
+import { CsvExportable } from "@/components/ui/ExportCsvButton";
 const API = "/api/v1/homestay-applications";
 
 interface Resident { name?: string; age?: number | string; gender?: string; relationship?: string }
@@ -311,7 +312,7 @@ export default function HomestayApplicationDetail() {
         {/* Household / residents */}
         <Section title={t("homestay.section_household")}>
           {app.residents && app.residents.length > 0 ? (
-            <Table>
+            <CsvExportable fileName="homestay-application-matches"><Table>
               <TableHeader>
                 <TableRow>
                   <TableHead>{t("homestay.f_name")}</TableHead>
@@ -330,7 +331,7 @@ export default function HomestayApplicationDetail() {
                   </TableRow>
                 ))}
               </TableBody>
-            </Table>
+            </Table></CsvExportable>
           ) : (
             <p className="text-sm text-muted-foreground">{t("homestay.no_residents")}</p>
           )}
@@ -369,7 +370,7 @@ export default function HomestayApplicationDetail() {
             />
           </div>
           {app.rooms && app.rooms.length > 0 ? (
-            <Table>
+            <CsvExportable fileName="homestay-application-placements"><Table>
               <TableHeader>
                 <TableRow>
                   <TableHead>{t("homestay.r_room")}</TableHead>
@@ -390,7 +391,7 @@ export default function HomestayApplicationDetail() {
                   </TableRow>
                 ))}
               </TableBody>
-            </Table>
+            </Table></CsvExportable>
           ) : (
             <p className="text-sm text-muted-foreground">{t("homestay.no_rooms")}</p>
           )}
@@ -465,7 +466,7 @@ export default function HomestayApplicationDetail() {
           <div className="mb-4">
             <p className="text-xs font-semibold text-muted-foreground mb-2">{t("homestay.wwcc_title")}</p>
             {app.wwcc_records && app.wwcc_records.length > 0 ? (
-              <Table>
+              <CsvExportable fileName="homestay-application-documents"><Table>
                 <TableHeader>
                   <TableRow>
                     <TableHead>{t("homestay.f_name")}</TableHead>
@@ -491,7 +492,7 @@ export default function HomestayApplicationDetail() {
                     );
                   })}
                 </TableBody>
-              </Table>
+              </Table></CsvExportable>
             ) : (
               <p className="text-sm text-muted-foreground">{t("homestay.no_wwcc")}</p>
             )}

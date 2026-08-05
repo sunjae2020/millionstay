@@ -12,6 +12,7 @@ import { Tag, Plus, Trash2, Check, X, Pencil, ArrowUp, ArrowDown, Loader2, Alert
 import { useToast } from "@/hooks/use-toast";
 import { apiFetch } from "@/lib/apiFetch";
 
+import { CsvExportable } from "@/components/ui/ExportCsvButton";
 type Category = { id: number; name: string; site_key: string; sort_order: number; is_active: boolean };
 
 const API = "/api/v1/blog-categories";
@@ -106,7 +107,7 @@ export default function BlogCategories({ embedded = false }: { embedded?: boolea
         </div>
 
         <div className="border rounded-lg bg-white">
-          <Table>
+          <CsvExportable fileName="blog-categories"><Table>
             <TableHeader>
               <TableRow>
                 <TableHead className="w-10"></TableHead>
@@ -157,7 +158,7 @@ export default function BlogCategories({ embedded = false }: { embedded?: boolea
                 </TableRow>
               ))}
             </TableBody>
-          </Table>
+          </Table></CsvExportable>
         </div>
 
         <p className="text-xs text-muted-foreground mt-3">

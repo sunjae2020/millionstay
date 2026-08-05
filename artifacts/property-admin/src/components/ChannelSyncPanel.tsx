@@ -13,6 +13,7 @@ import { formatDate } from "@/lib/date";
 import { Copy, Check, Plus, Trash2, ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 
+import { ExportableTable } from "@/components/ui/ExportCsvButton";
 type Channel = { id: number; code: string; name: string };
 type Listing = { id: number; channel_id: number; channel_name: string | null };
 type Account = { id: number; channel_id: number; label: string; auth_type: string; status: string };
@@ -248,7 +249,7 @@ export function ChannelSyncPanel({ spaceId, channels, listings }: { spaceId: num
           <p className="text-xs text-muted-foreground">{t("space.cs_no_reservations")}</p>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full text-sm">
+            <ExportableTable fileName="channel-sync-panel" className="w-full text-sm">
               <thead>
                 <tr className="text-left text-xs text-muted-foreground border-b">
                   <th className="py-1.5 pr-3">{t("space.cs_col_ext")}</th>
@@ -273,7 +274,7 @@ export function ChannelSyncPanel({ spaceId, channels, listings }: { spaceId: num
                   </tr>
                 ))}
               </tbody>
-            </table>
+            </ExportableTable>
           </div>
         )}
       </div>

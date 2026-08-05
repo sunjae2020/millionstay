@@ -13,6 +13,7 @@ import { useAuth } from "@/lib/auth";
 import { useDarkMode } from "@/lib/darkMode";
 import { FileSignature, DollarSign, TrendingUp, Clock, ArrowRight, PieChart as PieIcon, LineChart as LineIcon } from "lucide-react";
 
+import { ExportableTable } from "@/components/ui/ExportCsvButton";
 interface DashboardData {
   account_name: string;
   stats: {
@@ -236,7 +237,7 @@ export default function DashboardPage() {
               <p className="text-sm text-muted-foreground p-6">{t("dashboard.no_bookings")}</p>
             ) : (
               <div className="overflow-x-auto">
-                <table className="w-full text-sm">
+                <ExportableTable fileName="agent-dashboard" className="w-full text-sm">
                   <thead>
                     <tr className="text-left text-xs text-muted-foreground border-b border-card-border">
                       <th className="px-5 py-3 font-medium">{t("dashboard.col_ref", "Reference")}</th>
@@ -263,7 +264,7 @@ export default function DashboardPage() {
                       </tr>
                     ))}
                   </tbody>
-                </table>
+                </ExportableTable>
               </div>
             )}
           </div>

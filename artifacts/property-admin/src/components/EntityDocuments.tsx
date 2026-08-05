@@ -8,6 +8,7 @@ import { FileDropZone, DIRECTORY_INPUT_PROPS } from "@/components/FileDropZone";
 import { apiFetch, apiJson } from "@/lib/apiFetch";
 import { formatDate } from "@/lib/date";
 
+import { ExportableTable } from "@/components/ui/ExportCsvButton";
 /**
  * Documents filed against one record (contract, property, account …).
  *
@@ -205,7 +206,7 @@ export default function EntityDocuments({ entityType, entityId, defaultDocType =
         hideHint={hideUpload}
       >
       <div className="rounded-lg border bg-white overflow-x-auto">
-        <table className="w-full text-sm">
+        <ExportableTable fileName="entity-documents" className="w-full text-sm">
           <thead className="bg-muted/50 border-b">
             <tr>
               <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("entity_docs.col_file")}</th>
@@ -276,7 +277,7 @@ export default function EntityDocuments({ entityType, entityId, defaultDocType =
               ))
             )}
           </tbody>
-        </table>
+        </ExportableTable>
       </div>
       </FileDropZone>
 

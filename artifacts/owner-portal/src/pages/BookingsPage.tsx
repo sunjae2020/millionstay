@@ -8,6 +8,7 @@ import { formatDate } from "@/lib/dateFormat";
 import { formatMoney } from "@/lib/money";
 import { Calendar, CalendarDays, List, Search, X } from "lucide-react";
 
+import { ExportableTable } from "@/components/ui/ExportCsvButton";
 interface Booking {
   id: number;
   booking_ref: string;
@@ -153,7 +154,7 @@ export default function BookingsPage() {
       )}
 
       <div className="bg-card border border-card-border rounded-xl overflow-hidden">
-        <table className="w-full text-sm">
+        <ExportableTable fileName="owner-bookings" className="w-full text-sm">
           <thead className="bg-muted/50 border-b border-border">
             <tr>
               <th className="text-left px-4 py-3 font-medium text-muted-foreground">{t("bookings.col_ref")}</th>
@@ -211,7 +212,7 @@ export default function BookingsPage() {
               </tr>
             ))}
           </tbody>
-        </table>
+        </ExportableTable>
         <TablePagination
           page={page}
           pageSize={pageSize}

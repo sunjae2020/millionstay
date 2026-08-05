@@ -15,6 +15,7 @@ import {
 } from "recharts";
 import { ScheduleCalendar, type CalendarItem } from "@/components/ScheduleCalendar";
 
+import { ExportableTable } from "@/components/ui/ExportCsvButton";
 interface DashboardData {
   account_name: string;
   stats: { total_jobs: number; pending_jobs: number; completed_jobs: number; total_earnings: string };
@@ -224,7 +225,7 @@ export default function DashboardPage() {
             <div className="p-10 text-center text-muted-foreground text-sm">{t("dashboard.no_orders", "No work orders yet")}</div>
           ) : (
             <div className="overflow-x-auto">
-              <table className="w-full text-sm">
+              <ExportableTable fileName="service-host-dashboard" className="w-full text-sm">
                 <thead>
                   <tr className="text-left text-xs text-muted-foreground border-b border-border">
                     <th className="px-5 py-2.5 font-medium">{t("dashboard.col_order", "Order")}</th>
@@ -254,7 +255,7 @@ export default function DashboardPage() {
                     </tr>
                   ))}
                 </tbody>
-              </table>
+              </ExportableTable>
             </div>
           )}
         </div>

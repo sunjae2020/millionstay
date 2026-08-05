@@ -33,6 +33,7 @@ import { BookingConditionReports } from "./BookingConditionReports";
 import { BookingDepositSettlement } from "./BookingDepositSettlement";
 import { DocumentPreviewDialog, useDocumentPreview } from "@/components/DocumentPreviewDialog";
 
+import { ExportableTable } from "@/components/ui/ExportCsvButton";
 const BASE = import.meta.env.BASE_URL;
 
 const BOOKING_STATUS_COLORS: Record<string, string> = {
@@ -494,7 +495,7 @@ export default function BookingDetail() {
                   </Button>
                 </div>
                 <div className="rounded-lg border bg-white overflow-x-auto">
-                  <table className="w-full text-sm">
+                  <ExportableTable fileName="booking-kyc-documents" className="w-full text-sm">
                     <thead className="bg-gray-50 border-b">
                       <tr>
                         {[
@@ -547,7 +548,7 @@ export default function BookingDetail() {
                         </tr>
                       ))}
                     </tbody>
-                  </table>
+                  </ExportableTable>
                 </div>
               </div>
             )}
@@ -568,7 +569,7 @@ export default function BookingDetail() {
                   </Button>
                 </div>
                 <div className="rounded-lg border bg-white overflow-x-auto">
-                  <table className="w-full text-sm">
+                  <ExportableTable fileName="booking-services" className="w-full text-sm">
                     <thead className="bg-gray-50 border-b">
                       <tr>
                         {[t("booking.col_service_name"), t("common.type"), t("booking.col_qty"), t("booking.col_unit_price"), t("common.total"), t("booking.col_billing"), t("booking.col_frequency"), t("common.status"), t("common.notes"), ""].map((h, i) => (
@@ -612,7 +613,7 @@ export default function BookingDetail() {
                         </tr>
                       ))}
                     </tbody>
-                  </table>
+                  </ExportableTable>
                 </div>
               </div>
             )}
@@ -626,7 +627,7 @@ export default function BookingDetail() {
                   </Link>
                 </div>
                 <div className="rounded-lg border bg-white overflow-x-auto">
-                  <table className="w-full text-sm">
+                  <ExportableTable fileName="booking-invoices" className="w-full text-sm">
                     <thead className="bg-gray-50 border-b">
                       <tr>
                         {[
@@ -661,7 +662,7 @@ export default function BookingDetail() {
                         </tr>
                       ))}
                     </tbody>
-                  </table>
+                  </ExportableTable>
                 </div>
               </div>
             )}

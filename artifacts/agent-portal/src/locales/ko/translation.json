@@ -34,7 +34,10 @@
     "next_page": "다음 페이지",
     "switch_to_light": "라이트 모드로 전환",
     "switch_to_dark": "다크 모드로 전환",
-    "dismiss": "닫기"
+    "dismiss": "닫기",
+    "export_csv": "CSV 내보내기",
+    "export_csv_count": "{{count}}건을 CSV로 내보내기",
+    "export_csv_empty": "내보낼 데이터가 없습니다"
   },
   "login": {
     "headline_1": "당신의 비즈니스를",

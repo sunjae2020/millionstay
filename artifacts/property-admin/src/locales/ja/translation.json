@@ -391,7 +391,10 @@
     "all_years": "すべての年度",
     "all_types": "すべての種類",
     "search_ph_generic": "検索...",
-    "uploading": "アップロード中…"
+    "uploading": "アップロード中…",
+    "export_csv": "CSVエクスポート",
+    "export_csv_count": "{{count}}件をCSVにエクスポート",
+    "export_csv_empty": "エクスポートするデータがありません"
   },
   "lang": {
     "label": "言語",

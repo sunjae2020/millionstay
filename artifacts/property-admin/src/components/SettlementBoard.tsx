@@ -15,6 +15,7 @@ import { useBrand } from "@/contexts/ThemeContext";
 import { formatMoney } from "@/lib/currency";
 import { formatDate } from "@/lib/date";
 
+import { ExportableTable } from "@/components/ui/ExportCsvButton";
 // 정산 보드 — one contract's money in one place: what the customer paid, where
 // each part of it went, and what was left for us.
 //
@@ -198,7 +199,7 @@ export default function SettlementBoard({ contractId }: { contractId: number | s
       </div>
 
       <div className="rounded-lg border bg-white overflow-x-auto">
-        <table className="w-full text-sm">
+        <ExportableTable fileName="settlement-terms" className="w-full text-sm">
           <thead className="bg-gray-50 border-b">
             <tr>
               {[t("settlement.col_party"), t("settlement.col_payee"), t("settlement.col_basis"), t("settlement.col_cadence"), ""].map((h, i) => (
@@ -232,7 +233,7 @@ export default function SettlementBoard({ contractId }: { contractId: number | s
               </tr>
             ))}
           </tbody>
-        </table>
+        </ExportableTable>
       </div>
 
       {/* ── Receipts and their legs ──────────────────────────────────── */}
@@ -285,7 +286,7 @@ export default function SettlementBoard({ contractId }: { contractId: number | s
             </div>
           </div>
 
-          <table className="w-full text-sm">
+          <ExportableTable fileName="settlement-lines" className="w-full text-sm">
             <tbody>
               {r.legs.filter((l) => l.split_role === "external_payment").map((l) => (
                 <tr key={l.id} className="border-b last:border-b-0 hover:bg-gray-50">
@@ -315,7 +316,7 @@ export default function SettlementBoard({ contractId }: { contractId: number | s
                 <td colSpan={2} />
               </tr>
             </tbody>
-          </table>
+          </ExportableTable>
         </div>
       ))}
 

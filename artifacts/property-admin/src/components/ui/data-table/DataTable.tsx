@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import {
   Archive,
   ArchiveRestore,
+  Download,
   Loader2,
   RotateCcw,
   Trash2,
@@ -27,6 +28,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { apiFetch } from "@/lib/apiFetch";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
+import { csvFileName, downloadCsv, nodeToText, toCsvString } from "@/lib/csv";
 import { ACTIONS_KEY, type ColumnDef, type DataTableEditing, type EditValue } from "./types";
 import { useTablePrefs } from "./useTablePrefs";
 import { ResizableSortableTh } from "./ResizableSortableTh";
@@ -58,6 +60,10 @@ export interface DataTableProps<T> {
   onToggleShowDeleted?: (next: boolean) => void;
   /** Extra content rendered in the toolbar (left of Columns), e.g. page filters. */
   toolbarExtra?: React.ReactNode;
+  /** Default true — shows the CSV export button in the toolbar. */
+  exportable?: boolean;
+  /** Base name for the downloaded file; defaults to `tableKey`. */
+  exportFileName?: string;
   className?: string;
 }
 
@@ -77,6 +83,8 @@ export function DataTable<T>({
   showDeleted = false,
   onToggleShowDeleted,
   toolbarExtra,
+  exportable = true,
+  exportFileName,
   className,
 }: DataTableProps<T>) {
   const { t } = useTranslation();
@@ -200,6 +208,23 @@ export function DataTable<T>({
   const visibleCols = prefs.orderedVisibleColumns;
   const colSpan = visibleCols.length + (selectionEnabled ? 1 : 0);
 
+  // CSV export: every filtered+sorted row (not just the visible page), in the
+  // user's current column order/visibility. Narrowed to the selection when the
+  // user has ticked rows. The actions column is never exported.
+  const exportCols = visibleCols.filter(
+    (c) => c.key !== ACTIONS_KEY && c.exportable !== false,
+  );
+  const exportRowCount = selectedIds.size > 0 ? selectedIds.size : sorted.length;
+
+  function exportCsv() {
+    const rows = selectedIds.size > 0 ? sorted.filter((r) => selectedIds.has(rowKey(r))) : sorted;
+    const header = exportCols.map((c) => (typeof c.header === "string" ? t(c.header) : c.key));
+    const body = rows.map((row) =>
+      exportCols.map((c) => (c.csv ? c.csv(row) : nodeToText(c.cell(row)))),
+    );
+    downloadCsv(toCsvString([header, ...body]), csvFileName(exportFileName ?? tableKey));
+  }
+
   const dialogCopy: Record<Exclude<BulkAction, null>, { title: string; desc: string; confirm: string; danger: boolean }> = {
     archive: {
       title: t("common.archive_selected_title"),
@@ -239,6 +264,19 @@ export function DataTable<T>({
             >
               <Eye className="h-3.5 w-3.5" />
               {t("common.show_deleted")}
+            </Button>
+          )}
+          {exportable && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-8 gap-1.5"
+              onClick={exportCsv}
+              disabled={isLoading || exportRowCount === 0}
+              title={t("common.export_csv_count", { count: exportRowCount })}
+            >
+              <Download className="h-3.5 w-3.5" />
+              {t("common.export_csv")}
             </Button>
           )}
           <ColumnsMenu

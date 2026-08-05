@@ -8,6 +8,7 @@ import { AlertTriangle, Check, ExternalLink, Minus, X } from "lucide-react";
 import { apiJson } from "@/lib/apiFetch";
 import { formatDate } from "@/lib/date";
 
+import { ExportableTable } from "@/components/ui/ExportCsvButton";
 /**
  * 서류 점검 — what is missing, and what is about to expire.
  *
@@ -145,7 +146,7 @@ export default function DocumentCompliance() {
       ) : null}
 
       <div className="overflow-x-auto rounded-lg border bg-card">
-        <table className="w-full text-sm">
+        <ExportableTable fileName="document-compliance" className="w-full text-sm">
           <thead className="border-b bg-muted/50">
             <tr>
               {["col_contract", "col_unit", "col_tenant", "col_term", "col_expiry", "col_docs"].map((k) => (
@@ -215,7 +216,7 @@ export default function DocumentCompliance() {
               ))
             )}
           </tbody>
-        </table>
+        </ExportableTable>
       </div>
 
       {data && data.summary.expired > 0 && view !== "expiring" && (

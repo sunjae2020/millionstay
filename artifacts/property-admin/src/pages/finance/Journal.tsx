@@ -8,6 +8,7 @@ import { DataTable, type ColumnDef } from "@/components/ui/data-table";
 import { SearchBox } from "@/components/list-filters";
 import { formatDate } from "@/lib/date";
 
+import { ExportableTable } from "@/components/ui/ExportCsvButton";
 type GlLine = {
   account_code: string;
   account_name: string;
@@ -199,7 +200,7 @@ export default function Journal() {
                     <span className="text-xs font-medium text-muted-foreground">{entry.currency}</span>
                   </div>
                   <div className="overflow-x-auto">
-                    <table className="w-full min-w-max text-sm">
+                    <ExportableTable fileName="journal" className="w-full min-w-max text-sm">
                       <thead className="border-b bg-muted/10">
                         <tr>
                           <th className="text-left px-4 py-2 font-medium text-muted-foreground">{t("journal.col_account")}</th>
@@ -223,7 +224,7 @@ export default function Journal() {
                           </tr>
                         ))}
                       </tbody>
-                    </table>
+                    </ExportableTable>
                   </div>
                 </div>
               ))}

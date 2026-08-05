@@ -391,7 +391,10 @@
     "all_years": "Tất cả năm",
     "all_types": "Tất cả loại",
     "search_ph_generic": "Tìm kiếm...",
-    "uploading": "Đang tải lên…"
+    "uploading": "Đang tải lên…",
+    "export_csv": "Xuất CSV",
+    "export_csv_count": "Xuất {{count}} dòng ra CSV",
+    "export_csv_empty": "Không có dữ liệu để xuất"
   },
   "lang": {
     "label": "Ngôn ngữ",

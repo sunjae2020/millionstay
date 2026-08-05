@@ -391,7 +391,10 @@
     "all_years": "전체 연도",
     "all_types": "전체 유형",
     "search_ph_generic": "검색...",
-    "uploading": "업로드 중…"
+    "uploading": "업로드 중…",
+    "export_csv": "CSV 내보내기",
+    "export_csv_count": "{{count}}건을 CSV로 내보내기",
+    "export_csv_empty": "내보낼 데이터가 없습니다"
   },
   "lang": {
     "label": "언어",

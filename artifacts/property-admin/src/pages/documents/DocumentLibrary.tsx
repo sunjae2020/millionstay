@@ -11,6 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 import { formatDate } from "@/lib/date";
 import { DocumentPreviewDialog, useDocumentPreview } from "@/components/DocumentPreviewDialog";
 
+import { ExportableTable } from "@/components/ui/ExportCsvButton";
 /**
  * Document library — 문서 색인.
  *
@@ -270,7 +271,7 @@ export default function DocumentLibrary() {
       )}
 
       <div className="overflow-x-auto rounded-lg border bg-card">
-        <table className="w-full text-sm">
+        <ExportableTable fileName="document-library" className="w-full text-sm">
           <thead className="border-b bg-muted/50">
             <tr>
               {["col_doc", "col_type", "col_year", "col_unit", "col_tags", "col_record", "col_size", "col_uploaded"].map((k) => (
@@ -358,7 +359,7 @@ export default function DocumentLibrary() {
               ))
             )}
           </tbody>
-        </table>
+        </ExportableTable>
       </div>
 
       {/* Index editor. Only the index is editable — not the bytes, and not the

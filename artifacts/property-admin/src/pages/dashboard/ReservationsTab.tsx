@@ -28,6 +28,7 @@ import { formatMoney, SUPPORTED_CURRENCIES } from "@/lib/currency";
 import { formatDate } from "@/lib/date";
 import { matchesQuery } from "@/lib/search";
 
+import { ExportableTable } from "@/components/ui/ExportCsvButton";
 const STATUS_COLORS: Record<string, { bg: string; text: string; border: string }> = {
   Draft:           { bg: "#f8fafc", text: "#64748b", border: "#cbd5e1" },
   PendingPayment:  { bg: "#fef9c3", text: "#854d0e", border: "#fde68a" },
@@ -662,7 +663,7 @@ export default function ReservationsTab() {
           </Select>
         </div>
         <div className="overflow-auto">
-          <table className="w-full text-xs">
+          <ExportableTable fileName="reservations-tab" className="w-full text-xs">
             <thead className="bg-muted/50">
               <tr>
                 {[
@@ -703,7 +704,7 @@ export default function ReservationsTab() {
                 </tr>
               ))}
             </tbody>
-          </table>
+          </ExportableTable>
         </div>
         {pageCount > 1 && (
           <div className="flex items-center justify-between px-4 py-2 border-t text-xs">

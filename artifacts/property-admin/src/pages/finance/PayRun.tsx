@@ -12,6 +12,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useBrand } from "@/contexts/ThemeContext";
 import { formatMoney } from "@/lib/currency";
 
+import { ExportableTable } from "@/components/ui/ExportCsvButton";
 // Pay Run — the weekly "who do we owe" screen.
 //
 // Grouped by payee so the routine is "approve this person's four lines at once"
@@ -206,7 +207,7 @@ export default function PayRun() {
                 </div>
                 <div className="font-mono font-bold text-sm">{money(g.total, g.currency)}</div>
               </div>
-              <table className="w-full text-sm">
+              <ExportableTable fileName="pay-run" className="w-full text-sm">
                 <tbody>
                   {g.items.map((i) => (
                     <tr key={i.id} className="border-b last:border-b-0 hover:bg-gray-50">
@@ -237,7 +238,7 @@ export default function PayRun() {
                     </tr>
                   ))}
                 </tbody>
-              </table>
+              </ExportableTable>
             </div>
           ))
         )}

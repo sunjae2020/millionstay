@@ -27,6 +27,7 @@ import { ContentTranslationsPanel } from "@/components/ContentTranslationsPanel"
 import { Link } from "wouter";
 import { format } from "date-fns";
 
+import { ExportableTable } from "@/components/ui/ExportCsvButton";
 interface PropertyForm {
   name: string;
   address: string;
@@ -415,7 +416,7 @@ export default function PropertyDetail() {
           {!isNew && (
             <TabsContent value="spaces">
               <div className="rounded-md border bg-card overflow-x-auto max-w-3xl">
-                <table className="w-full text-sm">
+                <ExportableTable fileName="property-detail" className="w-full text-sm">
                   <thead className="bg-muted/50 border-b">
                     <tr>
                       <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("property.col_space_name")}</th>
@@ -444,7 +445,7 @@ export default function PropertyDetail() {
                       ))
                     )}
                   </tbody>
-                </table>
+                </ExportableTable>
               </div>
             </TabsContent>
           )}

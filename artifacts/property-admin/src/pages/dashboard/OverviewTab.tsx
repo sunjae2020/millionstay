@@ -18,6 +18,7 @@ import { useBrand } from "@/contexts/ThemeContext";
 import { formatMoney } from "@/lib/currency";
 import { formatDate } from "@/lib/date";
 
+import { ExportableTable } from "@/components/ui/ExportCsvButton";
 const CAL_COLORS: Record<string, string> = {
   Draft: "#9ca3af", PendingPayment: "#eab308", PendingApproval: "#f59e0b",
   Confirmed: "#3b82f6", Active: "#22c55e", CheckedOut: "#6366f1",
@@ -290,7 +291,7 @@ export default function OverviewTab() {
           action={<Link href="/booking/bookings" className="text-xs text-primary hover:underline">{t("dash_overview.view_all")} →</Link>}
         >
           <div className="overflow-auto">
-            <table className="w-full text-xs">
+            <ExportableTable fileName="overview-tab" className="w-full text-xs">
               <thead className="bg-muted/50">
                 <tr>
                   {[
@@ -325,7 +326,7 @@ export default function OverviewTab() {
                   </tr>
                 ))}
               </tbody>
-            </table>
+            </ExportableTable>
           </div>
         </DashCard>
 

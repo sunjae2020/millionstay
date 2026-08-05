@@ -36,7 +36,10 @@
     "next_page": "Next page",
     "page_not_found": "Page not found",
     "switch_to_light": "Switch to light mode",
-    "switch_to_dark": "Switch to dark mode"
+    "switch_to_dark": "Switch to dark mode",
+    "export_csv": "Export CSV",
+    "export_csv_count": "Export {{count}} rows to CSV",
+    "export_csv_empty": "Nothing to export"
   },
   "login": {
     "headline_1": "Deliver excellence,",

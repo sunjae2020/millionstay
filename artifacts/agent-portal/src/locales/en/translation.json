@@ -34,7 +34,10 @@
     "next_page": "Next page",
     "switch_to_light": "Switch to light mode",
     "switch_to_dark": "Switch to dark mode",
-    "dismiss": "Dismiss"
+    "dismiss": "Dismiss",
+    "export_csv": "Export CSV",
+    "export_csv_count": "Export {{count}} rows to CSV",
+    "export_csv_empty": "Nothing to export"
   },
   "login": {
     "headline_1": "Grow your book",

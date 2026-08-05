@@ -5,6 +5,7 @@ import { apiFetch } from "@/lib/apiFetch";
 import { Building2, LayoutGrid, Users, DoorOpen, Home, Tag } from "lucide-react";
 import { KpiCard, DashCard } from "@/components/dashboard/DashboardKit";
 
+import { ExportableTable } from "@/components/ui/ExportCsvButton";
 interface Unit {
   id: number;
   name: string;
@@ -212,7 +213,7 @@ export default function FloorBoardTab() {
           </div>
         ) : (
           <div className="overflow-auto max-h-[70vh]">
-            <table className="border-separate border-spacing-0 text-xs">
+            <ExportableTable fileName="floor-board-tab" className="border-separate border-spacing-0 text-xs">
               <thead>
                 <tr>
                   <th className="sticky left-0 top-0 z-30 bg-card border-b border-r px-3 py-2 text-left font-semibold min-w-[52px]">
@@ -283,7 +284,7 @@ export default function FloorBoardTab() {
                   </th>
                 </tr>
               </tfoot>
-            </table>
+            </ExportableTable>
           </div>
         )}
       </DashCard>

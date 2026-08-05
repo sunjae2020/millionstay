@@ -13,6 +13,7 @@ import { ArrowLeft, FolderOpen, Upload, CheckCircle2, XCircle, AlertCircle, Imag
 import { saveSession } from "./BulkPhotoUploadList";
 import { FileDropZone, relativePathOf } from "@/components/FileDropZone";
 
+import { ExportableTable } from "@/components/ui/ExportCsvButton";
 interface SpaceRow {
   id: number;
   name: string;
@@ -284,7 +285,7 @@ export default function BulkPhotoUpload() {
         {groups.length > 0 && (
           <div className="border rounded-lg overflow-hidden bg-card">
             <div className="overflow-x-auto">
-            <table className="w-full min-w-max text-sm">
+            <ExportableTable fileName="bulk-photo-upload" className="w-full min-w-max text-sm">
               <thead className="bg-muted/50 border-b">
                 <tr>
                   <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("bulk_photo.col_folder")}</th>
@@ -372,7 +373,7 @@ export default function BulkPhotoUpload() {
                   );
                 })}
               </tbody>
-            </table>
+            </ExportableTable>
             </div>
           </div>
         )}

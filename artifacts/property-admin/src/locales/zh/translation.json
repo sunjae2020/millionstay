@@ -391,7 +391,10 @@
     "all_years": "全部年份",
     "all_types": "全部类型",
     "search_ph_generic": "搜索...",
-    "uploading": "上传中…"
+    "uploading": "上传中…",
+    "export_csv": "导出 CSV",
+    "export_csv_count": "导出 {{count}} 行为 CSV",
+    "export_csv_empty": "没有可导出的数据"
   },
   "lang": {
     "label": "语言",

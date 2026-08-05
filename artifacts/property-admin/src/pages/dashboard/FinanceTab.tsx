@@ -18,6 +18,7 @@ import { formatMoney } from "@/lib/currency";
 import { formatDate } from "@/lib/date";
 import { matchesQuery } from "@/lib/search";
 
+import { ExportableTable } from "@/components/ui/ExportCsvButton";
 interface FinanceSummary {
   /** Gross — everything received, including money owed onward to owners/partners. */
   total_revenue: number;
@@ -182,7 +183,7 @@ export default function FinanceTab() {
             <span className="text-xs text-muted-foreground">{t("dash_finance.arrears_invoices", { count: arrears.total_invoices })}</span>
           </div>
           <div className="overflow-x-auto">
-            <table className="w-full text-sm">
+            <ExportableTable fileName="dashboard-rent-arrears" className="w-full text-sm">
               <thead className="border-b text-xs text-muted-foreground">
                 <tr>
                   <th className="text-left py-2 pr-3 font-medium">{t("dash_finance.arrears_tenant")}</th>
@@ -207,7 +208,7 @@ export default function FinanceTab() {
                   </tr>
                 ))}
               </tbody>
-            </table>
+            </ExportableTable>
           </div>
           {arrears.data.length > 10 && (
             <p className="text-xs text-muted-foreground mt-2">{t("dash_finance.arrears_more", { count: arrears.data.length - 10 })}</p>
@@ -286,7 +287,7 @@ export default function FinanceTab() {
           </Select>
         </div>
         <div className="overflow-auto">
-          <table className="w-full text-xs">
+          <ExportableTable fileName="dashboard-finance-transactions" className="w-full text-xs">
             <thead className="bg-muted/50">
               <tr>
                 {[t("dash_finance.col_invoice_no"), t("dash_finance.col_account"), t("common.amount"), t("dash_finance.col_due_date"), t("common.status"), t("common.actions")].map((h, hi) => (
@@ -328,7 +329,7 @@ export default function FinanceTab() {
                 </tr>
               ))}
             </tbody>
-          </table>
+          </ExportableTable>
         </div>
         {pageCount > 1 && (
           <div className="flex items-center justify-between px-4 py-2 border-t text-xs">
@@ -370,7 +371,7 @@ export default function FinanceTab() {
 
         <DashCard title={t("dash_finance.tax_summary_6mo")}>
           <div className="overflow-auto">
-            <table className="w-full text-xs">
+            <ExportableTable fileName="dashboard-tax-summary" className="w-full text-xs">
               <thead className="bg-muted/50">
                 <tr>
                   {[t("dash_finance.col_period"), t("dash_finance.col_gross_revenue"), t("dash_finance.col_tax_10"), t("dash_finance.col_net_revenue")].map((h, hi) => (
@@ -390,7 +391,7 @@ export default function FinanceTab() {
                   </tr>
                 ))}
               </tbody>
-            </table>
+            </ExportableTable>
           </div>
         </DashCard>
       </div>
