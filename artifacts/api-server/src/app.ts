@@ -42,6 +42,7 @@ import { conditionReportsAdminRouter, conditionReportsGuestRouter } from "./rout
 import { depositSettlementsAdminRouter, depositSettlementsGuestRouter } from "./routes/deposit-settlements";
 import { logger } from "./lib/logger";
 import { requireAuth } from "./middlewares/requireAuth";
+import { originGuard } from "./middlewares/originGuard";
 import { loginLimiter, applicationLimiter, generalLimiter, privacyExportLimiter, chatLimiter } from "./middlewares/rateLimit";
 
 // Resolve the directory of this file — works both in source and in the esbuild bundle.
@@ -185,6 +186,11 @@ app.use((_req, res, next) => {
   }
   next();
 });
+
+// ── Origin lock ── reject /api requests that didn't arrive through Cloudflare
+// (no valid X-Edge-Secret). No-op until ORIGIN_SHARED_SECRET is set. Runs before
+// webhooks + routes so a direct-to-origin caller can't reach any handler.
+app.use("/api", originGuard);
 
 app.use(
   "/api/v1/stripe/webhook",

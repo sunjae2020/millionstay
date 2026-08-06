@@ -1,4 +1,5 @@
 import rateLimit from "express-rate-limit";
+import { rateLimitKey } from "../lib/clientIp";
 
 const skip = process.env["NODE_ENV"] !== "production"
   ? () => true   // disabled outside prod
@@ -15,6 +16,7 @@ export const loginLimiter = rateLimit({
   standardHeaders: "draft-7",
   legacyHeaders: false,
   message: { error: "Too many login attempts. Try again in a minute." },
+  keyGenerator: rateLimitKey,
   skip,
 });
 
@@ -24,6 +26,7 @@ export const applicationLimiter = rateLimit({
   standardHeaders: "draft-7",
   legacyHeaders: false,
   message: { error: "Too many submissions. Try again later." },
+  keyGenerator: rateLimitKey,
   skip,
 });
 
@@ -32,6 +35,7 @@ export const generalLimiter = rateLimit({
   limit: 300,
   standardHeaders: "draft-7",
   legacyHeaders: false,
+  keyGenerator: rateLimitKey,
   skip,
 });
 
@@ -42,6 +46,7 @@ export const chatLimiter = rateLimit({
   standardHeaders: "draft-7",
   legacyHeaders: false,
   message: { error: "You're sending messages too quickly. Please wait a moment." },
+  keyGenerator: rateLimitKey,
   skip,
 });
 
@@ -53,5 +58,6 @@ export const privacyExportLimiter = rateLimit({
   standardHeaders: "draft-7",
   legacyHeaders: false,
   message: { error: "Daily privacy-export limit reached. Contact millionstay.com@gmail.com if you need additional exports." },
+  keyGenerator: rateLimitKey,
   skip,
 });
