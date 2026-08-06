@@ -29,6 +29,7 @@ import { CUSTOMER_APPLICATION } from "./lib/email-templates/customer-application
 import { CUSTOMER_BOOKING } from "./lib/email-templates/customer-booking.mjs";
 import { CUSTOMER_CONTRACT } from "./lib/email-templates/customer-contract.mjs";
 import { CUSTOMER_TENANCY } from "./lib/email-templates/customer-tenancy.mjs";
+import { CUSTOMER_BILLING } from "./lib/email-templates/customer-billing.mjs";
 
 const { Pool } = pg;
 const LOCALES = ["ko", "en", "ja", "zh", "th", "vi"];
@@ -42,6 +43,7 @@ const CATALOGUE = [
   ...CUSTOMER_BOOKING.map((t) => ({ ...t, kind: "email", category: "customer" })),
   ...CUSTOMER_CONTRACT.map((t) => ({ ...t, kind: "email", category: "customer" })),
   ...CUSTOMER_TENANCY.map((t) => ({ ...t, kind: "email", category: "customer" })),
+  ...CUSTOMER_BILLING.map((t) => ({ ...t, kind: "email", category: "customer" })),
 ];
 
 // ─────────────────────────────────────────────────────────────────────────────
