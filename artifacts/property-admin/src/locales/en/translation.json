@@ -867,7 +867,24 @@
     "portal_password_policy": "At least 12 characters, with upper and lower case, a number and a symbol.",
     "portal_password_signout_hint": "Setting a password signs the user out of every device.",
     "portal_password_saved": "Password updated.",
-    "portal_enabled_hint": "Turning this off blocks sign-in immediately."
+    "portal_enabled_hint": "Turning this off blocks sign-in immediately.",
+    "consolidated_title": "Consolidated invoicing",
+    "consolidated_hint": "Bill every space this account rents on a single monthly invoice.",
+    "consolidated_billing_day": "Billing day",
+    "consolidated_day_label": "Day {{day}}",
+    "consolidated_billing_day_hint": "The consolidated invoice is issued and falls due on this day each month.",
+    "consolidated_prorate": "Carry over pro-rata rent",
+    "consolidated_prorate_hint": "If a space was moved into part-way through last month, add last month's pro-rata rent to this month's invoice.",
+    "consolidated_run": "Generate this month",
+    "consolidated_run_done": "Generated — {{spaces}} space(s), {{prorated}} pro-rata carry-over(s).",
+    "consolidated_run_empty": "No active lease to bill for this month.",
+    "consolidated_run_failed": "Could not generate the consolidated invoice.",
+    "consolidated_saved": "Saved.",
+    "consolidated_save_failed": "Could not save the settings.",
+    "col_invoice_kind": "Type",
+    "invoice_kind_consolidated": "Consolidated",
+    "invoice_kind_bundled": "In consolidated",
+    "invoice_kind_standard": "Standard"
   },
   "lead": {
     "new": "New Lead",
@@ -1400,7 +1417,12 @@
     "pay_link_created": "Payment link created",
     "pay_link_created_desc": "Stripe Checkout opened; link copied to clipboard.",
     "pay_link_failed": "Could not create payment link",
-    "view_receipt": "View receipt"
+    "view_receipt": "View receipt",
+    "section_consolidated": "Consolidated billing",
+    "consolidated_hint": "Every space billed for {{period}}.",
+    "col_line_label": "Item",
+    "col_line_period": "Period",
+    "consolidated_children": "Per-space invoices"
   },
   "workorder": {
     "new": "New Work Order",

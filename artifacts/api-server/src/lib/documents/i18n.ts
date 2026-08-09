@@ -110,6 +110,9 @@ const LABELS: Dict = {
   "amountPaid":       { en: "Amount Paid", ko: "결제 금액",    zh: "已付金额",   ja: "支払金額", th: "ยอดที่ชำระ",     vi: "Số tiền đã trả" },
   "notes":            { en: "Notes",       ko: "비고",         zh: "备注",       ja: "備考",     th: "หมายเหตุ",       vi: "Ghi chú" },
   "issued":           { en: "Issued",      ko: "발행일",       zh: "开具日期",   ja: "発行日",   th: "วันที่ออก",      vi: "Ngày phát hành" },
+  // 통합(단체) 청구서 — 여러 공간을 한 장으로 묶은 월 청구서
+  "invoice.consolidated": { en: "Consolidated Invoice", ko: "통합 청구서", zh: "合并发票", ja: "一括請求書", th: "ใบแจ้งหนี้รวม", vi: "Hóa đơn gộp" },
+  "billingPeriod":    { en: "Billing Period", ko: "청구 대상 월", zh: "结算月份", ja: "請求対象月", th: "รอบบิล",     vi: "Kỳ thanh toán" },
 
   "receipt.heading":  { en: "Receipt",          ko: "영수증",      zh: "收据",     ja: "領収書",   th: "ใบเสร็จรับเงิน", vi: "Biên nhận" },
   "receivedFrom":     { en: "Received From",    ko: "지급인",      zh: "付款人",   ja: "支払者",   th: "รับเงินจาก",     vi: "Nhận từ" },

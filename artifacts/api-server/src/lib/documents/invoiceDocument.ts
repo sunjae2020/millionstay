@@ -30,6 +30,9 @@ export interface InvoiceDocInput {
   description: string | null;
   notes: string | null;
   created_at: string | Date | null;
+  // 통합(단체) 청구서면 "consolidated" — 표제와 청구 대상 월이 함께 표시된다.
+  invoice_kind?: string | null;
+  billing_period?: string | null;
   account_name?: string | null;
   account_email?: string | null;
   account_address?: string | null;
@@ -125,9 +128,10 @@ export function buildInvoiceBody(inv: InvoiceDocInput, lang: DocLang = "en", ter
   return `
     <div class="section" style="display:flex;justify-content:space-between;align-items:flex-start;gap:16px;">
       <div>
-        <h3>${t(lang, "invoice.heading")}</h3>
+        <h3>${inv.invoice_kind === "consolidated" ? t(lang, "invoice.consolidated") : t(lang, "invoice.heading")}</h3>
         <div class="ref-chip" style="font-size:20px;">${escapeHtml(inv.invoice_ref)}</div>
         <div style="font-size:13px;color:#777;margin-top:4px;">${t(lang, "issued")} ${formatDate(inv.created_at, lang)}</div>
+        ${inv.billing_period ? `<div style="font-size:13px;color:#777;margin-top:2px;">${t(lang, "billingPeriod")} ${escapeHtml(inv.billing_period)}</div>` : ""}
       </div>
       <span class="badge" style="background:${style.bg};color:${style.fg};">${escapeHtml(statusLabel(lang, status))}</span>
     </div>

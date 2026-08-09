@@ -41,6 +41,16 @@ export const accountsTable = pgTable("accounts", {
   // crawler, so an admin can tell which values were auto-collected.
   field_sources: jsonb("field_sources").$type<Record<string, string>>(),
   manual_input: boolean("manual_input").notNull().default(false),
+  // ── 통합(단체) 청구 ────────────────────────────────────────────────────────
+  // 한 계정이 여러 공간을 임차하는 법인 세입자(예: 재원산업)는 공간별 인보이스를
+  // 각각 받는 대신 매월 한 장의 통합 청구서로 받고 한 번에 납부한다.
+  // 공간별 인보이스는 계속 발행되며(회계·정산은 계약 단위가 정본) 통합 청구서의
+  // 자식으로 묶인다 — invoices.parent_invoice_id 참고.
+  consolidated_billing_enabled: boolean("consolidated_billing_enabled").notNull().default(false),
+  // 청구 기준일(1~28). 매월 이 날짜를 납기로 통합 청구서를 발행한다.
+  consolidated_billing_day: integer("consolidated_billing_day").notNull().default(1),
+  // 지난달 중간 입주분(일할계산)을 이번 달 통합 청구서에 이월해 함께 청구할지.
+  consolidated_prorate_enabled: boolean("consolidated_prorate_enabled").notNull().default(true),
   status: text("status").notNull().default("Active"),
   deleted_at: timestamp("deleted_at", { withTimezone: true }),
   created_at: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),

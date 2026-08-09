@@ -350,7 +350,10 @@
       "pm_card": "Credit Card",
       "pm_cash": "Cash",
       "pm_stripe": "Stripe",
-      "pm_cheque": "Cheque"
+      "pm_cheque": "Cheque",
+      "consolidated": "Consolidated",
+      "consolidated_breakdown": "View breakdown by unit ({{count}})",
+      "per_space_invoices": "Per-space invoices"
     },
     "documents": {
       "title": "My Documents",

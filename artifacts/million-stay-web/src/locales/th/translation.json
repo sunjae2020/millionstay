@@ -433,7 +433,10 @@
       "pm_card": "บัตรเครดิต",
       "pm_cash": "เงินสด",
       "pm_stripe": "Stripe",
-      "pm_cheque": "เช็ค"
+      "pm_cheque": "เช็ค",
+      "consolidated": "ใบแจ้งหนี้รวม",
+      "consolidated_breakdown": "ดูรายละเอียดแยกตามห้อง ({{count}} รายการ)",
+      "per_space_invoices": "ใบแจ้งหนี้รายห้อง"
     },
     "documents": {
       "title": "เอกสาร",

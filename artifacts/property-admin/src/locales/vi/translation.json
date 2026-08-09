@@ -867,7 +867,24 @@
     "portal_password_policy": "Tối thiểu 12 ký tự, gồm chữ hoa, chữ thường, số và ký tự đặc biệt.",
     "portal_password_signout_hint": "Đặt mật khẩu sẽ đăng xuất người dùng khỏi mọi thiết bị.",
     "portal_password_saved": "Đã cập nhật mật khẩu.",
-    "portal_enabled_hint": "Tắt sẽ chặn đăng nhập ngay lập tức."
+    "portal_enabled_hint": "Tắt sẽ chặn đăng nhập ngay lập tức.",
+    "consolidated_title": "Hóa đơn gộp",
+    "consolidated_hint": "Gộp tất cả các phòng mà tài khoản này thuê vào một hóa đơn duy nhất mỗi tháng.",
+    "consolidated_billing_day": "Ngày xuất hóa đơn",
+    "consolidated_day_label": "Ngày {{day}} hằng tháng",
+    "consolidated_billing_day_hint": "Hóa đơn gộp được phát hành và đến hạn vào ngày này mỗi tháng.",
+    "consolidated_prorate": "Chuyển tiếp tiền thuê tính theo ngày",
+    "consolidated_prorate_hint": "Nếu có phòng nhận bàn giao giữa tháng trước, tiền thuê tính theo ngày của tháng trước sẽ được cộng vào hóa đơn tháng này.",
+    "consolidated_run": "Tạo cho tháng này",
+    "consolidated_run_done": "Đã tạo — {{spaces}} phòng, {{prorated}} khoản chuyển tiếp theo ngày.",
+    "consolidated_run_empty": "Không có hợp đồng đang hiệu lực để xuất hóa đơn tháng này.",
+    "consolidated_run_failed": "Không thể tạo hóa đơn gộp.",
+    "consolidated_saved": "Đã lưu.",
+    "consolidated_save_failed": "Không thể lưu cài đặt.",
+    "col_invoice_kind": "Loại",
+    "invoice_kind_consolidated": "Gộp",
+    "invoice_kind_bundled": "Thuộc hóa đơn gộp",
+    "invoice_kind_standard": "Riêng lẻ"
   },
   "lead": {
     "new": "Khách hàng tiềm năng mới",
@@ -1400,7 +1417,12 @@
     "view_receipt": "Xem biên nhận",
     "btn_pdf": "PDF",
     "btn_email": "Email",
-    "method_stripe": "Stripe"
+    "method_stripe": "Stripe",
+    "section_consolidated": "Chi tiết hóa đơn gộp",
+    "consolidated_hint": "Chi tiết toàn bộ phòng được tính cho {{period}}.",
+    "col_line_label": "Hạng mục",
+    "col_line_period": "Kỳ",
+    "consolidated_children": "Hóa đơn từng phòng"
   },
   "workorder": {
     "new": "Tạo phiếu công việc mới",

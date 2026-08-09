@@ -4,6 +4,9 @@ import { eq, count, and, gte, lte, lt, sql, desc, isNull, inArray } from "drizzl
 import { listEntries, trialBalance } from "../lib/billing/gl";
 import { netRevenueBetween, netRevenueTotal } from "../lib/billing/payout";
 import { countableUnitFilter } from "../lib/unitScope";
+// 통합 청구서(부모)는 금액 집계에서 제외한다 — 공간별 자식 인보이스가 매출의 정본이라
+// 둘 다 더하면 두 번 잡힌다.
+import { excludeConsolidated } from "../lib/billing/consolidatedInvoices";
 
 const router: IRouter = Router();
 
@@ -69,7 +72,7 @@ router.get("/v1/dashboard/overview/kpis", async (_req, res) => {
       db.select({ count: count() }).from(bookingsTable).where(eq(bookingsTable.booking_status, "Active")),
       db.select({ count: count() }).from(spacesTable).where(and(eq(spacesTable.status, "Active"), countableUnitFilter)),
       db.select({ count: count() }).from(bookingsTable).where(eq(bookingsTable.booking_status, "Active")),
-      db.select({ amount: invoicesTable.amount }).from(invoicesTable).where(and(eq(invoicesTable.status, "Paid"), gte(invoicesTable.created_at, new Date(monthStart)), lt(invoicesTable.created_at, new Date(nextMonth)))),
+      db.select({ amount: invoicesTable.amount }).from(invoicesTable).where(and(excludeConsolidated(), eq(invoicesTable.status, "Paid"), gte(invoicesTable.created_at, new Date(monthStart)), lt(invoicesTable.created_at, new Date(nextMonth)))),
     ]);
 
     // Gross = every cent received. Net = what is actually ours once owner rent,
@@ -109,7 +112,8 @@ router.get("/v1/finance/summary", async (req, res) => {
     })();
 
     const allInvoices = await db.select({ status: invoicesTable.status, amount: invoicesTable.amount, due_date: invoicesTable.due_date, created_at: invoicesTable.created_at })
-      .from(invoicesTable);
+      .from(invoicesTable)
+      .where(excludeConsolidated());
 
     const thisMonthInvoices = allInvoices.filter(i => {
       const d = i.created_at?.toISOString().slice(0, 10) ?? "";
@@ -225,7 +229,7 @@ router.get("/v1/finance/revenue/monthly", async (req, res) => {
       const monthStr = startD.toISOString().slice(0, 7);
       const rows = await db.select({ amount: invoicesTable.amount })
         .from(invoicesTable)
-        .where(and(eq(invoicesTable.status, "Paid"), gte(invoicesTable.created_at, startD), lt(invoicesTable.created_at, endD)));
+        .where(and(excludeConsolidated(), eq(invoicesTable.status, "Paid"), gte(invoicesTable.created_at, startD), lt(invoicesTable.created_at, endD)));
       // `revenue` stays gross for chart continuity; net is the retained legs.
       result.push({
         month: monthStr,
@@ -245,7 +249,7 @@ router.get("/v1/finance/revenue/by-property", async (req, res) => {
     const invoices = await db.select({
       amount: invoicesTable.amount,
       booking_id: invoicesTable.booking_id,
-    }).from(invoicesTable).where(eq(invoicesTable.status, "Paid"));
+    }).from(invoicesTable).where(and(excludeConsolidated(), eq(invoicesTable.status, "Paid")));
 
     const bookingIds = [...new Set(invoices.map(i => i.booking_id).filter(Boolean))] as number[];
     const bookingMap: Record<number, number | null> = {};
@@ -290,7 +294,7 @@ router.get("/v1/finance/tax-summary", async (req, res) => {
       const endD = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - i + 1, 1));
       const monthStr = startD.toISOString().slice(0, 7);
       const rows = await db.select({ amount: invoicesTable.amount }).from(invoicesTable)
-        .where(and(eq(invoicesTable.status, "Paid"), gte(invoicesTable.created_at, startD), lt(invoicesTable.created_at, endD)));
+        .where(and(excludeConsolidated(), eq(invoicesTable.status, "Paid"), gte(invoicesTable.created_at, startD), lt(invoicesTable.created_at, endD)));
       const gross = rows.reduce((s, r) => s + Number(r.amount ?? 0), 0);
       const taxRate = 0.10;
       const taxAmount = gross * taxRate / (1 + taxRate);

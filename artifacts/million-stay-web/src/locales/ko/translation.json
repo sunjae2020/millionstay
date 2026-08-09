@@ -350,7 +350,10 @@
       "pm_card": "카드",
       "pm_cash": "현금",
       "pm_stripe": "Stripe",
-      "pm_cheque": "수표"
+      "pm_cheque": "수표",
+      "consolidated": "통합 청구",
+      "consolidated_breakdown": "호실별 내역 보기 ({{count}}건)",
+      "per_space_invoices": "공간별 인보이스"
     },
     "documents": {
       "title": "서류",

@@ -309,7 +309,10 @@
       "pm_card": "信用卡",
       "pm_cash": "现金",
       "pm_stripe": "Stripe",
-      "pm_cheque": "支票"
+      "pm_cheque": "支票",
+      "consolidated": "合并账单",
+      "consolidated_breakdown": "查看各房源明细（{{count}} 项）",
+      "per_space_invoices": "各房源发票"
     },
     "documents": {
       "title": "文件",

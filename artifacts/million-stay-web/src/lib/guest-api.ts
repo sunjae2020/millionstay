@@ -369,6 +369,18 @@ export interface MyInvoice {
   space_name?: string | null;
   property_address?: string | null;
   contract_id?: number | null;
+  // 통합(단체) 청구 — 여러 공간을 한 장으로 묶은 월 청구서와 그 안의 공간별 인보이스.
+  // "consolidated" = 납부 대상 통합 청구서, parent_invoice_id 있음 = 거기에 묶인 공간별 인보이스.
+  invoice_kind?: string | null;
+  parent_invoice_id?: number | null;
+  billing_period?: string | null;
+  line_items?: Array<{
+    label: string;
+    description?: string | null;
+    total_amount?: string | number | null;
+    period_start?: string | null;
+    period_end?: string | null;
+  }>;
   check_in_date?: string | null;
   check_out_date?: string | null;
   property_city?: string | null;

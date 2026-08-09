@@ -867,7 +867,24 @@
     "portal_password_policy": "12文字以上で、大文字・小文字・数字・記号をすべて含めてください。",
     "portal_password_signout_hint": "パスワードを設定すると、すべての端末からログアウトされます。",
     "portal_password_saved": "パスワードを変更しました。",
-    "portal_enabled_hint": "オフにすると直ちにログインできなくなります。"
+    "portal_enabled_hint": "オフにすると直ちにログインできなくなります。",
+    "consolidated_title": "一括請求",
+    "consolidated_hint": "このアカウントが借りているすべての住戸を、月1通の請求書にまとめて請求します。",
+    "consolidated_billing_day": "請求基準日",
+    "consolidated_day_label": "毎月{{day}}日",
+    "consolidated_billing_day_hint": "毎月この日付で一括請求書を発行し、支払期限とします。",
+    "consolidated_prorate": "前月の日割分を繰り越す",
+    "consolidated_prorate_hint": "前月の途中に入居した住戸がある場合、前月の日割賃料を今月の請求書に加えます。",
+    "consolidated_run": "今月分を作成",
+    "consolidated_run_done": "作成しました — 住戸{{spaces}}件、日割繰越{{prorated}}件",
+    "consolidated_run_empty": "今月請求する有効な契約がありません。",
+    "consolidated_run_failed": "一括請求書を作成できませんでした。",
+    "consolidated_saved": "保存しました。",
+    "consolidated_save_failed": "設定を保存できませんでした。",
+    "col_invoice_kind": "区分",
+    "invoice_kind_consolidated": "一括",
+    "invoice_kind_bundled": "一括に含む",
+    "invoice_kind_standard": "個別"
   },
   "lead": {
     "new": "新規リード",
@@ -1400,7 +1417,12 @@
     "pay_link_created": "支払いリンクを作成しました",
     "pay_link_created_desc": "Stripe Checkoutを開き、リンクをクリップボードにコピーしました。",
     "pay_link_failed": "支払いリンクを作成できませんでした",
-    "view_receipt": "領収書を表示"
+    "view_receipt": "領収書を表示",
+    "section_consolidated": "一括請求の内訳",
+    "consolidated_hint": "{{period}}の請求対象となるすべての住戸の内訳です。",
+    "col_line_label": "項目",
+    "col_line_period": "期間",
+    "consolidated_children": "住戸別請求書"
   },
   "workorder": {
     "new": "新規作業指示",

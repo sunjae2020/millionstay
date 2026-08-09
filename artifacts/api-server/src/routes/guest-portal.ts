@@ -1,6 +1,7 @@
 import { Router, type IRouter } from "express";
 import { DEFAULT_CURRENCY } from "../lib/currency";
-import { eq, and, or, desc, asc, inArray, isNull, lte } from "drizzle-orm";
+import { eq, and, or, desc, asc, inArray, isNull, lte, sql } from "drizzle-orm";
+import { alias } from "drizzle-orm/pg-core";
 import Stripe from "stripe";
 import {
   db,
@@ -10,6 +11,7 @@ import {
   spacesTable,
   propertiesTable,
   invoicesTable,
+  invoiceLineItemsTable,
   accountsTable,
   contractsTable,
   recurringSchedulesTable,
@@ -336,6 +338,10 @@ function currentMonthEnd(): string {
 }
 const notFutureBilled = () => or(isNull(invoicesTable.due_date), lte(invoicesTable.due_date, currentMonthEnd()));
 
+// 임대차 계약 기반 인보이스(예약이 없는 월세)의 호실명을 찾기 위한 별칭 조인.
+const invoiceContracts = alias(contractsTable, "invoice_contracts");
+const contractSpaces = alias(spacesTable, "contract_spaces");
+
 /* ───────────────────────────────────────────────────────
    GET /api/v1/guest/invoices — 내 결제 현황
 ──────────────────────────────────────────────────────── */
@@ -357,17 +363,45 @@ router.get("/v1/guest/invoices", async (req, res): Promise<void> => {
       created_at: invoicesTable.created_at,
       booking_id: invoicesTable.booking_id,
       booking_ref: bookingsTable.booking_ref,
-      space_name: spacesTable.name,
+      contract_id: invoicesTable.contract_id,
+      // 통합(단체) 청구: 통합 청구서 한 장과 그 안에 묶인 공간별 인보이스를 모두
+      // 내려보내고, 포털이 parent_invoice_id 로 묶어 보여준다.
+      invoice_kind: invoicesTable.invoice_kind,
+      parent_invoice_id: invoicesTable.parent_invoice_id,
+      billing_period: invoicesTable.billing_period,
+      // 예약 기반이면 예약의 공간, 임대차 계약 기반이면 계약의 공간.
+      space_name: sql<string | null>`coalesce(${spacesTable.name}, ${contractSpaces.name})`,
       property_address: propertiesTable.address,
     })
     .from(invoicesTable)
     .leftJoin(bookingsTable, eq(invoicesTable.booking_id, bookingsTable.id))
     .leftJoin(spacesTable, eq(bookingsTable.space_id, spacesTable.id))
     .leftJoin(propertiesTable, eq(spacesTable.property_id, propertiesTable.id))
+    .leftJoin(invoiceContracts, eq(invoicesTable.contract_id, invoiceContracts.id))
+    .leftJoin(contractSpaces, eq(invoiceContracts.space_id, contractSpaces.id))
     .where(and(eq(invoicesTable.account_id, guest.account_id), notFutureBilled()))
     .orderBy(asc(invoicesTable.due_date));
 
-  res.json({ success: true, data: invoices, meta: { total: invoices.length } });
+  // 통합 청구서에는 호실별 내역(일할 이월분 포함)을 함께 실어준다.
+  const consolidatedIds = invoices.filter(i => i.invoice_kind === "consolidated").map(i => i.id);
+  const lineMap: Record<number, unknown[]> = {};
+  if (consolidatedIds.length > 0) {
+    const lines = await db.select({
+      invoice_id: invoiceLineItemsTable.invoice_id,
+      label: invoiceLineItemsTable.label,
+      description: invoiceLineItemsTable.description,
+      total_amount: invoiceLineItemsTable.total_amount,
+      period_start: invoiceLineItemsTable.period_start,
+      period_end: invoiceLineItemsTable.period_end,
+    })
+      .from(invoiceLineItemsTable)
+      .where(inArray(invoiceLineItemsTable.invoice_id, consolidatedIds))
+      .orderBy(asc(invoiceLineItemsTable.sort_order), asc(invoiceLineItemsTable.id));
+    for (const l of lines) (lineMap[l.invoice_id] ??= []).push(l);
+  }
+
+  const data = invoices.map(i => ({ ...i, line_items: lineMap[i.id] ?? [] }));
+  res.json({ success: true, data, meta: { total: data.length } });
 });
 
 /* ───────────────────────────────────────────────────────

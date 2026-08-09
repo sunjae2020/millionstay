@@ -867,7 +867,24 @@
     "portal_password_policy": "อย่างน้อย 12 ตัวอักษร ประกอบด้วยตัวพิมพ์ใหญ่ พิมพ์เล็ก ตัวเลข และอักขระพิเศษ",
     "portal_password_signout_hint": "เมื่อตั้งรหัสผ่าน ผู้ใช้จะถูกออกจากระบบทุกอุปกรณ์",
     "portal_password_saved": "อัปเดตรหัสผ่านแล้ว",
-    "portal_enabled_hint": "เมื่อปิด ผู้ใช้จะเข้าสู่ระบบไม่ได้ทันที"
+    "portal_enabled_hint": "เมื่อปิด ผู้ใช้จะเข้าสู่ระบบไม่ได้ทันที",
+    "consolidated_title": "การออกใบแจ้งหนี้รวม",
+    "consolidated_hint": "ออกใบแจ้งหนี้รวมเดือนละหนึ่งฉบับสำหรับทุกห้องที่บัญชีนี้เช่า",
+    "consolidated_billing_day": "วันที่ออกบิล",
+    "consolidated_day_label": "วันที่ {{day}} ของทุกเดือน",
+    "consolidated_billing_day_hint": "ออกใบแจ้งหนี้รวมและกำหนดชำระในวันนี้ของทุกเดือน",
+    "consolidated_prorate": "ยกยอดค่าเช่าตามสัดส่วนของเดือนก่อน",
+    "consolidated_prorate_hint": "หากมีห้องที่เข้าอยู่กลางเดือนก่อน จะรวมค่าเช่าตามสัดส่วนของเดือนก่อนเข้าในใบแจ้งหนี้เดือนนี้",
+    "consolidated_run": "สร้างของเดือนนี้",
+    "consolidated_run_done": "สร้างแล้ว — {{spaces}} ห้อง, ยกยอดตามสัดส่วน {{prorated}} รายการ",
+    "consolidated_run_empty": "ไม่มีสัญญาที่ใช้งานอยู่สำหรับการเรียกเก็บเดือนนี้",
+    "consolidated_run_failed": "ไม่สามารถสร้างใบแจ้งหนี้รวมได้",
+    "consolidated_saved": "บันทึกแล้ว",
+    "consolidated_save_failed": "ไม่สามารถบันทึกการตั้งค่าได้",
+    "col_invoice_kind": "ประเภท",
+    "invoice_kind_consolidated": "รวม",
+    "invoice_kind_bundled": "อยู่ในใบรวม",
+    "invoice_kind_standard": "แยกรายการ"
   },
   "lead": {
     "new": "ลีดใหม่",
@@ -1400,7 +1417,12 @@
     "pay_link_created": "สร้างลิงก์ชำระเงินแล้ว",
     "pay_link_created_desc": "เปิด Stripe Checkout แล้ว และคัดลอกลิงก์ไปยังคลิปบอร์ดแล้ว",
     "pay_link_failed": "ไม่สามารถสร้างลิงก์ชำระเงินได้",
-    "view_receipt": "ดูใบเสร็จ"
+    "view_receipt": "ดูใบเสร็จ",
+    "section_consolidated": "รายละเอียดใบแจ้งหนี้รวม",
+    "consolidated_hint": "รายละเอียดทุกห้องที่เรียกเก็บสำหรับ {{period}}",
+    "col_line_label": "รายการ",
+    "col_line_period": "ช่วงเวลา",
+    "consolidated_children": "ใบแจ้งหนี้รายห้อง"
   },
   "workorder": {
     "new": "ใบสั่งงานใหม่",

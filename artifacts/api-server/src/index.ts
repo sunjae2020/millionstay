@@ -14,6 +14,7 @@ import { purgeExpiredDocuments } from "./lib/retentionPurge";
 import { generateRentCharges } from "./lib/homestay/monthlyBilling";
 import { generateRecurringInvoices } from "./lib/billing/recurringInvoices";
 import { generateLeaseRentInvoices } from "./lib/billing/leaseRentInvoices";
+import { generateConsolidatedInvoices } from "./lib/billing/consolidatedInvoices";
 import { checkWorkOrderSla } from "./lib/dispatch/workOrderDispatch";
 import { runCampaignSends } from "./lib/marketing/worker";
 
@@ -231,6 +232,20 @@ cron.schedule(
     generateLeaseRentInvoices()
       .then((r) => { if (r.enabled) logger.info({ ...r }, "Cron lease rent billing"); })
       .catch((err) => logger.error({ err }, "Cron lease rent billing failed"));
+  },
+  { timezone: "Australia/Sydney" },
+);
+
+// 통합(단체) 청구 — 매일 03:10 Sydney. 통합 청구를 켠 계정마다 그 달의 공간별
+// 인보이스를 만들고 한 장의 통합 청구서로 묶는다(지난달 중간 입주분은 일할계산해
+// 이월). 계정별 토글이 스위치이므로 별도 전역 설정은 없다. 멱등이라 같은 달에
+// 다시 돌아도 금액만 재계산할 뿐 중복 발행하지 않는다.
+cron.schedule(
+  "10 3 * * *",
+  () => {
+    generateConsolidatedInvoices()
+      .then((r) => { if (r.accounts) logger.info({ ...r }, "Cron consolidated invoicing"); })
+      .catch((err) => logger.error({ err }, "Cron consolidated invoicing failed"));
   },
   { timezone: "Australia/Sydney" },
 );

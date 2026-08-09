@@ -27,7 +27,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { useBrand } from "@/contexts/ThemeContext";
 import { SUPPORTED_CURRENCIES } from "@/lib/currency";
-import { ArrowLeft, Trash2, Save, FileText } from "lucide-react";
+import { ArrowLeft, Trash2, Save, FileText, Layers } from "lucide-react";
 import { apiFetch } from "@/lib/apiFetch";
 import { useToast } from "@/hooks/use-toast";
 import { DocumentVersions } from "@/components/DocumentVersions";
@@ -39,6 +39,23 @@ const statusColors: Record<string, string> = {
   Paid: "bg-green-100 text-green-700",
   Void: "bg-red-100 text-red-600",
 };
+
+/** 통합 청구서 한 줄(호실·기간·금액) — GET /v1/invoices/:id 의 line_items. */
+interface ConsolidatedLine {
+  id: number;
+  label: string;
+  description?: string | null;
+  period_start?: string | null;
+  period_end?: string | null;
+  total_amount?: string | number | null;
+}
+
+/** 통합 청구서에 묶인 공간별 인보이스 요약. */
+interface ConsolidatedChild {
+  id: number;
+  invoice_ref: string;
+  amount?: string | number | null;
+}
 
 interface FormData {
   booking_id: number | null;
@@ -108,6 +125,12 @@ export default function InvoiceDetail() {
   const { data: invoice, refetch } = useGetInvoice(Number(id), {
     query: { enabled: !isNew, queryKey: getGetInvoiceQueryKey(Number(id)) },
   });
+
+  // 통합(단체) 청구서 상세 — 호실별 라인과 묶여 있는 공간별 인보이스.
+  // 두 필드 모두 GET /v1/invoices/:id 가 함께 내려주므로 추가 요청이 없다.
+  const isConsolidated = (invoice as any)?.invoice_kind === "consolidated";
+  const lineItems: ConsolidatedLine[] = ((invoice as any)?.line_items ?? []) as ConsolidatedLine[];
+  const children: ConsolidatedChild[] = ((invoice as any)?.children ?? []) as ConsolidatedChild[];
 
   const { register, handleSubmit, reset, control } = useForm<FormData>({
     defaultValues: {
@@ -346,6 +369,69 @@ export default function InvoiceDetail() {
               </div>
             </div>
           </div>
+
+          {/* 통합(단체) 청구서 — 호실별 내역과 묶여 있는 공간별 인보이스 */}
+          {isConsolidated && (
+            <div className="border rounded-lg bg-white p-4 sm:p-6 space-y-6">
+              <div>
+                <h2 className="text-sm font-semibold uppercase text-primary tracking-wide mb-1 flex items-center gap-2">
+                  <Layers className="h-4 w-4" />
+                  {t('invoice.section_consolidated')}
+                </h2>
+                <p className="text-xs text-muted-foreground mb-4">
+                  {t('invoice.consolidated_hint', { period: (invoice as any)?.billing_period ?? "—" })}
+                </p>
+                <div className="overflow-x-auto border rounded-md">
+                  <table className="w-full text-sm">
+                    <thead className="bg-muted/50 border-b">
+                      <tr>
+                        <th className="text-left px-4 py-2.5 text-xs uppercase tracking-wide text-muted-foreground font-medium">{t('invoice.col_line_label')}</th>
+                        <th className="text-left px-4 py-2.5 text-xs uppercase tracking-wide text-muted-foreground font-medium">{t('invoice.col_line_period')}</th>
+                        <th className="text-right px-4 py-2.5 text-xs uppercase tracking-wide text-muted-foreground font-medium">{t('common.amount')}</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y">
+                      {lineItems.map((li) => (
+                        <tr key={li.id}>
+                          <td className="px-4 py-2.5">
+                            {li.label}
+                            {li.description && <div className="text-xs text-muted-foreground mt-0.5">{li.description}</div>}
+                          </td>
+                          <td className="px-4 py-2.5 text-muted-foreground whitespace-nowrap">
+                            {li.period_start ? `${formatDate(li.period_start)} ~ ${formatDate(li.period_end)}` : "—"}
+                          </td>
+                          <td className="px-4 py-2.5 text-right tabular-nums">
+                            {Number(li.total_amount ?? 0).toLocaleString()}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              {children.length > 0 && (
+                <div>
+                  <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2">
+                    {t('invoice.consolidated_children')}
+                  </h3>
+                  <div className="flex flex-wrap gap-2">
+                    {children.map((c) => (
+                      <button
+                        key={c.id}
+                        type="button"
+                        onClick={() => navigate(`/finance/invoices/${c.id}`)}
+                        className="text-xs rounded-full border px-3 py-1 hover:bg-muted transition-colors"
+                      >
+                        <span className="font-medium text-primary">{c.invoice_ref}</span>
+                        <span className="text-muted-foreground"> · {Number(c.amount ?? 0).toLocaleString()}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
         </form>
 
         {/* Mark Paid Dialog */}

@@ -15,6 +15,7 @@
 import { and, eq, gte, isNull, lte, or, sql } from "drizzle-orm";
 import { db, contractsTable, invoicesTable, spacesTable, integrationSettings } from "@workspace/db";
 import { DEFAULT_CURRENCY } from "../currency";
+import { consolidatedAccountIds } from "./consolidatedInvoices";
 
 /** Settings key (also an integrations ALLOWED_KEY) toggling this cron. */
 export const LEASE_RENT_INVOICES_ENABLED_KEY = "LEASE_RENT_INVOICES_ENABLED";
@@ -84,7 +85,12 @@ export async function generateLeaseRentInvoices(opts: { year?: number; month?: n
       or(isNull(contractsTable.end_date), gte(contractsTable.end_date, monthStart)),
     ));
 
+  // 통합 청구 계정의 계약은 통합 청구서 생성기가 (일할 이월분까지 함께) 만든다.
+  // 여기서 먼저 만들어버리면 청구 기준일·이월 계산이 어긋나므로 건너뛴다.
+  const consolidated = await consolidatedAccountIds();
+
   for (const lease of leases) {
+    if (lease.account_id && consolidated.has(lease.account_id)) { skipped++; continue; }
     const dueDate = dueDateFor(year, month, lease.rent_due_day ?? 1);
 
     // The month may only partially overlap the lease (a lease ending 2026-08-05

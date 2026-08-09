@@ -867,7 +867,24 @@
     "portal_password_policy": "至少 12 位，须包含大小写字母、数字和特殊字符。",
     "portal_password_signout_hint": "设置密码后，该用户将从所有设备登出。",
     "portal_password_saved": "密码已更新。",
-    "portal_enabled_hint": "关闭后将立即禁止登录。"
+    "portal_enabled_hint": "关闭后将立即禁止登录。",
+    "consolidated_title": "合并开票",
+    "consolidated_hint": "将该客户承租的所有房源合并为每月一张发票开具。",
+    "consolidated_billing_day": "账单日",
+    "consolidated_day_label": "每月{{day}}日",
+    "consolidated_billing_day_hint": "每月于该日期开具合并发票并作为到期日。",
+    "consolidated_prorate": "结转上月按日计算金额",
+    "consolidated_prorate_hint": "如有房源在上月中旬入住，将上月按日计算的租金一并计入本月发票。",
+    "consolidated_run": "生成本月发票",
+    "consolidated_run_done": "已生成 — 房源{{spaces}}个，按日结转{{prorated}}项",
+    "consolidated_run_empty": "本月没有可开票的有效合同。",
+    "consolidated_run_failed": "无法生成合并发票。",
+    "consolidated_saved": "已保存。",
+    "consolidated_save_failed": "无法保存设置。",
+    "col_invoice_kind": "类型",
+    "invoice_kind_consolidated": "合并",
+    "invoice_kind_bundled": "已并入合并",
+    "invoice_kind_standard": "单独"
   },
   "lead": {
     "new": "新建线索",
@@ -1400,7 +1417,12 @@
     "pay_link_created": "已创建付款链接",
     "pay_link_created_desc": "已打开 Stripe Checkout，链接已复制到剪贴板。",
     "pay_link_failed": "无法创建付款链接",
-    "view_receipt": "查看收据"
+    "view_receipt": "查看收据",
+    "section_consolidated": "合并开票明细",
+    "consolidated_hint": "{{period}} 的全部房源开票明细。",
+    "col_line_label": "项目",
+    "col_line_period": "期间",
+    "consolidated_children": "各房源发票"
   },
   "workorder": {
     "new": "新建工单",

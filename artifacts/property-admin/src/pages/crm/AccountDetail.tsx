@@ -22,9 +22,10 @@ import { AccountIdentityPanel, type FillSource } from "@/components/AccountIdent
 import { EntityPreviewDialog, type EntityPreview } from "@/components/EntityPreviewDialog";
 import { AddAccountContactDialog } from "@/components/AddAccountContactDialog";
 import { AccountPortalUsers } from "@/components/AccountPortalUsers";
+import { ConsolidatedBillingCard, type ConsolidatedBillingSettings } from "@/components/ConsolidatedBillingCard";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiFetch, apiJson } from "@/lib/apiFetch";
-import { ArrowLeft, Save, ExternalLink, AlertTriangle, Building2, FileText, FolderUp, Eye, Upload, Trash2, UserPlus, X } from "lucide-react";
+import { ArrowLeft, Save, ExternalLink, AlertTriangle, Building2, FileText, FolderUp, Eye, Upload, Trash2, UserPlus, X, Layers } from "lucide-react";
 import { FileDropZone, DIRECTORY_INPUT_PROPS } from "@/components/FileDropZone";
 import { Link } from "wouter";
 import { useBrand } from "@/contexts/ThemeContext";
@@ -1186,11 +1187,14 @@ export default function AccountDetail() {
             </TabsContent>
 
             <TabsContent value="invoices">
-              <div className="rounded-md border bg-card overflow-x-auto max-w-4xl">
+              <div className="space-y-5 max-w-4xl">
+              {id && <ConsolidatedBillingCard accountId={id} account={account as ConsolidatedBillingSettings | undefined} />}
+              <div className="rounded-md border bg-card overflow-x-auto">
                 <ExportableTable fileName="account-invoices" className="w-full text-sm">
                   <thead className="bg-muted/50 border-b">
                     <tr>
                       <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('account.col_invoice_ref')}</th>
+                      <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('account.col_invoice_kind')}</th>
                       <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('account.col_amount')}</th>
                       <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('account.col_currency')}</th>
                       <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('account.col_due_date')}</th>
@@ -1200,7 +1204,7 @@ export default function AccountDetail() {
                   <tbody className="divide-y">
                     {!invoices?.length ? (
                       <tr>
-                        <td colSpan={5} className="px-4 py-8 text-center text-muted-foreground text-sm">{t('account.empty_invoices')}</td>
+                        <td colSpan={6} className="px-4 py-8 text-center text-muted-foreground text-sm">{t('account.empty_invoices')}</td>
                       </tr>
                     ) : (
                       (invoices as any[]).map((inv: any) => (
@@ -1219,6 +1223,17 @@ export default function AccountDetail() {
                             detailUrl: `/finance/invoices/${inv.id}`,
                           })}>
                           <td className="px-4 py-3 font-medium text-primary">{inv.invoice_ref ?? `#${inv.id}`}</td>
+                          <td className="px-4 py-3">
+                            {inv.invoice_kind === "consolidated" ? (
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-primary/10 text-primary">
+                                <Layers className="h-3 w-3" />{t('account.invoice_kind_consolidated')}
+                              </span>
+                            ) : inv.parent_invoice_id ? (
+                              <span className="text-xs text-muted-foreground">{t('account.invoice_kind_bundled')}</span>
+                            ) : (
+                              <span className="text-xs text-muted-foreground">{t('account.invoice_kind_standard')}</span>
+                            )}
+                          </td>
                           <td className="px-4 py-3">{inv.amount != null ? Number(inv.amount).toFixed(2) : "—"}</td>
                           <td className="px-4 py-3 text-muted-foreground">{inv.currency ?? "—"}</td>
                           <td className="px-4 py-3 text-muted-foreground">{inv.due_date ?? "—"}</td>
@@ -1232,6 +1247,7 @@ export default function AccountDetail() {
                     )}
                   </tbody>
                 </ExportableTable>
+              </div>
               </div>
             </TabsContent>
 

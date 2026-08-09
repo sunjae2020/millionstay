@@ -21,6 +21,7 @@ import { formatPostalAddress } from "@workspace/address";
 import { getStripe } from "./stripe";
 import { postInvoicePaid, postInvoiceIssued } from "../lib/billing/gl";
 import { generateSettlementsForInvoice } from "../lib/billing/payout";
+import { generateConsolidatedInvoices } from "../lib/billing/consolidatedInvoices";
 import { deletedFilter, makeBulkDelete, makeBulkRestore } from "../lib/softDelete";
 import {
   CreateInvoiceBody,
@@ -126,6 +127,7 @@ router.get("/v1/invoices", async (req, res): Promise<void> => {
   const {
     q, status, booking_id, contract_id, account_id,
     date_from, date_to, year, payment_method,
+    invoice_kind, parent_invoice_id,
   } = req.query as Record<string, string>;
   const conditions: any[] = [deletedFilter(invoicesTable.deleted_at, req)];
   // 청구번호·설명뿐 아니라 화면에 함께 보이는 청구 대상(계정) 이름으로도 찾는다.
@@ -143,6 +145,10 @@ router.get("/v1/invoices", async (req, res): Promise<void> => {
   if (booking_id) conditions.push(eq(invoicesTable.booking_id, Number(booking_id)));
   if (contract_id) conditions.push(eq(invoicesTable.contract_id, Number(contract_id)));
   if (account_id) conditions.push(eq(invoicesTable.account_id, Number(account_id)));
+  // 통합 청구 필터: kind=consolidated 로 통합 청구서만, parent_invoice_id 로 한 통합
+  // 청구서에 묶인 공간별 인보이스만 조회한다.
+  if (invoice_kind) conditions.push(eq(invoicesTable.invoice_kind, invoice_kind));
+  if (parent_invoice_id) conditions.push(eq(invoicesTable.parent_invoice_id, Number(parent_invoice_id)));
   const rows = await db.select().from(invoicesTable)
     .where(and(...conditions))
     .orderBy(invoicesTable.id);
@@ -190,7 +196,34 @@ router.get("/v1/invoices/:id", async (req, res): Promise<void> => {
   const row = await db.select().from(invoicesTable).where(eq(invoicesTable.id, Number(req.params.id))).then(r => r[0]);
   if (!row) { res.status(404).json({ error: "Not found" }); return; }
   const [result] = await enrichInvoices([row]);
-  res.json({ ...result, line_items: await getLineItems(row.id) });
+  // 통합 청구서는 묶여 있는 공간별 인보이스를 함께 돌려준다(관리자 상세의 내역 표).
+  const children = row.invoice_kind === "consolidated"
+    ? await enrichInvoices(await db.select().from(invoicesTable).where(and(
+        eq(invoicesTable.parent_invoice_id, row.id),
+        isNull(invoicesTable.deleted_at),
+      )).orderBy(asc(invoicesTable.id)))
+    : [];
+  res.json({ ...result, line_items: await getLineItems(row.id), children });
+});
+
+/**
+ * 통합(단체) 청구서 생성/재계산.
+ *   POST /v1/invoices/consolidated/run { account_id?, year?, month? }
+ * 계정별 토글이 켜진 계정만 처리한다(크론과 같은 코드 경로, 멱등).
+ */
+router.post("/v1/invoices/consolidated/run", async (req, res): Promise<void> => {
+  const body = z.object({
+    account_id: z.number().int().positive().optional(),
+    year: z.number().int().min(2000).max(2100).optional(),
+    month: z.number().int().min(1).max(12).optional(),
+  }).safeParse(req.body ?? {});
+  if (!body.success) { res.status(400).json({ error: body.error.message }); return; }
+  const result = await generateConsolidatedInvoices({
+    accountId: body.data.account_id,
+    year: body.data.year,
+    month: body.data.month,
+  });
+  res.json(result);
 });
 
 router.put("/v1/invoices/:id", async (req, res): Promise<void> => {
@@ -256,7 +289,10 @@ router.post("/v1/invoices/:id/send", async (req, res): Promise<void> => {
   await logAction({ entityType: "invoice", entityId: row.id, action: "STATUS_CHANGE", oldValue: { status: "Draft" }, newValue: { status: "Sent" } });
   // Raise the receivable (Dr AR / Cr Revenue). Without this the ledger has no
   // record of money owed to us, so nothing can age. Best-effort — never blocks.
-  void postInvoiceIssued({ id: row.id, amount: Number(row.amount), currency: row.currency, issuedAt: new Date().toISOString() });
+  // 통합 청구서는 자식 인보이스가 이미 채권을 들고 있으므로 전기하지 않는다.
+  if (row.invoice_kind !== "consolidated") {
+    void postInvoiceIssued({ id: row.id, amount: Number(row.amount), currency: row.currency, issuedAt: new Date().toISOString() });
+  }
   const [result] = await enrichInvoices([row]);
   res.json(result);
 });
@@ -273,11 +309,30 @@ router.post("/v1/invoices/:id/pay", async (req, res): Promise<void> => {
     .returning();
   if (!row) { res.status(400).json({ error: "Invoice is not in a payable status" }); return; }
   await logAction({ entityType: "invoice", entityId: row.id, action: "PAYMENT", oldValue: { status: "open" }, newValue: { status: "Paid", payment_method: parsed.data.payment_method } });
-  // Auto-post the GL entry (best-effort; never blocks or alters the response).
-  void postInvoicePaid({ id: row.id, amount: Number(row.amount), currency: row.currency, paidAt: paidAt.toISOString() });
-  // Fan the receipt out into payout legs (집주인 / 파트너 / 에이전트 + 유보).
-  // Also best-effort: a settlement failure must never fail a payment.
-  void generateSettlementsForInvoice(row.id);
+
+  if (row.invoice_kind === "consolidated") {
+    // 통합 청구서는 납부용 표지일 뿐 회계의 정본이 아니다. 수납은 묶여 있는 공간별
+    // 인보이스로 내려보내고(계약 단위로 GL·정산이 걸린다) 부모 자신은 전기하지
+    // 않는다 — 부모까지 전기하면 매출이 두 번 잡힌다.
+    const children = await db.select().from(invoicesTable).where(and(
+      eq(invoicesTable.parent_invoice_id, row.id),
+      isNull(invoicesTable.deleted_at),
+      inArray(invoicesTable.status, ["Sent", "Draft", "Overdue", "Unpaid"]),
+    ));
+    for (const child of children) {
+      await db.update(invoicesTable)
+        .set({ status: "Paid", payment_method: parsed.data.payment_method, paid_at: paidAt, updated_at: new Date() })
+        .where(eq(invoicesTable.id, child.id));
+      void postInvoicePaid({ id: child.id, amount: Number(child.amount), currency: child.currency, paidAt: paidAt.toISOString() });
+      void generateSettlementsForInvoice(child.id);
+    }
+  } else {
+    // Auto-post the GL entry (best-effort; never blocks or alters the response).
+    void postInvoicePaid({ id: row.id, amount: Number(row.amount), currency: row.currency, paidAt: paidAt.toISOString() });
+    // Fan the receipt out into payout legs (집주인 / 파트너 / 에이전트 + 유보).
+    // Also best-effort: a settlement failure must never fail a payment.
+    void generateSettlementsForInvoice(row.id);
+  }
   const [result] = await enrichInvoices([row]);
   res.json(result);
 });
@@ -330,6 +385,8 @@ async function buildInvoiceDocInput(invoiceId: number, lang: DocLang): Promise<I
     description: enriched.description,
     notes: enriched.notes,
     created_at: enriched.created_at,
+    invoice_kind: enriched.invoice_kind,
+    billing_period: enriched.billing_period,
     account_name: (enriched as any).account_name ?? null,
     account_email,
     account_address,

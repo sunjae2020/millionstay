@@ -867,7 +867,24 @@
     "portal_password_policy": "12자 이상, 대소문자·숫자·특수문자를 모두 포함해야 합니다.",
     "portal_password_signout_hint": "비밀번호를 설정하면 모든 기기에서 로그아웃됩니다.",
     "portal_password_saved": "비밀번호를 변경했습니다.",
-    "portal_enabled_hint": "끄면 즉시 로그인이 차단됩니다."
+    "portal_enabled_hint": "끄면 즉시 로그인이 차단됩니다.",
+    "consolidated_title": "통합 청구",
+    "consolidated_hint": "이 계정이 임차한 모든 공간을 매월 한 장의 청구서로 청구합니다.",
+    "consolidated_billing_day": "청구 기준일",
+    "consolidated_day_label": "매월 {{day}}일",
+    "consolidated_billing_day_hint": "매월 이 날짜로 통합 청구서를 발행하고 납기로 잡습니다.",
+    "consolidated_prorate": "지난달 일할분 이월",
+    "consolidated_prorate_hint": "지난달 중간에 입주한 공간이 있으면 지난달 일할계산 임대료를 이번 달 청구서에 함께 싣습니다.",
+    "consolidated_run": "이번 달 생성",
+    "consolidated_run_done": "생성 완료 — 공간 {{spaces}}곳, 일할 이월 {{prorated}}건",
+    "consolidated_run_empty": "이번 달 청구할 진행 중 계약이 없습니다.",
+    "consolidated_run_failed": "통합 청구서를 생성하지 못했습니다.",
+    "consolidated_saved": "저장했습니다.",
+    "consolidated_save_failed": "설정을 저장하지 못했습니다.",
+    "col_invoice_kind": "구분",
+    "invoice_kind_consolidated": "통합",
+    "invoice_kind_bundled": "통합에 포함",
+    "invoice_kind_standard": "개별"
   },
   "lead": {
     "new": "새 리드",
@@ -1400,7 +1417,12 @@
     "pay_link_created": "결제 링크 생성됨",
     "pay_link_created_desc": "Stripe 결제 페이지가 열렸으며 링크가 클립보드에 복사되었습니다.",
     "pay_link_failed": "결제 링크를 생성할 수 없음",
-    "view_receipt": "영수증 보기"
+    "view_receipt": "영수증 보기",
+    "section_consolidated": "통합 청구 내역",
+    "consolidated_hint": "{{period}} 청구 대상 공간 전체 내역입니다.",
+    "col_line_label": "항목",
+    "col_line_period": "기간",
+    "consolidated_children": "공간별 인보이스"
   },
   "workorder": {
     "new": "새 작업 지시서",

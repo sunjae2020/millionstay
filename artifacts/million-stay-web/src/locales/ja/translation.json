@@ -434,7 +434,10 @@
       "pm_card": "クレジットカード",
       "pm_cash": "現金",
       "pm_stripe": "Stripe",
-      "pm_cheque": "小切手"
+      "pm_cheque": "小切手",
+      "consolidated": "一括請求",
+      "consolidated_breakdown": "住戸別の内訳を見る（{{count}}件）",
+      "per_space_invoices": "住戸別請求書"
     },
     "documents": {
       "title": "書類",

@@ -12,8 +12,10 @@ import { validatePassword } from "../utils/passwordPolicy";
 import { invalidatePartnerCache } from "../middlewares/requirePartnerAuth";
 import { revokeAllForUser } from "../lib/refreshTokens";
 import { issuePartnerResetLink, portalBaseUrl, PORTAL_TYPES, BCRYPT_COST } from "../lib/partnerPortal";
+import { z } from "zod";
 import { logAction } from "../utils/auditLog";
 import { deletedFilter, makeBulkDelete, makeBulkRestore } from "../lib/softDelete";
+import { excludeConsolidated } from "../lib/billing/consolidatedInvoices";
 import { formatPersonName, formatFirstName, formatLastName } from "../lib/nameFormat";
 import { enrichFromWebsite, downloadImage } from "../lib/accounts/websiteEnrich";
 import {
@@ -138,6 +140,32 @@ router.put("/v1/accounts/:id", async (req, res): Promise<void> => {
     .where(eq(accountsTable.id, paramsParsed.data.id))
     .returning();
   if (!row) { res.status(404).json({ error: "Not found" }); return; }
+  res.json(await enrichAccount(row));
+});
+
+/**
+ * 통합(단체) 청구 설정 — 여러 공간을 임차하는 계정을 매월 한 장의 청구서로 묶는다.
+ *   PUT /v1/accounts/:id/billing-settings { enabled, billing_day, prorate }
+ * 생성된 OpenAPI 클라이언트를 다시 돌리지 않아도 되도록 계정 본문 스키마와 분리했다.
+ */
+const BillingSettingsBody = z.object({
+  consolidated_billing_enabled: z.boolean().optional(),
+  // 1~28 — 말일 근처 날짜는 달마다 존재 여부가 달라져 청구일이 흔들린다.
+  consolidated_billing_day: z.number().int().min(1).max(28).optional(),
+  consolidated_prorate_enabled: z.boolean().optional(),
+});
+
+router.put("/v1/accounts/:id/billing-settings", async (req, res): Promise<void> => {
+  const id = Number(req.params.id);
+  if (!Number.isFinite(id)) { res.status(400).json({ error: "Invalid id" }); return; }
+  const parsed = BillingSettingsBody.safeParse(req.body ?? {});
+  if (!parsed.success) { res.status(400).json({ error: parsed.error.message }); return; }
+  const [row] = await db.update(accountsTable)
+    .set({ ...parsed.data, updated_at: new Date() })
+    .where(eq(accountsTable.id, id))
+    .returning();
+  if (!row) { res.status(404).json({ error: "Not found" }); return; }
+  await logAction({ entityType: "account", entityId: id, action: "UPDATE", newValue: parsed.data });
   res.json(await enrichAccount(row));
 });
 
@@ -275,8 +303,9 @@ router.get("/v1/accounts/:id/finance", async (req, res): Promise<void> => {
   const today = new Date().toISOString().slice(0, 10);
 
   // ── Receivable: invoices billed to this account ────────────────────────
+  // 통합 청구서는 자식(공간별) 인보이스와 금액이 겹치므로 미수/수납 집계에서 뺀다.
   const invoices = await db.select().from(invoicesTable)
-    .where(and(eq(invoicesTable.account_id, id), isNull(invoicesTable.deleted_at)))
+    .where(and(eq(invoicesTable.account_id, id), isNull(invoicesTable.deleted_at), excludeConsolidated()))
     .orderBy(desc(invoicesTable.id));
   for (const inv of invoices) {
     const amount = Number(inv.amount);

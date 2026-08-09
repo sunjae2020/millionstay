@@ -345,7 +345,10 @@
       "pm_bank_transfer": "Chuyển khoản ngân hàng",
       "pm_card": "Thẻ tín dụng",
       "pm_cash": "Tiền mặt",
-      "pm_cheque": "Séc"
+      "pm_cheque": "Séc",
+      "consolidated": "Hóa đơn gộp",
+      "consolidated_breakdown": "Xem chi tiết theo phòng ({{count}} mục)",
+      "per_space_invoices": "Hóa đơn từng phòng"
     },
     "documents": {
       "title": "Tài liệu của tôi",
