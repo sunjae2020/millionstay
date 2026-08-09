@@ -31,6 +31,8 @@ import { CUSTOMER_TENANCY } from "./lib/email-templates/customer-tenancy.mjs";
 import { CUSTOMER_BILLING } from "./lib/email-templates/customer-billing.mjs";
 import { CUSTOMER_CS } from "./lib/email-templates/customer-cs.mjs";
 import { CUSTOMER_SERVICE } from "./lib/email-templates/customer-service.mjs";
+import { PARTNER_ONBOARDING } from "./lib/email-templates/partner-onboarding.mjs";
+import { PARTNER_BUSINESS } from "./lib/email-templates/partner-business.mjs";
 
 const LOCALES = ["ko", "en", "ja", "zh", "th", "vi"];
 
@@ -46,6 +48,11 @@ const CATALOGUE = [
   ...CUSTOMER_BILLING.map((t) => ({ ...t, kind: "email", category: "customer" })),
   ...CUSTOMER_CS.map((t) => ({ ...t, kind: "email", category: "customer" })),
   ...CUSTOMER_SERVICE.map((t) => ({ ...t, kind: "email", category: "customer" })),
+  ...PARTNER_ONBOARDING.map((t) => ({ ...t, kind: "email", category: "partner" })),
+  // agent.inventory_update 는 광고성이라 category=marketing 으로 넘겨 셸이
+  // (광고) 표기·수신거부를 붙이게 한다(스펙 §6).
+  ...PARTNER_BUSINESS.map((t) => ({ ...t, kind: "email",
+    category: t.key === "agent.inventory_update" ? "marketing" : "partner" })),
 ];
 
 // ─────────────────────────────────────────────────────────────────────────────
