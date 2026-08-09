@@ -120,15 +120,20 @@ router.get("/v1/lookup/payment-info", async (req, res): Promise<void> => {
     payment_type: paymentInfoTable.payment_type,
     bsb_number: paymentInfoTable.bsb_number,
     bank_name: paymentInfoTable.bank_name,
+    account_number: paymentInfoTable.account_number,
+    account_name: paymentInfoTable.account_name,
   }).from(paymentInfoTable)
     .where(q ? columnMatches(paymentInfoTable.name, q) : undefined)
     .limit(20);
-  res.json(rows.map((r) => ({
-    id: r.id,
-    display: r.bsb_number
-      ? `${r.bank_name ?? r.name} — BSB ${r.bsb_number} (${r.payment_type})`
-      : `${r.name} (${r.payment_type})`,
-  })));
+  // 계좌를 고르는 화면(인보이스 입금 계좌 등)에서는 계좌번호까지 보여야 어느
+  // 계좌인지 구분된다. BSB는 호주 계좌에만 있으므로 있을 때만 덧붙인다.
+  res.json(rows.map((r) => {
+    const parts = [r.bank_name, r.bsb_number ? `BSB ${r.bsb_number}` : null, r.account_number].filter(Boolean);
+    const display = parts.length
+      ? `${parts.join(" ")}${r.account_name ? ` (${r.account_name})` : ""}`
+      : `${r.name} (${r.payment_type})`;
+    return { id: r.id, display };
+  }));
 });
 
 router.get("/v1/lookup/spaces", async (req, res): Promise<void> => {

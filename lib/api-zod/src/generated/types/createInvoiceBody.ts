@@ -13,6 +13,8 @@ export interface CreateInvoiceBody {
   contract_id?: number | null;
   /** @nullable */
   account_id?: number | null;
+  /** @nullable */
+  payment_info_id?: number | null;
   amount: number;
   currency?: string;
   /** @nullable */

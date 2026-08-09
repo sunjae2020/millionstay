@@ -3219,6 +3219,7 @@ export const ListInvoicesResponseItem = zod.object({
   booking_id: zod.number().nullish(),
   contract_id: zod.number().nullish(),
   account_id: zod.number().nullish(),
+  payment_info_id: zod.number().nullish(),
   amount: zod.number(),
   currency: zod.string(),
   status: zod.enum(["Draft", "Sent", "Paid", "Void"]),
@@ -3234,6 +3235,7 @@ export const ListInvoicesResponseItem = zod.object({
   booking_ref: zod.string().nullish(),
   contract_ref: zod.string().nullish(),
   account_name: zod.string().nullish(),
+  payment_info_name: zod.string().nullish(),
 });
 export const ListInvoicesResponse = zod.array(ListInvoicesResponseItem);
 
@@ -3244,6 +3246,7 @@ export const CreateInvoiceBody = zod.object({
   booking_id: zod.number().nullish(),
   contract_id: zod.number().nullish(),
   account_id: zod.number().nullish(),
+  payment_info_id: zod.number().nullish(),
   amount: zod.number(),
   currency: zod.string().optional(),
   due_date: zod.string().nullish(),
@@ -3264,6 +3267,7 @@ export const GetInvoiceResponse = zod.object({
   booking_id: zod.number().nullish(),
   contract_id: zod.number().nullish(),
   account_id: zod.number().nullish(),
+  payment_info_id: zod.number().nullish(),
   amount: zod.number(),
   currency: zod.string(),
   status: zod.enum(["Draft", "Sent", "Paid", "Void"]),
@@ -3279,6 +3283,7 @@ export const GetInvoiceResponse = zod.object({
   booking_ref: zod.string().nullish(),
   contract_ref: zod.string().nullish(),
   account_name: zod.string().nullish(),
+  payment_info_name: zod.string().nullish(),
 });
 
 /**
@@ -3292,6 +3297,7 @@ export const UpdateInvoiceBody = zod.object({
   booking_id: zod.number().nullish(),
   contract_id: zod.number().nullish(),
   account_id: zod.number().nullish(),
+  payment_info_id: zod.number().nullish(),
   amount: zod.number().nullish(),
   currency: zod.string().nullish(),
   due_date: zod.string().nullish(),
@@ -3305,6 +3311,7 @@ export const UpdateInvoiceResponse = zod.object({
   booking_id: zod.number().nullish(),
   contract_id: zod.number().nullish(),
   account_id: zod.number().nullish(),
+  payment_info_id: zod.number().nullish(),
   amount: zod.number(),
   currency: zod.string(),
   status: zod.enum(["Draft", "Sent", "Paid", "Void"]),
@@ -3320,6 +3327,7 @@ export const UpdateInvoiceResponse = zod.object({
   booking_ref: zod.string().nullish(),
   contract_ref: zod.string().nullish(),
   account_name: zod.string().nullish(),
+  payment_info_name: zod.string().nullish(),
 });
 
 /**
@@ -3342,6 +3350,7 @@ export const SendInvoiceResponse = zod.object({
   booking_id: zod.number().nullish(),
   contract_id: zod.number().nullish(),
   account_id: zod.number().nullish(),
+  payment_info_id: zod.number().nullish(),
   amount: zod.number(),
   currency: zod.string(),
   status: zod.enum(["Draft", "Sent", "Paid", "Void"]),
@@ -3357,6 +3366,7 @@ export const SendInvoiceResponse = zod.object({
   booking_ref: zod.string().nullish(),
   contract_ref: zod.string().nullish(),
   account_name: zod.string().nullish(),
+  payment_info_name: zod.string().nullish(),
 });
 
 /**
@@ -3377,6 +3387,7 @@ export const PayInvoiceResponse = zod.object({
   booking_id: zod.number().nullish(),
   contract_id: zod.number().nullish(),
   account_id: zod.number().nullish(),
+  payment_info_id: zod.number().nullish(),
   amount: zod.number(),
   currency: zod.string(),
   status: zod.enum(["Draft", "Sent", "Paid", "Void"]),
@@ -3392,6 +3403,7 @@ export const PayInvoiceResponse = zod.object({
   booking_ref: zod.string().nullish(),
   contract_ref: zod.string().nullish(),
   account_name: zod.string().nullish(),
+  payment_info_name: zod.string().nullish(),
 });
 
 /**
@@ -3407,6 +3419,7 @@ export const VoidInvoiceResponse = zod.object({
   booking_id: zod.number().nullish(),
   contract_id: zod.number().nullish(),
   account_id: zod.number().nullish(),
+  payment_info_id: zod.number().nullish(),
   amount: zod.number(),
   currency: zod.string(),
   status: zod.enum(["Draft", "Sent", "Paid", "Void"]),
@@ -3422,6 +3435,7 @@ export const VoidInvoiceResponse = zod.object({
   booking_ref: zod.string().nullish(),
   contract_ref: zod.string().nullish(),
   account_name: zod.string().nullish(),
+  payment_info_name: zod.string().nullish(),
 });
 
 /**

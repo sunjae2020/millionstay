@@ -61,6 +61,8 @@ interface FormData {
   booking_id: number | null;
   contract_id: number | null;
   account_id: number | null;
+  /** 입금 계좌 — Settings → Payment Info 에 저장된 계좌. 비우면 기본 계좌로 안내된다. */
+  payment_info_id: number | null;
   amount: string;
   currency: string;
   due_date: string;
@@ -134,7 +136,7 @@ export default function InvoiceDetail() {
 
   const { register, handleSubmit, reset, control } = useForm<FormData>({
     defaultValues: {
-      booking_id: null, contract_id: null, account_id: null,
+      booking_id: null, contract_id: null, account_id: null, payment_info_id: null,
       amount: "", currency: brandCurrency, due_date: "", description: "", notes: "",
     },
   });
@@ -145,6 +147,7 @@ export default function InvoiceDetail() {
         booking_id: invoice.booking_id ?? null,
         contract_id: invoice.contract_id ?? null,
         account_id: invoice.account_id ?? null,
+        payment_info_id: (invoice as any).payment_info_id ?? null,
         amount: invoice.amount != null ? String(invoice.amount) : "",
         currency: invoice.currency ?? brandCurrency,
         due_date: invoice.due_date ?? "",
@@ -170,6 +173,7 @@ export default function InvoiceDetail() {
     booking_id: data.booking_id ?? null,
     contract_id: data.contract_id ?? null,
     account_id: data.account_id ?? null,
+    payment_info_id: data.payment_info_id ?? null,
     amount: data.amount ? Number(data.amount) : 0,
     currency: data.currency || brandCurrency,
     due_date: data.due_date || null,
@@ -335,6 +339,21 @@ export default function InvoiceDetail() {
                   <DateInput value={field.value ?? ""} onChange={field.onChange} />
                 )} />
               </div>
+            </div>
+            {/* 입금 계좌 — 저장된 계좌(Settings → Payment Info) 중 하나. 비워 두면
+                기본 계좌이체 계좌로 안내되므로 대부분은 손댈 필요가 없다. */}
+            <div className="mt-4">
+              <Label>{t('invoice.label_payment_info')}</Label>
+              <Controller name="payment_info_id" control={control} render={({ field }) => (
+                <LookupSelect
+                  lookupUrl="/api/v1/lookup/payment-info"
+                  value={field.value}
+                  onChange={field.onChange}
+                  placeholder={t('invoice.placeholder_payment_info')}
+                  displayValue={(invoice as any)?.payment_info_name ?? null}
+                />
+              )} />
+              <p className="text-xs text-muted-foreground mt-1">{t('invoice.hint_payment_info')}</p>
             </div>
           </div>
 

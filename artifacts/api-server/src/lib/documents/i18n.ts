@@ -220,6 +220,22 @@ const LABELS: Dict = {
     vi: "Thanh toán bằng thẻ chịu phụ phí {pct}%, được cộng vào khi chọn thẻ ở bước thanh toán.",
   },
 
+  // ── Bank account (입금 계좌 안내) ─────────────────────────────────────────
+  "bankAccount":      { en: "Bank account", ko: "입금 계좌", zh: "汇款账户", ja: "振込口座", th: "บัญชีธนาคาร", vi: "Tài khoản ngân hàng" },
+  "bankName":         { en: "Bank", ko: "은행", zh: "开户行", ja: "銀行", th: "ธนาคาร", vi: "Ngân hàng" },
+  "bsb":              { en: "BSB", ko: "BSB", zh: "BSB", ja: "BSB", th: "BSB", vi: "BSB" },
+  "accountNumber":    { en: "Account number", ko: "계좌번호", zh: "账号", ja: "口座番号", th: "เลขที่บัญชี", vi: "Số tài khoản" },
+  "accountHolder":    { en: "Account name", ko: "예금주", zh: "户名", ja: "口座名義", th: "ชื่อบัญชี", vi: "Chủ tài khoản" },
+  "swift":            { en: "SWIFT", ko: "SWIFT", zh: "SWIFT", ja: "SWIFT", th: "SWIFT", vi: "SWIFT" },
+  "bankAccountNote":  {
+    en: "Please quote {ref} as the transfer reference.",
+    ko: "이체 시 받는 분 통장 표시에 {ref}를 남겨 주세요.",
+    zh: "转账时请备注 {ref} 作为参考编号。",
+    ja: "お振込の際は依頼人名に {ref} をご記入ください。",
+    th: "กรุณาระบุ {ref} เป็นข้อมูลอ้างอิงในการโอน",
+    vi: "Vui lòng ghi {ref} trong nội dung chuyển khoản.",
+  },
+
   // ── Move-out confirmation / deposit settlement (퇴거 세대 확인서) ──────────
   "doctype.move_out":     { en: "Move-out Confirmation", ko: "퇴거 세대 확인서", zh: "退租确认书", ja: "退去世帯確認書", th: "หนังสือยืนยันการย้ายออก", vi: "Xác nhận trả phòng" },
   "doctype.inspection":   { en: "Unit Inspection", ko: "세대점검표", zh: "房屋验收表", ja: "住戸点検表", th: "ใบตรวจสภาพห้อง", vi: "Phiếu kiểm tra căn hộ" },

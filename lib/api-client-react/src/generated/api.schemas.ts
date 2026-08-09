@@ -1728,6 +1728,8 @@ export interface Invoice {
   contract_id?: number | null;
   /** @nullable */
   account_id?: number | null;
+  /** @nullable */
+  payment_info_id?: number | null;
   amount: number;
   currency: string;
   status: InvoiceStatus;
@@ -1753,6 +1755,8 @@ export interface Invoice {
   contract_ref?: string | null;
   /** @nullable */
   account_name?: string | null;
+  /** @nullable */
+  payment_info_name?: string | null;
 }
 
 export interface CreateInvoiceBody {
@@ -1762,6 +1766,8 @@ export interface CreateInvoiceBody {
   contract_id?: number | null;
   /** @nullable */
   account_id?: number | null;
+  /** @nullable */
+  payment_info_id?: number | null;
   amount: number;
   currency?: string;
   /** @nullable */
@@ -1779,6 +1785,8 @@ export interface UpdateInvoiceBody {
   contract_id?: number | null;
   /** @nullable */
   account_id?: number | null;
+  /** @nullable */
+  payment_info_id?: number | null;
   /** @nullable */
   amount?: number | null;
   /** @nullable */

@@ -38,6 +38,18 @@ export interface InvoiceDocInput {
   account_address?: string | null;
   booking_ref?: string | null;
   contract_ref?: string | null;
+  /**
+   * 입금 계좌 — Settings → Payment Info 에 저장된 계좌 중 이 청구서가 가리키는
+   * 행(없으면 활성 계좌이체 기본값). `null`이면 계좌 안내를 렌더하지 않는다.
+   */
+  bank_account?: {
+    label?: string | null;
+    bank_name: string | null;
+    account_number: string | null;
+    account_name: string | null;
+    bsb_number?: string | null;
+    swift_code?: string | null;
+  } | null;
   line_items?: Array<{
     label: string;
     description?: string | null;
@@ -110,6 +122,32 @@ function renderDetailsTable(inv: InvoiceDocInput, lang: DocLang): string {
       </table>`;
 }
 
+/**
+ * 입금 계좌 안내. 계좌가 없거나(현금·카드 전용) 이미 수납/무효 처리된 청구서면
+ * 아무것도 렌더하지 않는다 — 낼 필요가 없는 문서에 계좌를 남기지 않기 위함이다.
+ */
+function renderBankAccount(inv: InvoiceDocInput, lang: DocLang): string {
+  const acc = inv.bank_account;
+  const status = inv.status || "Draft";
+  if (!acc || status === "Paid" || status === "Void") return "";
+  const row = (label: string, value: string | null | undefined) =>
+    value ? `<div class="row"><span class="label">${label}</span><span class="value">${escapeHtml(value)}</span></div>` : "";
+  const rows = [
+    row(t(lang, "bankName"), acc.bank_name),
+    row(t(lang, "bsb"), acc.bsb_number),
+    row(t(lang, "accountNumber"), acc.account_number),
+    row(t(lang, "accountHolder"), acc.account_name),
+    row(t(lang, "swift"), acc.swift_code),
+  ].join("");
+  if (!rows) return "";
+  return `
+    <div class="section" style="margin-top:20px;">
+      <h3>${t(lang, "bankAccount")}</h3>
+      ${rows}
+      <div style="font-size:12px;color:#999;margin-top:8px;">${t(lang, "bankAccountNote", { ref: escapeHtml(inv.invoice_ref) })}</div>
+    </div>`;
+}
+
 /** Build the inner body HTML for an invoice (no shell).
  *  `termsHtml` is optional admin-authored standard copy (payment terms / footer)
  *  from the editable `pdf.invoice` template, injected below the notes box. */
@@ -165,6 +203,8 @@ export function buildInvoiceBody(inv: InvoiceDocInput, lang: DocLang = "en", ter
       <div class="row"><span class="label">${t(lang, "byCard", { pct: String(CARD_SURCHARGE_PCT) })}</span><span class="value">${formatMoney(Math.round(Number(inv.amount ?? 0) * (1 + CARD_SURCHARGE_PCT / 100) * 100) / 100, inv.currency)}</span></div>
       <div style="font-size:12px;color:#999;margin-top:8px;">${t(lang, "cardSurchargeNote", { pct: String(CARD_SURCHARGE_PCT) })}</div>
     </div>` : ""}
+
+    ${renderBankAccount(inv, lang)}
 
     ${inv.notes?.trim() ? `<div class="info-box"><strong>${t(lang, "notes")}</strong><br/>${escapeHtml(inv.notes)}</div>` : ""}
 

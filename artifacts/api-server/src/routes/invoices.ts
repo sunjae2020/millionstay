@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { DEFAULT_CURRENCY } from "../lib/currency";
-import { db, invoicesTable, invoiceLineItemsTable, bookingsTable, contractsTable, accountsTable, emailLogsTable } from "@workspace/db";
+import { db, invoicesTable, invoiceLineItemsTable, bookingsTable, contractsTable, accountsTable, emailLogsTable, paymentInfoTable } from "@workspace/db";
 import { eq, ilike, and, asc, isNull, inArray } from "drizzle-orm";
 import { z } from "zod";
 import { logAction } from "../utils/auditLog";
@@ -93,14 +93,16 @@ async function enrichInvoices(rows: (typeof invoicesTable.$inferSelect)[]) {
   const bookingIds = [...new Set(rows.map(r => r.booking_id).filter(Boolean))] as number[];
   const contractIds = [...new Set(rows.map(r => r.contract_id).filter(Boolean))] as number[];
   const accountIds = [...new Set(rows.map(r => r.account_id).filter(Boolean))] as number[];
+  const payInfoIds = [...new Set(rows.map(r => r.payment_info_id).filter(Boolean))] as number[];
 
   const bookingMap: Record<number, string> = {};
   const contractMap: Record<number, string> = {};
   const accountMap: Record<number, string> = {};
+  const payInfoMap: Record<number, string> = {};
 
   // Batched lookups — see enrichContracts in contracts.ts: a per-id loop is an
   // N+1 that costs one round trip per invoice.
-  const [bookingRows, contractRows, accountRows] = await Promise.all([
+  const [bookingRows, contractRows, accountRows, payInfoRows] = await Promise.all([
     bookingIds.length
       ? db.select({ id: bookingsTable.id, booking_ref: bookingsTable.booking_ref }).from(bookingsTable).where(inArray(bookingsTable.id, bookingIds))
       : Promise.resolve([]),
@@ -110,17 +112,64 @@ async function enrichInvoices(rows: (typeof invoicesTable.$inferSelect)[]) {
     accountIds.length
       ? db.select({ id: accountsTable.id, name: accountsTable.name }).from(accountsTable).where(inArray(accountsTable.id, accountIds))
       : Promise.resolve([]),
+    payInfoIds.length
+      ? db.select().from(paymentInfoTable).where(inArray(paymentInfoTable.id, payInfoIds))
+      : Promise.resolve([]),
   ]);
   for (const b of bookingRows) bookingMap[b.id] = b.booking_ref;
   for (const c of contractRows) contractMap[c.id] = c.contract_ref;
   for (const a of accountRows) accountMap[a.id] = a.name;
+  for (const p of payInfoRows) payInfoMap[p.id] = paymentInfoDisplay(p);
 
   return rows.map(r => ({
     ...r,
     booking_ref: r.booking_id ? (bookingMap[r.booking_id] ?? null) : null,
     contract_ref: r.contract_id ? (contractMap[r.contract_id] ?? null) : null,
     account_name: r.account_id ? (accountMap[r.account_id] ?? null) : null,
+    payment_info_name: r.payment_info_id ? (payInfoMap[r.payment_info_id] ?? null) : null,
   }));
+}
+
+/**
+ * 계좌 한 줄 표기 — "은행명 계좌번호 (예금주)". 관리자 상세의 선택 표시와
+ * 청구서 문서의 입금 계좌 안내가 같은 문자열을 쓰도록 한곳에서 만든다.
+ * 계좌 정보가 없는 행(현금·Stripe 등)은 등록된 이름만 보여준다.
+ */
+function paymentInfoDisplay(p: typeof paymentInfoTable.$inferSelect): string {
+  const line = [p.bank_name, p.account_number].filter(Boolean).join(" ");
+  if (!line) return p.name;
+  return `${line}${p.account_name ? ` (${p.account_name})` : ""}`;
+}
+
+/**
+ * 청구서에 실릴 입금 계좌를 고른다. 지정된 계좌가 있으면 그것을, 없으면 활성
+ * 계좌이체 계좌 중 첫 행을 기본값으로 쓴다 — 계좌를 한 번도 고른 적 없는
+ * 기존 인보이스도 안내가 비지 않게 하기 위함이다. 활성 계좌가 하나도 없으면
+ * 계좌 구획 자체가 문서에서 빠진다.
+ */
+async function resolveInvoiceBankAccount(paymentInfoId: number | null) {
+  const row = paymentInfoId
+    ? await db.select().from(paymentInfoTable)
+        .where(and(eq(paymentInfoTable.id, paymentInfoId), isNull(paymentInfoTable.deleted_at)))
+        .then(r => r[0])
+    : await db.select().from(paymentInfoTable)
+        .where(and(
+          eq(paymentInfoTable.status, "Active"),
+          eq(paymentInfoTable.payment_type, "BankTransfer"),
+          isNull(paymentInfoTable.deleted_at),
+        ))
+        .orderBy(asc(paymentInfoTable.id))
+        .then(r => r[0]);
+  if (!row) return null;
+  if (!row.bank_name && !row.account_number) return null;
+  return {
+    label: row.name,
+    bank_name: row.bank_name,
+    account_number: row.account_number,
+    account_name: row.account_name,
+    bsb_number: row.bsb_number,
+    swift_code: row.swift_code,
+  };
 }
 
 router.get("/v1/invoices", async (req, res): Promise<void> => {
@@ -178,6 +227,7 @@ router.post("/v1/invoices", async (req, res): Promise<void> => {
     booking_id: parsed.data.booking_id ?? null,
     contract_id: parsed.data.contract_id ?? null,
     account_id: parsed.data.account_id ?? null,
+    payment_info_id: parsed.data.payment_info_id ?? null,
     amount,
     currency: ccy,
     exchange_rate_to_aud: await getRateToAud(ccy),
@@ -238,6 +288,7 @@ router.put("/v1/invoices/:id", async (req, res): Promise<void> => {
   if (parsed.data.booking_id !== undefined) updates.booking_id = parsed.data.booking_id;
   if (parsed.data.contract_id !== undefined) updates.contract_id = parsed.data.contract_id;
   if (parsed.data.account_id !== undefined) updates.account_id = parsed.data.account_id;
+  if (parsed.data.payment_info_id !== undefined) updates.payment_info_id = parsed.data.payment_info_id;
   if (parsed.data.amount != null) updates.amount = String(parsed.data.amount);
   if (parsed.data.currency != null) updates.currency = parsed.data.currency;
   if (parsed.data.due_date !== undefined) updates.due_date = parsed.data.due_date;
@@ -392,6 +443,7 @@ async function buildInvoiceDocInput(invoiceId: number, lang: DocLang): Promise<I
     account_address,
     booking_ref: (enriched as any).booking_ref ?? null,
     contract_ref: (enriched as any).contract_ref ?? null,
+    bank_account: await resolveInvoiceBankAccount(row.payment_info_id),
     line_items: (await getLineItems(invoiceId)).map(li => ({
       label: li.label,
       description: li.description,

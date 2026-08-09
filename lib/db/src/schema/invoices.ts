@@ -27,6 +27,11 @@ export const invoicesTable = pgTable("invoices", {
   currency: text("currency").notNull().default("AUD"),
   exchange_rate_to_aud: numeric("exchange_rate_to_aud", { precision: 18, scale: 8 }),
   status: text("status").notNull().default("Draft"),
+  // 이 청구서의 입금 계좌 — Settings → Payment Info(`payment_info`)에 저장된 계좌를
+  // 가리킨다. 비어 있으면 문서 렌더 시 활성 계좌 중 기본값(계좌이체 첫 행)을 쓰므로
+  // 기존 인보이스도 계좌 안내가 함께 나간다. 청구서마다 다른 계좌로 받아야 하는
+  // 경우(보증금 전용 계좌 등)에만 여기서 바꾼다.
+  payment_info_id: integer("payment_info_id"),
   due_date: text("due_date"),
   paid_at: timestamp("paid_at", { withTimezone: true }),
   payment_method: text("payment_method"),

@@ -5238,6 +5238,8 @@ components:
           type: ["integer", "null"]
         account_id:
           type: ["integer", "null"]
+        payment_info_id:
+          type: ["integer", "null"]
         amount:
           type: number
         currency:
@@ -5269,6 +5271,8 @@ components:
           type: ["string", "null"]
         account_name:
           type: ["string", "null"]
+        payment_info_name:
+          type: ["string", "null"]
       required: [id, invoice_ref, amount, currency, status, created_at, updated_at]
 
     CreateInvoiceBody:
@@ -5279,6 +5283,8 @@ components:
         contract_id:
           type: ["integer", "null"]
         account_id:
+          type: ["integer", "null"]
+        payment_info_id:
           type: ["integer", "null"]
         amount:
           type: number
@@ -5300,6 +5306,8 @@ components:
         contract_id:
           type: ["integer", "null"]
         account_id:
+          type: ["integer", "null"]
+        payment_info_id:
           type: ["integer", "null"]
         amount:
           type: ["number", "null"]
