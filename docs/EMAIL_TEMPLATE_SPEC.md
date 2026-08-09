@@ -371,10 +371,15 @@ Studio 목록이 두 축으로 탐색된다. 같은 축을 두 번 쓰면 정보
 
 | key | 발송 시점 | 상태 |
 |---|---|---|
-| `host.application_received` | 호스트 지원 접수 | 🔧 `sendHomestayHostEmail()` |
-| `host.approved` | 승인 + 포털 안내 | 🔧 동일 |
-| `host.rejected` | 반려 | 🔧 동일 |
-| `host.docs_requested` | 서류 요청 (신분증·보험·자격) | 🔧 동일 |
+| `host.application_received` | 호스트 지원 접수 | ➕ |
+| `host.approved` | 승인 + 포털 안내 | ➕ |
+| `host.rejected` | 반려 | ➕ |
+| `host.docs_requested` | 서류 요청 (신분증·보험·자격) | ➕ |
+
+> ⚠️ **`sendHomestayHostEmail()` 을 재사용하지 말 것.** 그 함수와 `homestay.*` 템플릿은
+> **홈스테이 호스트(민박 제공자)** 용이고, 여기 `host.*` 는 **서비스 호스트(청소·기사·정비,
+> `service_hosts` 테이블)** 다. 이름이 비슷할 뿐 다른 대상이며, Metheim 은 홈스테이 모듈이
+> 없어 `homestay.*` 는 시드에서 제거되는 쪽이다. 초안에서 이 둘을 뭉뚱그렸다가 정정했다.
 | `host.job_assigned` | 작업 지시 배정 | ➕ |
 | `host.job_reminder` | 작업 전일 리마인더 | ➕ |
 | `host.job_changed` | 일정·내용 변경 | ➕ |

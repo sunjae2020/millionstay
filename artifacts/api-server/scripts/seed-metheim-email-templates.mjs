@@ -33,6 +33,8 @@ import { CUSTOMER_CS } from "./lib/email-templates/customer-cs.mjs";
 import { CUSTOMER_SERVICE } from "./lib/email-templates/customer-service.mjs";
 import { PARTNER_ONBOARDING } from "./lib/email-templates/partner-onboarding.mjs";
 import { PARTNER_BUSINESS } from "./lib/email-templates/partner-business.mjs";
+import { HOST_ONBOARDING } from "./lib/email-templates/host-onboarding.mjs";
+import { HOST_JOBS } from "./lib/email-templates/host-jobs.mjs";
 
 const LOCALES = ["ko", "en", "ja", "zh", "th", "vi"];
 
@@ -53,6 +55,8 @@ const CATALOGUE = [
   // (광고) 표기·수신거부를 붙이게 한다(스펙 §6).
   ...PARTNER_BUSINESS.map((t) => ({ ...t, kind: "email",
     category: t.key === "agent.inventory_update" ? "marketing" : "partner" })),
+  ...HOST_ONBOARDING.map((t) => ({ ...t, kind: "email", category: "host" })),
+  ...HOST_JOBS.map((t) => ({ ...t, kind: "email", category: "host" })),
 ];
 
 // ─────────────────────────────────────────────────────────────────────────────
