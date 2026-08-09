@@ -23,6 +23,7 @@ import {
   type Block,
   type TextRef,
 } from "@workspace/cms-blocks";
+import { legacyContentToBlocks } from "../lib/cms/legacyImport.js";
 import { makeBulkDelete, makeBulkRestore, deletedFilter } from "../lib/softDelete.js";
 import { syncSiteDomain, getSiteDomainStatus, normaliseHostname } from "../lib/vercelDomains.js";
 import { getAnthropic, isChatConfigured, CHAT_MODEL, ChatConfigError } from "../lib/chat/anthropic.js";
@@ -745,10 +746,8 @@ router.post("/v1/cms/posts/:id/translate", async (req, res): Promise<void> => {
 
 /**
  * Fold a legacy `page_contents` row into a starting block tree so an editor
- * never begins from a blank canvas when converting an existing page. The field
- * groups the old fixed-field editor used (hero_*, feature_N_*, stat_*, cta_*)
- * map onto blocks; anything unmatched is preserved in a rich-text block so no
- * copy is lost.
+ * never begins from a blank canvas when converting an existing page. The key →
+ * block mapping lives in `lib/cms/legacyImport`.
  */
 router.post("/v1/cms/pages/:id/import-legacy", async (req, res): Promise<void> => {
   const pageId = Number(req.params["id"]);
@@ -772,94 +771,9 @@ router.post("/v1/cms/pages/:id/import-legacy", async (req, res): Promise<void> =
     return;
   }
 
-  const content = (legacy.content ?? {}) as Record<string, string>;
-  const used = new Set<string>();
-  const take = (key: string): string => {
-    const value = content[key];
-    if (typeof value === "string" && value.trim()) {
-      used.add(key);
-      return value;
-    }
-    if (value !== undefined) used.add(key);
-    return "";
-  };
-  const blocks: Block[] = [];
-  const id = (n: number) => `legacy_${n}`;
-  let seq = 0;
-
-  const heroTitle = take("hero_title");
-  if (heroTitle || content["hero_subtitle"]) {
-    blocks.push({
-      id: id(seq++),
-      type: "hero-banner",
-      props: {
-        title: heroTitle,
-        subtitle: take("hero_subtitle"),
-        description: take("hero_description"),
-        buttonLabel: take("hero_cta_primary") || take("cta_primary"),
-        secondaryLabel: take("hero_cta_secondary") || take("cta_secondary"),
-        backgroundImage: { url: take("hero_image_url") },
-        overlay: true,
-      },
-      style: { bg: "ink", width: "full", spacingTop: 0, spacingBottom: 0, align: "center" },
-    });
-  }
-
-  const features: Record<string, unknown>[] = [];
-  for (let i = 1; i <= 8; i += 1) {
-    const title = take(`feature_${i}_title`);
-    const description = take(`feature_${i}_body`);
-    if (title || description) features.push({ title, description });
-  }
-  if (features.length > 0) {
-    blocks.push({
-      id: id(seq++),
-      type: "feature-list",
-      props: { title: take("why_title"), subtitle: take("why_body"), columns: "3", items: features },
-      style: { spacingTop: 3, spacingBottom: 3, width: "contained" },
-    });
-  }
-
-  const stats = Object.keys(content)
-    .filter((k) => k.startsWith("stat_"))
-    .map((k) => {
-      used.add(k);
-      return { value: String(content[k] ?? ""), label: k.replace("stat_", "").replace(/_/g, " ") };
-    });
-  if (stats.length > 0) {
-    blocks.push({
-      id: id(seq++),
-      type: "statistics",
-      props: { title: "", items: stats },
-      style: { bg: "surface", spacingTop: 3, spacingBottom: 3 },
-    });
-  }
-
-  const ctaTitle = take("cta_title");
-  if (ctaTitle) {
-    blocks.push({
-      id: id(seq++),
-      type: "cta-banner",
-      props: { title: ctaTitle, subtitle: take("cta_subtitle"), buttonLabel: take("cta_button"), buttonUrl: "" },
-      style: { bg: "primary", spacingTop: 3, spacingBottom: 3, align: "center", width: "full" },
-    });
-  }
-
-  // Nothing is discarded — leftovers become a rich-text block for the editor.
-  const leftovers = Object.entries(content).filter(
-    ([k, v]) => !used.has(k) && typeof v === "string" && v.trim(),
+  const { blocks, unmatchedKeys } = legacyContentToBlocks(
+    (legacy.content ?? {}) as Record<string, unknown>,
   );
-  if (leftovers.length > 0) {
-    blocks.push({
-      id: id(seq++),
-      type: "rich-text",
-      props: {
-        title: "",
-        body: leftovers.map(([k, v]) => `<p><strong>${k}</strong><br>${v}</p>`).join("\n"),
-      },
-      style: { spacingTop: 2, spacingBottom: 2, width: "contained" },
-    });
-  }
 
   const body = normaliseBody({ blocks });
   await db
@@ -879,7 +793,7 @@ router.post("/v1/cms/pages/:id/import-legacy", async (req, res): Promise<void> =
       target: [cmsPageTranslationsTable.page_id, cmsPageTranslationsTable.locale],
       set: { body_json: body, updated_at: new Date() },
     });
-  res.json({ success: true, blocks: body.blocks.length, unmatchedKeys: leftovers.map(([k]) => k) });
+  res.json({ success: true, blocks: body.blocks.length, unmatchedKeys });
 });
 
 // ── Blog helper: list posts for the admin, scoped by site ──────────────────

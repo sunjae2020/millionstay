@@ -68,6 +68,7 @@ export const BLOCK_SPECS: Record<BlockType, BlockSpec> = {
     description: "여러 장을 자동으로 넘기는 대형 배너.",
     category: "Layout",
     fields: [
+      T("eyebrow", "상단 라벨"),
       { key: "autoplaySeconds", label: "자동 넘김 (초)", type: "number" },
       {
         key: "slides",
@@ -78,6 +79,7 @@ export const BLOCK_SPECS: Record<BlockType, BlockSpec> = {
       },
     ],
     defaultProps: {
+      eyebrow: "",
       autoplaySeconds: 6,
       slides: [
         {
@@ -118,6 +120,7 @@ export const BLOCK_SPECS: Record<BlockType, BlockSpec> = {
     description: "소개 문구 + 이미지 + 핵심 지표.",
     category: "Content",
     fields: [
+      T("eyebrow", "상단 라벨"),
       T("title", "제목"),
       T("subtitle", "부제"),
       T("description", "설명", "richtext"),
@@ -131,6 +134,7 @@ export const BLOCK_SPECS: Record<BlockType, BlockSpec> = {
       },
     ],
     defaultProps: {
+      eyebrow: "",
       title: "우리가 하는 일",
       subtitle: "임대 · 관리 · 운영",
       description: "<p>세대 하나하나를 직접 관리합니다. 임대 상담부터 입주, 유지보수, 퇴거 정산까지 한 회사가 책임집니다.</p>",
@@ -179,6 +183,7 @@ export const BLOCK_SPECS: Record<BlockType, BlockSpec> = {
     description: "아이콘·제목·설명 카드를 나열합니다.",
     category: "Content",
     fields: [
+      T("eyebrow", "상단 라벨"),
       T("title", "제목"),
       T("subtitle", "부제", "textarea"),
       {
@@ -200,6 +205,7 @@ export const BLOCK_SPECS: Record<BlockType, BlockSpec> = {
       },
     ],
     defaultProps: {
+      eyebrow: "",
       title: "이런 점이 다릅니다",
       subtitle: "고객이 가장 많이 언급한 세 가지",
       columns: "3",
@@ -297,6 +303,7 @@ export const BLOCK_SPECS: Record<BlockType, BlockSpec> = {
     description: "제공 서비스를 카드로 소개합니다.",
     category: "Content",
     fields: [
+      T("eyebrow", "상단 라벨"),
       T("title", "제목"),
       T("subtitle", "부제", "textarea"),
       {
@@ -308,6 +315,7 @@ export const BLOCK_SPECS: Record<BlockType, BlockSpec> = {
       },
     ],
     defaultProps: {
+      eyebrow: "",
       title: "제공 서비스",
       subtitle: "필요한 것만 골라 이용하세요.",
       items: [
@@ -421,6 +429,7 @@ export const BLOCK_SPECS: Record<BlockType, BlockSpec> = {
     description: "이용 후기 카드.",
     category: "Content",
     fields: [
+      T("eyebrow", "상단 라벨"),
       T("title", "제목"),
       T("subtitle", "부제", "textarea"),
       {
@@ -432,6 +441,7 @@ export const BLOCK_SPECS: Record<BlockType, BlockSpec> = {
       },
     ],
     defaultProps: {
+      eyebrow: "",
       title: "이용 후기",
       subtitle: "실제 입주자들이 남긴 이야기입니다.",
       items: [

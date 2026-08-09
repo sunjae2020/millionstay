@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { sanitiseHtml } from "./sanitise";
 import { styleToCss, tokensToCssVars, type DesignTokens } from "./tokens";
 import type { Block, BlockImage } from "./types";
@@ -94,6 +95,19 @@ function Heading({ children, className = "" }: { children: React.ReactNode; clas
   );
 }
 
+/** Small label above a heading — the "eyebrow" every marketing section uses. */
+function Eyebrow({ children, className = "" }: { children: string; className?: string }) {
+  if (!children) return null;
+  return (
+    <p
+      className={`text-sm font-semibold tracking-widest uppercase ${className}`}
+      style={{ color: "var(--cms-primary)" }}
+    >
+      {children}
+    </p>
+  );
+}
+
 /** Sanitised on save AND here — stored values from before the rule can't execute. */
 function Html({ html, className = "" }: { html: string; className?: string }) {
   if (!html) return null;
@@ -138,6 +152,102 @@ function Picture({ image, className = "" }: { image: BlockImage | null; classNam
       className={`max-w-full ${className}`}
       style={{ borderRadius: "var(--cms-radius)" }}
     />
+  );
+}
+
+function usePrefersReducedMotion() {
+  const [reduce, setReduce] = useState(false);
+  useEffect(() => {
+    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const on = () => setReduce(mq.matches);
+    on();
+    mq.addEventListener("change", on);
+    return () => mq.removeEventListener("change", on);
+  }, []);
+  return reduce;
+}
+
+/**
+ * Full-bleed autoplaying hero. Slides crossfade behind a dark overlay so the
+ * copy stays legible over any photo, and indicators let a reader step through
+ * them. Motion is dropped entirely when the OS asks for reduced motion.
+ */
+function HeroSlider({
+  slides,
+  eyebrow,
+  autoplaySeconds,
+}: {
+  slides: Record<string, unknown>[];
+  eyebrow: string;
+  autoplaySeconds: number;
+}) {
+  const [index, setIndex] = useState(0);
+  const reduce = usePrefersReducedMotion();
+  const interval = Math.max(2, autoplaySeconds || 6) * 1000;
+
+  useEffect(() => {
+    if (reduce || slides.length <= 1) return;
+    const id = setInterval(() => setIndex((prev) => (prev + 1) % slides.length), interval);
+    return () => clearInterval(id);
+  }, [reduce, slides.length, interval]);
+
+  const active = slides[index] ?? slides[0];
+  if (!active) return null;
+
+  return (
+    <div className="relative flex items-center min-h-[70vh] overflow-hidden" style={{ background: "var(--cms-ink)" }}>
+      {slides.map((slide, idx) => {
+        const image = img(slide["image"]);
+        return image ? (
+          <img
+            key={idx}
+            src={image.url}
+            alt=""
+            aria-hidden
+            className="absolute inset-0 h-full w-full object-cover transition-opacity duration-700"
+            style={{ opacity: idx === index ? 1 : 0 }}
+          />
+        ) : null;
+      })}
+      <div className="absolute inset-0 bg-black/50" />
+
+      <div className="relative mx-auto w-full max-w-6xl px-4 sm:px-6 py-20 sm:py-28 text-white">
+        <div className="max-w-2xl">
+          {eyebrow && <p className="text-sm font-semibold tracking-widest uppercase text-white/80">{eyebrow}</p>}
+          <h1
+            className="mt-4 text-3xl sm:text-5xl font-bold leading-tight"
+            style={{ fontFamily: "var(--cms-font-heading)" }}
+          >
+            {str(active["title"])}
+          </h1>
+          {str(active["description"]) && <p className="mt-5 text-lg opacity-90">{str(active["description"])}</p>}
+          {str(active["buttonLabel"]) && (
+            <div className="mt-8">
+              <CtaButton label={str(active["buttonLabel"])} href={str(active["buttonUrl"])} />
+            </div>
+          )}
+        </div>
+      </div>
+
+      {slides.length > 1 && (
+        <div className="absolute bottom-6 left-1/2 z-10 flex -translate-x-1/2 gap-2">
+          {slides.map((_, idx) => (
+            <button
+              key={idx}
+              type="button"
+              onClick={() => setIndex(idx)}
+              aria-label={`Slide ${idx + 1}`}
+              aria-current={idx === index}
+              className="h-2 rounded-full transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-white"
+              style={{
+                width: idx === index ? "24px" : "8px",
+                backgroundColor: idx === index ? "#fff" : "rgba(255,255,255,0.5)",
+              }}
+            />
+          ))}
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -212,27 +322,14 @@ function BlockBody({
       );
     }
 
-    case "hero-slider": {
-      // Rendered as a stack: no autoplay JS is shipped to the public bundle for
-      // a first version — the slides read as a sequence of banners.
-      const slides = rows(p["slides"]);
+    case "hero-slider":
       return (
-        <div className="space-y-6">
-          {slides.map((slide, index) => (
-            <div key={index} className="relative overflow-hidden" style={{ borderRadius: "var(--cms-radius)" }}>
-              <Picture image={img(slide["image"])} className="w-full object-cover" />
-              <div className="p-6">
-                <h3 className="text-xl font-semibold">{str(slide["title"])}</h3>
-                {str(slide["description"]) && <p className="mt-2 opacity-80">{str(slide["description"])}</p>}
-                <div className="mt-4">
-                  <CtaButton label={str(slide["buttonLabel"])} href={str(slide["buttonUrl"])} />
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
+        <HeroSlider
+          slides={rows(p["slides"])}
+          eyebrow={str(p["eyebrow"])}
+          autoplaySeconds={typeof p["autoplaySeconds"] === "number" ? p["autoplaySeconds"] : 6}
+        />
       );
-    }
 
     case "rich-text":
       return (
@@ -246,6 +343,7 @@ function BlockBody({
       return (
         <div className="grid gap-8 lg:grid-cols-2 items-center">
           <div>
+            <Eyebrow className="mb-2">{str(p["eyebrow"])}</Eyebrow>
             <Heading>{str(p["title"])}</Heading>
             {str(p["subtitle"]) && <p className="mt-2 opacity-70">{str(p["subtitle"])}</p>}
             <Html html={str(p["description"])} className="mt-4" />
@@ -283,6 +381,7 @@ function BlockBody({
     case "feature-list":
       return (
         <div>
+          <Eyebrow className="text-center mb-2">{str(p["eyebrow"])}</Eyebrow>
           <Heading className="text-center">{str(p["title"])}</Heading>
           {str(p["subtitle"]) && <p className="mt-2 text-center opacity-75">{str(p["subtitle"])}</p>}
           <div className={`mt-8 grid gap-6 ${GRID_COLS[str(p["columns"])] ?? GRID_COLS["3"]}`}>
@@ -357,6 +456,7 @@ function BlockBody({
     case "services":
       return (
         <div>
+          <Eyebrow className="text-center mb-2">{str(p["eyebrow"])}</Eyebrow>
           <Heading className="text-center">{str(p["title"])}</Heading>
           {str(p["subtitle"]) && <p className="mt-2 text-center opacity-75">{str(p["subtitle"])}</p>}
           <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
@@ -443,6 +543,7 @@ function BlockBody({
     case "testimonials":
       return (
         <div>
+          <Eyebrow className="text-center mb-2">{str(p["eyebrow"])}</Eyebrow>
           <Heading className="text-center">{str(p["title"])}</Heading>
           {str(p["subtitle"]) && <p className="mt-2 text-center opacity-75">{str(p["subtitle"])}</p>}
           <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
