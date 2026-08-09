@@ -489,7 +489,8 @@ Studio 목록이 두 축으로 탐색된다. 같은 축을 두 번 쓰면 정보
 | contract | `contract.host_agreement` | `host.approved` |
 
 **규칙**: 신규 문서는 [DOCUMENT_NAMING_RULE.md](DOCUMENT_NAMING_RULE.md) 에 따라 `DOC_CODES` 에
-3자리 코드를 먼저 등록하고 `resolveDocFileName()` 으로만 파일명을 만든다. 라우트에서
+3자리 코드를 먼저 등록하고 `issueDocumentFilename()` + `setDocumentDownloadHeaders()`
+(`lib/documents/filename.ts`)로만 파일명을 만든다. 라우트에서
 `` `${ref}.pdf` `` 조립 금지. 발행 문서는 전부 `DocumentPreviewDialog` 로 연다.
 
 ### 7.3 이메일 ↔ PDF 문안 일치
@@ -512,7 +513,7 @@ Studio 목록이 두 축으로 탐색된다. 같은 축을 두 번 쓰면 정보
 | **C** | 카탈로그 149키 등록 + **ko 원문 작성 → humanize-korean** | `seed-metheim-email-templates.mjs` |
 | **D** | en/ja/zh/th/vi 5개 로케일 작성 (기계번역 금지) | 동 시드 확장 |
 | **E** | 발송부 배선 — 하드코딩 문안 제거, `resolveTemplate` 경유 | 라우트/서비스 수정 |
-| **F** | PDF·계약 템플릿 9건 신설 + `DOC_CODES` 등록 | 시드 + `docFileName.ts` |
+| **F** | PDF·계약 템플릿 9건 신설 + `DOC_CODES` 등록 | 시드 + `documents/filename.ts` |
 | **G** | MillionStay 본체 적용 (en 원본, 홈스테이 도메인 포함) | `seed-document-templates.mjs` 확장 |
 
 C·D 는 키 단위로 파이프라인이 돌아간다(ko 작성 → humanize → 5개 로케일). 카테고리 단위로
