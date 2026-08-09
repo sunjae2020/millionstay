@@ -75,6 +75,21 @@ const EVENT_MAP: Record<string, string> = {
   "email.complained": "complained",
 };
 
+/**
+ * Is this bounce permanent — i.e. the address will never accept mail?
+ *
+ * Resend reports SES-derived classifications, so the value is `Permanent` /
+ * `Transient` / `Undetermined`, NOT "hard". Matching on "hard" (the term the
+ * industry uses in prose) silently never fires, and dead addresses stay in the
+ * sending pool forever, which is exactly the reputation damage the suppression
+ * list exists to prevent. Anything not clearly permanent is left alone — a
+ * transient bounce is a full mailbox, not a wrong address.
+ */
+function isPermanentBounce(type: string | undefined): boolean {
+  const t = (type ?? "").toLowerCase();
+  return t.includes("permanent") || t.includes("hard");
+}
+
 interface ResendEvent {
   type?: string;
   created_at?: string;
@@ -203,7 +218,7 @@ async function handleEvent(payload: ResendEvent, svixId?: string): Promise<void>
   // A hard bounce means the address does not exist; a complaint means the owner
   // told a mailbox provider we are spam. Both are permanent — block the address
   // rather than letting the next campaign rediscover it.
-  const isHardBounce = eventType === "bounced" && (payload.data?.bounce?.type ?? "").toLowerCase().includes("hard");
+  const isHardBounce = eventType === "bounced" && isPermanentBounce(payload.data?.bounce?.type);
   if (targetEmail && (isHardBounce || eventType === "complained")) {
     await db
       .insert(emailSuppressionsTable)
