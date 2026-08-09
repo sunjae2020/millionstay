@@ -456,8 +456,20 @@ Studio 목록이 두 축으로 탐색된다. 같은 축을 두 번 쓰면 정보
 - 발신자 상호·주소·연락처 (`company_info` 에서 자동)
 - 야간(21시–08시) 발송 시 **사전 별도 동의** 필요 → 스케줄러에서 차단
 
-이 4개 요소는 `renderEmailShell()` 이 `category==='marketing'` 일 때 자동 삽입한다.
-**본문 템플릿에 손으로 적지 않는다.**
+**구현 완료** — `sendMarketingEmail()` 이 강제한다. 본문 템플릿에 손으로 적지 않는다.
+
+| 요건 | 구현 | 테넌트 설정 |
+|---|---|---|
+| 수신동의 없으면 미발송 | `marketing_consents` 조회 (기존) | 없음 (항상) |
+| 수신거부 링크 + RFC 8058 헤더 | `buildUnsubscribeUrl()` (기존) | 없음 (항상) |
+| 제목 머리 `(광고)` | `applyAdPrefix()` | `MARKETING_AD_PREFIX` |
+| 야간 21–08시 발송 차단 | `inMarketingQuietHours()` | `MARKETING_QUIET_HOURS` + `MARKETING_TZ` |
+| 동의 출처·시점 고지 | `marketingFooter()` 6개국어 | `DEFAULT_DOC_LANG` |
+
+> 기존 코드는 **호주 Spam Act 기준**으로만 작성돼 있어 한국 요건 3가지가 빠져 있었다.
+> 값을 설정하지 않은 테넌트는 종전 동작 그대로다(호주 인스턴스 무영향).
+> 야간 차단은 **테넌트 시간대로 판정**한다 — 서버가 UTC라 UTC 시(hour)로 비교하면
+> 서울 22시가 UTC 13시로 읽혀 그대로 나간다.
 
 ---
 

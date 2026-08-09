@@ -38,6 +38,7 @@ import { HOST_JOBS } from "./lib/email-templates/host-jobs.mjs";
 import { OWNER } from "./lib/email-templates/owner.mjs";
 import { STAFF_ACCOUNT } from "./lib/email-templates/staff-account.mjs";
 import { STAFF_WORK } from "./lib/email-templates/staff-work.mjs";
+import { MARKETING } from "./lib/email-templates/marketing.mjs";
 
 const LOCALES = ["ko", "en", "ja", "zh", "th", "vi"];
 
@@ -63,6 +64,7 @@ const CATALOGUE = [
   ...OWNER.map((t) => ({ ...t, kind: "email", category: "owner" })),
   ...STAFF_ACCOUNT.map((t) => ({ ...t, kind: "email", category: "staff" })),
   ...STAFF_WORK.map((t) => ({ ...t, kind: "email", category: "staff" })),
+  ...MARKETING.map((t) => ({ ...t, kind: "email", category: "marketing" })),
 ];
 
 // ─────────────────────────────────────────────────────────────────────────────
