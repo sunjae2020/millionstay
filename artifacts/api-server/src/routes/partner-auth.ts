@@ -6,14 +6,12 @@ import { db, partnerUsersTable, accountsTable } from "@workspace/db";
 import { signPartnerJWT, requirePartnerAuth, invalidatePartnerCache, type PartnerAuthPayload, type PortalType } from "../middlewares/requirePartnerAuth";
 import { validatePassword } from "../utils/passwordPolicy";
 import { checkLockout, recordAttempt } from "../lib/loginLockout";
-import { sendPasswordResetEmail } from "../lib/email";
 import { issueRefreshToken, revokeRefreshToken, rotateRefreshToken, revokeAllForUser } from "../lib/refreshTokens";
+import { issuePartnerResetLink, PORTAL_TYPES, BCRYPT_COST } from "../lib/partnerPortal";
 
 const router: IRouter = Router();
 
-const ALLOWED_PORTAL_TYPES = new Set(["agent", "owner", "service_host"]);
-const RESET_TOKEN_TTL_MS = 60 * 60 * 1000; // 1 hour
-const BCRYPT_COST = 12;
+const ALLOWED_PORTAL_TYPES = new Set<string>(PORTAL_TYPES);
 
 function ipOf(req: any): string {
   const xff = (req.headers["x-forwarded-for"] || "") as string;
@@ -206,30 +204,7 @@ router.post("/v1/auth/partner/forgot-password", async (req, res): Promise<void> 
       .limit(1);
     if (!user || !user.is_active) return;
 
-    const rawToken = crypto.randomBytes(32).toString("hex");
-    const tokenHash = crypto.createHash("sha256").update(rawToken).digest("hex");
-    const expires = new Date(Date.now() + RESET_TOKEN_TTL_MS);
-    await db
-      .update(partnerUsersTable)
-      .set({ reset_token_hash: tokenHash, reset_token_expires_at: expires })
-      .where(eq(partnerUsersTable.id, user.id));
-
-    const portalBase = (() => {
-      const base = process.env["CLIENT_URL"] || `https://millionstay.com`;
-      switch (user.portal_type) {
-        case "agent": return process.env["AGENT_PORTAL_URL"] || `${base}/agent`;
-        case "owner": return process.env["OWNER_PORTAL_URL"] || `${base}/owner`;
-        case "service_host": return process.env["SERVICE_HOST_PORTAL_URL"] || `${base}/service-host`;
-        default: return base;
-      }
-    })();
-    const resetUrl = `${portalBase}/reset-password#token=${rawToken}`;
-
-    await sendPasswordResetEmail({
-      to: user.email,
-      name: [user.first_name, user.last_name].filter(Boolean).join(" ") || "Partner",
-      resetUrl,
-    });
+    await issuePartnerResetLink(user);
   } catch (err) {
     console.error("Partner forgot-password failed:", err);
   }

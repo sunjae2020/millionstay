@@ -1,11 +1,18 @@
 import { Router, type IRouter } from "express";
 import multer from "multer";
+import crypto from "node:crypto";
 import { eq, ilike, and, or, isNull, inArray, desc, SQL } from "drizzle-orm";
 import {
   db, accountsTable, accountContactsTable, contactsTable, commissionsTable, paymentInfoTable,
   invoicesTable, contractsTable, contractRelatedCostsTable, partnerPayoutsTable,
-  spacesTable, propertiesTable, documentsTable, serviceHostsTable,
+  spacesTable, propertiesTable, documentsTable, serviceHostsTable, partnerUsersTable,
 } from "@workspace/db";
+import bcrypt from "bcryptjs";
+import { validatePassword } from "../utils/passwordPolicy";
+import { invalidatePartnerCache } from "../middlewares/requirePartnerAuth";
+import { revokeAllForUser } from "../lib/refreshTokens";
+import { issuePartnerResetLink, portalBaseUrl, PORTAL_TYPES, BCRYPT_COST } from "../lib/partnerPortal";
+import { logAction } from "../utils/auditLog";
 import { deletedFilter, makeBulkDelete, makeBulkRestore } from "../lib/softDelete";
 import { formatPersonName, formatFirstName, formatLastName } from "../lib/nameFormat";
 import { enrichFromWebsite, downloadImage } from "../lib/accounts/websiteEnrich";
@@ -600,6 +607,285 @@ router.delete("/v1/accounts/:id/documents/:docId", async (req, res): Promise<voi
   if (!doc) { res.status(404).json({ error: "Not found" }); return; }
   await db.update(documentsTable).set({ deleted_at: new Date() }).where(eq(documentsTable.id, doc.id));
   await deleteFromCloudinary(doc.cloudinary_public_id);
+  res.status(204).end();
+});
+
+/* ────────────────────────────────────────────────────────────────────────────
+ * 포털 사용 — per-user portal access for this account.
+ *
+ * A row in `partner_users` IS the login: the email is the 아이디, `portal_type`
+ * decides which portal (agent / owner / service_host) it opens, and `is_active`
+ * is the on/off switch. Passwords are only ever written here (bcrypt) — never
+ * read back — so the admin UI can set one directly or mail an invite/reset link
+ * that lands on the same /reset-password flow the portals already use.
+ * ──────────────────────────────────────────────────────────────────────────── */
+
+const PORTAL_USER_COLUMNS = {
+  id: partnerUsersTable.id,
+  account_id: partnerUsersTable.account_id,
+  portal_type: partnerUsersTable.portal_type,
+  email: partnerUsersTable.email,
+  first_name: partnerUsersTable.first_name,
+  last_name: partnerUsersTable.last_name,
+  phone: partnerUsersTable.phone,
+  avatar_url: partnerUsersTable.avatar_url,
+  is_active: partnerUsersTable.is_active,
+  last_login_at: partnerUsersTable.last_login_at,
+  created_at: partnerUsersTable.created_at,
+  updated_at: partnerUsersTable.updated_at,
+};
+
+/** The listed shape, plus where this login actually signs in. */
+function shapePortalUser(row: Record<string, any>) {
+  return {
+    ...row,
+    display_name: formatPersonName(row["first_name"], row["last_name"]) || null,
+    portal_url: portalBaseUrl(String(row["portal_type"])),
+  };
+}
+
+function actorOf(req: any): { actorId: number | null; actorEmail: string | null } {
+  const user = req?.user;
+  return { actorId: user?.id ?? null, actorEmail: user?.email ?? null };
+}
+
+async function loadPortalUser(accountId: number, userId: number) {
+  const [row] = await db.select(PORTAL_USER_COLUMNS).from(partnerUsersTable)
+    .where(and(
+      eq(partnerUsersTable.id, userId),
+      eq(partnerUsersTable.account_id, accountId),
+      isNull(partnerUsersTable.deleted_at),
+    ));
+  return row ?? null;
+}
+
+/** Path ids + account existence in one place — every handler below starts here. */
+async function resolveAccountAndUser(req: any, res: any, withUser: boolean): Promise<{ id: number; userId: number } | null> {
+  const id = Number(req.params["id"]);
+  const userId = withUser ? Number(req.params["userId"]) : 0;
+  if (!Number.isInteger(id) || id <= 0 || (withUser && (!Number.isInteger(userId) || userId <= 0))) {
+    res.status(400).json({ error: "Invalid id" });
+    return null;
+  }
+  const [account] = await db.select({ id: accountsTable.id }).from(accountsTable)
+    .where(and(eq(accountsTable.id, id), isNull(accountsTable.deleted_at)));
+  if (!account) { res.status(404).json({ error: "Not found" }); return null; }
+  return { id, userId };
+}
+
+// GET /v1/accounts/:id/portal-users — the 포털 사용 tab.
+router.get("/v1/accounts/:id/portal-users", async (req, res): Promise<void> => {
+  const ids = await resolveAccountAndUser(req, res, false);
+  if (!ids) return;
+  const rows = await db.select(PORTAL_USER_COLUMNS).from(partnerUsersTable)
+    .where(and(eq(partnerUsersTable.account_id, ids.id), isNull(partnerUsersTable.deleted_at)))
+    .orderBy(partnerUsersTable.portal_type, partnerUsersTable.email);
+  res.json(rows.map(shapePortalUser));
+});
+
+// POST /v1/accounts/:id/portal-users — grant portal access to one person.
+// `password` is optional: without it the user is created inactive-until-set and
+// an invite (reset) mail goes out instead, so no plaintext is ever handled here.
+router.post("/v1/accounts/:id/portal-users", async (req, res): Promise<void> => {
+  const ids = await resolveAccountAndUser(req, res, false);
+  if (!ids) return;
+
+  const body = (req.body ?? {}) as {
+    portal_type?: string;
+    email?: string;
+    password?: string;
+    first_name?: string;
+    last_name?: string;
+    phone?: string;
+    is_active?: boolean;
+    send_invite?: boolean;
+  };
+
+  const portal_type = String(body.portal_type ?? "").trim();
+  if (!(PORTAL_TYPES as readonly string[]).includes(portal_type)) {
+    res.status(400).json({ error: "portal_type must be one of agent, owner, service_host" });
+    return;
+  }
+  const email = String(body.email ?? "").toLowerCase().trim();
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    res.status(400).json({ error: "A valid email is required" });
+    return;
+  }
+
+  const password = typeof body.password === "string" && body.password ? body.password : null;
+  if (password) {
+    const policy = validatePassword(password);
+    if (!policy.ok) { res.status(400).json({ error: policy.error }); return; }
+  }
+
+  // The email is unique across the whole table (it is the login), so a clash can
+  // also be a previously removed user — revive that row instead of failing.
+  const [clash] = await db.select().from(partnerUsersTable).where(eq(partnerUsersTable.email, email));
+  if (clash && !clash.deleted_at) {
+    res.status(409).json({ error: "This email already has a portal login" });
+    return;
+  }
+
+  // No password yet → a random one nobody knows; the invite link sets the real one.
+  const password_hash = await bcrypt.hash(password ?? crypto.randomUUID() + crypto.randomUUID(), BCRYPT_COST);
+  const values = {
+    account_id: ids.id,
+    portal_type,
+    email,
+    password_hash,
+    first_name: body.first_name?.trim() || null,
+    last_name: body.last_name?.trim() || null,
+    phone: body.phone?.trim() || null,
+    is_active: body.is_active ?? true,
+    deleted_at: null,
+    reset_token_hash: null,
+    reset_token_expires_at: null,
+  };
+
+  const [created] = clash
+    ? await db.update(partnerUsersTable).set(values).where(eq(partnerUsersTable.id, clash.id)).returning(PORTAL_USER_COLUMNS)
+    : await db.insert(partnerUsersTable).values(values).returning(PORTAL_USER_COLUMNS);
+
+  let invited = false;
+  if (!password || body.send_invite) {
+    try { invited = await issuePartnerResetLink({ ...created!, portal_type }); } catch { invited = false; }
+  }
+
+  const actor = actorOf(req);
+  await logAction({
+    entityType: "partner_users", entityId: created!.id, action: "CREATE", ...actor,
+    newValue: { account_id: ids.id, portal_type, email, is_active: created!.is_active },
+  });
+
+  res.status(201).json({ ...shapePortalUser(created!), invite_sent: invited });
+});
+
+// PUT /v1/accounts/:id/portal-users/:userId — profile + the on/off switch.
+// Deactivating also invalidates live tokens, so access stops immediately rather
+// than at the next token expiry.
+router.put("/v1/accounts/:id/portal-users/:userId", async (req, res): Promise<void> => {
+  const ids = await resolveAccountAndUser(req, res, true);
+  if (!ids) return;
+  const existing = await loadPortalUser(ids.id, ids.userId);
+  if (!existing) { res.status(404).json({ error: "Not found" }); return; }
+
+  const body = (req.body ?? {}) as Record<string, unknown>;
+  const patch: Record<string, unknown> = {};
+
+  if (typeof body["portal_type"] === "string") {
+    const portal_type = body["portal_type"].trim();
+    if (!(PORTAL_TYPES as readonly string[]).includes(portal_type)) {
+      res.status(400).json({ error: "portal_type must be one of agent, owner, service_host" });
+      return;
+    }
+    patch["portal_type"] = portal_type;
+  }
+  if (typeof body["email"] === "string") {
+    const email = body["email"].toLowerCase().trim();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { res.status(400).json({ error: "A valid email is required" }); return; }
+    if (email !== existing["email"]) {
+      const [clash] = await db.select({ id: partnerUsersTable.id }).from(partnerUsersTable)
+        .where(and(eq(partnerUsersTable.email, email), isNull(partnerUsersTable.deleted_at)));
+      if (clash) { res.status(409).json({ error: "This email already has a portal login" }); return; }
+      patch["email"] = email;
+    }
+  }
+  for (const key of ["first_name", "last_name", "phone"]) {
+    if (typeof body[key] === "string") patch[key] = (body[key] as string).trim() || null;
+  }
+  if (typeof body["is_active"] === "boolean") patch["is_active"] = body["is_active"];
+
+  if (!Object.keys(patch).length) { res.json(shapePortalUser(existing)); return; }
+
+  // An email or portal change moves the login itself — cut existing sessions too.
+  const cutSessions = patch["is_active"] === false || "email" in patch || "portal_type" in patch;
+  if (cutSessions) patch["tokens_invalid_after"] = new Date();
+
+  const [updated] = await db.update(partnerUsersTable).set(patch)
+    .where(eq(partnerUsersTable.id, ids.userId)).returning(PORTAL_USER_COLUMNS);
+
+  if (cutSessions) {
+    invalidatePartnerCache(ids.userId);
+    try { await revokeAllForUser(ids.userId, "partner"); } catch {}
+  }
+
+  const actor = actorOf(req);
+  await logAction({
+    entityType: "partner_users", entityId: ids.userId,
+    action: "is_active" in patch ? "STATUS_CHANGE" : "UPDATE", ...actor,
+    oldValue: { email: existing["email"], portal_type: existing["portal_type"], is_active: existing["is_active"] },
+    newValue: patch,
+  });
+
+  res.json(shapePortalUser(updated!));
+});
+
+// POST /v1/accounts/:id/portal-users/:userId/password — operator sets a password
+// directly (handover, phone support). Every live session is dropped.
+router.post("/v1/accounts/:id/portal-users/:userId/password", async (req, res): Promise<void> => {
+  const ids = await resolveAccountAndUser(req, res, true);
+  if (!ids) return;
+  const existing = await loadPortalUser(ids.id, ids.userId);
+  if (!existing) { res.status(404).json({ error: "Not found" }); return; }
+
+  const password = String((req.body ?? {})["password"] ?? "");
+  const policy = validatePassword(password);
+  if (!policy.ok) { res.status(400).json({ error: policy.error }); return; }
+
+  const password_hash = await bcrypt.hash(password, BCRYPT_COST);
+  await db.update(partnerUsersTable)
+    .set({ password_hash, reset_token_hash: null, reset_token_expires_at: null, tokens_invalid_after: new Date() })
+    .where(eq(partnerUsersTable.id, ids.userId));
+  invalidatePartnerCache(ids.userId);
+  try { await revokeAllForUser(ids.userId, "partner"); } catch {}
+
+  const actor = actorOf(req);
+  await logAction({ entityType: "partner_users", entityId: ids.userId, action: "UPDATE", ...actor, newValue: { password: "reset-by-admin" } });
+
+  res.json({ success: true });
+});
+
+// POST /v1/accounts/:id/portal-users/:userId/send-reset — mail the invite /
+// reset link rather than handing a password over in person.
+router.post("/v1/accounts/:id/portal-users/:userId/send-reset", async (req, res): Promise<void> => {
+  const ids = await resolveAccountAndUser(req, res, true);
+  if (!ids) return;
+  const existing = await loadPortalUser(ids.id, ids.userId);
+  if (!existing) { res.status(404).json({ error: "Not found" }); return; }
+
+  let sent = false;
+  try {
+    sent = await issuePartnerResetLink(existing as any);
+  } catch (err) {
+    console.error("Portal reset link failed:", err);
+  }
+  const actor = actorOf(req);
+  await logAction({ entityType: "partner_users", entityId: ids.userId, action: "UPDATE", ...actor, newValue: { reset_link_sent: sent } });
+
+  if (!sent) { res.status(502).json({ error: "Could not send the email — check the mail settings" }); return; }
+  res.json({ success: true });
+});
+
+// DELETE /v1/accounts/:id/portal-users/:userId — revoke access. Soft delete so
+// the audit trail (and any CS ticket authored by this login) survives.
+router.delete("/v1/accounts/:id/portal-users/:userId", async (req, res): Promise<void> => {
+  const ids = await resolveAccountAndUser(req, res, true);
+  if (!ids) return;
+  const existing = await loadPortalUser(ids.id, ids.userId);
+  if (!existing) { res.status(404).json({ error: "Not found" }); return; }
+
+  await db.update(partnerUsersTable)
+    .set({ deleted_at: new Date(), is_active: false, tokens_invalid_after: new Date() })
+    .where(eq(partnerUsersTable.id, ids.userId));
+  invalidatePartnerCache(ids.userId);
+  try { await revokeAllForUser(ids.userId, "partner"); } catch {}
+
+  const actor = actorOf(req);
+  await logAction({
+    entityType: "partner_users", entityId: ids.userId, action: "DELETE", ...actor,
+    oldValue: { email: existing["email"], portal_type: existing["portal_type"] },
+  });
+
   res.status(204).end();
 });
 

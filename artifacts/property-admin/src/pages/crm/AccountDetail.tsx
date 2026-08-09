@@ -21,6 +21,7 @@ import { AccountLookupSelect } from "@/components/AccountLookupSelect";
 import { AccountIdentityPanel, type FillSource } from "@/components/AccountIdentityPanel";
 import { EntityPreviewDialog, type EntityPreview } from "@/components/EntityPreviewDialog";
 import { AddAccountContactDialog } from "@/components/AddAccountContactDialog";
+import { AccountPortalUsers } from "@/components/AccountPortalUsers";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiFetch, apiJson } from "@/lib/apiFetch";
 import { ArrowLeft, Save, ExternalLink, AlertTriangle, Building2, FileText, FolderUp, Eye, Upload, Trash2, UserPlus, X } from "lucide-react";
@@ -805,6 +806,7 @@ export default function AccountDetail() {
               <TabsTrigger value="documents">
                 {t('account.tab_files')}{accountDocs?.length ? ` (${accountDocs.length})` : ""}
               </TabsTrigger>
+              <TabsTrigger value="portal">{t('account.tab_portal')}</TabsTrigger>
             </TabsList>
 
             <TabsContent value="details">
@@ -1231,6 +1233,17 @@ export default function AccountDetail() {
                   </tbody>
                 </ExportableTable>
               </div>
+            </TabsContent>
+
+            {/* ── Portal access (포털 사용) ───────────────────────────── */}
+            <TabsContent value="portal">
+              {id && (
+                <AccountPortalUsers
+                  accountId={id}
+                  contacts={related?.contacts as any}
+                  accountType={accountType}
+                />
+              )}
             </TabsContent>
           </Tabs>
         )}
