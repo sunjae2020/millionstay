@@ -1,4 +1,4 @@
-import { pgTable, serial, integer, text, timestamp, index, uniqueIndex } from "drizzle-orm/pg-core";
+import { pgTable, serial, integer, text, jsonb, timestamp, index, uniqueIndex } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
@@ -38,6 +38,11 @@ export const prospectsTable = pgTable(
     // Where the record came from: 'csv_import' | 'expo' | 'referral' | 'research' | 'manual'
     source: text("source").notNull().default("manual"),
     source_detail: text("source_detail").notNull().default(""),
+    // Source-specific metadata that would otherwise need a column per source
+    // (여수 관리대장 담당구역, 박람회 부스번호, 협회 소속 …). The segment builder
+    // derives its dropdowns from whatever keys actually appear here, so adding a
+    // new source needs no schema change and no code change.
+    attributes: jsonb("attributes").$type<Record<string, string>>().notNull().default({}),
     // 'new' | 'queued' | 'contacted' | 'opened' | 'clicked' | 'replied'
     // | 'converted' | 'unsubscribed' | 'bounced' | 'disqualified'
     prospect_status: text("prospect_status").notNull().default("new"),
@@ -68,6 +73,7 @@ export const prospectsTable = pgTable(
     index("idx_prospects_status").on(t.prospect_status),
     index("idx_prospects_segment").on(t.segment),
     index("idx_prospects_owner").on(t.owner_user_id),
+    index("idx_prospects_source").on(t.source),
   ],
 );
 

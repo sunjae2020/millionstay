@@ -50,6 +50,7 @@ const ProspectBody = z.object({
   consent_basis: z.enum(CONSENT_BASES).default("none"),
   consent_evidence: z.string().default(""),
   notes: z.string().default(""),
+  attributes: z.record(z.string(), z.string()).default({}),
 });
 
 /** A ground for contact is only meaningful with evidence recorded alongside it. */
@@ -60,7 +61,7 @@ function consentEvidenceMissing(basis: string, evidence: string): boolean {
 // ── List ────────────────────────────────────────────────────────────────────
 
 router.get("/v1/marketing/prospects", async (req, res): Promise<void> => {
-  const { search, segment, prospect_status, country, owner_user_id, list_id } =
+  const { search, segment, prospect_status, country, owner_user_id, list_id, source } =
     req.query as Record<string, string | undefined>;
 
   const conditions: SQL[] = [deletedFilter(prospectsTable.deleted_at, req)];
@@ -68,6 +69,17 @@ router.get("/v1/marketing/prospects", async (req, res): Promise<void> => {
   if (prospect_status) conditions.push(eq(prospectsTable.prospect_status, prospect_status));
   if (country) conditions.push(eq(prospectsTable.country, country));
   if (owner_user_id) conditions.push(eq(prospectsTable.owner_user_id, Number(owner_user_id)));
+  if (source) conditions.push(eq(prospectsTable.source, source));
+
+  // Attribute filters arrive as `attr.<key>=<value>` so the list screen can reuse
+  // whatever facets the segment builder discovered, without this route knowing
+  // any key by name.
+  for (const [param, value] of Object.entries(req.query as Record<string, unknown>)) {
+    if (!param.startsWith("attr.") || typeof value !== "string" || value === "") continue;
+    const key = param.slice("attr.".length);
+    if (!key) continue;
+    conditions.push(sql`lower(${prospectsTable.attributes} ->> ${key}) = lower(${value})`);
+  }
   if (list_id) {
     const memberIds = (
       await db
@@ -135,6 +147,75 @@ router.post("/v1/marketing/prospects", async (req, res): Promise<void> => {
       return;
     }
     res.status(500).json({ error: "Failed to create prospect" });
+  }
+});
+
+// ── Discovery: sources & facets ─────────────────────────────────────────────
+//
+// These MUST stay above `/prospects/:id` — Express matches in order and would
+// otherwise read "sources" as an id.
+
+/**
+ * The source labels that actually exist, derived from the data.
+ *
+ * Deliberately not an enum: every new import batch invents its own label
+ * ("2026 여수 박람회", "중개사협회 명부") and a hard-coded list would go stale the
+ * first time someone imports a file without touching the code.
+ */
+router.get("/v1/marketing/prospects/sources", async (_req, res): Promise<void> => {
+  try {
+    const rows = await db
+      .select({ source: prospectsTable.source, count: sql<number>`count(*)::int` })
+      .from(prospectsTable)
+      .where(and(isNull(prospectsTable.deleted_at), sql`${prospectsTable.source} <> ''`))
+      .groupBy(prospectsTable.source)
+      .orderBy(prospectsTable.source);
+    res.json({ success: true, data: rows });
+  } catch {
+    res.status(500).json({ error: "Failed to list sources" });
+  }
+});
+
+/**
+ * Which attribute keys can sensibly become a dropdown, and their values.
+ *
+ * `attributes` is unfolded with jsonb_each_text and scoped to one source, then
+ * gated on cardinality: a key with more distinct values than the limit is not a
+ * category, it is free text or a number (면적, 거리, 주소, 메모). Those would
+ * produce a thousand-item dropdown, so they are dropped here and left to text or
+ * range filters. This gate is what makes the builder usable without anyone
+ * curating a list of "filterable" keys.
+ */
+const FACET_VALUE_LIMIT = 40;
+
+router.get("/v1/marketing/prospects/facets", async (req, res): Promise<void> => {
+  const source = String((req.query.source as string | undefined) ?? "").trim();
+  try {
+    const rows = await db.execute(sql`
+      SELECT kv.key AS key,
+             array_agg(DISTINCT kv.value ORDER BY kv.value) AS values,
+             count(DISTINCT kv.value)::int AS value_count
+      FROM prospects p, jsonb_each_text(p.attributes) AS kv
+      WHERE p.deleted_at IS NULL
+        AND kv.value <> ''
+        AND (${source === "" ? null : source}::text IS NULL OR p.source = ${source === "" ? null : source})
+      GROUP BY kv.key
+      HAVING count(DISTINCT kv.value) <= ${FACET_VALUE_LIMIT}
+      ORDER BY kv.key
+    `);
+
+    const facets = (rows as unknown as { rows?: unknown[] }).rows ?? (rows as unknown as unknown[]);
+    res.json({
+      success: true,
+      data: (facets as Array<{ key: string; values: string[]; value_count: number }>).map((f) => ({
+        key: f.key,
+        values: f.values ?? [],
+        value_count: f.value_count,
+      })),
+    });
+  } catch (err) {
+    console.error("[marketing] facet discovery failed:", err instanceof Error ? err.message : err);
+    res.status(500).json({ error: "Failed to load facets" });
   }
 });
 
@@ -298,15 +379,39 @@ interface PreviewRow {
   /** 'new' | 'duplicate' | 'existing_account' | 'suppressed' | 'error' */
   verdict: string;
   message: string;
+  /** Columns the mapping did not claim, kept as source-specific attributes. */
+  attributes: Record<string, string>;
 }
 
-function applyMapping(raw: Record<string, string>, mapping: Record<string, string>): Record<string, string> {
-  const out: Record<string, string> = {};
-  for (const [header, field] of Object.entries(mapping)) {
-    if (!field) continue;
-    out[field] = raw[header] ?? "";
+/**
+ * Split a CSV row into known prospect fields and everything else.
+ *
+ * The leftovers are the point, not waste: a 여수 관리대장 export carries 담당구역
+ * and 취급물건, a 박람회 명단 carries 부스번호 and 협회. Dropping them would make
+ * the whole facet mechanism moot, because there would be nothing to facet on.
+ * Keys are normalised so `취급 물건` and `취급물건` do not become two facets.
+ */
+function normaliseAttrKey(header: string): string {
+  return header.trim().replace(/\s+/g, "_").replace(/[."$]/g, "").slice(0, 60);
+}
+
+function applyMapping(
+  raw: Record<string, string>,
+  mapping: Record<string, string>,
+): { fields: Record<string, string>; attributes: Record<string, string> } {
+  const fields: Record<string, string> = {};
+  const attributes: Record<string, string> = {};
+  for (const [header, value] of Object.entries(raw)) {
+    const field = mapping[header];
+    if (field) {
+      fields[field] = value ?? "";
+      continue;
+    }
+    const key = normaliseAttrKey(header);
+    const v = (value ?? "").trim();
+    if (key && v) attributes[key] = v;
   }
-  return out;
+  return { fields, attributes };
 }
 
 /**
@@ -320,7 +425,7 @@ async function buildPreview(csvText: string, mappingOverride?: Record<string, st
     : suggestColumnMapping(headers);
 
   const mapped = rows.map((r) => applyMapping(r, mapping));
-  const emails = mapped.map((m) => (m.email ?? "").toLowerCase().trim()).filter(Boolean);
+  const emails = mapped.map((m) => (m.fields.email ?? "").toLowerCase().trim()).filter(Boolean);
 
   // Three batched lookups, whatever the file size.
   const existingProspects = emails.length
@@ -357,21 +462,23 @@ async function buildPreview(csvText: string, mappingOverride?: Record<string, st
   const seenInFile = new Set<string>();
 
   const preview: PreviewRow[] = mapped.map((m, idx) => {
-    const email = (m.email ?? "").toLowerCase().trim();
+    const f = m.fields;
+    const email = (f.email ?? "").toLowerCase().trim();
     const base: PreviewRow = {
       row_no: idx + 2, // 1-based, and row 1 is the header
-      company_name: m.company_name ?? "",
+      company_name: f.company_name ?? "",
       email,
-      contact_name: m.contact_name ?? "",
-      contact_title: m.contact_title ?? "",
-      phone: m.phone ?? "",
-      website: m.website ?? "",
-      segment: m.segment ?? "",
-      country: m.country ?? "",
-      city: m.city ?? "",
-      notes: m.notes ?? "",
+      contact_name: f.contact_name ?? "",
+      contact_title: f.contact_title ?? "",
+      phone: f.phone ?? "",
+      website: f.website ?? "",
+      segment: f.segment ?? "",
+      country: f.country ?? "",
+      city: f.city ?? "",
+      notes: f.notes ?? "",
       verdict: "new",
       message: "",
+      attributes: m.attributes,
     };
 
     if (!base.company_name) return { ...base, verdict: "error", message: "company_name is required" };
@@ -391,7 +498,11 @@ async function buildPreview(csvText: string, mappingOverride?: Record<string, st
     return acc;
   }, {});
 
-  return { headers, mapping, rows: preview, counts, total: preview.length };
+  // Show the operator which columns are being kept as attributes — otherwise the
+  // mapping screen looks like those columns are simply being discarded.
+  const attributeKeys = [...new Set(preview.flatMap((r) => Object.keys(r.attributes)))].sort();
+
+  return { headers, mapping, rows: preview, counts, total: preview.length, attribute_keys: attributeKeys };
 }
 
 router.post("/v1/marketing/prospects/import/preview", upload.single("file"), async (req, res): Promise<void> => {
@@ -479,6 +590,10 @@ router.post("/v1/marketing/prospects/import/commit", upload.single("file"), asyn
               website: row.website || sql`${prospectsTable.website}`,
               country: row.country || sql`${prospectsTable.country}`,
               city: row.city || sql`${prospectsTable.city}`,
+              // Merge rather than replace: a second import of the same company
+              // from a different source adds its attributes instead of erasing
+              // what the first one contributed.
+              attributes: sql`${prospectsTable.attributes} || ${JSON.stringify(row.attributes)}::jsonb`,
               updated_at: new Date(),
             })
             .where(sql`lower(${prospectsTable.email}) = ${row.email} AND ${prospectsTable.deleted_at} IS NULL`)
@@ -500,6 +615,7 @@ router.post("/v1/marketing/prospects/import/commit", upload.single("file"), asyn
             country: row.country,
             city: row.city,
             notes: row.notes,
+            attributes: row.attributes,
             source: String(body.source ?? "csv_import"),
             source_detail: String(body.source_detail ?? ""),
             language_code: String(body.language_code ?? "ko"),
