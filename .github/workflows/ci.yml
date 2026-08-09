@@ -129,5 +129,10 @@ jobs:
       # Builds each app with the tenant brand/env, stages a prebuilt dir with
       # the /api proxy vercel.json, and deploys to the metheim-<app> projects.
       # The script honors VERCEL_TOKEN / VERCEL_SCOPE for non-interactive auth.
-      - name: Deploy metheim admin + web
-        run: TENANT=metheim scripts/redeploy-tenant-frontends.sh admin web
+      #
+      # All five apps, not just admin + web: the three partner portals were left
+      # out originally, so every merge to main silently pushed them further out
+      # of date until somebody noticed and hand-deployed them. A tenant app that
+      # is only deployed when a human remembers is a tenant app that is stale.
+      - name: Deploy metheim frontends
+        run: TENANT=metheim scripts/redeploy-tenant-frontends.sh admin web agent owner host
