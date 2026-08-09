@@ -39,8 +39,13 @@ import { OWNER } from "./lib/email-templates/owner.mjs";
 import { STAFF_ACCOUNT } from "./lib/email-templates/staff-account.mjs";
 import { STAFF_WORK } from "./lib/email-templates/staff-work.mjs";
 import { MARKETING } from "./lib/email-templates/marketing.mjs";
+import { SMS_CUSTOMER } from "./lib/email-templates/sms-customer.mjs";
+import { SMS_PARTNER } from "./lib/email-templates/sms-partner.mjs";
+import { smsGrade, renderSample } from "./lib/email-templates/_sms.mjs";
 
 const LOCALES = ["ko", "en", "ja", "zh", "th", "vi"];
+/** 이 템플릿이 채워야 하는 로케일. SMS 는 국내 전용이라 ko 만. */
+const localesFor = (t) => (t.kind === "sms" ? ["ko"] : LOCALES);
 
 // ─────────────────────────────────────────────────────────────────────────────
 // 카탈로그 조립 — 카테고리별 묶음
@@ -65,6 +70,12 @@ const CATALOGUE = [
   ...STAFF_ACCOUNT.map((t) => ({ ...t, kind: "email", category: "staff" })),
   ...STAFF_WORK.map((t) => ({ ...t, kind: "email", category: "staff" })),
   ...MARKETING.map((t) => ({ ...t, kind: "email", category: "marketing" })),
+  // SMS 는 국내 발송 전용이라 ko 하나만 둔다. 외국인 세입자에게는 같은 사건의
+  // 이메일이 6개국어로 나가므로 정보가 닿지 않는 구멍은 없다.
+  ...SMS_CUSTOMER.map((t) => ({ ...t, kind: "sms", category: "customer",
+    tr: { ko: { subject: null, body: t.text } } })),
+  ...SMS_PARTNER.map((t) => ({ ...t, kind: "sms", category: "partner",
+    tr: { ko: { subject: null, body: t.text } } })),
 ];
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -97,10 +108,10 @@ function validate(rows) {
     if (!/^[a-z][a-z0-9_]*\.[a-z][a-z0-9_]*$/.test(t.key)) {
       problems.push(`${id}: 키가 <domain>.<event> 형식이 아님`);
     }
-    for (const loc of LOCALES) {
+    for (const loc of localesFor(t)) {
       const tr = t.tr[loc];
       if (!tr?.body?.trim()) { problems.push(`${id}: ${loc} 본문 누락`); continue; }
-      if (style === "shell" && !tr.subject?.trim()) {
+      if (t.kind !== "sms" && style === "shell" && !tr.subject?.trim()) {
         problems.push(`${id}: ${loc} 제목 누락 (shell 형식은 제목 필수)`);
       }
       if (BANNED.test(tr.body)) {
@@ -121,6 +132,34 @@ function validate(rows) {
       }
       const cyrillic = text.match(/\p{Script=Cyrillic}+/gu);
       if (cyrillic) problems.push(`${id}: ${loc} 키릴 문자 혼입 — ${[...new Set(cyrillic)].join(", ")}`);
+      // ── SMS 전용 검증 ───────────────────────────────────────────────
+      if (t.kind === "sms") {
+        // 길이는 곧 비용이다. {{변수}} 리터럴이 아니라 **표본값을 치환한 뒤** 잰다 —
+        // 그러지 않으면 실제 발송분이 LMS 로 넘어가도 통과한다.
+        const { bytes, type } = smsGrade(tr.body);
+        if (type === "OVER") {
+          problems.push(`${id}: SMS 본문이 ${bytes}바이트 — LMS 한도(2000) 초과`);
+        } else if (type === "LMS" && !t.allowLms) {
+          problems.push(
+            `${id}: 표본 치환 시 ${bytes}바이트로 LMS(요금 3배)다. 줄이거나 allowLms:true 로 의도를 밝혀라.
+` +
+            `      → ${renderSample(tr.body).replace(/\n/g, " / ")}`);
+        }
+        if (/<[a-z/]/i.test(tr.body)) problems.push(`${id}: SMS 에 HTML 태그가 있음`);
+        // (광고)·수신거부는 발송 코드가 붙인다. 문안에 있으면 이중 표기가 된다.
+        if (/\(광고\)|무료거부|수신거부/.test(tr.body)) {
+          problems.push(`${id}: (광고)·수신거부 문구는 발송 코드가 붙인다 — 문안에서 제거`);
+        }
+        // 문자는 전달·캡처가 쉽다. 금융정보를 넣지 않는다.
+        if (/계좌번호|카드번호|주민(등록)?번호/.test(tr.body)) {
+          problems.push(`${id}: SMS 에 금융·신원 정보를 담지 않는다`);
+        }
+        // 원본 URL 은 그것만으로 SMS 한도를 먹는다.
+        if (/https?:\/\/(?!\{\{)/.test(tr.body)) {
+          problems.push(`${id}: SMS 에 리터럴 URL 이 있음 — 단축 링크 변수를 쓸 것`);
+        }
+        continue;  // 아래 이메일 전용 검사는 건너뛴다
+      }
       if (style === "note" && /<[a-z/]/i.test(tr.body)) {
         problems.push(`${id}: ${loc} note 형식에 HTML 태그가 있음 — 커버에 escape 되어 태그가 그대로 보인다`);
       }
@@ -152,7 +191,8 @@ async function main() {
     for (const p of problems) console.error(`  - ${p}`);
     process.exit(1);
   }
-  console.log(`✓ 검증 통과 — ${rows.length}개 템플릿 × ${LOCALES.length}개 로케일`);
+  const nSms = rows.filter((t) => t.kind === "sms").length;
+  console.log(`✓ 검증 통과 — 이메일 ${rows.length - nSms}종 × ${LOCALES.length}개 로케일 + SMS ${nSms}종(ko)`);
 
   if (process.env.DRY_RUN) {
     for (const t of rows) console.log(`  [dry] ${t.category.padEnd(9)} ${t.kind}/${t.key}`);
@@ -182,7 +222,7 @@ async function main() {
          RETURNING id, (xmax = 0) AS inserted`,
         [t.kind, t.key, t.name, t.description, t.category, JSON.stringify(t.vars)]);
 
-      for (const loc of LOCALES) {
+      for (const loc of localesFor(t)) {
         const { subject, body } = t.tr[loc];
         await pool.query(
           `INSERT INTO document_template_translations (template_id, locale, subject, body_html)
@@ -193,7 +233,7 @@ async function main() {
       }
 
       tpl.inserted ? created++ : updated++;
-      console.log(`✓ ${t.category.padEnd(9)} ${t.kind}/${t.key} (#${tpl.id}) — ${LOCALES.length} 로케일`);
+      console.log(`✓ ${t.category.padEnd(9)} ${t.kind}/${t.key} (#${tpl.id}) — ${localesFor(t).length} 로케일`);
     }
     console.log(`\n완료 — 신규 ${created} · 갱신 ${updated} · 건너뜀 ${skipped}`);
   } finally {
