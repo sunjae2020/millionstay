@@ -23,15 +23,15 @@
  *         DATABASE_URL=<metheim> ONLY=common node scripts/seed-metheim-email-templates.mjs
  *         DATABASE_URL=<metheim> DRY_RUN=1 node scripts/seed-metheim-email-templates.mjs
  */
-import pg from "pg";
 import { COMMON } from "./lib/email-templates/common.mjs";
 import { CUSTOMER_APPLICATION } from "./lib/email-templates/customer-application.mjs";
 import { CUSTOMER_BOOKING } from "./lib/email-templates/customer-booking.mjs";
 import { CUSTOMER_CONTRACT } from "./lib/email-templates/customer-contract.mjs";
 import { CUSTOMER_TENANCY } from "./lib/email-templates/customer-tenancy.mjs";
 import { CUSTOMER_BILLING } from "./lib/email-templates/customer-billing.mjs";
+import { CUSTOMER_CS } from "./lib/email-templates/customer-cs.mjs";
+import { CUSTOMER_SERVICE } from "./lib/email-templates/customer-service.mjs";
 
-const { Pool } = pg;
 const LOCALES = ["ko", "en", "ja", "zh", "th", "vi"];
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -44,6 +44,8 @@ const CATALOGUE = [
   ...CUSTOMER_CONTRACT.map((t) => ({ ...t, kind: "email", category: "customer" })),
   ...CUSTOMER_TENANCY.map((t) => ({ ...t, kind: "email", category: "customer" })),
   ...CUSTOMER_BILLING.map((t) => ({ ...t, kind: "email", category: "customer" })),
+  ...CUSTOMER_CS.map((t) => ({ ...t, kind: "email", category: "customer" })),
+  ...CUSTOMER_SERVICE.map((t) => ({ ...t, kind: "email", category: "customer" })),
 ];
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -119,7 +121,7 @@ function validate(rows) {
 
 async function main() {
   const url = process.env.DATABASE_URL;
-  if (!url) throw new Error("DATABASE_URL 이 필요합니다");
+  if (!url && !process.env.DRY_RUN) throw new Error("DATABASE_URL 이 필요합니다");
 
   const only = process.env.ONLY?.trim();
   const rows = only ? CATALOGUE.filter((t) => t.category === only) : CATALOGUE;
@@ -138,7 +140,9 @@ async function main() {
     return;
   }
 
-  const pool = new Pool({ connectionString: url, ssl: { rejectUnauthorized: false } });
+  // pg 는 여기서 처음 필요하다 — DRY_RUN 검증은 DB 드라이버 없이도 돌아야 한다.
+  const { default: pg } = await import("pg");
+  const pool = new pg.Pool({ connectionString: url, ssl: { rejectUnauthorized: false } });
   const keepExisting = !!process.env.KEEP_EXISTING;
   let created = 0, updated = 0, skipped = 0;
 

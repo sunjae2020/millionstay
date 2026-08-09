@@ -37,6 +37,11 @@
 > **138 커밋 뒤처져 있고** `emailBrand.ts` 자체가 없다. 이 브랜치에서 조사하면 "브랜딩이 안 되어
 > 있다"는 **잘못된 결론**이 나온다(실제로 이 문서 초안이 그렇게 작성됐다가 정정됐다).
 > **이 작업은 `origin/main` 에서 딴 워크트리에서 진행한다.**
+>
+> 🚨 **워크트리를 `/private/tmp` 아래에 두지 말 것.** macOS 가 3일 이상 미접근 파일을
+> 자동 삭제해 작업 중 워크트리가 통째로 비워진다(2026-08-09 실제 발생 — `.git` 링크와
+> 미커밋 파일이 사라졌다). 커밋은 본 레포 오브젝트 DB 에 있어 살아남지만 미커밋 작업은
+> 잃는다. `<repo>/.claude/worktrees/<name>` 처럼 영구 경로를 쓰고, 배치마다 커밋한다.
 
 **결론: Phase A(공용 셸 신설)는 불필요하다.** 템플릿 작성이 곧바로 1순위다.
 
@@ -424,15 +429,15 @@ Studio 목록이 두 축으로 탐색된다. 같은 축을 두 번 쓰면 정보
 | category | 템플릿 수 |
 |---|---|
 | `common` | 16 |
-| `customer` | 62 |
+| `customer` | 64 |
 | `owner` | 10 |
 | `partner` | 17 |
 | `host` | 14 |
 | `staff` | 20 |
 | `marketing` | 8 |
-| **합계** | **147** |
+| **합계** | **149** |
 
-× 6 로케일 = **882 개 번역 행.**
+× 6 로케일 = **894 개 번역 행.**
 
 ---
 
@@ -504,12 +509,12 @@ Studio 목록이 두 축으로 탐색된다. 같은 축을 두 번 쓰면 정보
 |---|---|---|
 | ~~A~~ | ~~공용 이메일 셸~~ | **완료 (main 684bd7e)** |
 | **B** | `category` slug 정규화 마이그레이션 + Studio 그룹 라벨 i18n | 마이그레이션 1건, admin i18n |
-| **C** | 카탈로그 147키 등록 + **ko 원문 작성 → humanize-korean** | `seed-metheim-email-templates.mjs` |
+| **C** | 카탈로그 149키 등록 + **ko 원문 작성 → humanize-korean** | `seed-metheim-email-templates.mjs` |
 | **D** | en/ja/zh/th/vi 5개 로케일 작성 (기계번역 금지) | 동 시드 확장 |
 | **E** | 발송부 배선 — 하드코딩 문안 제거, `resolveTemplate` 경유 | 라우트/서비스 수정 |
 | **F** | PDF·계약 템플릿 9건 신설 + `DOC_CODES` 등록 | 시드 + `docFileName.ts` |
 | **G** | MillionStay 본체 적용 (en 원본, 홈스테이 도메인 포함) | `seed-document-templates.mjs` 확장 |
 
 C·D 는 키 단위로 파이프라인이 돌아간다(ko 작성 → humanize → 5개 로케일). 카테고리 단위로
-끊어서 `common`(16) → `customer`(62) → `owner`(10) → `partner`(17) → `host`(14) → `staff`(20)
+끊어서 `common`(16) → `customer`(64) → `owner`(10) → `partner`(17) → `host`(14) → `staff`(20)
 → `marketing`(8) 순으로 진행하고, 각 묶음이 끝날 때마다 시드를 실행해 Studio 에서 확인한다.
