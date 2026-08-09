@@ -36,6 +36,8 @@ import { PARTNER_BUSINESS } from "./lib/email-templates/partner-business.mjs";
 import { HOST_ONBOARDING } from "./lib/email-templates/host-onboarding.mjs";
 import { HOST_JOBS } from "./lib/email-templates/host-jobs.mjs";
 import { OWNER } from "./lib/email-templates/owner.mjs";
+import { STAFF_ACCOUNT } from "./lib/email-templates/staff-account.mjs";
+import { STAFF_WORK } from "./lib/email-templates/staff-work.mjs";
 
 const LOCALES = ["ko", "en", "ja", "zh", "th", "vi"];
 
@@ -59,6 +61,8 @@ const CATALOGUE = [
   ...HOST_ONBOARDING.map((t) => ({ ...t, kind: "email", category: "host" })),
   ...HOST_JOBS.map((t) => ({ ...t, kind: "email", category: "host" })),
   ...OWNER.map((t) => ({ ...t, kind: "email", category: "owner" })),
+  ...STAFF_ACCOUNT.map((t) => ({ ...t, kind: "email", category: "staff" })),
+  ...STAFF_WORK.map((t) => ({ ...t, kind: "email", category: "staff" })),
 ];
 
 // ─────────────────────────────────────────────────────────────────────────────
