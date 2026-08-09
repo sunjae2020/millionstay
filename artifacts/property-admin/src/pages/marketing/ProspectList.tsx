@@ -10,7 +10,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { DataTable, ACTIONS_KEY, type ColumnDef } from "@/components/ui/data-table";
 import { useToast } from "@/hooks/use-toast";
 import { formatDate } from "@/lib/date";
-import { listProspects, deleteProspect, type Prospect } from "@/lib/marketing/api";
+import {
+  listProspects, deleteProspect, listProspectSources, listProspectFacets, prettyFacetKey,
+  type Prospect,
+} from "@/lib/marketing/api";
 import { ProspectImportWizard } from "@/components/marketing/ProspectImportWizard";
 import { ConvertToAccountModal } from "@/components/marketing/ConvertToAccountModal";
 
@@ -39,6 +42,8 @@ export default function ProspectList() {
   const [segment, setSegment] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [showDeleted, setShowDeleted] = useState(false);
+  const [source, setSource] = useState("");
+  const [attrs, setAttrs] = useState<Record<string, string>>({});
   const [importOpen, setImportOpen] = useState(false);
   const [convertTarget, setConvertTarget] = useState<Prospect | null>(null);
 
@@ -46,12 +51,26 @@ export default function ProspectList() {
     search: search || undefined,
     segment: segment || undefined,
     prospect_status: statusFilter || undefined,
+    source: source || undefined,
+    attrs: Object.fromEntries(Object.entries(attrs).filter(([, v]) => v)),
     ...(showDeleted ? { deleted: "only" } : {}),
   };
 
   const { data, isLoading } = useQuery({
     queryKey: ["marketing", "prospects", params],
     queryFn: () => listProspects(params),
+  });
+
+  const { data: sources } = useQuery({
+    queryKey: ["marketing", "prospect-sources"],
+    queryFn: listProspectSources,
+  });
+
+  // Same discovery call the segment builder uses, so the list offers exactly the
+  // filters the current source can actually support.
+  const { data: facets } = useQuery({
+    queryKey: ["marketing", "prospect-facets", source],
+    queryFn: () => listProspectFacets(source || undefined),
   });
 
   const invalidate = () => qc.invalidateQueries({ queryKey: ["marketing", "prospects"] });
@@ -226,6 +245,39 @@ export default function ProspectList() {
                 ))}
               </SelectContent>
             </Select>
+            <Select
+              value={source || "all"}
+              onValueChange={(v) => { setSource(v === "all" ? "" : v); setAttrs({}); }}
+            >
+              <SelectTrigger className="w-40">
+                <SelectValue placeholder={t("marketing.source")} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">{t("marketing.all_sources")}</SelectItem>
+                {(sources ?? []).map((s) => (
+                  <SelectItem key={s.source} value={s.source}>
+                    {s.source} ({s.count})
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {(facets ?? []).map((facet) => (
+              <Select
+                key={facet.key}
+                value={attrs[facet.key] || "any"}
+                onValueChange={(v) => setAttrs((prev) => ({ ...prev, [facet.key]: v === "any" ? "" : v }))}
+              >
+                <SelectTrigger className="w-40">
+                  <SelectValue placeholder={prettyFacetKey(facet.key)} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="any">{prettyFacetKey(facet.key)} · {t("common.all")}</SelectItem>
+                  {facet.values.map((v) => (
+                    <SelectItem key={v} value={v}>{v}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            ))}
           </div>
         }
       />

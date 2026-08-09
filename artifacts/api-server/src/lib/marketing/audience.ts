@@ -15,6 +15,14 @@ import { db, prospectsTable, prospectListMembersTable, marketingListsTable } fro
  * later version of the UI still resolves, just less precisely.
  */
 export interface FilterCriteria {
+  /** Import batch / provenance label (prospects.source). */
+  source?: string;
+  /**
+   * Source-specific attribute filters, `{ key: value }` against `attributes`.
+   * Applied generically — no key is named in code, so a segment can filter on an
+   * attribute that did not exist when this was written.
+   */
+  attrs?: Record<string, string>;
   segment?: string | string[];
   country?: string | string[];
   prospect_status?: string | string[];
@@ -52,6 +60,15 @@ export function criteriaConditions(criteria: FilterCriteria): SQL[] {
     conditions.push(gte(prospectsTable.qualification_score, criteria.min_score));
   }
   if (criteria.never_contacted) conditions.push(isNull(prospectsTable.last_contacted_at));
+
+  if (criteria.source) conditions.push(eq(prospectsTable.source, criteria.source));
+
+  for (const [key, value] of Object.entries(criteria.attrs ?? {})) {
+    if (!key || value === undefined || value === null || value === "") continue;
+    // Case-insensitive equality on the JSONB text value. Both sides are bound
+    // parameters — the key never reaches SQL as an identifier.
+    conditions.push(sql`lower(${prospectsTable.attributes} ->> ${key}) = lower(${value})`);
+  }
   if (criteria.search) {
     const term = `%${criteria.search}%`;
     conditions.push(

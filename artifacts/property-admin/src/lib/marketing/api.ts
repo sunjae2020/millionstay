@@ -29,6 +29,7 @@ export interface Prospect {
   consent_basis: ConsentBasis;
   consent_evidence: string;
   consent_recorded_at: string | null;
+  attributes: Record<string, string>;
   bounce_count: number;
   last_contacted_at: string | null;
   next_action_at: string | null;
@@ -70,6 +71,7 @@ export interface ImportPreviewRow {
   notes: string;
   verdict: "new" | "duplicate" | "existing_account" | "suppressed" | "error";
   message: string;
+  attributes: Record<string, string>;
 }
 
 export interface ImportPreview {
@@ -78,6 +80,8 @@ export interface ImportPreview {
   rows: ImportPreviewRow[];
   counts: Partial<Record<ImportPreviewRow["verdict"], number>>;
   total: number;
+  /** Unmapped columns kept as source-specific attributes. */
+  attribute_keys: string[];
 }
 
 export interface ImportResult {
@@ -95,13 +99,22 @@ export interface ListProspectsParams {
   segment?: string;
   prospect_status?: string;
   country?: string;
+  source?: string;
   list_id?: number;
   deleted?: string;
+  /** Attribute equality filters, sent as `attr.<key>=<value>`. */
+  attrs?: Record<string, string>;
 }
 
 export async function listProspects(params: ListProspectsParams = {}): Promise<Prospect[]> {
   const qs = new URLSearchParams();
-  for (const [k, v] of Object.entries(params)) if (v !== undefined && v !== "") qs.set(k, String(v));
+  for (const [k, v] of Object.entries(params)) {
+    if (k === "attrs") continue;
+    if (v !== undefined && v !== "") qs.set(k, String(v));
+  }
+  for (const [key, value] of Object.entries(params.attrs ?? {})) {
+    if (value) qs.set(`attr.${key}`, value);
+  }
   const q = qs.toString();
   const res = await apiJson<Envelope<Prospect[]>>(`/api/v1/marketing/prospects${q ? `?${q}` : ""}`);
   return res.data;
@@ -431,4 +444,41 @@ export interface MarketingDashboard {
 export async function getMarketingDashboard(): Promise<MarketingDashboard> {
   const res = await apiJson<Envelope<MarketingDashboard>>("/api/v1/marketing/dashboard");
   return res.data;
+}
+
+/* ── Dynamic facets ────────────────────────────────────────────────────── */
+
+export interface ProspectSource {
+  source: string;
+  count: number;
+}
+
+export interface ProspectFacet {
+  key: string;
+  values: string[];
+  value_count: number;
+}
+
+/** Source labels derived from the data, never a hard-coded enum. */
+export async function listProspectSources(): Promise<ProspectSource[]> {
+  const res = await apiJson<Envelope<ProspectSource[]>>("/api/v1/marketing/prospects/sources");
+  return res.data;
+}
+
+/**
+ * Attribute keys worth showing as a dropdown for this source, with their values.
+ * High-cardinality keys (numbers, addresses, free text) are filtered out server
+ * side, so whatever comes back is safe to render as a `<Select>`.
+ */
+export async function listProspectFacets(source?: string): Promise<ProspectFacet[]> {
+  const q = source ? `?source=${encodeURIComponent(source)}` : "";
+  const res = await apiJson<Envelope<ProspectFacet[]>>(`/api/v1/marketing/prospects/facets${q}`);
+  return res.data;
+}
+
+/** `school_sector` → `School sector`, `취급물건` → `취급물건`. */
+export function prettyFacetKey(key: string): string {
+  const spaced = key.replace(/[_.]+/g, " ").trim();
+  if (!/[a-z]/i.test(spaced)) return spaced;
+  return spaced.charAt(0).toUpperCase() + spaced.slice(1);
 }

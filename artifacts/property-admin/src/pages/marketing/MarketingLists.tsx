@@ -13,6 +13,7 @@ import { useToast } from "@/hooks/use-toast";
 import { formatDate } from "@/lib/date";
 import {
   listMarketingLists, createMarketingList, deleteMarketingList, previewSegment,
+  listProspectSources, listProspectFacets, prettyFacetKey,
   type MarketingList,
 } from "@/lib/marketing/api";
 
@@ -35,13 +36,42 @@ export default function MarketingLists() {
   const [neverContacted, setNeverContacted] = useState(false);
   const [matchCount, setMatchCount] = useState<number | null>(null);
 
+  // The dynamic part. Sources come from the data, and the attribute dropdowns are
+  // rebuilt from whatever keys that source actually carries — 여수 관리대장 has
+  // 담당구역, a 박람회 list has 부스번호, and neither is named anywhere in this file.
+  const [source, setSource] = useState("");
+  const [attrs, setAttrs] = useState<Record<string, string>>({});
+
+  const { data: sources } = useQuery({
+    queryKey: ["marketing", "prospect-sources"],
+    queryFn: listProspectSources,
+    enabled: open,
+  });
+
+  const { data: facets, isFetching: facetsLoading } = useQuery({
+    // source is part of the key, so changing it refetches the facet set
+    queryKey: ["marketing", "prospect-facets", source],
+    queryFn: () => listProspectFacets(source || undefined),
+    enabled: open && listType === "dynamic",
+  });
+
   function criteria(): Record<string, unknown> {
     const c: Record<string, unknown> = {};
     if (segment) c.segment = segment;
     if (country) c.country = country;
     if (minScore) c.min_score = Number(minScore);
     if (neverContacted) c.never_contacted = true;
+    if (source) c.source = source;
+    const chosen = Object.fromEntries(Object.entries(attrs).filter(([, v]) => v));
+    if (Object.keys(chosen).length) c.attrs = chosen;
     return c;
+  }
+
+  /** Attribute choices belong to a source; keep none of them when it changes. */
+  function changeSource(next: string) {
+    setSource(next);
+    setAttrs({});
+    setMatchCount(null);
   }
 
   async function checkCount() {
@@ -63,7 +93,8 @@ export default function MarketingLists() {
       toast({ title: t("marketing.list_created") });
       qc.invalidateQueries({ queryKey: ["marketing", "lists"] });
       setOpen(false);
-      setName(""); setSegment(""); setCountry(""); setMinScore(""); setNeverContacted(false); setMatchCount(null);
+      setName(""); setSegment(""); setCountry(""); setMinScore(""); setNeverContacted(false);
+      setMatchCount(null); setSource(""); setAttrs({});
     } catch {
       toast({ title: t("marketing.save_failed"), variant: "destructive" });
     } finally {
@@ -151,6 +182,52 @@ export default function MarketingLists() {
 
             {listType === "dynamic" && (
               <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1.5 col-span-2">
+                  <Label className="text-xs">{t("marketing.source")}</Label>
+                  <Select value={source || "__all"} onValueChange={(v) => changeSource(v === "__all" ? "" : v)}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="__all">{t("marketing.all_sources")}</SelectItem>
+                      {(sources ?? []).map((s) => (
+                        <SelectItem key={s.source} value={s.source}>
+                          {s.source} ({s.count})
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-muted-foreground">{t("marketing.source_help")}</p>
+                </div>
+
+                {/* Rebuilt from the selected source's own attribute keys. */}
+                {facetsLoading && (
+                  <div className="col-span-2 flex items-center gap-2 text-xs text-muted-foreground">
+                    <Loader2 className="h-3 w-3 animate-spin" />
+                    {t("marketing.loading_facets")}
+                  </div>
+                )}
+                {!facetsLoading && (facets ?? []).length === 0 && (
+                  <p className="col-span-2 text-xs text-muted-foreground">{t("marketing.no_facets")}</p>
+                )}
+                {(facets ?? []).map((facet) => (
+                  <div key={facet.key} className="space-y-1.5">
+                    <Label className="text-xs">{prettyFacetKey(facet.key)}</Label>
+                    <Select
+                      value={attrs[facet.key] || "__any"}
+                      onValueChange={(v) =>
+                        setAttrs((prev) => ({ ...prev, [facet.key]: v === "__any" ? "" : v }))
+                      }
+                    >
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="__any">{t("common.all")}</SelectItem>
+                        {facet.values.map((v) => (
+                          <SelectItem key={v} value={v}>{v}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                ))}
+
                 <div className="space-y-1.5">
                   <Label className="text-xs">{t("marketing.segment")}</Label>
                   <Select value={segment || "__none"} onValueChange={(v) => setSegment(v === "__none" ? "" : v)}>

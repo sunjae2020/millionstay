@@ -161,6 +161,7 @@ export function ProspectImportWizard({ open, onOpenChange, onImported }: Props) 
           {preview && preview.headers.length > 0 && (
             <div className="space-y-2">
               <Label>{t("marketing.column_mapping")}</Label>
+              <p className="text-xs text-muted-foreground">{t("marketing.mapping_help")}</p>
               <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
                 {preview.headers.map((header) => (
                   <div key={header} className="flex items-center gap-2">
@@ -197,6 +198,18 @@ export function ProspectImportWizard({ open, onOpenChange, onImported }: Props) 
                 <Badge label={t("marketing.verdict_error")} value={preview.counts.error ?? 0} tone="red" />
                 <span className="text-muted-foreground">{t("marketing.total_rows", { count: preview.total })}</span>
               </div>
+
+              {preview.attribute_keys.length > 0 && (
+                <div className="rounded-md border bg-muted/40 p-3 text-xs">
+                  <div className="font-medium mb-1">{t("marketing.kept_as_attributes")}</div>
+                  <div className="flex flex-wrap gap-1">
+                    {preview.attribute_keys.map((k) => (
+                      <span key={k} className="px-2 py-0.5 rounded-full border bg-background">{k}</span>
+                    ))}
+                  </div>
+                  <p className="text-muted-foreground mt-2">{t("marketing.attributes_help")}</p>
+                </div>
+              )}
 
               {(preview.counts.existing_account ?? 0) > 0 && (
                 <div className="flex items-start gap-2 rounded-md border border-orange-200 bg-orange-50 p-3 text-sm text-orange-800">
@@ -264,6 +277,16 @@ export function ProspectImportWizard({ open, onOpenChange, onImported }: Props) 
                     <SelectItem value="merge">{t("marketing.duplicate_merge")}</SelectItem>
                   </SelectContent>
                 </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label>{t("marketing.source_label")}</Label>
+                <Input
+                  value={source}
+                  onChange={(e) => setSource(e.target.value)}
+                  placeholder={t("marketing.source_label_ph")}
+                />
+                <p className="text-xs text-muted-foreground">{t("marketing.source_label_help")}</p>
               </div>
 
               <div className="space-y-2">
