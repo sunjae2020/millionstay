@@ -99,3 +99,58 @@ SOLAPI_API_KEY=... SOLAPI_API_SECRET=... \
 - **발송부 배선** — `sendSms()` 를 실제 이벤트(예약확정·작업배정·연체)에 거는 작업은
   Phase E 에서 이메일 배선과 함께 한다. 지금은 함수와 문안만 있다.
 - 발송 이력 저장 — 이메일은 `email_logs` 가 있으나 SMS 는 없다. 분쟁 대응에 필요하다.
+
+---
+
+# 카카오 알림톡 (선택 — SMS 보다 싸고 도달률이 높다)
+
+## 왜 붙이나
+
+| | 알림톡 | 친구톡 | SMS |
+|---|---|---|---|
+| 대상 | 채널 친구가 **아니어도** | 채널 친구만 | 전화번호만 있으면 |
+| 내용 | **정보성만** | 광고 가능 | 제한 없음 |
+| 템플릿 심사 | **필수** | 불필요 | 불필요 |
+
+우리 SMS 24종은 전부 거래성이라 **알림톡 대상**이다. `marketing.*` 은 알림톡으로 보낼 수
+없고 친구톡이나 SMS 로 간다.
+
+## 절차
+
+1. **카카오톡 채널 개설** — business.kakao.com, 사업자등록증 필요
+2. **Solapi 에 채널 연동** → `pfId`(발신프로필 키) 발급 → `KAKAO_PF_ID` 에 설정
+3. **템플릿 심사 등록** — [KAKAO_ALIMTALK_TEMPLATES.md](KAKAO_ALIMTALK_TEMPLATES.md) 의
+   22종을 그대로 복사해 등록한다. 그 문서는 SMS 문안에서 자동 생성되므로
+   문안을 고치면 다시 뽑는다:
+   ```bash
+   node scripts/gen-kakao-templates.mjs > docs/KAKAO_ALIMTALK_TEMPLATES.md
+   ```
+4. 승인되면 `templateId` 를 연결한다 (배포 불필요):
+   ```bash
+   DATABASE_URL=… node scripts/set-kakao-template-id.mjs sms.booking_confirmed TX_0001
+   DATABASE_URL=… node scripts/set-kakao-template-id.mjs sms.rent_due TX_0002 --button "청구서 보기"
+   DATABASE_URL=… node scripts/set-kakao-template-id.mjs --list      # 연결 현황
+   DATABASE_URL=… node scripts/set-kakao-template-id.mjs sms.rent_due --clear   # 되돌리기
+   ```
+
+## 동작 방식
+
+`sendSms()` 는 아래를 **모두** 만족할 때만 알림톡을 시도한다. 하나라도 빠지면 조용히
+SMS 로 나간다 — 알림톡은 최적화지 필수 경로가 아니므로 설정 미비로 발송이 멈추면 안 된다.
+
+- `KAKAO_PF_ID` 가 있다
+- 해당 템플릿에 `templateId` 가 연결돼 있다
+- 광고성이 아니다 (`advertising: false`)
+- `smsOnly: true` 가 아니다
+
+알림톡 발송이 실패하면 **같은 문구가 SMS 로 자동 대체발송**된다(`disableSms: false`).
+따로 구현할 것이 없고, 이 때문에 문안의 `[브랜드]` 접두를 유지한다.
+
+## 주의
+
+- 🚨 **알림톡 본문은 승인된 템플릿과 글자가 일치해야 한다.** DB 문안을 고치면 심사를
+  다시 넣어야 하고 그 전까지 알림톡 발송이 거부된다(SMS 로는 나간다).
+- 심사에서 걸릴 만한 것은 생성 문서에 `⚠️ 심사 유의` 로 표시해 두었다. 특히
+  `sms.rent_overdue` 는 채권추심으로 읽힐 수 있어 임대차 계약에 따른 납부 안내라는
+  발송 근거를 함께 제출한다.
+- 내부 직원용 2종(`staff_*`)은 심사에 올리지 않는다. 고객 채널로 보낼 대상이 아니다.

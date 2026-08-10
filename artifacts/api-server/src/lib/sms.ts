@@ -78,6 +78,45 @@ export interface SendSmsOptions {
   vars?: Record<string, unknown>;
   /** 광고성이면 true — (광고) 표기·무료거부번호·야간차단이 적용된다. */
   advertising?: boolean;
+  /** 알림톡을 시도하지 않고 SMS 로만 보낸다(내부 직원 알림 등). */
+  smsOnly?: boolean;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+   카카오 알림톡
+
+   알림톡은 SMS 보다 싸고 도달률이 높지만 **사전 심사를 통과한 템플릿**으로만 보낼 수
+   있다. 승인 결과로 나오는 `templateId` 는 심사 때마다 달라지고 재심사로 바뀌므로
+   코드에 상수로 박지 않는다 — `document_templates.variables_schema.kakao` 에 둔다.
+   그러면 배포 없이 Studio·SQL 로 갱신할 수 있다.
+
+     variables_schema = {
+       ...변수정의,
+       kakao: { templateId: "TX_0001", buttons?: [...] }
+     }
+
+   `pfId`(발신프로필)는 채널당 하나라 env 로 둔다.
+
+   ⚠️ 알림톡 본문은 **승인된 템플릿과 글자가 일치**해야 한다. 그래서 DB 문안을 고치면
+      심사를 다시 넣어야 하고, 그 전까지는 발송이 거부된다. 문안 수정 시 주의.
+   ⚠️ 알림톡은 **정보성만** 허용된다. advertising=true 면 시도하지 않고 SMS 로 간다.
+   ───────────────────────────────────────────────────────────────────────── */
+
+interface KakaoMeta {
+  templateId?: string;
+  buttons?: Array<Record<string, unknown>>;
+}
+
+/** {{변수}} → 카카오 #{변수} 치환값 맵. 카카오는 키에 `#{}` 를 포함해 받는다. */
+export function kakaoVariables(vars: Record<string, unknown>): Record<string, string> {
+  const out: Record<string, string> = {};
+  for (const [k, v] of Object.entries(vars)) out[`#{${k}}`] = String(v ?? "");
+  return out;
+}
+
+/** 문안의 {{변수}} 를 카카오 템플릿 표기 #{변수} 로. 심사 등록용. */
+export function toKakaoTemplate(text: string): string {
+  return text.replace(/\{\{(\w+)\}\}/g, "#{$1}");
 }
 
 /**
@@ -105,14 +144,17 @@ export async function sendSms(opts: SendSmsOptions): Promise<SmsSendResult> {
   const to = normalizeKrPhone(opts.to);
   if (!to) return { ok: false, error: `발신 불가한 번호 형식: ${opts.to}` };
 
-  // 1. 본문 확보 — 템플릿 우선.
+  // 1. 본문 확보 — 템플릿 우선. 카카오 메타도 여기서 함께 읽는다.
   let body = opts.text ?? "";
+  let kakao: KakaoMeta | null = null;
   if (opts.templateKey) {
     const tpl = await resolveTemplate({ kind: "sms", key: opts.templateKey, locale: "ko" });
     if (!tpl?.bodyHtml?.trim()) {
       return { ok: false, error: `SMS 템플릿 없음 또는 미발행: ${opts.templateKey}` };
     }
     body = tpl.bodyHtml;
+    const meta = (tpl.variablesSchema as Record<string, unknown>)?.kakao;
+    if (meta && typeof meta === "object") kakao = meta as KakaoMeta;
   }
   body = renderString(body, opts.vars ?? {});
   if (!body.trim()) return { ok: false, error: "본문이 비었습니다" };
@@ -146,12 +188,30 @@ export async function sendSms(opts: SendSmsOptions): Promise<SmsSendResult> {
     return { ok: false, skipped: true, error: "SMS 미설정", type, bytes };
   }
 
-  // 5. 발송. `send()` 는 메시지 배열을 받고 그룹 응답을 돌려준다(SDK 6.x).
+  // 5. 알림톡을 쓸 수 있으면 붙인다. 조건이 하나라도 빠지면 조용히 SMS 로 간다 —
+  //    알림톡은 최적화지 필수 경로가 아니므로, 설정 미비로 발송이 멈추면 안 된다.
+  const pfId = (process.env.KAKAO_PF_ID ?? "").trim();
+  const useKakao = !opts.smsOnly && !opts.advertising && !!pfId && !!kakao?.templateId;
+  const kakaoOptions = useKakao
+    ? {
+        pfId,
+        templateId: kakao!.templateId!,
+        variables: kakaoVariables(opts.vars ?? {}),
+        // false = 알림톡 실패 시 같은 text 로 SMS 대체발송. 이 값이 대체발송 스위치다.
+        disableSms: false,
+        ...(kakao!.buttons?.length ? { buttons: kakao!.buttons } : {}),
+      }
+    : undefined;
+  const channel = useKakao ? "알림톡" : type;
+
+  // 6. 발송. `send()` 는 메시지 배열을 받고 그룹 응답을 돌려준다(SDK 6.x).
   //    제목(subject)은 넣지 않는다 — 넣으면 90B 이하라도 LMS 로 전환된다.
   try {
     const { SolapiMessageService } = await import("solapi");
     const svc = new SolapiMessageService(apiKey, apiSecret);
-    const res = await svc.send([{ to, from, text: body }]);
+    const res = await svc.send([
+      { to, from, text: body, ...(kakaoOptions ? { kakaoOptions } : {}) },
+    ] as never);
 
     // 그룹 단위 응답이라 개별 실패가 카운트로 온다. 실패가 있으면 성공으로 보고하지 않는다.
     const failed = Number(res?.groupInfo?.count?.registeredFailed ?? 0);
@@ -161,11 +221,11 @@ export async function sendSms(opts: SendSmsOptions): Promise<SmsSendResult> {
       const msg = detail
         ? `${detail.statusCode ?? ""} ${detail.statusMessage ?? ""}`.trim()
         : `${failed}건 등록 실패`;
-      console.error(`[sms] 발송 실패 → ${to}: ${msg}`);
+      console.error(`[sms] 발송 실패 (${channel}) → ${to}: ${msg}`);
       return { ok: false, error: msg, type, bytes };
     }
 
-    console.log(`[sms] 발송 ${type} ${bytes}B → ${to} (${groupId ?? "no-group"})`);
+    console.log(`[sms] 발송 ${channel} ${bytes}B → ${to} (${groupId ?? "no-group"})`);
     return { ok: true, id: groupId, type, bytes };
   } catch (err) {
     const msg = err instanceof Error ? err.message : "발송 실패";
