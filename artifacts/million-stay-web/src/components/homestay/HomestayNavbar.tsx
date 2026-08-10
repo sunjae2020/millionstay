@@ -82,7 +82,7 @@ export function HomestayNavbar() {
         <div className="hidden md:flex items-center gap-3">
           <HomestayLanguageSwitcher />
           <Link
-            href="/for-homestay-host"
+            href="/hosts/application"
             className="px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:brightness-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary"
             style={{ backgroundColor: HS.orange, borderRadius: HS_RADIUS.pill }}
           >
@@ -126,7 +126,7 @@ export function HomestayNavbar() {
           </nav>
           <div className="px-6 py-5" style={{ borderTop: `1px solid ${HS.line}` }}>
             <Link
-              href="/for-homestay-host"
+              href="/hosts/application"
               onClick={() => setOpen(false)}
               className="block w-full px-4 py-3.5 text-base font-semibold text-white text-center"
               style={{ backgroundColor: HS.orange, borderRadius: HS_RADIUS.pill }}

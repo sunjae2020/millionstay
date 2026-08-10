@@ -32,7 +32,7 @@ export default function HomestayHome() {
   // teal rule with a single fixed slot).
   const EXPLORE = [
     { title: t("homestay.home.explore_1_title"), body: t("homestay.home.explore_1_body"), cta: t("homestay.home.explore_1_cta"), href: "/students/apply", tab: HS.orange },
-    { title: t("homestay.home.explore_2_title"), body: t("homestay.home.explore_2_body"), cta: t("homestay.home.explore_2_cta"), href: "/for-homestay-host", tab: HS.navy },
+    { title: t("homestay.home.explore_2_title"), body: t("homestay.home.explore_2_body"), cta: t("homestay.home.explore_2_cta"), href: "/hosts/application", tab: HS.navy },
     { title: t("homestay.home.explore_3_title"), body: t("homestay.home.explore_3_body"), cta: t("homestay.home.explore_3_cta"), href: "/partners", tab: HS.teal },
   ];
 
@@ -75,7 +75,7 @@ export default function HomestayHome() {
                 {pc("hero_cta_find", t("homestay.home.hero_cta_find"))} <ArrowRight className="w-4 h-4" />
               </Link>
               <Link
-                href="/for-homestay-host"
+                href="/hosts/application"
                 className="px-7 py-3.5 font-semibold inline-flex items-center gap-2 text-white border border-white/70 bg-white/10 backdrop-blur-sm transition-colors hover:bg-white/20 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-white"
                 style={{ borderRadius: HS_RADIUS.pill }}
               >

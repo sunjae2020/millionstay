@@ -459,6 +459,31 @@ const PAGE_FIELDS: Record<string, SectionField[]> = {
     { key: "parking_title", label: "Parking — Title", type: "text" },
     { key: "parking_body", label: "Parking — Body", type: "textarea" },
   ],
+  // Per-audience landing pages — 세입자 / 세대주 / 에이전트·파트너.
+  "dev-resident": [
+    { key: "hero_title", label: "Hero Title", type: "text" },
+    { key: "hero_subtitle", label: "Hero Subtitle", type: "textarea" },
+    { key: "why_title", label: `"Why live here" Section Title`, type: "text" },
+    { key: "steps_title", label: "Move-in Steps — Section Title", type: "text" },
+    { key: "inquiry_title", label: "Inquiry — Title", type: "text" },
+    { key: "inquiry_subtitle", label: "Inquiry — Subtitle", type: "textarea" },
+  ],
+  "dev-owner": [
+    { key: "hero_title", label: "Hero Title", type: "text" },
+    { key: "hero_subtitle", label: "Hero Subtitle", type: "textarea" },
+    { key: "benefits_title", label: "Benefits — Section Title", type: "text" },
+    { key: "benefits_body", label: "Benefits — Body", type: "richtext" },
+    { key: "how_title", label: "How It Works — Section Title", type: "text" },
+    { key: "inquiry_title", label: "Inquiry — Title", type: "text" },
+    { key: "inquiry_subtitle", label: "Inquiry — Subtitle", type: "textarea" },
+  ],
+  "dev-partner": [
+    { key: "hero_title", label: "Hero Title", type: "text" },
+    { key: "hero_subtitle", label: "Hero Subtitle", type: "textarea" },
+    { key: "why_title", label: "Why Partner — Section Title", type: "text" },
+    { key: "inquiry_title", label: "Inquiry — Title", type: "text" },
+    { key: "inquiry_subtitle", label: "Inquiry — Subtitle", type: "textarea" },
+  ],
   // Footer / operator info (Metheim Korea) — also shown on the legal pages.
   "dev-footer": [
     { key: "company_name", label: "Company Name (상호)", type: "text" },

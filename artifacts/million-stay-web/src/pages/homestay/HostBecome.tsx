@@ -5,7 +5,7 @@ import { usePageContent, useHomestaySeo } from "@/lib/usePageContent";
 
 // Host Family — single-tier page. Absorbs the former Host Family Benefits
 // (#benefits) and 10 Useful Tips (#tips) sub-pages as anchored sections.
-// "Apply Now" stays a separate page (/for-homestay-host), reached via CTA.
+// "Apply Now" stays a separate page (/hosts/application), reached via CTA.
 
 export default function HostBecome() {
   const { t } = useTranslation();
@@ -63,7 +63,7 @@ export default function HostBecome() {
       <HsSection heading={t("homestay.hosts.steps_heading")}>
         <HsNumbered items={STEPS} />
         <div className="mt-8">
-          <HsCTA buttons={[{ label: t("homestay.hosts.start_application"), href: "/for-homestay-host" }]} />
+          <HsCTA buttons={[{ label: t("homestay.hosts.start_application"), href: "/hosts/application" }]} />
         </div>
       </HsSection>
 
@@ -78,7 +78,7 @@ export default function HostBecome() {
       <HsSection id="tips" heading={t("homestay.hosts.tips_heading")}>
         <HsNumbered items={TIPS} />
         <div className="mt-8">
-          <HsCTA buttons={[{ label: t("homestay.hosts.start_application"), href: "/for-homestay-host" }]} />
+          <HsCTA buttons={[{ label: t("homestay.hosts.start_application"), href: "/hosts/application" }]} />
         </div>
       </HsSection>
     </HomestayLayout>

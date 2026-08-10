@@ -52,7 +52,7 @@ export default function AboutUs() {
         <div className="mt-8">
           <HsCTA buttons={[
             { label: t("homestay.about.cta_apply_now"), href: "/students/apply" },
-            { label: t("homestay.about.cta_become_host"), href: "/for-homestay-host", variant: "outline" },
+            { label: t("homestay.about.cta_become_host"), href: "/hosts/application", variant: "outline" },
           ]} />
         </div>
       </HsSection>

@@ -75,8 +75,11 @@ export default function HomestayRouter() {
       <Route path="/privacy-policy"><HashRedirect to="/privacy" /></Route>
       <Route path="/terms" component={HomestayTerms} />
 
-      {/* Live flows (existing pages) */}
-      <Route path="/for-homestay-host" component={ForHomestayHost} />
+      {/* Live flows (existing pages). The host application form keeps the shared
+          MillionStay component but is served under the homestay site's own
+          /hosts/… slug; the old MillionStay URL redirects to it. */}
+      <Route path="/hosts/application" component={ForHomestayHost} />
+      <Route path="/for-homestay-host"><HashRedirect to="/hosts/application" /></Route>
       <Route path="/host-login" component={HostLogin} />
       <Route path="/host-portal" component={HostPortal} />
       <Route path="/sign/:token" component={Sign} />

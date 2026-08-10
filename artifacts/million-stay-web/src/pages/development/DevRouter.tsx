@@ -1,4 +1,5 @@
-import { Switch, Route } from "wouter";
+import { useEffect } from "react";
+import { Switch, Route, useLocation } from "wouter";
 import DevHome from "./Home";
 import DevAbout from "./About";
 import DevBuy from "./Buy";
@@ -41,6 +42,16 @@ import InspectionSign from "@/pages/inspection-sign";
 import PaymentResult from "@/pages/payment-result";
 import NotFound from "@/pages/not-found";
 
+// Sends a retired URL to its current one, replacing the history entry so the
+// back button skips the legacy path.
+function LegacyRedirect({ to }: { to: string }) {
+  const [, navigate] = useLocation();
+  useEffect(() => {
+    navigate(to, { replace: true });
+  }, [to, navigate]);
+  return null;
+}
+
 // Dedicated router for a single-building "development" instance (Metheim).
 // Top-level marketing site is the 4-part Home/Buy/Rent/Management; the guest
 // booking + portal routes are mounted unchanged so the short-term Rent flow and
@@ -58,12 +69,18 @@ export default function DevRouter() {
       <Route path="/directions" component={DevDirections} />
 
       {/* Metheim-specific versions of the standard site's marketing pages.
-          Same URLs as MillionStay so existing links resolve, but tenant/owner/
-          partner personas instead of student-homestay/education-agent content. */}
+          The personas are tenant/owner/partner, not MillionStay's student-
+          homestay/education-agent ones, so each page is served from a slug that
+          names its own audience. The MillionStay URLs these pages were
+          originally mounted on stay as redirects. */}
       <Route path="/stay-plan" component={DevStayPlan} />
-      <Route path="/for-student" component={DevForResident} />
-      <Route path="/for-homestay-host" component={DevForOwner} />
-      <Route path="/for-agent" component={DevForPartner} />
+      <Route path="/for-resident" component={DevForResident} />
+      <Route path="/for-owner" component={DevForOwner} />
+      <Route path="/for-partner" component={DevForPartner} />
+      {/* 에이전트 = 파트너 (부동산 중개·소개 파트너) — same page. */}
+      <Route path="/for-agent"><LegacyRedirect to="/for-partner" /></Route>
+      <Route path="/for-student"><LegacyRedirect to="/for-resident" /></Route>
+      <Route path="/for-homestay-host"><LegacyRedirect to="/for-owner" /></Route>
 
       {/* Shared short-term booking engine */}
       <Route path="/search" component={Search} />

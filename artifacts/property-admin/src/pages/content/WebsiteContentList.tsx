@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import {
   Home, GraduationCap, Handshake, Info, HelpCircle, Phone, Users,
   ChevronRight, Globe, Building2, KeyRound, LineChart, MapPin,
-  ShieldCheck, FileText, Landmark, Search,
+  ShieldCheck, FileText, Landmark, Search, Sofa, Wallet,
 } from "lucide-react";
 
 // Each website page is content-managed per language via the page_contents table
@@ -86,6 +86,9 @@ const DEV_PAGES: Omit<WebsitePageDef, "site" | "previewBase">[] = [
   { key: "dev-rent", label: "Rent / Stay", description: "Short-term booking intro and long-term lease consultation", icon: KeyRound, path: "/rent" },
   { key: "dev-manage", label: "Management", description: "Entrusted-management benefits, yield simulator and application", icon: LineChart, path: "/management" },
   { key: "dev-directions", label: "Directions", description: "Address, map, transit/parking and contact details", icon: MapPin, path: "/directions" },
+  { key: "dev-resident", label: "For Residents", description: "세입자 안내 — 입주 장점, 절차와 상담 신청", icon: Sofa, path: "/for-resident" },
+  { key: "dev-owner", label: "For Owners", description: "세대주 안내 — 위탁관리 혜택, 절차와 신청", icon: Wallet, path: "/for-owner" },
+  { key: "dev-partner", label: "For Partners", description: "에이전트·파트너 안내 — 제휴 혜택과 문의", icon: Handshake, path: "/for-partner" },
   // The search screen is functional UI, not a block page — only its hero copy
   // and image are content-managed, so it lives here rather than in /cms/pages.
   { key: "dev-search", label: "Search", description: "Search screen hero heading, tagline and background image", icon: Search, path: "/search" },

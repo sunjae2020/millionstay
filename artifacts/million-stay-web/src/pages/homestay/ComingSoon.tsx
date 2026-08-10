@@ -25,7 +25,7 @@ export default function HomestayComingSoon({ title }: { title?: string }) {
           {t("homestay.coming_soon.body")}
         </p>
         <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
-          <Link href="/for-homestay-host" className="px-6 py-3 rounded-lg font-semibold text-white inline-flex items-center gap-2" style={{ backgroundColor: HS.brand }}>
+          <Link href="/hosts/application" className="px-6 py-3 rounded-lg font-semibold text-white inline-flex items-center gap-2" style={{ backgroundColor: HS.brand }}>
             {t("homestay.coming_soon.become_host")} <ArrowRight className="w-4 h-4" />
           </Link>
           <Link href="/contact" className="px-6 py-3 rounded-lg font-semibold border border-gray-300 text-gray-800">

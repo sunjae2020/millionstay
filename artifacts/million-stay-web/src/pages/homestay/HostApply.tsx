@@ -34,7 +34,7 @@ export default function HostApply() {
           <strong>{t("homestay.host_apply.documents_label")}</strong> {t("homestay.host_apply.documents_list")}
         </p>
         <div className="mt-8">
-          <HsCTA buttons={[{ label: t("homestay.host_apply.cta_start"), href: "/for-homestay-host" }]} />
+          <HsCTA buttons={[{ label: t("homestay.host_apply.cta_start"), href: "/hosts/application" }]} />
         </div>
       </HsSection>
     </HomestayLayout>

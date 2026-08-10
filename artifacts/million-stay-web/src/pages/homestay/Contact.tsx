@@ -25,7 +25,7 @@ export default function HomestayContact() {
 
   const SHORTCUTS = [
     { label: t("homestay.contact.shortcut_apply_label"), href: "/students/apply", note: t("homestay.contact.shortcut_apply_note") },
-    { label: t("homestay.contact.shortcut_host_label"), href: "/for-homestay-host", note: t("homestay.contact.shortcut_host_note") },
+    { label: t("homestay.contact.shortcut_host_label"), href: "/hosts/application", note: t("homestay.contact.shortcut_host_note") },
     { label: t("homestay.contact.shortcut_partner_label"), href: "/partners", note: t("homestay.contact.shortcut_partner_note") },
   ];
 

@@ -30,7 +30,7 @@ const COLUMNS: Array<{ titleKey: string; links: Array<{ labelKey: string; href: 
     links: [
       { labelKey: "homestay.footer.host_become", href: "/hosts/become-a-host" },
       { labelKey: "homestay.footer.host_benefits", href: "/hosts/become-a-host#benefits" },
-      { labelKey: "homestay.footer.apply_now", href: "/for-homestay-host" },
+      { labelKey: "homestay.footer.apply_now", href: "/hosts/application" },
       { labelKey: "homestay.footer.host_login", href: "/host-login" },
     ],
   },

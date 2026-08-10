@@ -324,7 +324,7 @@ export function DevFooter() {
           <p className="mt-4 text-sm leading-relaxed max-w-sm">{t("dev.footer.desc")}</p>
         </div>
 
-        <div className="grid grid-cols-2 gap-x-6 gap-y-8 sm:grid-cols-4">
+        <div className="grid grid-cols-2 gap-x-6 gap-y-8 sm:grid-cols-4 lg:grid-cols-5">
           <div>
             <h4 className="text-white font-semibold text-sm mb-3">{t("dev.nav.buy")}</h4>
             <Link href="/buy" className="block text-sm py-1 hover:text-white">{t("dev.footer.buy_link")}</Link>
@@ -337,6 +337,13 @@ export function DevFooter() {
           <div>
             <h4 className="text-white font-semibold text-sm mb-3">{t("dev.nav.management")}</h4>
             <Link href="/management" className="block text-sm py-1 hover:text-white">{t("dev.footer.mgmt_link")}</Link>
+          </div>
+          {/* Per-audience landing pages — 세입자 / 세대주 / 에이전트·파트너. */}
+          <div>
+            <h4 className="text-white font-semibold text-sm mb-3">{t("dev.footer.audience_heading")}</h4>
+            <Link href="/for-resident" className="block text-sm py-1 hover:text-white">{t("dev.footer.for_resident")}</Link>
+            <Link href="/for-owner" className="block text-sm py-1 hover:text-white">{t("dev.footer.for_owner")}</Link>
+            <Link href="/for-partner" className="block text-sm py-1 hover:text-white">{t("dev.footer.for_partner")}</Link>
           </div>
           <div>
             <h4 className="text-white font-semibold text-sm mb-3">{t("dev.footer.company_col")}</h4>
