@@ -222,11 +222,57 @@ export async function resolveDocEmailCopy(
   };
 }
 
+/* ═══════════════════════════════════════════════════════════════════════════
+   편집 가능한 문안 해석 (Settings → Documents → Templates)
+
+   발송 함수는 문안을 코드에 두지 않고 여기를 거친다. 운영자가 Studio 에서 고치면
+   재배포 없이 반영된다. 정본 = docs/EMAIL_TEMPLATE_SPEC.md
+
+   **폴백이 핵심이다.** 템플릿이 없거나 미발행이면 `null` 을 돌려주고 호출부는 기존
+   하드코딩 문안을 그대로 쓴다. 그래서
+     - 문안을 아직 시드하지 않은 테넌트(MillionStay 본체)는 동작이 바뀌지 않고,
+     - Studio 에서 실수로 archive 해도 메일이 안 나가는 사고가 나지 않는다.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+export interface ResolvedCopy {
+  subject: string | null;
+  /** 셸 안쪽 본문 HTML. renderEmailShell({ body }) 에 그대로 넣는다. */
+  body: string;
+}
+
+/**
+ * 발행된 이메일 템플릿을 찾아 {{변수}}를 채운다. 없으면 null → 호출부가 폴백.
+ *
+ * ⚠️ 변수 값은 **호출부가 escape 해서 넘긴다.** 문안에는 사용자 입력이 그대로 박히므로
+ *    (이름·주소·문의 내용) 이스케이프를 빼먹으면 저장형 XSS 가 된다. 기존 발송 함수가
+ *    이미 safeName()/escapeHtml() 을 쓰고 있으니 그 값을 그대로 넘기면 된다.
+ */
+export async function resolveEmailCopy(
+  key: string,
+  lang: string | undefined,
+  vars: Record<string, unknown>,
+): Promise<ResolvedCopy | null> {
+  try {
+    const tpl = await resolveTemplate({ kind: "email", key, locale: normalizeLang(lang ?? "") });
+    if (!tpl?.bodyHtml?.trim()) return null;
+    return {
+      subject: tpl.subject?.trim() ? renderString(tpl.subject, vars) : null,
+      body: renderString(tpl.bodyHtml, vars),
+    };
+  } catch (err) {
+    // 템플릿 조회 실패로 메일이 안 나가면 안 된다 — 폴백으로 보낸다.
+    console.error(`[email] 템플릿 해석 실패 (${key}) — 기본 문안으로 발송:`, err);
+    return null;
+  }
+}
+
 export interface PasswordResetEmailOptions {
   to: string;
   name: string;
   resetUrl: string;
   product?: "Admin" | "Guest" | "Partner";
+  /** 문안 언어. 생략하면 테넌트 기본(DEFAULT_DOC_LANG). */
+  lang?: string;
 }
 
 export async function sendPasswordResetEmail(opts: PasswordResetEmailOptions): Promise<boolean>;
@@ -254,10 +300,18 @@ export async function sendPasswordResetEmail(
   const productLabel = opts.product ?? "Admin";
   const brand = await resolveEmailBrand();
 
+  const copy = await resolveEmailCopy("account.password_reset", opts.lang, {
+    recipient: safeNameVal,
+    product_label: escapeHtml(productLabel),
+    url: safeUrl,
+    expiry_minutes: 60,
+    brand: escapeHtml(brand.name),
+  });
+
   const html = renderEmailShell({
     brand,
     footerLines: [`This email was sent to ${safeTo}`],
-    body: `
+    body: copy?.body ?? `
     <p class="lead">Hi <strong>${safeNameVal}</strong>,</p>
     <p>We received a request to reset the password for your ${escapeHtml(brand.name)} ${escapeHtml(productLabel)} account. Click the button below to set a new password:</p>
     <a href="${safeUrl}" class="btn">Reset My Password →</a>
@@ -270,7 +324,7 @@ export async function sendPasswordResetEmail(
     await client.emails.send({
       ...emailSender(),
       to: [opts.to],
-      subject: `[${brand.name} ${productLabel}] Password Reset Request`,
+      subject: copy?.subject ?? `[${brand.name} ${productLabel}] Password Reset Request`,
       html,
     });
     console.log(`[email] Password reset sent to ${opts.to}`);
@@ -288,10 +342,19 @@ export async function sendRegistrationRequestEmail(to: string, name: string, adm
     return false;
   }
   const brand = await resolveEmailBrand();
+  const copy = await resolveEmailCopy("account.registration_request", undefined, {
+    applicant_name: safeName(name),
+    applicant_email: escapeHtml(to),
+    applicant_phone: "—",
+    product_label: "Admin",
+    date: new Date().toISOString().slice(0, 10),
+    url: `${escapeHtml(adminPanelUrl)}/settings/users`,
+    brand: escapeHtml(brand.name),
+  });
   const html = renderEmailShell({
     brand,
-    tag: "New Access Request",
-    body: `
+    tag: copy ? null : "New Access Request",
+    body: copy?.body ?? `
     <p class="lead">A new admin account request has been submitted and is awaiting your approval.</p>
     <div class="box">
       <strong>${safeName(name)}</strong><br>
@@ -301,7 +364,7 @@ export async function sendRegistrationRequestEmail(to: string, name: string, adm
     <a href="${escapeHtml(adminPanelUrl)}/settings/users" class="btn">Review in Admin Panel →</a>`,
   });
   try {
-    await client.emails.send({ ...emailSender(), to: [to], subject: `[${brand.name} Admin] New Account Request`, html });
+    await client.emails.send({ ...emailSender(), to: [to], subject: copy?.subject ?? `[${brand.name} Admin] New Account Request`, html });
     console.log(`[email] Registration notification sent to ${to}`);
     return true;
   } catch (err) {
