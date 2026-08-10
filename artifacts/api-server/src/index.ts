@@ -14,7 +14,7 @@ import { purgeExpiredDocuments } from "./lib/retentionPurge";
 import { generateRentCharges } from "./lib/homestay/monthlyBilling";
 import { generateRecurringInvoices } from "./lib/billing/recurringInvoices";
 import { generateLeaseRentInvoices } from "./lib/billing/leaseRentInvoices";
-import { sendRentDunning } from "./lib/billing/rentDunning";
+import { sendRentDunning, sendRentDueNotices } from "./lib/billing/rentDunning";
 import { generateConsolidatedInvoices } from "./lib/billing/consolidatedInvoices";
 import { checkWorkOrderSla } from "./lib/dispatch/workOrderDispatch";
 import { runCampaignSends } from "./lib/marketing/worker";
@@ -252,6 +252,18 @@ cron.schedule(
         if (r.noContact > 0) logger.warn({ noContact: r.noContact }, "연체 건 중 연락 수단 없음");
       })
       .catch((err) => logger.error({ err }, "Cron rent dunning failed"));
+  },
+  { timezone: "Asia/Seoul" },
+);
+
+// 납부 기한 사전 안내 — 매일 09:00 Seoul, 독촉(09:30)보다 먼저.
+// 밀린 뒤 독촉하는 것보다 기한 전에 알리는 편이 낫다 — 대부분 잊어서 밀린다.
+cron.schedule(
+  "0 9 * * *",
+  () => {
+    sendRentDueNotices()
+      .then((r) => { if (r.enabled) logger.info({ ...r }, "Cron rent due notice"); })
+      .catch((err) => logger.error({ err }, "Cron rent due notice failed"));
   },
   { timezone: "Asia/Seoul" },
 );

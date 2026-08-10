@@ -1,3 +1,4 @@
+import { notifyCsTicketResolved } from "../lib/cs/csNotify";
 import { Router, type IRouter } from "express";
 import multer from "multer";
 import { eq, desc, and, ilike, or, sql, isNull, inArray, gte, lte } from "drizzle-orm";
@@ -217,6 +218,9 @@ router.put("/v1/cs-tickets/:id", requireAuth, async (req, res): Promise<void> =>
   try {
     const id = Number(req.params.id);
     const { status, priority, assigned_admin_id } = req.body;
+    const [before] = await db.select({ status: csTicketsTable.status })
+      .from(csTicketsTable).where(eq(csTicketsTable.id, id)).limit(1);
+    const prevStatus = before?.status;
     const updates: Record<string, any> = { updated_at: new Date() };
     if (status && CS_STATUSES.includes(status)) updates.status = status;
     if (priority && CS_PRIORITIES.includes(priority)) updates.priority = priority;
@@ -224,6 +228,14 @@ router.put("/v1/cs-tickets/:id", requireAuth, async (req, res): Promise<void> =>
     if (status === "Closed") updates.closed_at = new Date();
     const [updated] = await db.update(csTicketsTable).set(updates).where(eq(csTicketsTable.id, id)).returning();
     if (!updated) { res.status(404).json({ success: false, error: { code: "NOT_FOUND", message: "Ticket not found" } }); return; }
+
+    // 처리 완료 통보. Resolved/Closed 로 **바뀐 순간에만** 보낸다 — 이미 그 상태인
+    // 티켓을 다시 저장했다고 통보가 또 나가면 안 된다(중복은 csNotify 도 막지만,
+    // 애초에 상태 전이가 아닐 때는 부르지 않는 편이 맞다).
+    if ((status === "Resolved" || status === "Closed") && status !== prevStatus) {
+      void notifyCsTicketResolved(id);
+    }
+
     res.json({ success: true, data: updated });
   } catch {
     res.status(500).json({ success: false, error: { code: "SERVER_ERROR", message: "Failed to update ticket" } });

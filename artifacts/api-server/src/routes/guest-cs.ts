@@ -1,3 +1,4 @@
+import { notifyCsTicketReceived } from "../lib/cs/csNotify";
 import { Router, type IRouter } from "express";
 import multer from "multer";
 import { eq, desc, and, sql, lte } from "drizzle-orm";
@@ -138,6 +139,10 @@ router.post("/v1/guest/cs-tickets", requireGuestAuth, async (req, res): Promise<
       });
       await adoptCustomerLanguage(ticket.id, ticket.customer_language, patch.original_lang);
     }
+
+    // 접수 확인 — 문의를 넣었는데 아무 응답이 없는 것이 고객에게 가장 답답하다.
+    // 언어는 티켓의 customer_language 를 따른다. 실패해도 접수는 유지된다.
+    void notifyCsTicketReceived(ticket.id);
 
     res.status(201).json({ success: true, data: ticket });
   } catch {

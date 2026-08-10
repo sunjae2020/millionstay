@@ -327,6 +327,62 @@ export async function sendDunningEmail(opts: {
   }
 }
 
+/**
+ * CS 티켓 알림. 템플릿 문안으로만 보내고 발송 시 email_log 에 기록한다
+ * (entity_type='cs_ticket') — 중복 발송 방지의 근거다.
+ *
+ * 독촉과 달리 **문안이 없으면 조용히 건너뛴다.** CS 알림은 없어도 티켓 처리 자체는
+ * 굴러가므로, 문안 미비로 예외를 던져 티켓 생성을 막는 쪽이 더 나쁘다.
+ */
+export async function sendCsEmail(opts: {
+  to: string;
+  toName: string;
+  templateKey: string;
+  ticketId: number;
+  vars: Record<string, unknown>;
+  lang?: string;
+}): Promise<boolean> {
+  const client = getResend();
+  if (!client) return false;
+
+  const safeVars = Object.fromEntries(
+    Object.entries(opts.vars).map(([k, v]) => [k, escapeHtml(String(v ?? ""))]));
+  const copy = await resolveEmailCopy(opts.templateKey, opts.lang, safeVars);
+  if (!copy) {
+    console.log(`[email] CS 문안 없음 (${opts.templateKey}) — 건너뜀`);
+    return false;
+  }
+
+  const brand = await resolveEmailBrand();
+  const subject = copy.subject ?? `[${brand.name}] ${opts.vars.ref ?? ""}`;
+  const html = renderEmailShell({ brand, body: copy.body });
+
+  try {
+    const { data, error } = await client.emails.send({
+      ...emailSender(), to: [opts.to], subject, html,
+    });
+    if (error || !data?.id) {
+      console.error(`[email] CS 발송 거부 (${opts.templateKey} #${opts.ticketId}):`, error);
+      return false;
+    }
+    await db.insert(emailLogsTable).values({
+      template_code: opts.templateKey,
+      to_email: opts.to,
+      to_name: opts.toName,
+      subject,
+      resend_message_id: data.id,
+      status: "Sent",
+      entity_type: "cs_ticket",
+      entity_id: opts.ticketId,
+    });
+    console.log(`[email] CS ${opts.templateKey} → ${opts.to} (티켓 #${opts.ticketId})`);
+    return true;
+  } catch (err) {
+    console.error(`[email] CS 발송 실패 (${opts.templateKey} #${opts.ticketId}):`, err);
+    return false;
+  }
+}
+
 export interface PasswordResetEmailOptions {
   to: string;
   name: string;
