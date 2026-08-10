@@ -1,5 +1,5 @@
 import { Resend } from "resend";
-import { db, marketingConsentsTable } from "@workspace/db";
+import { db, marketingConsentsTable, emailLogsTable } from "@workspace/db";
 import { and, eq } from "drizzle-orm";
 import { t, normalizeLang, docLocale, type DocLang } from "./documents/i18n";
 import { buildAppointmentIcs } from "./ical";
@@ -263,6 +263,67 @@ export async function resolveEmailCopy(
     // 템플릿 조회 실패로 메일이 안 나가면 안 된다 — 폴백으로 보낸다.
     console.error(`[email] 템플릿 해석 실패 (${key}) — 기본 문안으로 발송:`, err);
     return null;
+  }
+}
+
+/**
+ * 연체 독촉 발송. 템플릿 문안으로만 보내고, **발송 성공 시 email_log 에 기록한다** —
+ * 그 기록이 곧 "이 단계는 이미 보냈다" 는 멱등 키다(lib/billing/rentDunning.ts).
+ *
+ * 기록에 실패하면 다음 크론에서 같은 단계를 다시 보내게 되므로, 로그 기록 실패는
+ * 조용히 넘기지 않고 발송 실패로 취급한다 — 중복 독촉이 미발송보다 나쁘다.
+ */
+export async function sendDunningEmail(opts: {
+  to: string;
+  toName: string;
+  templateKey: string;
+  invoiceId: number;
+  vars: Record<string, unknown>;
+  lang?: string;
+}): Promise<boolean> {
+  const client = getResend();
+  if (!client) {
+    console.log(`[email] RESEND_API_KEY 없음 — 독촉 건너뜀 (${opts.templateKey} #${opts.invoiceId})`);
+    return false;
+  }
+
+  const safeVars = Object.fromEntries(
+    Object.entries(opts.vars).map(([k, v]) => [k, escapeHtml(String(v ?? ""))]));
+  const copy = await resolveEmailCopy(opts.templateKey, opts.lang, safeVars);
+  if (!copy) {
+    // 독촉은 폴백 문안이 없다 — 문안 없이 임의로 보내면 법적 다툼의 근거가 흔들린다.
+    console.error(`[email] 독촉 문안 없음 (${opts.templateKey}) — 발송하지 않음`);
+    return false;
+  }
+
+  const brand = await resolveEmailBrand();
+  const subject = copy.subject ?? `[${brand.name}] 납부 안내`;
+  const html = renderEmailShell({ brand, body: copy.body });
+
+  try {
+    const { data, error } = await client.emails.send({
+      ...emailSender(), to: [opts.to], subject, html,
+    });
+    if (error || !data?.id) {
+      console.error(`[email] 독촉 발송 거부 (${opts.templateKey} #${opts.invoiceId}):`, error);
+      return false;
+    }
+    // 발송 기록 = 멱등 키. 여기서 실패하면 다음 크론이 중복 발송한다.
+    await db.insert(emailLogsTable).values({
+      template_code: opts.templateKey,
+      to_email: opts.to,
+      to_name: opts.toName,
+      subject,
+      resend_message_id: data.id,
+      status: "Sent",
+      entity_type: "invoice",
+      entity_id: opts.invoiceId,
+    });
+    console.log(`[email] 독촉 ${opts.templateKey} → ${opts.to} (인보이스 #${opts.invoiceId})`);
+    return true;
+  } catch (err) {
+    console.error(`[email] 독촉 실패 (${opts.templateKey} #${opts.invoiceId}):`, err);
+    return false;
   }
 }
 

@@ -14,6 +14,7 @@ import { purgeExpiredDocuments } from "./lib/retentionPurge";
 import { generateRentCharges } from "./lib/homestay/monthlyBilling";
 import { generateRecurringInvoices } from "./lib/billing/recurringInvoices";
 import { generateLeaseRentInvoices } from "./lib/billing/leaseRentInvoices";
+import { sendRentDunning } from "./lib/billing/rentDunning";
 import { generateConsolidatedInvoices } from "./lib/billing/consolidatedInvoices";
 import { checkWorkOrderSla } from "./lib/dispatch/workOrderDispatch";
 import { runCampaignSends } from "./lib/marketing/worker";
@@ -234,6 +235,25 @@ cron.schedule(
       .catch((err) => logger.error({ err }, "Cron lease rent billing failed"));
   },
   { timezone: "Australia/Sydney" },
+);
+
+// 연체 독촉 — 매일 09:30 Seoul. 인보이스 생성(03:00)보다 늦게 돌려 그날 새로 Overdue 가
+// 된 건까지 포함한다. 오전에 보내는 이유는 밤에 오는 독촉이 불쾌하기 때문이고,
+// 광고가 아니라 거래성이라 야간 금지 규정 대상은 아니지만 그래도 업무시간에 보낸다.
+// DUNNING_ENABLED=true 인 테넌트에서만 실제로 발송한다(기본 꺼짐).
+cron.schedule(
+  "30 9 * * *",
+  () => {
+    sendRentDunning()
+      .then((r) => {
+        if (!r.enabled) return;
+        logger.info({ ...r }, "Cron rent dunning");
+        // 연락 수단이 없는 건은 조용히 넘어가면 영원히 통보가 안 된다 — 눈에 띄게 남긴다.
+        if (r.noContact > 0) logger.warn({ noContact: r.noContact }, "연체 건 중 연락 수단 없음");
+      })
+      .catch((err) => logger.error({ err }, "Cron rent dunning failed"));
+  },
+  { timezone: "Asia/Seoul" },
 );
 
 // 통합(단체) 청구 — 매일 03:10 Sydney. 통합 청구를 켠 계정마다 그 달의 공간별
