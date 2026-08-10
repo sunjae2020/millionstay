@@ -36,6 +36,7 @@ import {
   DeleteAccountParams,
   CreateContactBody,
 } from "@workspace/api-zod";
+import { resolvePartyCode } from "../lib/documents/partyCode";
 
 import { keywordCondition, contactIdsByName } from "../lib/listSearch";
 const router: IRouter = Router();
@@ -62,8 +63,13 @@ async function enrichAccount(row: typeof accountsTable.$inferSelect) {
         .where(eq(accountsTable.id, row.parent_account_id))
     : [null];
 
+  // 고객 ID — 상세를 열 때 아직 번호가 없으면 그 자리에서 채번한다. 기존
+  // 계정도 처음 열리는 순간 번호를 받고, 이후로는 바뀌지 않는다.
+  const party_code = await resolvePartyCode({ entityType: "account", entityId: row.id });
+
   return {
     ...row,
+    party_code,
     primary_contact_name: primaryContact ? formatPersonName(primaryContact.first_name, primaryContact.last_name) : null,
     secondary_contact_name: secondaryContact ? formatPersonName(secondaryContact.first_name, secondaryContact.last_name) : null,
     default_commission_name: commission?.name ?? null,

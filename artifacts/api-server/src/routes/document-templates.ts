@@ -10,7 +10,7 @@ import { htmlToPdf, PdfUnavailableError } from "../lib/documents/pdf.js";
 import { renderDocumentShell } from "../lib/documents/theme.js";
 import { renderSampleDocumentHtml, sampleTemplateVars } from "../lib/documents/sampleDocs.js";
 import { normalizeLang, t } from "../lib/documents/i18n.js";
-import { DOC_CODES, sanitisePartyName, setDocumentDownloadHeaders } from "../lib/documents/filename.js";
+import { DOC_NAMES_KO, sanitizePartyName, setDocFileName } from "../lib/documents/docFileName";
 import { emailSender } from "../lib/email.js";
 import { resolveEmailBrand, renderEmailShell } from "../lib/emailBrand.js";
 import { logAction } from "../utils/auditLog.js";
@@ -178,7 +178,8 @@ router.post("/v1/document-templates/:id/test-generate", async (req, res): Promis
     // Samples have no counterparty — the "customer" slot carries the localised
     // word for sample so the file is obviously not a real document.
     // 샘플은 발행 문서가 아니므로 순번을 소비하지 않는다 — 코드만 규칙에 맞춘다.
-    setDocumentDownloadHeaders(res, `${DOC_CODES.sample}-${sanitisePartyName(tpl.name)}_${locale}.pdf`);
+    res.setHeader("Content-Type", "application/pdf");
+    setDocFileName(res, `${DOC_NAMES_KO.sample}-${sanitizePartyName(tpl.name)}_${locale}`);
     res.setHeader("Content-Length", String(pdf.length));
     res.send(pdf);
   } catch (err) {

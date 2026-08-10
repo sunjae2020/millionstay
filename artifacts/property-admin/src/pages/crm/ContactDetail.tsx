@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { useLocation, useParams } from "wouter";
 import { useTranslation } from "react-i18next";
 import { Layout, PageHeader } from "@/components/Layout";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { DateInput } from "@/components/ui/date-input";
@@ -334,7 +335,19 @@ export default function ContactDetail() {
   return (
     <Layout>
       <PageHeader
-        title={isNew ? `${t("common.new")} ${t("nav.contact")}` : contact ? formatPersonName(contact.first_name, contact.last_name) : t("nav.contact")}
+        title={
+          isNew ? `${t("common.new")} ${t("nav.contact")}` : (
+            <div className="flex items-center gap-2">
+              <span>{contact ? formatPersonName(contact.first_name, contact.last_name) : t("nav.contact")}</span>
+              {/* 고객 ID — 서류 파일명·보관 폴더가 이 번호를 쓴다. */}
+              {(contact as any)?.party_code && (
+                <Badge variant="secondary" className="font-mono text-xs" title={t("account.party_code")}>
+                  {(contact as any).party_code}
+                </Badge>
+              )}
+            </div>
+          )
+        }
         actions={
           <div className="flex gap-2">
             <Link href="/crm/contacts">

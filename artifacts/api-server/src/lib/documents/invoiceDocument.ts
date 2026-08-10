@@ -39,6 +39,8 @@ export interface InvoiceDocInput {
   tax_amount?: string | number | null;
   /** 세입자가 실제로 내는 금액(공급가액 + 세액). 없으면 amount 로 본다. */
   total_amount?: string | number | null;
+  /** 청구 대상 계정 id — 파일명에 담당자·상호를 함께 남길 때 쓴다. */
+  account_id?: number | null;
   account_name?: string | null;
   account_email?: string | null;
   account_address?: string | null;

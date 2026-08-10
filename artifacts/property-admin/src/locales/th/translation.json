@@ -813,6 +813,7 @@
     "sub_accounts": "บัญชีย่อย",
     "upload_file": "อัปโหลดไฟล์",
     "file_upload_failed": "อัปโหลดไฟล์ไม่สำเร็จ",
+    "party_code": "รหัสลูกค้า",
     "type_tenant": "ผู้เช่า (พักระยะยาว)",
     "type_agent": "นายหน้าอสังหาฯ",
     "type_homestay_host": "เจ้าบ้านโฮมสเตย์",

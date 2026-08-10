@@ -58,11 +58,80 @@ export function downloadCsv(csv: string, fileName: string) {
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
-/** `<base>_YYYYMMDD.csv` — mirrors the issued-document naming style. */
-export function csvFileName(base: string): string {
-  const d = new Date();
+/**
+ * 리포트 파일명 — `리포트-<발행사>-<리포트종류>-<기준일>_v1.csv`.
+ *
+ * 화면에서 내려받는 표 역시 고객에게 발행하는 문서가 아닌 **운영 리포트**라서
+ * 서버의 `buildReportFileName()`과 같은 규칙을 쓴다(docs/DOCUMENT_NAMING_RULE.md).
+ * 필드 간은 `-`, 필드 내부는 `_`, 공백은 없다. 서류 이름은 한글이 정본이다 —
+ * 폴더에서 파일을 훑는 사람이 읽는 값이라 코드보다 이름이 낫다.
+ *
+ * 발행사 표기는 인스턴스마다 다르다 — `VITE_DOC_ISSUER_LABEL`(없으면
+ * `VITE_APP_NAME`, 그것도 없으면 `MillionStay`). Metheim은 한글 상호를 넣어
+ * 내려받은 파일만 봐도 어느 회사가 뽑은 자료인지 남게 한다.
+ */
+export function issuerLabel(): string {
+  const env = import.meta.env as Record<string, string | undefined>;
+  return namePart(env.VITE_DOC_ISSUER_LABEL || env.VITE_APP_NAME || "MillionStay") || "MillionStay";
+}
+
+/** 이름 한 조각을 파일명 규격으로 — 금지문자 제거, 공백은 `_`로. */
+function namePart(raw: string): string {
+  return String(raw ?? "")
+    .replace(/[\\/:*?"<>|#%.\- -]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .replace(/ /g, "_")
+    .slice(0, 40);
+}
+
+/**
+ * 리포트 종류 통제 어휘 — 서버 `REPORT_TYPES`의 프론트 사본. 호출부가 넘긴
+ * 영문 키(`monthly_settlement`, `bookings`…)를 한글 이름으로 바꾼다. 목록
+ * 화면의 표는 대개 그 화면 이름이 곧 리포트 이름이라, 등록되지 않은 값은
+ * 그대로 정리해서 쓴다.
+ */
+const REPORT_TYPES_KO: Record<string, string> = {
+  monthly_settlement: "월별정산",
+  deposit_settlement: "보증금정산",
+  commission_statement: "커미션명세",
+  occupancy: "공실현황",
+  revenue: "매출현황",
+  arrears: "미납현황",
+  maintenance: "유지보수현황",
+  partner_payout: "파트너정산",
+  campaign_performance: "캠페인성과",
+  document_checklist: "서류점검표",
+  booking: "예약현황",
+  bookings: "예약현황",
+  accounts: "계정목록",
+  contacts: "연락처목록",
+  contracts: "계약목록",
+  invoices: "청구목록",
+  spaces: "세대목록",
+  properties: "건물목록",
+  work_orders: "작업지시목록",
+  quotes: "견적목록",
+};
+
+/** `monthly_settlement` → `월별정산`. 미등록 키는 정리만 해서 그대로 쓴다. */
+function reportType(base: string): string {
+  const key = String(base || "").trim().toLowerCase().replace(/[\s-]+/g, "_");
+  const known = REPORT_TYPES_KO[key];
+  if (known) return known;
+  const words = String(base || "리포트")
+    .replace(/[_\-]+/g, " ")
+    .replace(/([a-z0-9])([A-Z])/g, "$1 $2")
+    .split(/\s+/)
+    .filter(Boolean)
+    .map((w) => (/^[a-z]/.test(w) ? w[0].toUpperCase() + w.slice(1) : w));
+  return namePart(words.join(" ")) || "리포트";
+}
+
+export function csvFileName(base: string, opts: { asOf?: Date; version?: number } = {}): string {
+  const d = opts.asOf ?? new Date();
   const stamp = `${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, "0")}${String(d.getDate()).padStart(2, "0")}`;
-  return `${base || "export"}_${stamp}.csv`;
+  return `리포트-${issuerLabel()}-${reportType(base)}-${stamp}_v${Math.max(1, opts.version ?? 1)}.csv`;
 }
 
 export interface CsvColumn<T> {

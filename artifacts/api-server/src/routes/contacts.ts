@@ -28,6 +28,7 @@ import {
   UpdateContactBody,
   DeleteContactParams,
 } from "@workspace/api-zod";
+import { resolvePartyCode } from "../lib/documents/partyCode";
 
 import { keywordCondition } from "../lib/listSearch";
 const router: IRouter = Router();
@@ -478,7 +479,9 @@ router.get("/v1/contacts/:id", async (req, res): Promise<void> => {
   if (!parsed.success) { res.status(400).json({ error: parsed.error.message }); return; }
   const [row] = await db.select().from(contactsTable).where(eq(contactsTable.id, parsed.data.id));
   if (!row) { res.status(404).json({ error: "Not found" }); return; }
-  res.json(row);
+  // 고객 ID — 없으면 상세를 여는 이 순간 채번한다 (partyCode.ts).
+  const party_code = await resolvePartyCode({ entityType: "contact", entityId: row.id });
+  res.json({ ...row, party_code });
 });
 
 router.put("/v1/contacts/:id", async (req, res): Promise<void> => {

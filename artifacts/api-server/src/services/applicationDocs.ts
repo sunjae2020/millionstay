@@ -22,7 +22,7 @@ import {
 } from "@workspace/db";
 import { buildServiceBriefHtml } from "../lib/documents/serviceBrief.js";
 import { htmlToPdf, PdfUnavailableError } from "../lib/documents/pdf.js";
-import { issueDocumentFilename } from "../lib/documents/filename.js";
+import { resolveDocFileName } from "../lib/documents/docFileName";
 import { normalizeLang, type DocLang } from "../lib/documents/i18n.js";
 import {
   buildApplicationHtml,
@@ -380,7 +380,7 @@ export async function docFilenameForSigning(
   const signerName = Array.isArray(signing.signers)
     ? (signing.signers as Array<{ name?: string }>).find((x) => x?.name)?.name ?? null
     : null;
-  return issueDocumentFilename({
+  return resolveDocFileName({
     kind: isApplication ? "application" : "signed_contract",
     entityType: signing.context_type,
     entityId: signing.context_id,
@@ -403,7 +403,7 @@ export async function emailApplicationPdf(
     : signing.context_type === "contract" ? "Accommodation Agreement"
     : "Student Application";
   const { entityType, templateCode } = logMeta(signing.context_type);
-  const filename = await docFilenameForSigning(signing, recipients.applicant?.name);
+  const filename = `${await docFilenameForSigning(signing, recipients.applicant?.name)}.pdf`;
   const targets: Array<{ email: string; name?: string }> = [];
   if (select.applicant && recipients.applicant) targets.push(recipients.applicant);
   if (select.host && recipients.host) targets.push(recipients.host);
@@ -529,13 +529,13 @@ export async function sendServiceBriefs(placementId: number, ref: string): Promi
       const result = await sendDocumentEmail({
         to: email, toName: name, lang: "en",
         docTypeLabel: "Service Assignment", ref: `${ref}-SVC-${svc.id}`,
-        pdf, filename: await issueDocumentFilename({
+        pdf, filename: `${await resolveDocFileName({
           kind: "brief",
           entityType: "homestay_placement_service",
           entityId: svc.id,
           party: [name, studentLabel],
           issueDate: svc.scheduled_at,
-        }),
+        })}.pdf`,
         note: "You've been assigned a service for this placement. The brief is attached. It contains only the information required to perform and bill your service — please keep the student's details confidential.",
       });
       if (result.ok) sent.push(email);

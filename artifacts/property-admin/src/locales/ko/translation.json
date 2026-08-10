@@ -813,6 +813,7 @@
     "sub_accounts": "하위 계정",
     "upload_file": "파일 업로드",
     "file_upload_failed": "파일을 업로드하지 못했습니다",
+    "party_code": "고객 ID",
     "type_tenant": "세입자 (장기체류)",
     "type_agent": "부동산 중개",
     "type_homestay_host": "홈스테이 호스트",

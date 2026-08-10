@@ -13,6 +13,7 @@ import { useBrand } from "@/contexts/ThemeContext";
 import { formatMoney } from "@/lib/currency";
 
 import { ExportableTable } from "@/components/ui/ExportCsvButton";
+import { csvFileName } from "@/lib/csv";
 // Pay Run — the weekly "who do we owe" screen.
 //
 // Grouped by payee so the routine is "approve this person's four lines at once"
@@ -120,7 +121,7 @@ export default function PayRun() {
     const url = URL.createObjectURL(new Blob([`﻿${csv}`], { type: "text/csv;charset=utf-8" }));
     const a = document.createElement("a");
     a.href = url;
-    a.download = `pay-run-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.download = csvFileName("partner_payout");
     a.click();
     URL.revokeObjectURL(url);
   };

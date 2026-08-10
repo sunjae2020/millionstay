@@ -813,6 +813,7 @@
     "sub_accounts": "下位アカウント",
     "upload_file": "ファイルをアップロード",
     "file_upload_failed": "ファイルをアップロードできませんでした",
+    "party_code": "顧客ID",
     "type_tenant": "賃借人（長期滞在）",
     "type_agent": "不動産仲介",
     "type_homestay_host": "ホームステイホスト",
