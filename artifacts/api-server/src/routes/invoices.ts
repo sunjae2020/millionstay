@@ -52,6 +52,14 @@ const LineItemInput = z.object({
   // "revenue" (default) posts to GL Revenue; "deposit" posts to the Deposits Held
   // (2100) liability on payment so refundable deposits are never booked as income.
   line_type: z.enum(["revenue", "deposit"]).optional(),
+  // 이 줄이 커버하는 기간. 일할계산(프로라타) 줄은 여기에 실제 사용 구간이 들어가고
+  // (예: 이월분 2026-07-25 ~ 2026-07-31), 청구서 문서·포털이 기간을 함께 보여준다.
+  period_start: z.string().nullish(),
+  period_end: z.string().nullish(),
+  // 어느 호실·계약분인지. 통합 청구서처럼 여러 계약이 한 장에 실릴 때 필요하다.
+  space_id: z.number().int().positive().nullish(),
+  contract_id: z.number().int().positive().nullish(),
+  charge_kind: z.enum(["rent", "vat", "deposit", "other"]).optional(),
 });
 type LineItemInput = z.infer<typeof LineItemInput>;
 const LineItemsBody = z.object({ line_items: z.array(LineItemInput).optional() });
@@ -70,6 +78,11 @@ function buildLineItemRows(invoiceId: number, items: LineItemInput[]) {
       unit_amount: String(it.unit_amount),
       total_amount: String(round2(qty * it.unit_amount)),
       line_type: it.line_type ?? "revenue",
+      charge_kind: it.charge_kind ?? "rent",
+      period_start: it.period_start ?? null,
+      period_end: it.period_end ?? null,
+      space_id: it.space_id ?? null,
+      contract_id: it.contract_id ?? null,
       sort_order: idx,
     };
   });
