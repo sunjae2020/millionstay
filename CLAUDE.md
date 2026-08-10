@@ -195,13 +195,22 @@ gates it, so keep it green. Two notable classes were fixed:
   assumed), so `pdf.ts` passes zeros. Every page gets the same 32px top/bottom
   margin as the 32px horizontal padding; `@page :first` drops the top margin so
   the brand bar still bleeds to the edge of page 1.
-- **Issued documents are named by one rule:** `<코드3자리>-<이름>_<YYYYMMDD><순번>`
-  (`CTR-김용식_20260803A.pdf`). Always via `issueDocumentFilename()` +
-  `setDocumentDownloadHeaders()` in `lib/documents/filename.ts` — never assemble
-  `` `${ref}.pdf` `` in a route. Register a new document's 3-letter code in
-  `DOC_CODES` first; the A…Z9 suffix is allocated per person-day and stored, so a
-  re-rendered document keeps its name. See
-  [docs/DOCUMENT_NAMING_RULE.md](docs/DOCUMENT_NAMING_RULE.md).
+- **Issued documents are named by one rule:**
+  `<고객ID>-<대상>-<서류종류 한글>-<YYYYMMDD><순번>` (`MH2607C001-김용식-계약서-20260803A.pdf`).
+  Always via `resolveDocFileName()` + `setDocFileName()` in
+  `lib/documents/docFileName.ts` — never assemble `` `${ref}.pdf` `` in a route.
+  Register a new document in **both** `DOC_CODES` (internal 3-letter key) and
+  `DOC_NAMES_KO` (the Korean name that appears in the filename). Customer IDs are
+  allocated by `party_codes` via `resolvePartyCode()` (`PARTY_CODE_PREFIX`, Metheim
+  `MH`) — never hand-assigned, never reused. Operational reports (incl. admin CSV
+  exports) use the sister rule `리포트-<대상>-<리포트종류>-<기준일>_v<버전>` via
+  `buildReportFileName()` / `csvFileName()`, and private uploads are foldered by
+  customer ID (`resolveDocFolder()`). Per-instance switch `DOC_NAME_INCLUDE_ORG`
+  adds the counterparty's Korean name + trade name (Metheim runs it on);
+  `DOC_NAME_INCLUDE_ISSUER` would also stamp the issuing company but stays off
+  wherever customer IDs are used — the ID prefix already names the issuer. Names issued before 2026-08 keep the old
+  `CTR-김용식_20260803A` form and are still parsed — nothing is renamed.
+  See [docs/DOCUMENT_NAMING_RULE.md](docs/DOCUMENT_NAMING_RULE.md).
 - **Money columns** (`invoices.amount`, `promotions.discount_amount`) are
   `numeric(10,2)` → Drizzle returns **strings**; wrap with `Number()` before math.
 - **Lookup endpoints** return `{ id, display, ...extra }` consistently.

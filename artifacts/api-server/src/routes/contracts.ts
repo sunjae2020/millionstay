@@ -40,7 +40,7 @@ import {
 import { readStoredCompanyInfo } from "../lib/documents/companyInfo";
 import { paymentInfoTable } from "@workspace/db";
 import { htmlToPdf, PdfUnavailableError } from "../lib/documents/pdf";
-import { issueDocumentFilename, setDocumentDownloadHeaders } from "../lib/documents/filename";
+import { resolveDocFileName, setDocFileName } from "../lib/documents/docFileName";
 import { formatPostalAddress } from "@workspace/address";
 import { resolveCompanyInfo, resolveIssuerCountry } from "../lib/documents/companyInfo";
 import { normalizeLang, t, type DocLang } from "../lib/documents/i18n";
@@ -1189,13 +1189,16 @@ export async function renderContractPdf(
 /** 계약서 파일명 — 세입자명 기준, 발행일은 계약 작성일. */
 async function contractFilename(
   id: number,
-  built: { doc: { tenant_name?: string | null; created_at: string | Date | null } },
+  built: { doc: { tenant_name?: string | null; created_at: string | Date | null }; tenantAccountId?: number | null },
 ): Promise<string> {
-  return issueDocumentFilename({
+  return resolveDocFileName({
     kind: "contract",
     entityType: "contract",
     entityId: id,
+    // 상호를 함께 남기는 인스턴스는 계정에서 담당자 이름과 법인 상호를 직접 읽는다.
+    accountId: built.tenantAccountId ?? null,
     party: [built.doc.tenant_name],
+    org: [built.doc.tenant_name],
     issueDate: built.doc.created_at,
   });
 }
@@ -1217,7 +1220,8 @@ router.get("/v1/contracts/:id/pdf", async (req, res): Promise<void> => {
   if (asHtml) { res.type("html").send(await renderContractHtml(built, false, lang)); return; }
   try {
     const pdf = await renderContractPdf(built, lang);
-    setDocumentDownloadHeaders(res, await contractFilename(id, built));
+    res.setHeader("Content-Type", "application/pdf");
+    setDocFileName(res, await contractFilename(id, built));
     res.setHeader("Content-Length", String(pdf.length));
     res.send(pdf);
   } catch (err) {

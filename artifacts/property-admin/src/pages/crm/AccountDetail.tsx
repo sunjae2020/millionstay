@@ -763,6 +763,12 @@ export default function AccountDetail() {
                   {accountTypeLabel(t, account.account_type)}
                 </Badge>
               )}
+              {/* 고객 ID — 서류 파일명·보관 폴더가 이 번호를 쓴다. */}
+              {(account as any)?.party_code && (
+                <Badge variant="secondary" className="font-mono text-xs" title={t("account.party_code")}>
+                  {(account as any).party_code}
+                </Badge>
+              )}
             </div>
           )
         }

@@ -1,4 +1,5 @@
 import { getAnthropic, isChatConfigured } from "../chat/anthropic.js";
+import { parseDocFileName, UNNAMED_PARTY } from "./docFileName";
 
 /**
  * Document intake classification — read a bulk-uploaded file well enough to file it.
@@ -95,6 +96,9 @@ export interface IntakeScanResult {
 const NAME_TYPE_RULES: Array<[RegExp, IntakeDocType]> = [
   // 우리가 발행한 문서는 이름 앞에 문서코드가 붙는다 (filename.ts DOC_CODES):
   // CTR-김용식_20260803A.pdf. 서명받아 되돌아온 스캔본의 가장 확실한 단서다.
+  [/-(서명)?계약서-\d{8}/, "contract"],
+  [/-청구서-\d{8}/, "tax_invoice"],
+  [/-영수증-\d{8}/, "receipt"],
   [/^(CTR|SGN)-/i, "contract"],
   [/^INV-/i, "tax_invoice"],
   [/^RCP-/i, "receipt"],
@@ -149,9 +153,9 @@ function personNameFromName(name: string): string | undefined {
   return candidate;
 }
 
-/** 발행 파일명의 `_YYYYMMDD` — 연도만 짚는 것보다 정확한 날짜 단서다. */
+/** 발행 파일명의 `-YYYYMMDD`(옛 형식은 `_YYYYMMDD`) — 정확한 날짜 단서다. */
 function issuedDateFromName(name: string): string | undefined {
-  const m = /_(\d{4})(\d{2})(\d{2})(?:[A-Z]\d?)?(?:\.|$|[-_])/.exec(name);
+  const m = /[-_](\d{4})(\d{2})(\d{2})(?:[A-Z]\d?)?(?:\.|$|[-_])/.exec(name);
   if (!m) return undefined;
   const [, y, mo, d] = m;
   if (Number(mo) < 1 || Number(mo) > 12 || Number(d) < 1 || Number(d) > 31) return undefined;
@@ -171,7 +175,36 @@ function yearFromName(name: string): string | undefined {
  * record on — a type with nothing to match against is not worth skipping the
  * content read for.
  */
+/** 우리가 발행한 서류 종류 → 인박스 분류. 나머지는 휴리스틱으로 넘긴다. */
+const KIND_DOC_TYPES: Partial<Record<string, IntakeDocType>> = {
+  contract: "contract",
+  signed_contract: "contract",
+  invoice: "tax_invoice",
+  receipt: "receipt",
+};
+
 export function scanFileName(fileName: string): IntakeScanResult | null {
+  // 우리가 발행했다가 서명받아 되돌아온 파일은 규칙대로 읽으면 정확하다 —
+  // 이름·발행일이 추측이 아니라 규칙에서 그대로 나온다.
+  const parsed = parseDocFileName(fileName);
+  const parsedType = parsed?.kind ? KIND_DOC_TYPES[parsed.kind] : undefined;
+  if (parsed && parsedType) {
+    const fields: IntakeFields = { document_date: parsed.issueDate };
+    if (parsed.party && parsed.party !== UNNAMED_PARTY) fields.party_name = parsed.party;
+    const unit = unitFromName(fileName);
+    if (unit) fields.unit_label = unit;
+    return {
+      doc_type: parsedType,
+      fields,
+      // 규칙을 따른 이름은 휴리스틱보다 확실하지만, 페이지를 읽은 것은 아니다.
+      confidence: 0.8,
+      notes: null,
+      source: "filename",
+      inputTokens: null,
+      outputTokens: null,
+    };
+  }
+
   const docType = docTypeFromName(fileName);
   if (!docType) return null;
 

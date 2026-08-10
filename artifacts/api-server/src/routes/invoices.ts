@@ -16,7 +16,7 @@ import { freezeDocument, snapshotDocType } from "../lib/documents/freeze";
 import { formatDocMoney } from "../lib/documents/theme";
 import { sendDocumentEmail, resolveDocEmailCopy } from "../lib/email";
 import { accountRecipients, parseRecipients, toRecipientsResponse } from "../lib/documents/recipients";
-import { issueDocumentFilename, setDocumentDownloadHeaders } from "../lib/documents/filename.js";
+import { resolveDocFileName, setDocFileName } from "../lib/documents/docFileName";
 import { formatPostalAddress } from "@workspace/address";
 import { getStripe } from "./stripe";
 import { postInvoicePaid, postInvoiceIssued } from "../lib/billing/gl";
@@ -495,6 +495,7 @@ async function buildInvoiceDocInput(invoiceId: number, lang: DocLang): Promise<I
     created_at: enriched.created_at,
     invoice_kind: enriched.invoice_kind,
     billing_period: enriched.billing_period,
+    account_id: row.account_id ?? null,
     account_name: (enriched as any).account_name ?? null,
     account_email,
     account_address,
@@ -569,12 +570,14 @@ async function invoiceFilename(
   docInput: InvoiceDocInput,
   kind: "invoice" | "receipt",
 ): Promise<string> {
-  return issueDocumentFilename({
+  return resolveDocFileName({
     kind,
     entityType: "invoice",
     entityId: id,
     variant: kind === "receipt" ? "receipt" : "",
+    accountId: docInput.account_id ?? null,
     party: [docInput.account_name],
+    org: [docInput.account_name],
     issueDate: kind === "receipt" ? (docInput.paid_at ?? docInput.created_at) : docInput.created_at,
   });
 }
@@ -587,7 +590,8 @@ async function sendPdf(
 ): Promise<void> {
   try {
     const pdf = await htmlToPdf(html);
-    setDocumentDownloadHeaders(res, filename);
+    res.setHeader("Content-Type", "application/pdf");
+    setDocFileName(res, filename);
     res.setHeader("Content-Length", String(pdf.length));
     res.send(pdf);
   } catch (err) {

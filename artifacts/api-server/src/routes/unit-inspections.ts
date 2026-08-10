@@ -35,7 +35,7 @@ import { isCloudinaryConfigured, uploadToCloudinary, cldFolder } from "../utils/
 import { logAction } from "../utils/auditLog";
 import { htmlToPdf, PdfUnavailableError } from "../lib/documents/pdf";
 import { resolveCompanyInfo } from "../lib/documents/companyInfo";
-import { DOC_CODES, issueDocumentFilename, sanitisePartyName, setDocumentDownloadHeaders } from "../lib/documents/filename";
+import { DOC_NAMES_KO, resolveDocFileName, sanitizePartyName, setDocFileName } from "../lib/documents/docFileName";
 import { normalizeLang, t } from "../lib/documents/i18n";
 import {
   buildUnitInspectionHtml,
@@ -739,18 +739,19 @@ adminRouter.delete("/v1/inspections/:id", async (req, res): Promise<void> => {
 /** 세대점검표 파일명 — 세입자명(없으면 호실) 기준. */
 async function inspectionFilename(report: Inspection): Promise<string> {
   const meta = (report.meta ?? {}) as { tenant_name?: string | null; unit_no?: string | null };
-  return issueDocumentFilename({
+  return resolveDocFileName({
     kind: "inspection",
     entityType: "inspection",
     entityId: report.id,
     party: [meta.tenant_name, meta.unit_no],
+    org: [meta.tenant_name],
     issueDate: report.created_at ?? null,
   });
 }
 
 /** 빈 양식은 발행 대상이 없으므로 순번 없이 서식명으로 이름 붙인다. */
 function blankFormFilename(templateKey: string): string {
-  return `${DOC_CODES.sample}-${sanitisePartyName(getInspectionTemplate(templateKey).key)}_blank.pdf`;
+  return `${DOC_NAMES_KO.sample}-${sanitizePartyName(getInspectionTemplate(templateKey).key)}_blank`;
 }
 
 /**
@@ -773,7 +774,8 @@ async function renderInspectionPdf(
   if (format === "html") { res.setHeader("Content-Type", "text/html; charset=utf-8"); res.send(html); return; }
   try {
     const pdf = await htmlToPdf(html);
-    setDocumentDownloadHeaders(res, filename);
+    res.setHeader("Content-Type", "application/pdf");
+    setDocFileName(res, filename);
     res.setHeader("Content-Length", String(pdf.length));
     res.send(pdf);
   } catch (err) {

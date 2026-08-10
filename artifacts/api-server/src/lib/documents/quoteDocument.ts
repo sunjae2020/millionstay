@@ -25,6 +25,8 @@ export interface QuoteDocInput {
   description: string | null;
   notes: string | null;
   created_at: string | Date | null;
+  /** 수신처 계정 id — 파일명에 담당자·상호를 함께 남길 때 쓴다. */
+  account_id?: number | null;
   party_name?: string | null;
   party_email?: string | null;
   space_name?: string | null;

@@ -14,6 +14,7 @@ import { BarChart2, Download, Search } from "lucide-react";
 import { useBrand } from "@/contexts/ThemeContext";
 import { formatMoney } from "@/lib/currency";
 import { formatDate } from "@/lib/date";
+import { csvFileName } from "@/lib/csv";
 
 const BOOKING_STATUSES = ["Draft", "PendingApproval", "Confirmed", "Active", "CheckedOut", "Cancelled", "NoShow"];
 
@@ -45,7 +46,7 @@ function exportCsv(data: any[]) {
   const blob = new Blob([csv], { type: "text/csv" });
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
-  a.href = url; a.download = `booking-report-${new Date().toISOString().split("T")[0]}.csv`;
+  a.href = url; a.download = csvFileName("booking");
   a.click(); URL.revokeObjectURL(url);
 }
 

@@ -20,7 +20,7 @@ import { requireGuestAuth } from "../middlewares/requireGuestAuth";
 import { logAction } from "../utils/auditLog";
 import { postEntry, ACCOUNTS } from "../lib/billing/gl";
 import { htmlToPdf, PdfUnavailableError } from "../lib/documents/pdf";
-import { issueDocumentFilename, setDocumentDownloadHeaders } from "../lib/documents/filename";
+import { resolveDocFileName, setDocFileName } from "../lib/documents/docFileName";
 import { resolveCompanyInfo } from "../lib/documents/companyInfo";
 import { normalizeLang, t } from "../lib/documents/i18n";
 import { resolveTemplateBody } from "../lib/documents/templateEngine";
@@ -472,11 +472,13 @@ adminRouter.get("/v1/deposit-settlements/:id/document.pdf", async (req, res): Pr
 
     if (asHtml) { res.type("html").send(html); return; }
     const pdf = await htmlToPdf(html);
-    setDocumentDownloadHeaders(res, await issueDocumentFilename({
+    res.setHeader("Content-Type", "application/pdf");
+    setDocFileName(res, await resolveDocFileName({
       kind: "settlement",
       entityType: "deposit_settlement",
       entityId: id,
       party: [docInput.tenant_name, docInput.unit],
+      org: [docInput.tenant_name],
       issueDate: docInput.as_of_date,
     }));
     res.setHeader("Content-Length", String(pdf.length));

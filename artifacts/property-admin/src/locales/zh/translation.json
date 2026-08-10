@@ -813,6 +813,7 @@
     "sub_accounts": "子账户",
     "upload_file": "上传文件",
     "file_upload_failed": "文件上传失败",
+    "party_code": "客户ID",
     "type_tenant": "承租人（长期居住）",
     "type_agent": "房地产中介",
     "type_homestay_host": "寄宿家庭",

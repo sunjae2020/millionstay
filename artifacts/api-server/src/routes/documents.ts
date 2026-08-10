@@ -8,6 +8,7 @@ import { and, eq, ilike, inArray, notInArray, isNull, or, sql, desc } from "driz
 import { columnMatches } from "../lib/listSearch";
 import { listSnapshots } from "../lib/documents/freeze";
 import { calcRetentionDate } from "../lib/retention";
+import { resolveDocFolder } from "../lib/documents/docFileName";
 import { CONTRACT_CHECKLIST, evaluateChecklist } from "../lib/documents/checklist";
 import { decodeUploadFilename } from "../lib/uploadFilename";
 import { logAction } from "../utils/auditLog";
@@ -412,7 +413,7 @@ router.post("/v1/documents", attachmentUpload.single("file"), async (req, res): 
     // Office files, and Cloudinary's default image pipeline rejects whatever it
     // cannot decode.
     const up = await uploadPrivateToCloudinary(file.buffer, {
-      folder: cldFolder(`private/${entityType}`),
+      folder: cldFolder(await resolveDocFolder(entityType, entityId)),
       resource_type: "auto",
     });
     const [row] = await db.insert(documentsTable).values({

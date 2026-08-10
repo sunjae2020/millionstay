@@ -33,7 +33,7 @@ import {
   type RecipientSelection,
 } from "../services/applicationDocs.js";
 import { isCloudinaryConfigured, generateSignedUrl } from "../utils/cloudinary.js";
-import { issueDocumentFilename, setDocumentDownloadHeaders } from "../lib/documents/filename.js";
+import { resolveDocFileName, setDocFileName } from "../lib/documents/docFileName";
 import { normalizeLang, t } from "../lib/documents/i18n.js";
 
 /** Name of the first signer on a request — the person the document is about. */
@@ -293,7 +293,8 @@ contractSigningPublicRouter.get("/v1/public/contract-signing/:token/pdf", async 
       res.status(503).json({ error: "pdf_unavailable", message: "The signed PDF could not be generated." });
       return;
     }
-    setDocumentDownloadHeaders(res, await issueDocumentFilename({
+    res.setHeader("Content-Type", "application/pdf");
+    setDocFileName(res, await resolveDocFileName({
       kind: "signed_contract",
       entityType: row.context_type,
       entityId: row.context_id,

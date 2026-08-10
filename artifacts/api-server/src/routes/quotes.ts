@@ -8,7 +8,7 @@ import { keywordCondition, accountIdsByName, dateRangeConditions, yearConditions
 import { deletedFilter, makeBulkDelete, makeBulkRestore } from "../lib/softDelete";
 import { buildQuoteHtml, type QuoteDocInput } from "../lib/documents/quoteDocument";
 import { htmlToPdf, PdfUnavailableError } from "../lib/documents/pdf";
-import { issueDocumentFilename, setDocumentDownloadHeaders } from "../lib/documents/filename";
+import { resolveDocFileName, setDocFileName } from "../lib/documents/docFileName";
 import { resolveCompanyInfo } from "../lib/documents/companyInfo";
 import { normalizeLang, t } from "../lib/documents/i18n";
 import { resolveTemplateBody } from "../lib/documents/templateEngine";
@@ -264,6 +264,7 @@ async function buildQuoteDocInput(id: number): Promise<QuoteDocInput | null> {
     description: enriched.description,
     notes: enriched.notes,
     created_at: enriched.created_at,
+    account_id: row.account_id ?? null,
     party_name: (enriched as any).account_name ?? null,
     party_email,
     space_name: (enriched as any).space_name ?? null,
@@ -273,11 +274,13 @@ async function buildQuoteDocInput(id: number): Promise<QuoteDocInput | null> {
 
 /** 견적서 파일명 — 수신처(계정/리드)명 기준. 공실 견적은 대상 공간명으로 대체된다. */
 async function quoteFilename(id: number, docInput: QuoteDocInput): Promise<string> {
-  return issueDocumentFilename({
+  return resolveDocFileName({
     kind: "quote",
     entityType: "quote",
     entityId: id,
+    accountId: docInput.account_id ?? null,
     party: [docInput.party_name, (docInput as { space_name?: string | null }).space_name],
+    org: [docInput.party_name],
     issueDate: docInput.created_at,
   });
 }
@@ -298,7 +301,8 @@ router.get("/v1/quotes/:id/pdf", async (req, res): Promise<void> => {
   if (asHtml) { res.type("html").send(html); return; }
   try {
     const pdf = await htmlToPdf(html);
-    setDocumentDownloadHeaders(res, await quoteFilename(id, docInput));
+    res.setHeader("Content-Type", "application/pdf");
+    setDocFileName(res, await quoteFilename(id, docInput));
     res.setHeader("Content-Length", String(pdf.length));
     res.send(pdf);
   } catch (err) {

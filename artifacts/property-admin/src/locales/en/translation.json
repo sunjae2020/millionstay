@@ -813,6 +813,7 @@
     "sub_accounts": "Sub-accounts",
     "upload_file": "Upload file",
     "file_upload_failed": "The file could not be uploaded",
+    "party_code": "Customer ID",
     "type_tenant": "Tenant (long stay)",
     "type_agent": "Real Estate Agent",
     "type_homestay_host": "Homestay Host",
