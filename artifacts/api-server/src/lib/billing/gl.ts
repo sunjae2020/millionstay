@@ -37,6 +37,8 @@ export const ACCOUNTS = {
   // Refundable security deposits are a liability, not revenue — held until
   // refunded/forfeited (H-402).
   DEPOSIT_HELD: { code: "2100", name: "Deposits Held" },
+  // 부가세예수금 — 과세 청구서에서 받은 세액은 매출이 아니라 국가에 낼 부채다.
+  VAT_PAYABLE: { code: "2300", name: "VAT Payable" },
   // Service-host / contractor payouts (외주비): expense on accrual, payable until paid.
   CONTRACTOR_EXPENSE: { code: "5100", name: "Contractor Expense" },
   CONTRACTOR_PAYABLE: { code: "2200", name: "Contractor Payable" },
@@ -203,13 +205,19 @@ export async function postInvoiceIssued(args: {
   amount: number;
   currency: string;
   issuedAt?: string | null;
+  /** 부가세액(공급가액과 별도). 매출이 아니라 부가세예수금(2300)으로 간다. */
+  tax?: number;
 }): Promise<typeof journalEntriesTable.$inferSelect | null> {
   const amount = round2(args.amount || 0);
   if (amount <= 0) return null;
+  const tax = round2(args.tax || 0);
   const entryDate = args.issuedAt ? args.issuedAt.slice(0, 10) : sydneyToday();
   const { deposit, revenue } = await splitDepositPortion(args.id, amount);
 
   const creditLines: PostingLine[] = [];
+  if (tax > 0) {
+    creditLines.push({ account_code: ACCOUNTS.VAT_PAYABLE.code, account_name: ACCOUNTS.VAT_PAYABLE.name, debit: 0, credit: tax });
+  }
   if (deposit > 0) {
     creditLines.push({ account_code: ACCOUNTS.DEPOSIT_HELD.code, account_name: ACCOUNTS.DEPOSIT_HELD.name, debit: 0, credit: deposit });
   }
@@ -225,7 +233,7 @@ export async function postInvoiceIssued(args: {
     sourceId: args.id,
     currency: args.currency || "AUD",
     lines: [
-      { account_code: ACCOUNTS.ACCOUNTS_RECEIVABLE.code, account_name: ACCOUNTS.ACCOUNTS_RECEIVABLE.name, debit: amount, credit: 0 },
+      { account_code: ACCOUNTS.ACCOUNTS_RECEIVABLE.code, account_name: ACCOUNTS.ACCOUNTS_RECEIVABLE.name, debit: round2(amount + tax), credit: 0 },
       ...creditLines,
     ],
   });
@@ -244,9 +252,12 @@ export async function postInvoicePaid(args: {
   amount: number;
   currency: string;
   paidAt?: string | null;
+  /** 부가세액(공급가액과 별도). 발행 분개가 없으면 여기서 부채로 잡는다. */
+  tax?: number;
 }): Promise<typeof journalEntriesTable.$inferSelect | null> {
   const amount = round2(args.amount || 0);
   if (amount <= 0) return null;
+  const tax = round2(args.tax || 0);
   const entryDate = args.paidAt ? args.paidAt.slice(0, 10) : sydneyToday();
 
   const creditLines: PostingLine[] = [];
@@ -256,9 +267,12 @@ export async function postInvoicePaid(args: {
       account_code: ACCOUNTS.ACCOUNTS_RECEIVABLE.code,
       account_name: ACCOUNTS.ACCOUNTS_RECEIVABLE.name,
       debit: 0,
-      credit: amount,
+      credit: round2(amount + tax),
     });
   } else {
+    if (tax > 0) {
+      creditLines.push({ account_code: ACCOUNTS.VAT_PAYABLE.code, account_name: ACCOUNTS.VAT_PAYABLE.name, debit: 0, credit: tax });
+    }
     const { deposit, revenue } = await splitDepositPortion(args.id, amount);
     if (deposit > 0) {
       creditLines.push({ account_code: ACCOUNTS.DEPOSIT_HELD.code, account_name: ACCOUNTS.DEPOSIT_HELD.name, debit: 0, credit: deposit });
@@ -276,7 +290,7 @@ export async function postInvoicePaid(args: {
     sourceId: args.id,
     currency: args.currency || "AUD",
     lines: [
-      { account_code: ACCOUNTS.CASH.code, account_name: ACCOUNTS.CASH.name, debit: amount, credit: 0 },
+      { account_code: ACCOUNTS.CASH.code, account_name: ACCOUNTS.CASH.name, debit: round2(amount + tax), credit: 0 },
       ...creditLines,
     ],
   });

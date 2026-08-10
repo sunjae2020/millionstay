@@ -66,6 +66,26 @@ const LineItemsBody = z.object({ line_items: z.array(LineItemInput).optional() }
 
 const round2 = (n: number): number => Math.round(n * 100) / 100;
 
+/**
+ * 부가세 입력. `amount`(공급가액)는 그대로 두고 세액만 따로 계산해 담는다 —
+ * 매출·정산·커미션이 모두 공급가액 기준이라 세액을 섞으면 전부 부풀려진다.
+ */
+const TaxBody = z.object({
+  tax_mode: z.enum(["none", "exclusive"]).optional(),
+  tax_rate: z.number().min(0).max(100).optional(),
+});
+
+/** 소수점 없는 통화(KRW·JPY)는 세액도 정수로 끊는다(35만 × 10% = 35,000). */
+function roundTax(amount: number, currency: string): number {
+  return currency === "KRW" || currency === "JPY" ? Math.round(amount) : round2(amount);
+}
+
+/** 공급가액과 과세 설정으로 세액을 계산한다. 면세면 0. */
+export function computeTax(supply: number, mode: string, rate: number, currency: string): number {
+  if (mode !== "exclusive" || !(rate > 0)) return 0;
+  return roundTax(supply * rate / 100, currency);
+}
+
 /** Map validated line-item inputs to insert rows for a given invoice. */
 function buildLineItemRows(invoiceId: number, items: LineItemInput[]) {
   return items.map((it, idx) => {
@@ -140,6 +160,8 @@ async function enrichInvoices(rows: (typeof invoicesTable.$inferSelect)[]) {
     contract_ref: r.contract_id ? (contractMap[r.contract_id] ?? null) : null,
     account_name: r.account_id ? (accountMap[r.account_id] ?? null) : null,
     payment_info_name: r.payment_info_id ? (payInfoMap[r.payment_info_id] ?? null) : null,
+    // 세입자가 실제로 내는 금액 — 공급가액 + 세액. 면세면 amount 와 같다.
+    total_amount: round2(Number(r.amount ?? 0) + Number(r.tax_amount ?? 0)),
   }));
 }
 
@@ -229,12 +251,16 @@ router.post("/v1/invoices", async (req, res): Promise<void> => {
   if (!parsed.success) { res.status(400).json({ error: parsed.error.message }); return; }
   const itemsParsed = LineItemsBody.safeParse(req.body);
   if (!itemsParsed.success) { res.status(400).json({ error: itemsParsed.error.message }); return; }
+  const taxParsed = TaxBody.safeParse(req.body);
+  if (!taxParsed.success) { res.status(400).json({ error: taxParsed.error.message }); return; }
   const lineItems = itemsParsed.data.line_items ?? [];
   const hasLineItems = lineItems.length > 0;
 
   const invoice_ref = await nextInvoiceRef();
   const ccy = parsed.data.currency ?? DEFAULT_CURRENCY;
   const amount = hasLineItems ? sumLineItems(lineItems) : String(parsed.data.amount ?? 0);
+  const taxMode = taxParsed.data.tax_mode ?? "none";
+  const taxRate = taxParsed.data.tax_rate ?? (taxMode === "exclusive" ? 10 : 0);
   const [row] = await db.insert(invoicesTable).values({
     invoice_ref,
     booking_id: parsed.data.booking_id ?? null,
@@ -242,6 +268,9 @@ router.post("/v1/invoices", async (req, res): Promise<void> => {
     account_id: parsed.data.account_id ?? null,
     payment_info_id: parsed.data.payment_info_id ?? null,
     amount,
+    tax_mode: taxMode,
+    tax_rate: String(taxRate),
+    tax_amount: String(computeTax(Number(amount), taxMode, taxRate, ccy)),
     currency: ccy,
     exchange_rate_to_aud: await getRateToAud(ccy),
     due_date: parsed.data.due_date ?? null,
@@ -294,6 +323,8 @@ router.put("/v1/invoices/:id", async (req, res): Promise<void> => {
   if (!parsed.success) { res.status(400).json({ error: parsed.error.message }); return; }
   const itemsParsed = LineItemsBody.safeParse(req.body);
   if (!itemsParsed.success) { res.status(400).json({ error: itemsParsed.error.message }); return; }
+  const taxParsed = TaxBody.safeParse(req.body);
+  if (!taxParsed.success) { res.status(400).json({ error: taxParsed.error.message }); return; }
   const lineItems = itemsParsed.data.line_items; // undefined = leave untouched
   const id = Number(req.params.id);
 
@@ -309,6 +340,19 @@ router.put("/v1/invoices/:id", async (req, res): Promise<void> => {
   if (parsed.data.notes !== undefined) updates.notes = parsed.data.notes;
   // When line_items are provided, they own the amount.
   if (lineItems !== undefined) updates.amount = sumLineItems(lineItems);
+
+  // 세액은 저장된 값이 아니라 항상 (공급가액 × 세율)로 다시 계산한다 — 금액이나 과세
+  // 구분 중 하나만 바뀌어도 둘이 어긋나면 청구 총액이 틀린다.
+  const current = await db.select().from(invoicesTable).where(eq(invoicesTable.id, id)).then(r => r[0]);
+  if (!current) { res.status(404).json({ error: "Not found" }); return; }
+  const taxMode = taxParsed.data.tax_mode ?? current.tax_mode ?? "none";
+  const taxRate = taxParsed.data.tax_rate ?? Number(current.tax_rate ?? 0);
+  const supply = Number(updates.amount ?? current.amount ?? 0);
+  const ccy = String(updates.currency ?? current.currency ?? DEFAULT_CURRENCY);
+  updates.tax_mode = taxMode;
+  updates.tax_rate = String(taxMode === "exclusive" && !(taxRate > 0) ? 10 : taxRate);
+  updates.tax_amount = String(computeTax(supply, taxMode, Number(updates.tax_rate), ccy));
+
   const [row] = await db.update(invoicesTable).set(updates).where(eq(invoicesTable.id, id)).returning();
   if (!row) { res.status(404).json({ error: "Not found" }); return; }
   if (lineItems !== undefined) {
@@ -355,7 +399,7 @@ router.post("/v1/invoices/:id/send", async (req, res): Promise<void> => {
   // record of money owed to us, so nothing can age. Best-effort — never blocks.
   // 통합 청구서는 자식 인보이스가 이미 채권을 들고 있으므로 전기하지 않는다.
   if (row.invoice_kind !== "consolidated") {
-    void postInvoiceIssued({ id: row.id, amount: Number(row.amount), currency: row.currency, issuedAt: new Date().toISOString() });
+    void postInvoiceIssued({ id: row.id, amount: Number(row.amount), currency: row.currency, tax: Number(row.tax_amount ?? 0), issuedAt: new Date().toISOString() });
   }
   const [result] = await enrichInvoices([row]);
   res.json(result);
@@ -387,12 +431,12 @@ router.post("/v1/invoices/:id/pay", async (req, res): Promise<void> => {
       await db.update(invoicesTable)
         .set({ status: "Paid", payment_method: parsed.data.payment_method, paid_at: paidAt, updated_at: new Date() })
         .where(eq(invoicesTable.id, child.id));
-      void postInvoicePaid({ id: child.id, amount: Number(child.amount), currency: child.currency, paidAt: paidAt.toISOString() });
+      void postInvoicePaid({ id: child.id, amount: Number(child.amount), currency: child.currency, tax: Number(child.tax_amount ?? 0), paidAt: paidAt.toISOString() });
       void generateSettlementsForInvoice(child.id);
     }
   } else {
     // Auto-post the GL entry (best-effort; never blocks or alters the response).
-    void postInvoicePaid({ id: row.id, amount: Number(row.amount), currency: row.currency, paidAt: paidAt.toISOString() });
+    void postInvoicePaid({ id: row.id, amount: Number(row.amount), currency: row.currency, tax: Number(row.tax_amount ?? 0), paidAt: paidAt.toISOString() });
     // Fan the receipt out into payout legs (집주인 / 파트너 / 에이전트 + 유보).
     // Also best-effort: a settlement failure must never fail a payment.
     void generateSettlementsForInvoice(row.id);
@@ -456,6 +500,10 @@ async function buildInvoiceDocInput(invoiceId: number, lang: DocLang): Promise<I
     account_address,
     booking_ref: (enriched as any).booking_ref ?? null,
     contract_ref: (enriched as any).contract_ref ?? null,
+    tax_mode: row.tax_mode,
+    tax_rate: row.tax_rate,
+    tax_amount: row.tax_amount,
+    total_amount: (enriched as any).total_amount,
     bank_account: await resolveInvoiceBankAccount(row.payment_info_id),
     line_items: (await getLineItems(invoiceId)).map(li => ({
       label: li.label,
@@ -690,7 +738,8 @@ router.post("/v1/invoices/:id/checkout", async (req, res): Promise<void> => {
   if (row.status === "Paid") { res.status(400).json({ error: "Invoice is already paid." }); return; }
   if (row.status === "Void" || row.status === "Archived") { res.status(400).json({ error: "Invoice is not collectable." }); return; }
 
-  const amount = Number(row.amount);
+  // 결제는 세입자가 실제로 내는 금액(공급가액 + 세액)으로 건다.
+  const amount = round2(Number(row.amount) + Number(row.tax_amount ?? 0));
   if (!(amount > 0)) { res.status(400).json({ error: "Invoice amount must be greater than zero." }); return; }
 
   const surchargePct = Number((req.body?.surcharge_pct ?? 0));

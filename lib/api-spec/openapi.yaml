@@ -5273,6 +5273,14 @@ components:
           type: ["string", "null"]
         payment_info_name:
           type: ["string", "null"]
+        tax_mode:
+          type: string
+        tax_rate:
+          type: ["number", "null"]
+        tax_amount:
+          type: ["number", "null"]
+        total_amount:
+          type: ["number", "null"]
       required: [id, invoice_ref, amount, currency, status, created_at, updated_at]
 
     CreateInvoiceBody:
@@ -5286,6 +5294,10 @@ components:
           type: ["integer", "null"]
         payment_info_id:
           type: ["integer", "null"]
+        tax_mode:
+          type: string
+        tax_rate:
+          type: ["number", "null"]
         amount:
           type: number
         currency:
@@ -5309,6 +5321,10 @@ components:
           type: ["integer", "null"]
         payment_info_id:
           type: ["integer", "null"]
+        tax_mode:
+          type: string
+        tax_rate:
+          type: ["number", "null"]
         amount:
           type: ["number", "null"]
         currency:

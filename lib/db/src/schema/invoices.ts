@@ -23,7 +23,18 @@ export const invoicesTable = pgTable("invoices", {
   parent_invoice_id: integer("parent_invoice_id"),
   // 청구 대상 월 "YYYY-MM". 통합 청구서와 그 자식 모두에 채워진다.
   billing_period: text("billing_period"),
+  // 공급가액(과세표준). 부가세를 붙이더라도 이 값은 세액을 포함하지 않는다 — 매출·정산·
+  // 커미션 계산이 모두 이 컬럼을 쓰므로 세액이 섞이면 매출이 부풀고 정산이 틀어진다.
+  // 세입자가 실제로 내는 금액은 amount + tax_amount 다.
   amount: numeric("amount", { precision: 10, scale: 2 }).notNull().default("0"),
+  // ── 부가세 ────────────────────────────────────────────────────────────────
+  // "none"      면세 — 주택 임대가 기본. 계산서(세금계산서 아님)로 발행한다.
+  // "exclusive" 과세 — 공급가액에 세액을 더해 청구한다(세금계산서).
+  // 한국 주택 임대는 면세라 기본값이 none 이고, 상가·사무실·과세 서비스만 켠다.
+  tax_mode: text("tax_mode").notNull().default("none"),
+  tax_rate: numeric("tax_rate", { precision: 5, scale: 2 }).notNull().default("0"),
+  // 계산된 세액을 저장해 둔다 — 세율이 바뀌어도 이미 발행된 청구서의 세액은 그대로다.
+  tax_amount: numeric("tax_amount", { precision: 12, scale: 2 }).notNull().default("0"),
   currency: text("currency").notNull().default("AUD"),
   exchange_rate_to_aud: numeric("exchange_rate_to_aud", { precision: 18, scale: 8 }),
   status: text("status").notNull().default("Draft"),

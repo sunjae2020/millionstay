@@ -3236,6 +3236,10 @@ export const ListInvoicesResponseItem = zod.object({
   contract_ref: zod.string().nullish(),
   account_name: zod.string().nullish(),
   payment_info_name: zod.string().nullish(),
+  tax_mode: zod.string().optional(),
+  tax_rate: zod.number().nullish(),
+  tax_amount: zod.number().nullish(),
+  total_amount: zod.number().nullish(),
 });
 export const ListInvoicesResponse = zod.array(ListInvoicesResponseItem);
 
@@ -3247,6 +3251,8 @@ export const CreateInvoiceBody = zod.object({
   contract_id: zod.number().nullish(),
   account_id: zod.number().nullish(),
   payment_info_id: zod.number().nullish(),
+  tax_mode: zod.string().optional(),
+  tax_rate: zod.number().nullish(),
   amount: zod.number(),
   currency: zod.string().optional(),
   due_date: zod.string().nullish(),
@@ -3284,6 +3290,10 @@ export const GetInvoiceResponse = zod.object({
   contract_ref: zod.string().nullish(),
   account_name: zod.string().nullish(),
   payment_info_name: zod.string().nullish(),
+  tax_mode: zod.string().optional(),
+  tax_rate: zod.number().nullish(),
+  tax_amount: zod.number().nullish(),
+  total_amount: zod.number().nullish(),
 });
 
 /**
@@ -3298,6 +3308,8 @@ export const UpdateInvoiceBody = zod.object({
   contract_id: zod.number().nullish(),
   account_id: zod.number().nullish(),
   payment_info_id: zod.number().nullish(),
+  tax_mode: zod.string().optional(),
+  tax_rate: zod.number().nullish(),
   amount: zod.number().nullish(),
   currency: zod.string().nullish(),
   due_date: zod.string().nullish(),
@@ -3328,6 +3340,10 @@ export const UpdateInvoiceResponse = zod.object({
   contract_ref: zod.string().nullish(),
   account_name: zod.string().nullish(),
   payment_info_name: zod.string().nullish(),
+  tax_mode: zod.string().optional(),
+  tax_rate: zod.number().nullish(),
+  tax_amount: zod.number().nullish(),
+  total_amount: zod.number().nullish(),
 });
 
 /**
@@ -3367,6 +3383,10 @@ export const SendInvoiceResponse = zod.object({
   contract_ref: zod.string().nullish(),
   account_name: zod.string().nullish(),
   payment_info_name: zod.string().nullish(),
+  tax_mode: zod.string().optional(),
+  tax_rate: zod.number().nullish(),
+  tax_amount: zod.number().nullish(),
+  total_amount: zod.number().nullish(),
 });
 
 /**
@@ -3404,6 +3424,10 @@ export const PayInvoiceResponse = zod.object({
   contract_ref: zod.string().nullish(),
   account_name: zod.string().nullish(),
   payment_info_name: zod.string().nullish(),
+  tax_mode: zod.string().optional(),
+  tax_rate: zod.number().nullish(),
+  tax_amount: zod.number().nullish(),
+  total_amount: zod.number().nullish(),
 });
 
 /**
@@ -3436,6 +3460,10 @@ export const VoidInvoiceResponse = zod.object({
   contract_ref: zod.string().nullish(),
   account_name: zod.string().nullish(),
   payment_info_name: zod.string().nullish(),
+  tax_mode: zod.string().optional(),
+  tax_rate: zod.number().nullish(),
+  tax_amount: zod.number().nullish(),
+  total_amount: zod.number().nullish(),
 });
 
 /**

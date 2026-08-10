@@ -33,6 +33,12 @@ export interface InvoiceDocInput {
   // 통합(단체) 청구서면 "consolidated" — 표제와 청구 대상 월이 함께 표시된다.
   invoice_kind?: string | null;
   billing_period?: string | null;
+  /** 부가세 — "exclusive"면 공급가액(amount)에 세액을 더해 청구한다. 면세면 "none". */
+  tax_mode?: string | null;
+  tax_rate?: string | number | null;
+  tax_amount?: string | number | null;
+  /** 세입자가 실제로 내는 금액(공급가액 + 세액). 없으면 amount 로 본다. */
+  total_amount?: string | number | null;
   account_name?: string | null;
   account_email?: string | null;
   account_address?: string | null;
@@ -75,6 +81,23 @@ function formatDate(value: string | Date | null, lang: DocLang): string {
   return formatDocDate(value, lang);
 }
 
+/** 과세 청구서인가 — 세액이 실제로 붙는 경우에만 세액 줄을 그린다. */
+function taxed(inv: InvoiceDocInput): boolean {
+  return inv.tax_mode === "exclusive" && Number(inv.tax_amount ?? 0) > 0;
+}
+
+/** 세율 표기(10 → "10"). */
+function taxPct(inv: InvoiceDocInput): string {
+  const rate = Number(inv.tax_rate ?? 0);
+  return Number.isInteger(rate) ? String(rate) : String(rate);
+}
+
+/** 세입자가 내는 금액 — 총액이 내려오면 그대로, 아니면 공급가액 + 세액. */
+function payableAmount(inv: InvoiceDocInput): number {
+  if (inv.total_amount != null) return Number(inv.total_amount);
+  return Number(inv.amount ?? 0) + Number(inv.tax_amount ?? 0);
+}
+
 function formatQty(value: string | number): string {
   const n = Number(value ?? 0);
   return Number.isInteger(n) ? String(n) : n.toLocaleString("en-AU", { maximumFractionDigits: 2 });
@@ -100,9 +123,18 @@ function renderDetailsTable(inv: InvoiceDocInput, lang: DocLang): string {
           <tr><th>${t(lang, "description")}</th><th class="num">${t(lang, "qty")}</th><th class="num">${t(lang, "unit")}</th><th class="num">${t(lang, "amount")}</th></tr>
         </thead>
         <tbody>${rows}
+          ${taxed(inv) ? `
+          <tr>
+            <td colspan="3" class="num">${t(lang, "supplyAmount")}</td>
+            <td class="num">${formatMoney(inv.amount, inv.currency)}</td>
+          </tr>
+          <tr>
+            <td colspan="3" class="num">${t(lang, "taxAmount", { pct: taxPct(inv) })}</td>
+            <td class="num">${formatMoney(inv.tax_amount ?? 0, inv.currency)}</td>
+          </tr>` : ""}
           <tr>
             <td colspan="3" class="num"><strong>${t(lang, "total")}</strong></td>
-            <td class="num"><strong>${formatMoney(inv.amount, inv.currency)}</strong></td>
+            <td class="num"><strong>${formatMoney(payableAmount(inv), inv.currency)}</strong></td>
           </tr>
         </tbody>
       </table>`;
@@ -118,6 +150,15 @@ function renderDetailsTable(inv: InvoiceDocInput, lang: DocLang): string {
             <td>${escapeHtml(lineDesc)}</td>
             <td class="num">${formatMoney(inv.amount, inv.currency)}</td>
           </tr>
+          ${taxed(inv) ? `
+          <tr>
+            <td class="num">${t(lang, "taxAmount", { pct: taxPct(inv) })}</td>
+            <td class="num">${formatMoney(inv.tax_amount ?? 0, inv.currency)}</td>
+          </tr>
+          <tr>
+            <td class="num"><strong>${t(lang, "total")}</strong></td>
+            <td class="num"><strong>${formatMoney(payableAmount(inv), inv.currency)}</strong></td>
+          </tr>` : ""}
         </tbody>
       </table>`;
 }
@@ -194,13 +235,13 @@ export function buildInvoiceBody(inv: InvoiceDocInput, lang: DocLang = "en", ter
 
     <div class="total-box">
       <span>${status === "Paid" ? t(lang, "amountPaid") : t(lang, "amountDue")}</span>
-      <span class="amount">${formatMoney(inv.amount, inv.currency)}</span>
+      <span class="amount">${formatMoney(payableAmount(inv), inv.currency)}</span>
     </div>
 
-    ${(status !== "Paid" && Number(inv.amount ?? 0) > 0) ? `<div class="section" style="margin-top:20px;">
+    ${(status !== "Paid" && payableAmount(inv) > 0) ? `<div class="section" style="margin-top:20px;">
       <h3>${t(lang, "paymentOptions")}</h3>
-      <div class="row"><span class="label">${t(lang, "byBankTransfer")}</span><span class="value">${formatMoney(inv.amount, inv.currency)}</span></div>
-      <div class="row"><span class="label">${t(lang, "byCard", { pct: String(CARD_SURCHARGE_PCT) })}</span><span class="value">${formatMoney(Math.round(Number(inv.amount ?? 0) * (1 + CARD_SURCHARGE_PCT / 100) * 100) / 100, inv.currency)}</span></div>
+      <div class="row"><span class="label">${t(lang, "byBankTransfer")}</span><span class="value">${formatMoney(payableAmount(inv), inv.currency)}</span></div>
+      <div class="row"><span class="label">${t(lang, "byCard", { pct: String(CARD_SURCHARGE_PCT) })}</span><span class="value">${formatMoney(Math.round(payableAmount(inv) * (1 + CARD_SURCHARGE_PCT / 100) * 100) / 100, inv.currency)}</span></div>
       <div style="font-size:12px;color:#999;margin-top:8px;">${t(lang, "cardSurchargeNote", { pct: String(CARD_SURCHARGE_PCT) })}</div>
     </div>` : ""}
 

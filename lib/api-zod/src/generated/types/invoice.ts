@@ -45,4 +45,11 @@ export interface Invoice {
   account_name?: string | null;
   /** @nullable */
   payment_info_name?: string | null;
+  tax_mode?: string;
+  /** @nullable */
+  tax_rate?: number | null;
+  /** @nullable */
+  tax_amount?: number | null;
+  /** @nullable */
+  total_amount?: number | null;
 }

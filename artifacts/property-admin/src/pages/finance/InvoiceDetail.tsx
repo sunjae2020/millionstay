@@ -26,7 +26,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { useBrand } from "@/contexts/ThemeContext";
-import { SUPPORTED_CURRENCIES } from "@/lib/currency";
+import { SUPPORTED_CURRENCIES, formatMoney } from "@/lib/currency";
 import { ArrowLeft, Trash2, Save, FileText, Layers } from "lucide-react";
 import { apiFetch } from "@/lib/apiFetch";
 import { useToast } from "@/hooks/use-toast";
@@ -54,6 +54,9 @@ interface FormData {
   account_id: number | null;
   /** 입금 계좌 — Settings → Payment Info 에 저장된 계좌. 비우면 기본 계좌로 안내된다. */
   payment_info_id: number | null;
+  /** 과세 구분 — "none" 면세(계산서) / "exclusive" 과세(공급가액 + 세액). */
+  tax_mode: string;
+  tax_rate: string;
   amount: string;
   currency: string;
   due_date: string;
@@ -125,9 +128,10 @@ export default function InvoiceDetail() {
   const lineItems: InvoiceLineItem[] = ((invoice as any)?.line_items ?? []) as InvoiceLineItem[];
   const children: ConsolidatedChild[] = ((invoice as any)?.children ?? []) as ConsolidatedChild[];
 
-  const { register, handleSubmit, reset, control } = useForm<FormData>({
+  const { register, handleSubmit, reset, control, watch } = useForm<FormData>({
     defaultValues: {
       booking_id: null, contract_id: null, account_id: null, payment_info_id: null,
+      tax_mode: "none", tax_rate: "10",
       amount: "", currency: brandCurrency, due_date: "", description: "", notes: "",
     },
   });
@@ -139,6 +143,8 @@ export default function InvoiceDetail() {
         contract_id: invoice.contract_id ?? null,
         account_id: invoice.account_id ?? null,
         payment_info_id: (invoice as any).payment_info_id ?? null,
+        tax_mode: (invoice as any).tax_mode ?? "none",
+        tax_rate: String(Number((invoice as any).tax_rate ?? 10) || 10),
         amount: invoice.amount != null ? String(invoice.amount) : "",
         currency: invoice.currency ?? brandCurrency,
         due_date: invoice.due_date ?? "",
@@ -147,6 +153,19 @@ export default function InvoiceDetail() {
       });
     }
   }, [invoice, reset]);
+
+  // 화면의 과세 미리보기 — 저장 전에도 세액·총액이 바로 보이도록 폼 값으로 계산한다.
+  // 반올림 규칙은 서버(computeTax)와 같다: 소수점 없는 통화는 정수로 끊는다.
+  const taxMode = watch("tax_mode");
+  const supplyAmount = Number(watch("amount") || 0);
+  const invoiceCurrency = watch("currency") || brandCurrency;
+  const taxRate = Number(watch("tax_rate") || 0);
+  const taxAmount = taxMode === "exclusive" && taxRate > 0
+    ? (invoiceCurrency === "KRW" || invoiceCurrency === "JPY"
+        ? Math.round(supplyAmount * taxRate / 100)
+        : Math.round(supplyAmount * taxRate) / 100)
+    : 0;
+  const payable = supplyAmount + taxAmount;
 
   const invalidate = () => {
     qc.invalidateQueries({ queryKey: getListInvoicesQueryKey() });
@@ -165,6 +184,8 @@ export default function InvoiceDetail() {
     contract_id: data.contract_id ?? null,
     account_id: data.account_id ?? null,
     payment_info_id: data.payment_info_id ?? null,
+    tax_mode: data.tax_mode,
+    tax_rate: Number(data.tax_rate || 10),
     amount: data.amount ? Number(data.amount) : 0,
     currency: data.currency || brandCurrency,
     due_date: data.due_date || null,
@@ -331,6 +352,44 @@ export default function InvoiceDetail() {
                 )} />
               </div>
             </div>
+            {/* 과세 구분 — 한국 주택 임대는 면세(계산서)가 기본이고, 상가·과세
+                서비스만 과세로 바꾼다. 금액 칸은 언제나 공급가액이다. */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-4">
+              <div>
+                <Label>{t('invoice.label_tax_mode')}</Label>
+                <Controller name="tax_mode" control={control} render={({ field }) => (
+                  <Select value={field.value} onValueChange={field.onChange}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">{t('invoice.tax_mode_none')}</SelectItem>
+                      <SelectItem value="exclusive">{t('invoice.tax_mode_exclusive')}</SelectItem>
+                    </SelectContent>
+                  </Select>
+                )} />
+              </div>
+              {taxMode === "exclusive" && (
+                <div>
+                  <Label>{t('invoice.label_tax_rate')}</Label>
+                  <Input type="number" step="0.01" {...register("tax_rate")} />
+                </div>
+              )}
+              <div>
+                <Label>{t('invoice.label_total_amount')}</Label>
+                <div className="h-9 flex items-center text-sm font-medium tabular-nums">
+                  {formatMoney(payable, invoice?.currency ?? brandCurrency)}
+                  {taxMode === "exclusive" && (
+                    <span className="ml-2 text-xs font-normal text-muted-foreground">
+                      {t('invoice.tax_breakdown', {
+                        supply: formatMoney(supplyAmount, invoice?.currency ?? brandCurrency),
+                        tax: formatMoney(taxAmount, invoice?.currency ?? brandCurrency),
+                      })}
+                    </span>
+                  )}
+                </div>
+                <p className="text-xs text-muted-foreground mt-1">{t('invoice.hint_total_amount')}</p>
+              </div>
+            </div>
+
             {/* 입금 계좌 — 저장된 계좌(Settings → Payment Info) 중 하나. 비워 두면
                 기본 계좌이체 계좌로 안내되므로 대부분은 손댈 필요가 없다. */}
             <div className="mt-4">

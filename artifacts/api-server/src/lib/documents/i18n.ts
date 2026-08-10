@@ -220,6 +220,17 @@ const LABELS: Dict = {
     vi: "Thanh toán bằng thẻ chịu phụ phí {pct}%, được cộng vào khi chọn thẻ ở bước thanh toán.",
   },
 
+  // ── 부가세 (과세 청구서) ──────────────────────────────────────────────────
+  "supplyAmount":     { en: "Subtotal (ex. tax)", ko: "공급가액", zh: "供货金额", ja: "供給価額", th: "มูลค่าก่อนภาษี", vi: "Giá trị trước thuế" },
+  "taxAmount":        {
+    en: "VAT ({pct}%)",
+    ko: "부가세 ({pct}%)",
+    zh: "增值税（{pct}%）",
+    ja: "消費税（{pct}%）",
+    th: "ภาษีมูลค่าเพิ่ม ({pct}%)",
+    vi: "Thuế GTGT ({pct}%)",
+  },
+
   // ── Bank account (입금 계좌 안내) ─────────────────────────────────────────
   "bankAccount":      { en: "Bank account", ko: "입금 계좌", zh: "汇款账户", ja: "振込口座", th: "บัญชีธนาคาร", vi: "Tài khoản ngân hàng" },
   "bankName":         { en: "Bank", ko: "은행", zh: "开户行", ja: "銀行", th: "ธนาคาร", vi: "Ngân hàng" },

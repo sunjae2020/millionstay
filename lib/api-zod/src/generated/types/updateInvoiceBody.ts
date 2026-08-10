@@ -15,6 +15,9 @@ export interface UpdateInvoiceBody {
   account_id?: number | null;
   /** @nullable */
   payment_info_id?: number | null;
+  tax_mode?: string;
+  /** @nullable */
+  tax_rate?: number | null;
   /** @nullable */
   amount?: number | null;
   /** @nullable */
