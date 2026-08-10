@@ -4888,7 +4888,16 @@
     "toast_created": "Đã tạo mẫu",
     "error": "Đã xảy ra lỗi",
     "kind_email": "Email",
-    "kind_pdf": "PDF"
+    "kind_pdf": "PDF",
+    "col_category": "Nhóm",
+    "cat_common": "Dùng chung",
+    "cat_customer": "Khách hàng & người thuê",
+    "cat_owner": "Chủ sở hữu",
+    "cat_partner": "Đối tác",
+    "cat_host": "Nhân viên dịch vụ",
+    "cat_staff": "Nhân viên nội bộ",
+    "cat_marketing": "Tiếp thị",
+    "cat_legacy": "Cần rà soát"
   },
   "homestayBilling": {
     "title": "Thanh toán Homestay",

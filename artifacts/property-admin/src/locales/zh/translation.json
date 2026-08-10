@@ -4985,7 +4985,16 @@
     "toast_published": "模板已发布",
     "toast_test_sent": "测试邮件已发送",
     "toast_created": "模板已创建",
-    "error": "出现错误"
+    "error": "出现错误",
+    "col_category": "分组",
+    "cat_common": "通用",
+    "cat_customer": "客户与租户",
+    "cat_owner": "业主",
+    "cat_partner": "合作伙伴",
+    "cat_host": "服务人员",
+    "cat_staff": "内部员工",
+    "cat_marketing": "营销",
+    "cat_legacy": "待整理"
   },
   "homestayBilling": {
     "title": "寄宿计费",

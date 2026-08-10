@@ -4985,7 +4985,16 @@
     "toast_published": "เผยแพร่แม่แบบแล้ว",
     "toast_test_sent": "ส่งอีเมลทดสอบแล้ว",
     "toast_created": "สร้างแม่แบบแล้ว",
-    "error": "เกิดข้อผิดพลาด"
+    "error": "เกิดข้อผิดพลาด",
+    "col_category": "กลุ่ม",
+    "cat_common": "ใช้ร่วมกัน",
+    "cat_customer": "ลูกค้าและผู้เช่า",
+    "cat_owner": "เจ้าของ",
+    "cat_partner": "พันธมิตร",
+    "cat_host": "ผู้ให้บริการ",
+    "cat_staff": "พนักงานภายใน",
+    "cat_marketing": "การตลาด",
+    "cat_legacy": "รอจัดระเบียบ"
   },
   "homestayBilling": {
     "title": "การเรียกเก็บเงินโฮมสเตย์",

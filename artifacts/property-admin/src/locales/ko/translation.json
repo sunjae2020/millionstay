@@ -4985,7 +4985,16 @@
     "toast_published": "템플릿이 게시되었습니다",
     "toast_test_sent": "테스트 이메일이 전송되었습니다",
     "toast_created": "템플릿이 생성되었습니다",
-    "error": "문제가 발생했습니다"
+    "error": "문제가 발생했습니다",
+    "col_category": "그룹",
+    "cat_common": "공통",
+    "cat_customer": "고객·세입자",
+    "cat_owner": "소유주",
+    "cat_partner": "파트너",
+    "cat_host": "서비스 호스트",
+    "cat_staff": "내부 직원",
+    "cat_marketing": "마케팅",
+    "cat_legacy": "정리 대상"
   },
   "homestayBilling": {
     "title": "홈스테이 청구",

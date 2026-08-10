@@ -4985,7 +4985,16 @@
     "toast_published": "テンプレートを公開しました",
     "toast_test_sent": "テストメールを送信しました",
     "toast_created": "テンプレートを作成しました",
-    "error": "問題が発生しました"
+    "error": "問題が発生しました",
+    "col_category": "グループ",
+    "cat_common": "共通",
+    "cat_customer": "顧客・入居者",
+    "cat_owner": "オーナー",
+    "cat_partner": "パートナー",
+    "cat_host": "サービスホスト",
+    "cat_staff": "社内スタッフ",
+    "cat_marketing": "マーケティング",
+    "cat_legacy": "整理対象"
   },
   "homestayBilling": {
     "title": "ホームステイ請求",

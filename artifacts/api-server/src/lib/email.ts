@@ -700,6 +700,104 @@ export interface MarketingEmailOptions {
   bodyHtml: string;
   toName?: string | null;
   channel?: "email";
+  /** Copy language for the compliance footer. Defaults to the tenant's document language. */
+  lang?: string;
+  /** When the recipient opted in — shown in the footer where the law requires it (KR). */
+  consentedAt?: Date | string | null;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+   Marketing compliance that varies by jurisdiction.
+
+   The Australian rules (consent + unsubscribe + sender identity) are enforced
+   unconditionally below. Korea's 「정보통신망법」 제50조 adds three obligations
+   that Australian law does not have, so they are switched on per tenant:
+
+     MARKETING_AD_PREFIX   subject must start with the ad marker, e.g. "(광고)"
+     MARKETING_QUIET_HOURS "21-08" — no promotional send inside this window
+     MARKETING_TZ          IANA zone the quiet hours are measured in
+
+   A tenant that leaves these unset behaves exactly as before. Metheim sets all
+   three in tenants/metheim/config.env.
+   ───────────────────────────────────────────────────────────────────────── */
+
+/** Prefix the subject with the ad marker unless it already carries one. */
+function applyAdPrefix(subject: string): string {
+  const prefix = (process.env.MARKETING_AD_PREFIX ?? "").trim();
+  if (!prefix) return subject;
+  return subject.startsWith(prefix) ? subject : `${prefix} ${subject}`;
+}
+
+/**
+ * True when promotional sending is barred right now. Korea forbids advertising
+ * messages between 21:00 and 08:00 without a separate night-time consent, and
+ * we do not collect one — so we refuse rather than send and hope.
+ */
+export function inMarketingQuietHours(now = new Date()): { blocked: boolean; window?: string } {
+  const raw = (process.env.MARKETING_QUIET_HOURS ?? "").trim();
+  const m = /^(\d{1,2})\s*-\s*(\d{1,2})$/.exec(raw);
+  if (!m) return { blocked: false };
+  const [from, to] = [Number(m[1]), Number(m[2])];
+  const tz = (process.env.MARKETING_TZ ?? "").trim();
+  // Read the hour in the tenant's zone — the server clock is usually UTC, and
+  // 22:00 in Seoul is 13:00 UTC. Comparing against the raw UTC hour would let
+  // night-time sends through.
+  const hour = tz
+    ? Number(new Intl.DateTimeFormat("en-GB", { hour: "2-digit", hour12: false, timeZone: tz }).format(now))
+    : now.getHours();
+  // from > to means the window wraps midnight (21-08).
+  const blocked = from > to ? hour >= from || hour < to : hour >= from && hour < to;
+  return { blocked, window: `${from}:00–${to}:00${tz ? ` ${tz}` : ""}` };
+}
+
+/** Consent-source + unsubscribe footer, in the recipient's language. */
+function marketingFooter(lang: DocLang, brand: string, unsubUrl: string, consentedAt?: Date | string | null): string[] {
+  const when = consentedAt
+    ? new Date(consentedAt).toISOString().slice(0, 10)
+    : null;
+  const L: Record<DocLang, { source: (b: string, d: string | null) => string; unsub: string; privacy: string }> = {
+    ko: {
+      source: (b, d) => d
+        ? `${d}에 ${b} 광고성 정보 수신에 동의하셔서 보내 드립니다.`
+        : `${b} 광고성 정보 수신에 동의하셔서 보내 드립니다.`,
+      unsub: "수신거부", privacy: "개인정보처리방침",
+    },
+    en: {
+      source: (b, d) => d
+        ? `You are receiving this because you opted in to marketing from ${b} on ${d}.`
+        : `You are receiving this because you opted in to marketing from ${b}.`,
+      unsub: "Unsubscribe", privacy: "Privacy Policy",
+    },
+    ja: {
+      source: (b, d) => d
+        ? `${d} に ${b} の広告メール受信に同意いただいたため、お送りしております。`
+        : `${b} の広告メール受信に同意いただいたため、お送りしております。`,
+      unsub: "配信停止", privacy: "個人情報保護方針",
+    },
+    zh: {
+      source: (b, d) => d
+        ? `您于 ${d} 同意接收 ${b} 的广告信息，故向您发送本邮件。`
+        : `您已同意接收 ${b} 的广告信息，故向您发送本邮件。`,
+      unsub: "退订", privacy: "隐私政策",
+    },
+    th: {
+      source: (b, d) => d
+        ? `ท่านได้ให้ความยินยอมรับข่าวสารโฆษณาจาก ${b} เมื่อวันที่ ${d} เราจึงส่งอีเมลฉบับนี้`
+        : `ท่านได้ให้ความยินยอมรับข่าวสารโฆษณาจาก ${b} เราจึงส่งอีเมลฉบับนี้`,
+      unsub: "ยกเลิกรับข่าวสาร", privacy: "นโยบายความเป็นส่วนตัว",
+    },
+    vi: {
+      source: (b, d) => d
+        ? `Quý khách đã đồng ý nhận thông tin quảng cáo từ ${b} vào ngày ${d}, nên chúng tôi gửi email này.`
+        : `Quý khách đã đồng ý nhận thông tin quảng cáo từ ${b}, nên chúng tôi gửi email này.`,
+      unsub: "Hủy nhận tin", privacy: "Chính sách bảo mật",
+    },
+  };
+  const t = L[lang] ?? L.en;
+  return [
+    escapeHtml(t.source(brand, when)),
+    `<a href="${unsubUrl}">${t.unsub}</a> · <a href="${PORTAL_URL}/privacy-policy">${t.privacy}</a>`,
+  ];
 }
 
 /**
@@ -741,23 +839,30 @@ export async function sendMarketingEmail(
     return { ok: false, skipped: true, error: "Email service not configured" };
   }
 
-  // 2. Unsubscribe link (Spam Act s.18).
+  // 2. Quiet hours (KR 정보통신망법 §50④ — night-time advertising needs its own
+  //    consent, which we do not collect). Inert unless the tenant configures it.
+  const quiet = inMarketingQuietHours();
+  if (quiet.blocked) {
+    console.log(`[email] marketing send refused — quiet hours ${quiet.window} for ${to}`);
+    return { ok: false, skipped: true, error: `Marketing quiet hours (${quiet.window})` };
+  }
+
+  // 3. Unsubscribe link (Spam Act s.18) + consent source (KR §50).
   const unsubUrl = buildUnsubscribeUrl(to, channel);
   const brand = await resolveEmailBrand();
+  const lang = normalizeLang(opts.lang ?? process.env.DEFAULT_DOC_LANG ?? "en");
   const html = renderEmailShell({
     brand,
     body: opts.bodyHtml,
-    footerLines: [
-      `You are receiving this because you opted in to marketing from ${escapeHtml(brand.name)}.`,
-      `<a href="${unsubUrl}">Unsubscribe</a> · <a href="${PORTAL_URL}/privacy-policy">Privacy Policy</a>`,
-    ],
+    footerLines: marketingFooter(lang, brand.name, unsubUrl, opts.consentedAt ?? consent?.opted_in_at),
   });
 
   try {
     const result = await client.emails.send({
       ...emailSender(),
       to: [to],
-      subject: opts.subject,
+      // 4. Ad marker in the subject (KR §50④). No-op where unset.
+      subject: applyAdPrefix(opts.subject),
       html,
       // 3. RFC 8058 one-click unsubscribe headers.
       headers: {
