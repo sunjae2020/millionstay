@@ -1,5 +1,5 @@
 import { Resend } from "resend";
-import { db, marketingConsentsTable } from "@workspace/db";
+import { db, marketingConsentsTable, emailLogsTable } from "@workspace/db";
 import { and, eq } from "drizzle-orm";
 import { t, normalizeLang, docLocale, type DocLang } from "./documents/i18n";
 import { buildAppointmentIcs } from "./ical";
@@ -222,11 +222,118 @@ export async function resolveDocEmailCopy(
   };
 }
 
+/* ═══════════════════════════════════════════════════════════════════════════
+   편집 가능한 문안 해석 (Settings → Documents → Templates)
+
+   발송 함수는 문안을 코드에 두지 않고 여기를 거친다. 운영자가 Studio 에서 고치면
+   재배포 없이 반영된다. 정본 = docs/EMAIL_TEMPLATE_SPEC.md
+
+   **폴백이 핵심이다.** 템플릿이 없거나 미발행이면 `null` 을 돌려주고 호출부는 기존
+   하드코딩 문안을 그대로 쓴다. 그래서
+     - 문안을 아직 시드하지 않은 테넌트(MillionStay 본체)는 동작이 바뀌지 않고,
+     - Studio 에서 실수로 archive 해도 메일이 안 나가는 사고가 나지 않는다.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+export interface ResolvedCopy {
+  subject: string | null;
+  /** 셸 안쪽 본문 HTML. renderEmailShell({ body }) 에 그대로 넣는다. */
+  body: string;
+}
+
+/**
+ * 발행된 이메일 템플릿을 찾아 {{변수}}를 채운다. 없으면 null → 호출부가 폴백.
+ *
+ * ⚠️ 변수 값은 **호출부가 escape 해서 넘긴다.** 문안에는 사용자 입력이 그대로 박히므로
+ *    (이름·주소·문의 내용) 이스케이프를 빼먹으면 저장형 XSS 가 된다. 기존 발송 함수가
+ *    이미 safeName()/escapeHtml() 을 쓰고 있으니 그 값을 그대로 넘기면 된다.
+ */
+export async function resolveEmailCopy(
+  key: string,
+  lang: string | undefined,
+  vars: Record<string, unknown>,
+): Promise<ResolvedCopy | null> {
+  try {
+    const tpl = await resolveTemplate({ kind: "email", key, locale: normalizeLang(lang ?? "") });
+    if (!tpl?.bodyHtml?.trim()) return null;
+    return {
+      subject: tpl.subject?.trim() ? renderString(tpl.subject, vars) : null,
+      body: renderString(tpl.bodyHtml, vars),
+    };
+  } catch (err) {
+    // 템플릿 조회 실패로 메일이 안 나가면 안 된다 — 폴백으로 보낸다.
+    console.error(`[email] 템플릿 해석 실패 (${key}) — 기본 문안으로 발송:`, err);
+    return null;
+  }
+}
+
+/**
+ * 연체 독촉 발송. 템플릿 문안으로만 보내고, **발송 성공 시 email_log 에 기록한다** —
+ * 그 기록이 곧 "이 단계는 이미 보냈다" 는 멱등 키다(lib/billing/rentDunning.ts).
+ *
+ * 기록에 실패하면 다음 크론에서 같은 단계를 다시 보내게 되므로, 로그 기록 실패는
+ * 조용히 넘기지 않고 발송 실패로 취급한다 — 중복 독촉이 미발송보다 나쁘다.
+ */
+export async function sendDunningEmail(opts: {
+  to: string;
+  toName: string;
+  templateKey: string;
+  invoiceId: number;
+  vars: Record<string, unknown>;
+  lang?: string;
+}): Promise<boolean> {
+  const client = getResend();
+  if (!client) {
+    console.log(`[email] RESEND_API_KEY 없음 — 독촉 건너뜀 (${opts.templateKey} #${opts.invoiceId})`);
+    return false;
+  }
+
+  const safeVars = Object.fromEntries(
+    Object.entries(opts.vars).map(([k, v]) => [k, escapeHtml(String(v ?? ""))]));
+  const copy = await resolveEmailCopy(opts.templateKey, opts.lang, safeVars);
+  if (!copy) {
+    // 독촉은 폴백 문안이 없다 — 문안 없이 임의로 보내면 법적 다툼의 근거가 흔들린다.
+    console.error(`[email] 독촉 문안 없음 (${opts.templateKey}) — 발송하지 않음`);
+    return false;
+  }
+
+  const brand = await resolveEmailBrand();
+  const subject = copy.subject ?? `[${brand.name}] 납부 안내`;
+  const html = renderEmailShell({ brand, body: copy.body });
+
+  try {
+    const { data, error } = await client.emails.send({
+      ...emailSender(), to: [opts.to], subject, html,
+    });
+    if (error || !data?.id) {
+      console.error(`[email] 독촉 발송 거부 (${opts.templateKey} #${opts.invoiceId}):`, error);
+      return false;
+    }
+    // 발송 기록 = 멱등 키. 여기서 실패하면 다음 크론이 중복 발송한다.
+    await db.insert(emailLogsTable).values({
+      template_code: opts.templateKey,
+      to_email: opts.to,
+      to_name: opts.toName,
+      subject,
+      resend_message_id: data.id,
+      status: "Sent",
+      entity_type: "invoice",
+      entity_id: opts.invoiceId,
+    });
+    console.log(`[email] 독촉 ${opts.templateKey} → ${opts.to} (인보이스 #${opts.invoiceId})`);
+    return true;
+  } catch (err) {
+    console.error(`[email] 독촉 실패 (${opts.templateKey} #${opts.invoiceId}):`, err);
+    return false;
+  }
+}
+
 export interface PasswordResetEmailOptions {
   to: string;
   name: string;
   resetUrl: string;
   product?: "Admin" | "Guest" | "Partner";
+  /** 문안 언어. 생략하면 테넌트 기본(DEFAULT_DOC_LANG). */
+  lang?: string;
 }
 
 export async function sendPasswordResetEmail(opts: PasswordResetEmailOptions): Promise<boolean>;
@@ -254,10 +361,18 @@ export async function sendPasswordResetEmail(
   const productLabel = opts.product ?? "Admin";
   const brand = await resolveEmailBrand();
 
+  const copy = await resolveEmailCopy("account.password_reset", opts.lang, {
+    recipient: safeNameVal,
+    product_label: escapeHtml(productLabel),
+    url: safeUrl,
+    expiry_minutes: 60,
+    brand: escapeHtml(brand.name),
+  });
+
   const html = renderEmailShell({
     brand,
     footerLines: [`This email was sent to ${safeTo}`],
-    body: `
+    body: copy?.body ?? `
     <p class="lead">Hi <strong>${safeNameVal}</strong>,</p>
     <p>We received a request to reset the password for your ${escapeHtml(brand.name)} ${escapeHtml(productLabel)} account. Click the button below to set a new password:</p>
     <a href="${safeUrl}" class="btn">Reset My Password →</a>
@@ -270,7 +385,7 @@ export async function sendPasswordResetEmail(
     await client.emails.send({
       ...emailSender(),
       to: [opts.to],
-      subject: `[${brand.name} ${productLabel}] Password Reset Request`,
+      subject: copy?.subject ?? `[${brand.name} ${productLabel}] Password Reset Request`,
       html,
     });
     console.log(`[email] Password reset sent to ${opts.to}`);
@@ -288,10 +403,19 @@ export async function sendRegistrationRequestEmail(to: string, name: string, adm
     return false;
   }
   const brand = await resolveEmailBrand();
+  const copy = await resolveEmailCopy("account.registration_request", undefined, {
+    applicant_name: safeName(name),
+    applicant_email: escapeHtml(to),
+    applicant_phone: "—",
+    product_label: "Admin",
+    date: new Date().toISOString().slice(0, 10),
+    url: `${escapeHtml(adminPanelUrl)}/settings/users`,
+    brand: escapeHtml(brand.name),
+  });
   const html = renderEmailShell({
     brand,
-    tag: "New Access Request",
-    body: `
+    tag: copy ? null : "New Access Request",
+    body: copy?.body ?? `
     <p class="lead">A new admin account request has been submitted and is awaiting your approval.</p>
     <div class="box">
       <strong>${safeName(name)}</strong><br>
@@ -301,7 +425,7 @@ export async function sendRegistrationRequestEmail(to: string, name: string, adm
     <a href="${escapeHtml(adminPanelUrl)}/settings/users" class="btn">Review in Admin Panel →</a>`,
   });
   try {
-    await client.emails.send({ ...emailSender(), to: [to], subject: `[${brand.name} Admin] New Account Request`, html });
+    await client.emails.send({ ...emailSender(), to: [to], subject: copy?.subject ?? `[${brand.name} Admin] New Account Request`, html });
     console.log(`[email] Registration notification sent to ${to}`);
     return true;
   } catch (err) {
