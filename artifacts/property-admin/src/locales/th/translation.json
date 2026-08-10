@@ -4987,7 +4987,8 @@
     "cat_partner": "พันธมิตร",
     "cat_host": "ผู้ให้บริการ",
     "cat_staff": "พนักงานภายใน",
-    "cat_marketing": "การตลาด"
+    "cat_marketing": "การตลาด",
+    "cat_legacy": "รอจัดระเบียบ"
   },
   "homestayBilling": {
     "title": "การเรียกเก็บเงินโฮมสเตย์",

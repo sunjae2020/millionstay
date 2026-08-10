@@ -41,7 +41,8 @@ const KINDS = [
  * 업무 도메인은 key 의 `<domain>.` 접두사가 담는다 — 두 축으로 탐색된다.
  * 라벨은 i18n `documentTemplate.cat_<slug>`.
  */
-const CATEGORIES = ["common", "customer", "owner", "partner", "host", "staff", "marketing"] as const;
+// `legacy` 는 정리 대상 버킷이다 — 코드가 참조하지 않는 옛 템플릿이 여기 모인다.
+const CATEGORIES = ["common", "customer", "owner", "partner", "host", "staff", "marketing", "legacy"] as const;
 type Category = (typeof CATEGORIES)[number];
 
 /** key 의 `<domain>.<event>` 중 도메인 부분. 점이 없는 레거시 키는 null. */

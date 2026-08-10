@@ -4890,7 +4890,8 @@
     "cat_partner": "Partners",
     "cat_host": "Service hosts",
     "cat_staff": "Internal staff",
-    "cat_marketing": "Marketing"
+    "cat_marketing": "Marketing",
+    "cat_legacy": "Legacy (to review)"
   },
   "homestayBilling": {
     "title": "Homestay Billing",

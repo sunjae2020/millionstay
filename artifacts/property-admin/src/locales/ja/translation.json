@@ -4987,7 +4987,8 @@
     "cat_partner": "パートナー",
     "cat_host": "サービスホスト",
     "cat_staff": "社内スタッフ",
-    "cat_marketing": "マーケティング"
+    "cat_marketing": "マーケティング",
+    "cat_legacy": "整理対象"
   },
   "homestayBilling": {
     "title": "ホームステイ請求",

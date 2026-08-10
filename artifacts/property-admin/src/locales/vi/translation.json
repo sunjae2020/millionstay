@@ -4890,7 +4890,8 @@
     "cat_partner": "Đối tác",
     "cat_host": "Nhân viên dịch vụ",
     "cat_staff": "Nhân viên nội bộ",
-    "cat_marketing": "Tiếp thị"
+    "cat_marketing": "Tiếp thị",
+    "cat_legacy": "Cần rà soát"
   },
   "homestayBilling": {
     "title": "Thanh toán Homestay",

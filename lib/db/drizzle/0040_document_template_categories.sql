@@ -23,10 +23,19 @@ UPDATE document_templates
    SET category = CASE
      WHEN category IN ('Documents', '문서', 'Document', 'documents') THEN 'common'
      WHEN category IN ('Homestay', '홈스테이', 'homestay')           THEN 'customer'
+     -- 'System' 은 시드 스크립트에 없고 프로드(primary) DB 에만 있는 값이다.
+     -- UPPER_SNAKE 키 10건(BOOKING_CONFIRMED·PASSWORD_RESET·INVOICE_OVERDUE …)이
+     -- 여기 묶여 있는데, **코드 어디서도 참조하지 않는 고아 행**이고 신규 키와
+     -- 용도가 겹친다(PASSWORD_RESET ↔ account.password_reset 등).
+     -- 지우지 않고 'legacy' 로 몰아 Studio 에서 눈에 띄게 둔다 — 운영자가 내용을
+     -- 확인한 뒤 archive 하거나 삭제할 판단 재료가 된다. 조용히 common 에 섞으면
+     -- 살아 있는 템플릿처럼 보인다.
+     WHEN category IN ('System', 'system')                          THEN 'legacy'
      ELSE category
    END
  WHERE category IN ('Documents', '문서', 'Document', 'documents',
-                    'Homestay', '홈스테이', 'homestay');
+                    'Homestay', '홈스테이', 'homestay',
+                    'System', 'system');
 
 -- 미분류 행은 공통으로 모은다 (Studio 에서 "기타" 로 흩어지지 않게).
 UPDATE document_templates

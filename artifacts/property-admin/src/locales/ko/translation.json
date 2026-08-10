@@ -4987,7 +4987,8 @@
     "cat_partner": "파트너",
     "cat_host": "서비스 호스트",
     "cat_staff": "내부 직원",
-    "cat_marketing": "마케팅"
+    "cat_marketing": "마케팅",
+    "cat_legacy": "정리 대상"
   },
   "homestayBilling": {
     "title": "홈스테이 청구",

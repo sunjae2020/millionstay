@@ -136,7 +136,13 @@ function validate(rows) {
       if (t.kind === "sms") {
         // 길이는 곧 비용이다. {{변수}} 리터럴이 아니라 **표본값을 치환한 뒤** 잰다 —
         // 그러지 않으면 실제 발송분이 LMS 로 넘어가도 통과한다.
-        const { bytes, type } = smsGrade(tr.body);
+        const { bytes, type, nonEucKr } = smsGrade(tr.body);
+        // 이모지·특수문자는 EUC-KR 로 안 들어가 LMS 전환·발송 실패·글자 깨짐을 부른다.
+        if (nonEucKr.length) {
+          problems.push(`${id}: EUC-KR 로 보낼 수 없는 문자 ${nonEucKr.join(" ")} — SMS 에서 깨진다`);
+        }
+        // SOLAPI: 제목을 넣으면 본문이 90바이트 이하라도 LMS 로 자동 전환된다.
+        if (tr.subject) problems.push(`${id}: SMS 는 제목을 지원하지 않는다 — 넣으면 LMS 로 전환된다`);
         if (type === "OVER") {
           problems.push(`${id}: SMS 본문이 ${bytes}바이트 — LMS 한도(2000) 초과`);
         } else if (type === "LMS" && !t.allowLms) {

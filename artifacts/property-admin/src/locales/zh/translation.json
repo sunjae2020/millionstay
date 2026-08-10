@@ -4987,7 +4987,8 @@
     "cat_partner": "合作伙伴",
     "cat_host": "服务人员",
     "cat_staff": "内部员工",
-    "cat_marketing": "营销"
+    "cat_marketing": "营销",
+    "cat_legacy": "待整理"
   },
   "homestayBilling": {
     "title": "寄宿计费",
