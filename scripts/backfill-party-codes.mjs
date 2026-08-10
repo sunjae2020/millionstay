@@ -38,9 +38,16 @@ function periodOf(value) {
   return `${iso.slice(2, 4)}${iso.slice(5, 7)}`;
 }
 
+// Supabase의 풀러 URL은 `sslmode=require`를 달고 오는데, pg는 접속 문자열의
+// sslmode를 ssl 옵션보다 우선해서 자체 서명 체인을 거부한다. 파라미터를 떼고
+// 원격이면 검증 없이 TLS를 쓴다 — 로컬 개발 DB는 평문 그대로.
+const RAW_URL = process.env.DATABASE_URL || "";
+const CONN = RAW_URL.replace(/[?&]sslmode=[^&]*/g, "").replace(/\?$/, "");
+const IS_LOCAL = /@(localhost|127\.0\.0\.1)/.test(CONN);
+
 const db = new Client({
-  connectionString: process.env.DATABASE_URL,
-  ssl: (process.env.DATABASE_URL || "").includes("supabase.") ? { rejectUnauthorized: false } : undefined,
+  connectionString: CONN,
+  ssl: IS_LOCAL ? undefined : { rejectUnauthorized: false },
 });
 
 await db.connect();
