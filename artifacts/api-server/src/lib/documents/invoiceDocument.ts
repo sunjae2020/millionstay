@@ -180,7 +180,7 @@ export function buildInvoiceBody(inv: InvoiceDocInput, lang: DocLang = "en", ter
       ${links ? `<div style="font-size:12px;color:#999;margin-top:8px;">${links}</div>` : ""}
     </div>
 
-    <div class="section">
+    <div class="section flow">
       <h3>${t(lang, "details")}</h3>
       ${renderDetailsTable(inv, lang)}
     </div>

@@ -356,6 +356,14 @@ export function renderDocumentShell(opts: RenderShellOptions): string {
   /* Keep cards/rows from splitting awkwardly across a page boundary. */
   .section, .total-box, .info-box { page-break-inside: avoid; }
   table.lines tr { page-break-inside: avoid; }
+  /* …but a card holding an itemised table can be taller than a whole page.
+     Keeping it intact then pushes the whole card to the next page and leaves
+     the first one mostly blank (통합 청구서), so let those flow across pages
+     and repeat the table header on each one instead. */
+  .section:has(table.lines), .section.flow { page-break-inside: auto; }
+  table.lines thead { display: table-header-group; }
+  /* Never leave a section heading stranded at the bottom of a page. */
+  .section h3 { page-break-after: avoid; break-after: avoid; }
   /* Compact layout for short (single-item) documents so they fit one A4 page. */
   body.compact .doc-body { padding: 24px 32px; }
   body.compact .section { margin-bottom: 10px; padding: 12px 16px; }
