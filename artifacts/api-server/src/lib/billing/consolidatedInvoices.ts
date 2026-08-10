@@ -32,6 +32,25 @@ import {
 import { DEFAULT_CURRENCY } from "../currency";
 
 const pad = (n: number) => String(n).padStart(2, "0");
+
+/**
+ * 청구 달력의 기준 시간대. 크론이 도는 서버는 UTC 라서 `new Date()`의 UTC 날짜를 그대로
+ * 쓰면 "매월 28일에 발행" 같은 날짜 조건이 하루 어긋난다(시드니 03:10 = 전날 17:10 UTC).
+ * 테넌트의 실제 영업 시간대로 오늘 날짜를 읽는다 — Metheim 은 `BILLING_TIMEZONE=Asia/Seoul`.
+ */
+const BILLING_TZ = process.env.BILLING_TIMEZONE || "Australia/Sydney";
+
+/** 기준 시간대의 오늘 날짜(연·월·일). */
+function todayInBillingTz(): { year: number; month: number; day: number } {
+  const [y, m, d] = new Intl.DateTimeFormat("en-CA", { timeZone: BILLING_TZ })
+    .format(new Date()).split("-").map(Number);
+  return { year: y, month: m, day: d };
+}
+
+/** 한 달 뒤의 (연, 월). */
+function addMonth(year: number, month: number): { year: number; month: number } {
+  return month === 12 ? { year: year + 1, month: 1 } : { year, month: month + 1 };
+}
 const daysInMonth = (year: number, month: number) => new Date(Date.UTC(year, month, 0)).getUTCDate();
 const round2 = (n: number) => Math.round(n * 100) / 100;
 
@@ -81,9 +100,8 @@ export type ConsolidatedResult = {
 export async function generateConsolidatedInvoices(
   opts: { year?: number; month?: number; accountId?: number } = {},
 ): Promise<ConsolidatedResult> {
-  const now = new Date();
-  const year = opts.year ?? now.getUTCFullYear();
-  const month = opts.month ?? now.getUTCMonth() + 1;
+  const today = todayInBillingTz();
+  const explicitPeriod = opts.year != null && opts.month != null;
 
   const conditions = [
     isNull(accountsTable.deleted_at),
@@ -94,6 +112,24 @@ export async function generateConsolidatedInvoices(
 
   const result: ConsolidatedResult = { accounts: 0, invoices: 0, children: 0, prorated: 0, skipped: 0 };
   for (const account of accounts) {
+    // 대상 월 — 호출자가 지정하면 그대로(관리자 화면의 "지금 생성"), 아니면 계정의
+    // 발행 주기를 따른다. 생성일이 정해진 계정은 그날에만, 정해진 대상 월(기본 다음
+    // 달)로 만든다. 생성일이 없으면 예전처럼 매일 이번 달분을 다시 계산한다.
+    let year: number;
+    let month: number;
+    if (explicitPeriod) {
+      year = opts.year!;
+      month = opts.month!;
+    } else if (account.consolidated_issue_day != null) {
+      if (account.consolidated_issue_day !== today.day) continue;
+      ({ year, month } = account.consolidated_issue_next_month
+        ? addMonth(today.year, today.month)
+        : { year: today.year, month: today.month });
+    } else {
+      year = today.year;
+      month = today.month;
+    }
+
     try {
       const one = await generateForAccount(account, year, month);
       result.accounts++;
@@ -239,7 +275,10 @@ async function generateForAccount(
       billing_period: period,
       amount: String(total),
       currency,
-      status: "Sent",
+      // 세입자가 실제로 받는 문서이므로 사람이 확인하고 보낸다 — 아무도 보내지 않은
+      // 청구서를 Sent 로 만들어 두면 발송 여부를 화면에서 구분할 수 없다.
+      // 관리자가 미리보기 → 이메일 보내기를 하면 그때 Draft → Sent 로 넘어간다.
+      status: "Draft",
       due_date: dueDate,
       description,
     }).returning({ id: invoicesTable.id });

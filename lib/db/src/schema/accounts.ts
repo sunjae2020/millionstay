@@ -51,6 +51,11 @@ export const accountsTable = pgTable("accounts", {
   consolidated_billing_day: integer("consolidated_billing_day").notNull().default(1),
   // 지난달 중간 입주분(일할계산)을 이번 달 통합 청구서에 이월해 함께 청구할지.
   consolidated_prorate_enabled: boolean("consolidated_prorate_enabled").notNull().default(true),
+  // 청구서를 만드는 날(1~28). 세입자마다 "매월 28일에 다음 달분을 받는다"처럼 발행
+  // 주기가 정해져 있다(재원산업). NULL 이면 예전처럼 매일 이번 달분을 다시 계산한다.
+  consolidated_issue_day: integer("consolidated_issue_day"),
+  // 생성일에 만드는 대상이 "다음 달"인지(기본) "이번 달"인지.
+  consolidated_issue_next_month: boolean("consolidated_issue_next_month").notNull().default(true),
   status: text("status").notNull().default("Active"),
   deleted_at: timestamp("deleted_at", { withTimezone: true }),
   created_at: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),

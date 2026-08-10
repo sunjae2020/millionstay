@@ -23,6 +23,17 @@ export interface ConsolidatedBillingSettings {
   consolidated_billing_enabled?: boolean | null;
   consolidated_billing_day?: number | null;
   consolidated_prorate_enabled?: boolean | null;
+  consolidated_issue_day?: number | null;
+  consolidated_issue_next_month?: boolean | null;
+}
+
+/** 발행 주기 설정으로 다음 생성 대상 월을 계산한다(화면 안내와 "지금 생성"이 같은 값을 쓴다). */
+function targetPeriod(issueDay: number | null, nextMonth: boolean): { year: number; month: number } {
+  const now = new Date();
+  const y = now.getFullYear();
+  const m = now.getMonth() + 1;
+  if (issueDay == null || !nextMonth) return { year: y, month: m };
+  return m === 12 ? { year: y + 1, month: 1 } : { year: y, month: m + 1 };
 }
 
 type RunResult = { accounts: number; invoices: number; children: number; prorated: number; skipped: number };
@@ -40,6 +51,8 @@ export function ConsolidatedBillingCard({
   const [enabled, setEnabled] = useState(false);
   const [day, setDay] = useState(1);
   const [prorate, setProrate] = useState(true);
+  const [issueDay, setIssueDay] = useState<number | null>(null);
+  const [issueNextMonth, setIssueNextMonth] = useState(true);
   const [saving, setSaving] = useState(false);
   const [running, setRunning] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
@@ -50,6 +63,8 @@ export function ConsolidatedBillingCard({
     setEnabled(!!account.consolidated_billing_enabled);
     setDay(account.consolidated_billing_day ?? 1);
     setProrate(account.consolidated_prorate_enabled ?? true);
+    setIssueDay(account.consolidated_issue_day ?? null);
+    setIssueNextMonth(account.consolidated_issue_next_month ?? true);
   }, [account]);
 
   async function save() {
@@ -63,6 +78,8 @@ export function ConsolidatedBillingCard({
           consolidated_billing_enabled: enabled,
           consolidated_billing_day: day,
           consolidated_prorate_enabled: prorate,
+          consolidated_issue_day: issueDay,
+          consolidated_issue_next_month: issueNextMonth,
         }),
       });
       qc.invalidateQueries({ queryKey: getGetAccountQueryKey(accountId) });
@@ -74,7 +91,7 @@ export function ConsolidatedBillingCard({
     }
   }
 
-  /** 이번 달 통합 청구서를 지금 생성/재계산한다(크론과 같은 경로, 멱등). */
+  /** 설정된 대상 월(기본: 다음 달분)의 통합 청구서를 지금 생성/재계산한다 — 크론과 같은 경로, 멱등. */
   async function runNow() {
     setRunning(true);
     setError(null);
@@ -82,7 +99,7 @@ export function ConsolidatedBillingCard({
     try {
       const result = await apiJson<RunResult>("/api/v1/invoices/consolidated/run", {
         method: "POST",
-        body: JSON.stringify({ account_id: accountId }),
+        body: JSON.stringify({ account_id: accountId, ...targetPeriod(issueDay, issueNextMonth) }),
       });
       qc.invalidateQueries({ queryKey: getListInvoicesQueryKey({ account_id: accountId }) });
       qc.invalidateQueries({ queryKey: ["account-finance", String(accountId)] });
@@ -137,6 +154,52 @@ export function ConsolidatedBillingCard({
               </span>
             </div>
             <p className="text-[11px] text-muted-foreground">{t("account.consolidated_prorate_hint")}</p>
+          </div>
+
+          {/* 발행 주기 — "매월 28일에 다음 달분 생성"처럼 세입자와 합의된 주기를 넣는다. */}
+          <div className="space-y-1.5">
+            <Label className="text-xs">{t("account.consolidated_issue_day")}</Label>
+            <Select
+              value={issueDay == null ? "none" : String(issueDay)}
+              onValueChange={(v) => setIssueDay(v === "none" ? null : Number(v))}
+            >
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">{t("account.consolidated_issue_day_none")}</SelectItem>
+                {BILLING_DAYS.map((d) => (
+                  <SelectItem key={d} value={String(d)}>{t("account.consolidated_day_label", { day: d })}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <p className="text-[11px] text-muted-foreground">{t("account.consolidated_issue_day_hint")}</p>
+          </div>
+
+          <div className="space-y-1.5">
+            <Label className="text-xs">{t("account.consolidated_issue_target")}</Label>
+            <Select
+              value={issueNextMonth ? "next" : "current"}
+              onValueChange={(v) => setIssueNextMonth(v === "next")}
+              disabled={issueDay == null}
+            >
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="next">{t("account.consolidated_target_next")}</SelectItem>
+                <SelectItem value="current">{t("account.consolidated_target_current")}</SelectItem>
+              </SelectContent>
+            </Select>
+            <p className="text-[11px] text-muted-foreground">
+              {issueDay == null
+                ? t("account.consolidated_issue_target_off")
+                : t("account.consolidated_issue_target_hint", {
+                    day: issueDay,
+                    period: `${targetPeriod(issueDay, issueNextMonth).year}-${String(targetPeriod(issueDay, issueNextMonth).month).padStart(2, "0")}`,
+                  })}
+            </p>
+          </div>
+
+          {/* 생성 = 발송이 아니다. 메일은 사람이 확인하고 보낸다. */}
+          <div className="sm:col-span-2 rounded-md border border-dashed bg-muted/30 px-3 py-2">
+            <p className="text-[11px] text-muted-foreground">{t("account.consolidated_manual_send_hint")}</p>
           </div>
         </div>
       )}

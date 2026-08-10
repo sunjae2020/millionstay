@@ -153,6 +153,10 @@ const BillingSettingsBody = z.object({
   // 1~28 — 말일 근처 날짜는 달마다 존재 여부가 달라져 청구일이 흔들린다.
   consolidated_billing_day: z.number().int().min(1).max(28).optional(),
   consolidated_prorate_enabled: z.boolean().optional(),
+  // 청구서를 만드는 날(1~28). null 이면 매일 이번 달분을 다시 계산하는 기존 동작.
+  consolidated_issue_day: z.number().int().min(1).max(28).nullable().optional(),
+  // 생성일에 만드는 대상이 다음 달분인지(기본) 이번 달분인지.
+  consolidated_issue_next_month: z.boolean().optional(),
 });
 
 router.put("/v1/accounts/:id/billing-settings", async (req, res): Promise<void> => {
