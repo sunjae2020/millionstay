@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { getDefaultVariant } from "./registry";
 import { sanitiseHtml } from "./sanitise";
 import { styleToCss, tokensToCssVars, type DesignTokens } from "./tokens";
 import type { Block, BlockImage } from "./types";
@@ -155,6 +156,120 @@ function Picture({ image, className = "" }: { image: BlockImage | null; classNam
   );
 }
 
+// ── variant kit ────────────────────────────────────────────────────────────
+// Shared pieces for the alternate block layouts (`block.style.variant`). The
+// compositions are adapted from Shadcn Space blocks (MIT — shadcnspace.com);
+// every colour, radius and font here still resolves to a --cms-* design token,
+// so a variant can restyle a section but can never break brand consistency.
+
+/** Pill label above a heading — the shadcn "Badge" eyebrow, token-coloured. */
+function Pill({ children }: { children: string }) {
+  if (!children) return null;
+  return (
+    <span
+      className="inline-block px-3 py-1 text-xs font-medium border"
+      style={{ borderRadius: "999px", borderColor: "var(--cms-primary)", color: "var(--cms-primary)" }}
+    >
+      {children}
+    </span>
+  );
+}
+
+/** Centred pill + big heading + subtitle, the header every variant shares. */
+function SectionHead({
+  eyebrow,
+  title,
+  subtitle,
+}: {
+  eyebrow?: string;
+  title: string;
+  subtitle?: string;
+}) {
+  if (!eyebrow && !title && !subtitle) return null;
+  return (
+    <div className="flex flex-col items-center gap-3 text-center">
+      {eyebrow ? <Pill>{eyebrow}</Pill> : null}
+      {title && (
+        <h2
+          className="text-3xl sm:text-4xl font-semibold tracking-tight max-w-2xl"
+          style={{ fontFamily: "var(--cms-font-heading)" }}
+        >
+          {title}
+        </h2>
+      )}
+      {subtitle ? <p className="opacity-70 max-w-xl">{subtitle}</p> : null}
+    </div>
+  );
+}
+
+/**
+ * Fade-and-rise on first scroll into view. Uses IntersectionObserver rather
+ * than a motion library so the public bundle gains nothing, and does nothing
+ * at all when the OS asks for reduced motion.
+ */
+function Reveal({
+  children,
+  delay = 0,
+  className = "",
+}: {
+  children: React.ReactNode;
+  delay?: number;
+  className?: string;
+}) {
+  const [shown, setShown] = useState(false);
+  const [node, setNode] = useState<HTMLDivElement | null>(null);
+  const reduce = usePrefersReducedMotion();
+
+  useEffect(() => {
+    if (!node || reduce) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry?.isIntersecting) {
+          setShown(true);
+          observer.disconnect();
+        }
+      },
+      { threshold: 0.1 },
+    );
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, [node, reduce]);
+
+  const visible = reduce || shown;
+  return (
+    <div
+      ref={setNode}
+      className={className}
+      style={{
+        opacity: visible ? 1 : 0,
+        transform: visible ? "none" : "translateY(24px)",
+        transition: reduce ? undefined : `opacity .6s ease ${delay}ms, transform .6s ease ${delay}ms`,
+      }}
+    >
+      {children}
+    </div>
+  );
+}
+
+/**
+ * Card surface used by the variants. Border and tint are mixed from the
+ * inherited text colour rather than a fixed grey, so a card stays legible on a
+ * light `surface` section and on a dark `ink` one without a second definition.
+ */
+const CARD: React.CSSProperties = {
+  background: "color-mix(in srgb, currentColor 4%, transparent)",
+  borderColor: "color-mix(in srgb, currentColor 18%, transparent)",
+  borderRadius: "var(--cms-radius)",
+};
+
+function Check() {
+  return (
+    <svg viewBox="0 0 20 20" aria-hidden className="h-4 w-4 shrink-0 mt-0.5" style={{ color: "var(--cms-primary)" }}>
+      <path fill="currentColor" d="M7.6 14.2 3.8 10.4l1.4-1.4 2.4 2.4 6-6 1.4 1.4z" />
+    </svg>
+  );
+}
+
 function usePrefersReducedMotion() {
   const [reduce, setReduce] = useState(false);
   useEffect(() => {
@@ -269,6 +384,9 @@ function BlockBody({
   data?: BlockData;
 }) {
   const p = block.props;
+  // No stored variant (or an unknown one, which normalise drops) falls back to
+  // the block type's first registered layout — not necessarily "classic".
+  const variant = block.style?.variant ?? getDefaultVariant(block.type);
 
   switch (block.type) {
     case "section":
@@ -288,6 +406,48 @@ function BlockBody({
 
     case "hero-banner": {
       const background = img(p["backgroundImage"]);
+      if (variant === "split") {
+        return (
+          <div className="mx-auto max-w-6xl px-4 sm:px-6 py-16 sm:py-24">
+            <div className="grid gap-10 lg:grid-cols-2 lg:items-center">
+              <Reveal>
+                {str(p["subtitle"]) && <Pill>{str(p["subtitle"])}</Pill>}
+                <h1
+                  className="mt-5 text-4xl sm:text-5xl font-semibold tracking-tight leading-[1.1]"
+                  style={{ fontFamily: "var(--cms-font-heading)" }}
+                >
+                  {str(p["title"])}
+                </h1>
+                {str(p["description"]) && (
+                  <p className="mt-5 text-lg opacity-75 max-w-lg">{str(p["description"])}</p>
+                )}
+                <div className="mt-8 flex flex-wrap gap-3">
+                  <CtaButton label={str(p["buttonLabel"])} href={str(p["buttonUrl"])} />
+                  {str(p["secondaryLabel"]) && (
+                    <a
+                      href={str(p["secondaryUrl"]) || "#"}
+                      className="inline-block px-5 py-2.5 text-sm font-medium border"
+                      style={{ borderRadius: "var(--cms-radius)", borderColor: "currentColor" }}
+                    >
+                      {str(p["secondaryLabel"])}
+                    </a>
+                  )}
+                </div>
+              </Reveal>
+              {background && (
+                <Reveal delay={150}>
+                  <img
+                    src={background.url}
+                    alt={background.alt ?? ""}
+                    className="w-full h-64 sm:h-96 object-cover"
+                    style={{ borderRadius: "var(--cms-radius)" }}
+                  />
+                </Reveal>
+              )}
+            </div>
+          </div>
+        );
+      }
       return (
         <div className="relative">
           {background && (
@@ -379,6 +539,33 @@ function BlockBody({
     }
 
     case "feature-list":
+      if (variant === "cards") {
+        return (
+          <div className="flex flex-col gap-10 sm:gap-14">
+            <Reveal>
+              <SectionHead
+                eyebrow={str(p["eyebrow"])}
+                title={str(p["title"])}
+                subtitle={str(p["subtitle"])}
+              />
+            </Reveal>
+            <div className={`grid gap-6 ${GRID_COLS[str(p["columns"])] ?? GRID_COLS["3"]}`}>
+              {rows(p["items"]).map((item, index) => (
+                <Reveal key={index} delay={index * 80}>
+                  <div
+                    className="h-full border border-t-4 p-7 transition-shadow duration-300 hover:shadow-lg"
+                    style={{ ...CARD, borderTopColor: "var(--cms-primary)" }}
+                  >
+                    <Picture image={img(item["icon"])} className="h-9 w-9 object-contain" />
+                    <p className="mt-5 text-lg font-semibold">{str(item["title"])}</p>
+                    <p className="mt-2 opacity-70">{str(item["description"])}</p>
+                  </div>
+                </Reveal>
+              ))}
+            </div>
+          </div>
+        );
+      }
       return (
         <div>
           <Eyebrow className="text-center mb-2">{str(p["eyebrow"])}</Eyebrow>
@@ -434,6 +621,33 @@ function BlockBody({
       );
 
     case "statistics":
+      if (variant === "divided") {
+        return (
+          <div className="flex flex-col gap-8">
+            {str(p["title"]) && (
+              <Reveal>
+                <SectionHead title={str(p["title"])} />
+              </Reveal>
+            )}
+            <Reveal>
+              <div className="border flex flex-wrap overflow-hidden" style={CARD}>
+                {rows(p["items"]).map((item, index) => (
+                  <div
+                    key={index}
+                    className="flex-1 min-w-[45%] sm:min-w-0 p-6 border-b sm:border-b-0 sm:border-e last:border-e-0"
+                    style={{ borderColor: CARD.borderColor }}
+                  >
+                    <p className="text-3xl sm:text-4xl font-semibold" style={{ color: "var(--cms-primary)" }}>
+                      {str(item["value"])}
+                    </p>
+                    <p className="mt-2 text-sm opacity-70">{str(item["label"])}</p>
+                  </div>
+                ))}
+              </div>
+            </Reveal>
+          </div>
+        );
+      }
       return (
         <div>
           <Heading className="text-center">{str(p["title"])}</Heading>
@@ -454,6 +668,58 @@ function BlockBody({
       return <Html html={str(p["html"])} />;
 
     case "services":
+      // The overlay layout is carried by the imagery; with no images at all it
+      // would draw flat dark boxes, so that content keeps the classic cards.
+      if (variant === "overlay" && rows(p["items"]).some((item) => img(item["image"]))) {
+        return (
+          <div className="flex flex-col gap-10 sm:gap-14">
+            <Reveal>
+              <SectionHead
+                eyebrow={str(p["eyebrow"])}
+                title={str(p["title"])}
+                subtitle={str(p["subtitle"])}
+              />
+            </Reveal>
+            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+              {rows(p["items"]).map((item, index) => {
+                const image = img(item["image"]);
+                const href = str(item["href"]);
+                const card = (
+                  <div
+                    className="group relative h-72 overflow-hidden border"
+                    style={{ ...CARD, background: "var(--cms-ink)" }}
+                  >
+                    {image && (
+                      <img
+                        src={image.url}
+                        alt={image.alt ?? ""}
+                        loading="lazy"
+                        className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                      />
+                    )}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/25 to-transparent" />
+                    <div className="absolute inset-x-0 bottom-0 p-6 text-white">
+                      <p className="text-lg font-semibold">{str(item["title"])}</p>
+                      <p className="mt-1 text-sm text-white/80">{str(item["description"])}</p>
+                    </div>
+                  </div>
+                );
+                return (
+                  <Reveal key={index} delay={index * 80}>
+                    {href ? (
+                      <a href={href} className="block focus:outline-none focus-visible:ring-2">
+                        {card}
+                      </a>
+                    ) : (
+                      card
+                    )}
+                  </Reveal>
+                );
+              })}
+            </div>
+          </div>
+        );
+      }
       return (
         <div>
           <Eyebrow className="text-center mb-2">{str(p["eyebrow"])}</Eyebrow>
@@ -479,6 +745,60 @@ function BlockBody({
       );
 
     case "pricing":
+      if (variant === "highlight") {
+        return (
+          <div className="flex flex-col gap-10 sm:gap-14">
+            <Reveal>
+              <SectionHead title={str(p["title"])} subtitle={str(p["subtitle"])} />
+            </Reveal>
+            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 items-stretch">
+              {rows(p["plans"]).map((plan, index) => {
+                const featured = plan["featured"] === true;
+                return (
+                  <Reveal key={index} delay={index * 80} className="h-full">
+                    <div
+                      className={`flex h-full flex-col border p-8 ${featured ? "shadow-xl lg:-my-3 lg:py-11" : ""}`}
+                      style={{
+                        ...CARD,
+                        ...(featured
+                          ? { borderColor: "var(--cms-primary)", background: "color-mix(in srgb, var(--cms-primary) 6%, transparent)" }
+                          : {}),
+                      }}
+                    >
+                      {/* The recommended plan is marked by frame and lift, not
+                          by a label — the renderer has no locale to write one in. */}
+                      <p className="font-semibold" style={featured ? { color: "var(--cms-primary)" } : undefined}>
+                        {str(plan["name"])}
+                      </p>
+                      <p className="mt-4 text-4xl font-semibold">
+                        {str(plan["price"])}
+                        <span className="text-sm font-normal opacity-60"> {str(plan["period"])}</span>
+                      </p>
+                      {str(plan["description"]) && (
+                        <p className="mt-3 text-sm opacity-70">{str(plan["description"])}</p>
+                      )}
+                      <ul className="mt-6 space-y-2 text-sm">
+                        {str(plan["features"])
+                          .split("\n")
+                          .filter(Boolean)
+                          .map((feature, i) => (
+                            <li key={i} className="flex gap-2">
+                              <Check />
+                              <span className="opacity-80">{feature}</span>
+                            </li>
+                          ))}
+                      </ul>
+                      <div className="mt-auto pt-8">
+                        <CtaButton label={str(plan["buttonLabel"])} href={str(plan["buttonUrl"])} />
+                      </div>
+                    </div>
+                  </Reveal>
+                );
+              })}
+            </div>
+          </div>
+        );
+      }
       return (
         <div>
           <Heading className="text-center">{str(p["title"])}</Heading>
@@ -514,6 +834,34 @@ function BlockBody({
       );
 
     case "faqs":
+      if (variant === "cards") {
+        return (
+          <div className="mx-auto max-w-3xl flex flex-col gap-8">
+            <Reveal>
+              <SectionHead title={str(p["title"])} />
+            </Reveal>
+            <div className="flex flex-col gap-3">
+              {rows(p["items"]).map((item, index) => (
+                <Reveal key={index} delay={index * 60}>
+                  <details className="group border p-5" style={CARD}>
+                    <summary className="flex cursor-pointer list-none items-center justify-between gap-4 font-medium">
+                      {str(item["question"])}
+                      <span
+                        aria-hidden
+                        className="shrink-0 text-xl leading-none transition-transform duration-200 group-open:rotate-45"
+                        style={{ color: "var(--cms-primary)" }}
+                      >
+                        +
+                      </span>
+                    </summary>
+                    <Html html={str(item["answer"])} className="mt-3 opacity-75" />
+                  </details>
+                </Reveal>
+              ))}
+            </div>
+          </div>
+        );
+      }
       return (
         <div className="mx-auto max-w-3xl">
           <Heading className="text-center">{str(p["title"])}</Heading>
@@ -541,6 +889,47 @@ function BlockBody({
       );
 
     case "testimonials":
+      if (variant === "bento") {
+        const items = rows(p["items"]);
+        return (
+          <div className="flex flex-col gap-10 sm:gap-14">
+            <Reveal>
+              <SectionHead
+                eyebrow={str(p["eyebrow"])}
+                title={str(p["title"])}
+                subtitle={str(p["subtitle"])}
+              />
+            </Reveal>
+            {/* First entry takes the wide slot, the rest fill a 4-column band —
+                the asymmetry is what makes the grid read as editorial. */}
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-12">
+              {items.map((item, index) => (
+                <Reveal
+                  key={index}
+                  delay={index * 90}
+                  className={index === 0 ? "lg:col-span-8" : "lg:col-span-4"}
+                >
+                  <figure
+                    className="flex h-full flex-col justify-between gap-8 border p-8"
+                    style={index === 0 ? { ...CARD, background: "var(--cms-ink)", color: "var(--cms-on-ink)" } : CARD}
+                  >
+                    <blockquote className={index === 0 ? "text-xl lg:text-2xl font-medium" : "text-base"}>
+                      {str(item["quote"])}
+                    </blockquote>
+                    <figcaption className="flex items-center gap-3">
+                      <Picture image={img(item["avatar"])} className="h-10 w-10 rounded-full object-cover" />
+                      <div>
+                        <p className="text-sm font-medium">{str(item["author"])}</p>
+                        <p className="text-xs opacity-70">{str(item["role"])}</p>
+                      </div>
+                    </figcaption>
+                  </figure>
+                </Reveal>
+              ))}
+            </div>
+          </div>
+        );
+      }
       return (
         <div>
           <Eyebrow className="text-center mb-2">{str(p["eyebrow"])}</Eyebrow>
@@ -564,6 +953,40 @@ function BlockBody({
       );
 
     case "team":
+      // Same rule as services — no portraits, no photo cards.
+      if (variant === "cards" && rows(p["items"]).some((item) => img(item["photo"]))) {
+        return (
+          <div className="flex flex-col gap-10">
+            <Reveal>
+              <SectionHead title={str(p["title"])} />
+            </Reveal>
+            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+              {rows(p["items"]).map((item, index) => {
+                const photo = img(item["photo"]);
+                return (
+                  <Reveal key={index} delay={index * 70}>
+                    <div className="group relative h-80 overflow-hidden border" style={CARD}>
+                      {photo && (
+                        <img
+                          src={photo.url}
+                          alt={photo.alt ?? str(item["name"])}
+                          loading="lazy"
+                          className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                        />
+                      )}
+                      <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent p-5 text-white">
+                        <p className="font-semibold">{str(item["name"])}</p>
+                        <p className="text-sm text-white/80">{str(item["role"])}</p>
+                        {str(item["bio"]) && <p className="mt-1 text-xs text-white/70">{str(item["bio"])}</p>}
+                      </div>
+                    </div>
+                  </Reveal>
+                );
+              })}
+            </div>
+          </div>
+        );
+      }
       return (
         <div>
           <Heading className="text-center">{str(p["title"])}</Heading>
@@ -618,6 +1041,46 @@ function BlockBody({
     }
 
     case "cta-banner":
+      if (variant === "panel") {
+        return (
+          <div className="mx-auto max-w-6xl px-4 sm:px-6">
+            <Reveal>
+              <div
+                className="relative overflow-hidden px-6 py-14 sm:px-14 text-center"
+                style={{
+                  borderRadius: "var(--cms-radius)",
+                  background:
+                    "linear-gradient(135deg, var(--cms-primary) 0%, color-mix(in srgb, var(--cms-primary) 55%, var(--cms-ink)) 100%)",
+                  color: "var(--cms-on-primary)",
+                }}
+              >
+                <h2
+                  className="text-3xl sm:text-4xl font-semibold tracking-tight"
+                  style={{ fontFamily: "var(--cms-font-heading)" }}
+                >
+                  {str(p["title"])}
+                </h2>
+                {str(p["subtitle"]) && (
+                  <p className="mx-auto mt-4 max-w-xl opacity-90">{str(p["subtitle"])}</p>
+                )}
+                {str(p["buttonLabel"]) && (
+                  <a
+                    href={str(p["buttonUrl"]) || "#"}
+                    className="mt-8 inline-block px-6 py-3 text-sm font-semibold transition-opacity hover:opacity-90"
+                    style={{
+                      borderRadius: "var(--cms-radius)",
+                      background: "var(--cms-on-primary)",
+                      color: "var(--cms-primary)",
+                    }}
+                  >
+                    {str(p["buttonLabel"])}
+                  </a>
+                )}
+              </div>
+            </Reveal>
+          </div>
+        );
+      }
       return (
         <div className="mx-auto max-w-3xl text-center">
           <Heading>{str(p["title"])}</Heading>

@@ -24,6 +24,20 @@ export interface BlockStyle {
   spacingBottom?: SpacingStep;
   align?: BlockAlign;
   width?: BlockWidth;
+  /**
+   * Which layout the renderer draws for this block type. Absent falls back to
+   * the block's first registered variant, so reordering that list restyles
+   * saved pages without a data migration. Values are validated against the
+   * block's own `variants` — an unknown one is dropped, never rendered.
+   */
+  variant?: string;
+}
+
+/** A selectable layout for one block type. `value` is stored in BlockStyle.variant. */
+export interface BlockVariant {
+  value: string;
+  label: string;
+  description?: string;
 }
 
 export interface Block {
@@ -89,6 +103,8 @@ export interface BlockSpec {
   fields: FieldDef[];
   defaultProps: Record<string, unknown>;
   defaultStyle?: BlockStyle;
+  /** Alternate layouts offered in the editor. The FIRST entry is the default. */
+  variants?: BlockVariant[];
 }
 
 export const BLOCK_CATEGORIES = [

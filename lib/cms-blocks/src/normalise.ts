@@ -21,10 +21,16 @@ export function newBlockId(): string {
   return randomId();
 }
 
-function normaliseStyle(input: unknown): BlockStyle | undefined {
+function normaliseStyle(type: string, input: unknown): BlockStyle | undefined {
   if (!input || typeof input !== "object") return undefined;
   const raw = input as Record<string, unknown>;
   const out: BlockStyle = {};
+  // A variant only survives if the block type still offers it — a layout removed
+  // from the registry falls back to the default rendering instead of blanking.
+  const variants = getBlockSpec(type)?.variants ?? [];
+  if (typeof raw["variant"] === "string" && variants.some((v) => v.value === raw["variant"])) {
+    out.variant = raw["variant"] as string;
+  }
   if (BLOCK_BG.includes(raw["bg"] as never)) out.bg = raw["bg"] as BlockStyle["bg"];
   if (SPACING_STEPS.includes(raw["spacingTop"] as never)) out.spacingTop = raw["spacingTop"] as BlockStyle["spacingTop"];
   if (SPACING_STEPS.includes(raw["spacingBottom"] as never)) {
@@ -63,7 +69,7 @@ function normaliseBlock(input: unknown, depth: number): Block | null {
     type: spec.type,
     props: normaliseProps(type, raw["props"]),
   };
-  const style = normaliseStyle(raw["style"]);
+  const style = normaliseStyle(spec.type, raw["style"]);
   if (style) block.style = style;
   if (raw["hidden"] === true) block.hidden = true;
   if (spec.container && Array.isArray(raw["children"]) && depth < MAX_DEPTH) {

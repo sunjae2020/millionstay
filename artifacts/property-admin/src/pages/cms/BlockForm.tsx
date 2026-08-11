@@ -17,6 +17,7 @@ import {
   type Block,
   type BlockImage,
   type BlockStyle,
+  type BlockVariant,
   type FieldDef,
 } from "@workspace/cms-blocks";
 
@@ -52,7 +53,11 @@ export function BlockForm({
         />
       ))}
 
-      <StylePanel style={block.style} onChange={(style) => onChange({ ...block, style })} />
+      <StylePanel
+        style={block.style}
+        variants={spec.variants}
+        onChange={(style) => onChange({ ...block, style })}
+      />
     </div>
   );
 }
@@ -265,18 +270,48 @@ function ImageField({
  */
 export function StylePanel({
   style,
+  variants,
   onChange,
 }: {
   style: BlockStyle | undefined;
+  /** Layout choices for this block type. Fewer than two → no picker is shown. */
+  variants?: BlockVariant[];
   onChange: (style: BlockStyle) => void;
 }) {
   const { t } = useTranslation();
   const current = style ?? {};
   const set = (patch: Partial<BlockStyle>) => onChange({ ...current, ...patch });
+  // Mirrors getDefaultVariant(): no stored value means the first listed layout.
+  const activeVariant = current.variant ?? variants?.[0]?.value ?? "classic";
+  const activeVariantSpec = variants?.find((v) => v.value === activeVariant);
 
   return (
     <div className="rounded-lg border bg-muted/20 p-3 space-y-3">
       <p className="text-xs font-medium text-muted-foreground">{t("cms.style_section")}</p>
+
+      {variants && variants.length > 1 && (
+        <div>
+          <Label className="text-xs">{t("cms.style_variant")}</Label>
+          <div className="flex flex-wrap gap-1 mt-1">
+            {variants.map((v) => (
+              <button
+                key={v.value}
+                onClick={() => set({ variant: v.value })}
+                className={`rounded-md border px-2 py-1 text-xs transition-colors ${
+                  activeVariant === v.value
+                    ? "border-primary bg-primary/10 text-primary"
+                    : "text-muted-foreground hover:bg-muted"
+                }`}
+              >
+                {v.label}
+              </button>
+            ))}
+          </div>
+          {activeVariantSpec?.description && (
+            <p className="mt-1 text-[11px] text-muted-foreground">{activeVariantSpec.description}</p>
+          )}
+        </div>
+      )}
 
       <div>
         <Label className="text-xs">{t("cms.style_bg")}</Label>

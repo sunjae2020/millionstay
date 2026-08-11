@@ -1,4 +1,4 @@
-import type { BlockSpec, BlockType, FieldDef } from "./types";
+import type { BlockSpec, BlockType, BlockVariant, FieldDef } from "./types";
 
 // ---------------------------------------------------------------------------
 // The UI Blocks catalog. Each entry declares (a) the fields the admin edit form
@@ -17,6 +17,18 @@ const T = (key: string, label: string, type: FieldDef["type"] = "text"): FieldDe
 
 const IMG = (key: string, label: string): FieldDef => ({ key, label, type: "image" });
 const LINK = (key = "href", label = "링크 URL"): FieldDef => ({ key, label, type: "link" });
+
+// ── Layout variants ─────────────────────────────────────────────────────────
+// A variant changes only how a block is DRAWN — never which fields it stores.
+// The alternate layouts are adapted from Shadcn Space (MIT, shadcnspace.com):
+// the composition is borrowed, the colours come from our own design tokens.
+//
+// ORDER MATTERS: the FIRST entry is what a block renders when it has no stored
+// variant, so putting a new layout first updates every existing page at once.
+// "classic" stays in the list as a one-click way back, per block.
+const V = (value: string, label: string, description?: string): BlockVariant =>
+  description ? { value, label, description } : { value, label };
+const CLASSIC = V("classic", "기본 (이전)", "변형 도입 전의 단순한 레이아웃");
 
 export const BLOCK_SPECS: Record<BlockType, BlockSpec> = {
   // ── Layout ───────────────────────────────────────────────────────────────
@@ -61,6 +73,10 @@ export const BLOCK_SPECS: Record<BlockType, BlockSpec> = {
       overlay: true,
     },
     defaultStyle: { bg: "ink", spacingTop: 0, spacingBottom: 0, align: "center", width: "full" },
+    variants: [
+      CLASSIC,
+      V("split", "좌우 분할", "왼쪽 문구 · 오른쪽 이미지. 배경 이미지는 오른쪽 패널로 들어갑니다."),
+    ],
   },
   "hero-slider": {
     type: "hero-slider",
@@ -216,6 +232,7 @@ export const BLOCK_SPECS: Record<BlockType, BlockSpec> = {
       ],
     },
     defaultStyle: { spacingTop: 3, spacingBottom: 3, width: "contained" },
+    variants: [V("cards", "강조 카드", "상단 강조선과 호버 그림자가 있는 카드"), CLASSIC],
   },
   quote: {
     type: "quote",
@@ -283,6 +300,7 @@ export const BLOCK_SPECS: Record<BlockType, BlockSpec> = {
       ],
     },
     defaultStyle: { bg: "surface", spacingTop: 3, spacingBottom: 3 },
+    variants: [V("divided", "분할 카드", "한 장의 카드를 세로선으로 나눈 지표 띠"), CLASSIC],
   },
   "custom-html": {
     type: "custom-html",
@@ -325,6 +343,7 @@ export const BLOCK_SPECS: Record<BlockType, BlockSpec> = {
       ],
     },
     defaultStyle: { spacingTop: 3, spacingBottom: 3, width: "contained" },
+    variants: [V("overlay", "이미지 오버레이", "이미지 위에 문구를 얹고 호버 시 확대"), CLASSIC],
   },
   pricing: {
     type: "pricing",
@@ -370,6 +389,7 @@ export const BLOCK_SPECS: Record<BlockType, BlockSpec> = {
       ],
     },
     defaultStyle: { spacingTop: 3, spacingBottom: 3, width: "contained" },
+    variants: [V("highlight", "추천 강조", "추천 플랜을 띄우고 포함 항목에 체크 표시"), CLASSIC],
   },
   faqs: {
     type: "faqs",
@@ -395,6 +415,7 @@ export const BLOCK_SPECS: Record<BlockType, BlockSpec> = {
       ],
     },
     defaultStyle: { spacingTop: 3, spacingBottom: 3, width: "contained" },
+    variants: [V("cards", "카드형", "질문마다 테두리 카드와 +/− 표시"), CLASSIC],
   },
 
   // ── Trust ────────────────────────────────────────────────────────────────
@@ -451,6 +472,7 @@ export const BLOCK_SPECS: Record<BlockType, BlockSpec> = {
       ],
     },
     defaultStyle: { spacingTop: 3, spacingBottom: 3, width: "contained" },
+    variants: [V("bento", "벤토 그리드", "첫 후기를 크게 배치한 비대칭 그리드"), CLASSIC],
   },
   team: {
     type: "team",
@@ -476,6 +498,7 @@ export const BLOCK_SPECS: Record<BlockType, BlockSpec> = {
       ],
     },
     defaultStyle: { spacingTop: 3, spacingBottom: 3, width: "contained" },
+    variants: [V("cards", "사진 카드", "인물 사진 위에 이름·직함을 얹은 카드"), CLASSIC],
   },
 
   // ── Media ────────────────────────────────────────────────────────────────
@@ -548,6 +571,10 @@ export const BLOCK_SPECS: Record<BlockType, BlockSpec> = {
       buttonUrl: "/contact",
     },
     defaultStyle: { bg: "primary", spacingTop: 3, spacingBottom: 3, align: "center", width: "full" },
+    variants: [
+      CLASSIC,
+      V("panel", "라운드 패널", "둥근 그라디언트 패널. 섹션 배경은 '없음'으로 두세요."),
+    ],
   },
   "contact-block": {
     type: "contact-block",
@@ -673,4 +700,14 @@ export const BLOCK_SPEC_LIST: BlockSpec[] = Object.values(BLOCK_SPECS);
 
 export function getBlockSpec(type: string): BlockSpec | undefined {
   return BLOCK_SPECS[type as BlockType];
+}
+
+/**
+ * The layout a block of this type renders when it has no stored variant — the
+ * first entry in its `variants` list. The editor and the renderer both read it
+ * from here, so changing the list order restyles saved pages without a data
+ * migration, and no block renders something the editor cannot see.
+ */
+export function getDefaultVariant(type: string): string {
+  return getBlockSpec(type)?.variants?.[0]?.value ?? "classic";
 }
