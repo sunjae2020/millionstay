@@ -6613,5 +6613,16 @@
     "per_weekly_suffix": "/週",
     "per_daily_suffix": "/日",
     "per_monthly_suffix": "/月"
+  },
+  "product_lookup": {
+    "deposit": "保証金",
+    "monthly": "月額",
+    "weekly": "週額",
+    "daily": "日額",
+    "per_month": "/月",
+    "per_week": "/週",
+    "per_day": "/日",
+    "min_term": "最短 {{count}}{{unit}}",
+    "inactive": "無効"
   }
 }

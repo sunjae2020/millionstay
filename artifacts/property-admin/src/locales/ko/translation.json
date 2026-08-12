@@ -6613,5 +6613,16 @@
     "per_weekly_suffix": "/주",
     "per_daily_suffix": "/일",
     "per_monthly_suffix": "/월"
+  },
+  "product_lookup": {
+    "deposit": "보증금",
+    "monthly": "월",
+    "weekly": "주",
+    "daily": "일",
+    "per_month": "/월",
+    "per_week": "/주",
+    "per_day": "/일",
+    "min_term": "최소 {{count}}{{unit}}",
+    "inactive": "비활성"
   }
 }

@@ -6613,5 +6613,16 @@
     "per_weekly_suffix": "/周",
     "per_daily_suffix": "/日",
     "per_monthly_suffix": "/月"
+  },
+  "product_lookup": {
+    "deposit": "押金",
+    "monthly": "月租",
+    "weekly": "周租",
+    "daily": "日租",
+    "per_month": "/月",
+    "per_week": "/周",
+    "per_day": "/日",
+    "min_term": "最短 {{count}}{{unit}}",
+    "inactive": "停用"
   }
 }

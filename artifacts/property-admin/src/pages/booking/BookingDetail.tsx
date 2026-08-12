@@ -25,6 +25,7 @@ import {
 import { useQueryClient, useQuery, useMutation } from "@tanstack/react-query";
 import { ArrowLeft, Save, FileText, CheckCircle2, XCircle, Upload, ExternalLink, Plus, Trash2, Camera } from "lucide-react";
 import { LookupSelect } from "@/components/LookupSelect";
+import { ProductLookupSelect } from "@/components/ProductLookupSelect";
 import { AccountLookupSelect } from "@/components/AccountLookupSelect";
 import { apiFetch } from "@/lib/apiFetch";
 import { useBrand } from "@/contexts/ThemeContext";
@@ -623,7 +624,7 @@ export default function BookingDetail() {
               </div>
             </div>
             <Controller name="product_id" control={control} render={({ field }) => (
-              <LookupSelect
+              <ProductLookupSelect
                 lookupUrl="/api/v1/lookup/products"
                 placeholder={t("booking.placeholder_product")}
                 value={field.value}

@@ -18,6 +18,7 @@ import {
 import { useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, Save, Upload, Trash2 } from "lucide-react";
 import { LookupSelect } from "@/components/LookupSelect";
+import { ProductLookupSelect } from "@/components/ProductLookupSelect";
 import { AccountLookupSelect } from "@/components/AccountLookupSelect";
 import { apiJson } from "@/lib/apiFetch";
 
@@ -197,7 +198,7 @@ export default function ServiceHostDetail() {
               name="contract_product_id"
               control={control}
               render={({ field }) => (
-                <LookupSelect
+                <ProductLookupSelect
                   lookupUrl="/api/v1/lookup/products"
                   placeholder={t("service_host.search_service_placeholder")}
                   value={field.value ?? null}

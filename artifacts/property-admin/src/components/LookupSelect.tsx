@@ -24,6 +24,15 @@ export interface LookupSelectProps {
    * relabelled here — see AccountLookupSelect.
    */
   formatLabel?: (item: LookupItem) => string;
+  /**
+   * Renders the whole result row instead of a single line of text. Use when the
+   * label alone can't tell two records apart (e.g. rate-card products that share
+   * a name and only differ by unit/rent/deposit) — see ProductLookupSelect.
+   * `formatLabel` still supplies the collapsed label shown in the closed field.
+   */
+  renderItem?: (item: LookupItem) => React.ReactNode;
+  /** Widen the dialog when rows carry more than one line. */
+  dialogClassName?: string;
 }
 
 /** Every lookup returns id + display; endpoints may add their own fields. */
@@ -33,7 +42,7 @@ export interface LookupItem {
   [key: string]: unknown;
 }
 
-export function LookupSelect({ value, onChange, lookupUrl, placeholder = "Search…", displayValue, excludeIds, formatLabel }: LookupSelectProps) {
+export function LookupSelect({ value, onChange, lookupUrl, placeholder = "Search…", displayValue, excludeIds, formatLabel, renderItem, dialogClassName }: LookupSelectProps) {
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
@@ -109,7 +118,7 @@ export function LookupSelect({ value, onChange, lookupUrl, placeholder = "Search
       </div>
 
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="max-w-md">
+        <DialogContent className={dialogClassName ?? "max-w-md"}>
           <DialogHeader>
             <DialogTitle>{t('common.select')}</DialogTitle>
           </DialogHeader>
@@ -138,7 +147,7 @@ export function LookupSelect({ value, onChange, lookupUrl, placeholder = "Search
                 className="w-full text-left px-3 py-2 text-sm hover:bg-accent hover:text-accent-foreground rounded-sm transition-colors"
                 onClick={() => handleSelect(item)}
               >
-                {labelOf(item)}
+                {renderItem ? renderItem(item) : labelOf(item)}
               </button>
             ))}
           </ScrollArea>

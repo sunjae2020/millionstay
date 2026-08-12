@@ -222,9 +222,20 @@ router.get("/v1/lookup/products", async (req, res): Promise<void> => {
       currency: accommodationCatalogTable.currency,
       billing_frequency: accommodationCatalogTable.billing_frequency,
       deposit_amount: accommodationCatalogTable.deposit_amount,
+      // 같은 이름의 요금표 행(여러 "보증금 1000만원")은 붙어 있는 세대/타입과
+      // 계약 조건으로만 구별된다 — 선택 팝업이 그 정보를 다 보여주도록 함께 내려보낸다.
+      room_type: accommodationCatalogTable.room_type,
+      contract_term: accommodationCatalogTable.contract_term,
+      min_contract_period: accommodationCatalogTable.min_contract_period,
+      min_contract_period_unit: accommodationCatalogTable.min_contract_period_unit,
+      status: accommodationCatalogTable.status,
+      space_id: accommodationCatalogTable.space_id,
+      space_name: spacesTable.name,
+      space_type: spacesTable.custom_type_name,
     })
     .from(accommodationCatalogTable)
-    .where(q ? columnMatches(accommodationCatalogTable.name, q) : undefined)
+    .leftJoin(spacesTable, eq(spacesTable.id, accommodationCatalogTable.space_id))
+    .where(q ? keywordCondition(q, [accommodationCatalogTable.name, accommodationCatalogTable.product_tag, spacesTable.name]) : undefined)
     .orderBy(asc(accommodationCatalogTable.name))
     .limit(20);
   // The price is quoted in the product's OWN currency (a KRW rate card must not
@@ -236,11 +247,22 @@ router.get("/v1/lookup/products", async (req, res): Promise<void> => {
     const unit = { daily: "일", weekly: "주", monthly: "월" }[rates.base_unit];
     return {
       id: r.id,
-      display: `${r.name}${amount != null ? ` — ${formatDocMoney(amount, rates.currency)}/${unit}` : ""}`,
+      display: [
+        `${r.name}${amount != null ? ` — ${formatDocMoney(amount, rates.currency)}/${unit}` : ""}`,
+        r.space_name,
+      ].filter(Boolean).join(" · "),
       name: r.name,
       item_description: r.item_description,
       product_tag: r.product_tag,
       deposit_amount: r.deposit_amount,
+      room_type: r.room_type,
+      contract_term: r.contract_term,
+      min_contract_period: r.min_contract_period,
+      min_contract_period_unit: r.min_contract_period_unit,
+      status: r.status,
+      space_id: r.space_id,
+      space_name: r.space_name,
+      space_type: r.space_type,
       rates,
     };
   }));

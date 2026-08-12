@@ -6613,5 +6613,16 @@
     "per_weekly_suffix": "/สัปดาห์",
     "per_daily_suffix": "/วัน",
     "per_monthly_suffix": "/เดือน"
+  },
+  "product_lookup": {
+    "deposit": "เงินมัดจำ",
+    "monthly": "รายเดือน",
+    "weekly": "รายสัปดาห์",
+    "daily": "รายวัน",
+    "per_month": "/เดือน",
+    "per_week": "/สัปดาห์",
+    "per_day": "/วัน",
+    "min_term": "ขั้นต่ำ {{count}} {{unit}}",
+    "inactive": "ปิดใช้งาน"
   }
 }

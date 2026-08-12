@@ -21,6 +21,7 @@ import {
   getListContractsQueryKey, getGetContractQueryKey,
 } from "@workspace/api-client-react";
 import { LookupSelect } from "@/components/LookupSelect";
+import { ProductLookupSelect } from "@/components/ProductLookupSelect";
 import { AccountLookupSelect } from "@/components/AccountLookupSelect";
 import { ArrowLeft, Save, Trash2, CalendarDays, Plus, Pencil, List, FileDown, Eye, Mail, Receipt, ClipboardList, Wallet, Check, FileSignature, FileText, Scale } from "lucide-react";
 import { apiFetch } from "@/lib/apiFetch";
@@ -819,7 +820,7 @@ export default function ContractDetail() {
                 <div>
                   <Label>{t('contract.label_product_package')}</Label>
                   <Controller name="product_id" control={control} render={({ field }) => (
-                    <LookupSelect
+                    <ProductLookupSelect
                       lookupUrl="/api/v1/lookup/products"
                       value={field.value}
                       onChange={field.onChange}
