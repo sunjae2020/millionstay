@@ -21,6 +21,7 @@ import { useToast } from "@/hooks/use-toast";
 import { motion, AnimatePresence } from "framer-motion";
 import { CheckCircle2, ChevronLeft, ChevronRight, Home, FileText, CreditCard, Sparkles } from "lucide-react";
 import { Link } from "wouter";
+import { formatPersonName } from "@/lib/nameFormat";
 
 const steps = [
   { key: "step1", icon: Home },
@@ -382,7 +383,7 @@ export default function Booking() {
                     <div className="space-y-4">
                       <div className="rounded-lg bg-primary/5 border border-primary/20 p-4">
                         <p className="text-sm font-medium text-foreground">
-                          {t("booking.booking_as")}: <span className="text-primary">{[authGuest.first_name, authGuest.last_name].filter(Boolean).join(" ")}</span>
+                          {t("booking.booking_as")}: <span className="text-primary">{formatPersonName(authGuest.first_name, authGuest.last_name)}</span>
                         </p>
                         <p className="text-xs text-muted-foreground">{authGuest.email}</p>
                       </div>

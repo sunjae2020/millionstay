@@ -62,7 +62,9 @@
     "secure": "セキュアアクセス · {{appName}} サービスホストポータル",
     "apply_prompt": "サービスを提供しませんか？",
     "apply_cta": "サービスホストへ申請する",
-    "forgot_password": "パスワードをお忘れですか？"
+    "forgot_password": "パスワードをお忘れですか？",
+    "identifier": "メールアドレスまたは携帯番号",
+    "identifier_placeholder": "you@example.com または 010-0000-0000"
   },
   "trigger": {
     "at_checkin": "チェックイン時",

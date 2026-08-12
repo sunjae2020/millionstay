@@ -2785,7 +2785,9 @@
     "role_agent": "Agent",
     "role_owner": "Owner",
     "role_service_host": "Service Host",
-    "secure": "Secured with 256-bit encryption"
+    "secure": "Secured with 256-bit encryption",
+    "identifier": "Email or mobile",
+    "identifier_placeholder": "you@example.com or 010-0000-0000"
   },
   "inspectionSign": {
     "add_photo": "Add photo",

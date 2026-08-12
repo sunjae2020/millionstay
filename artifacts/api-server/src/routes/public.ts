@@ -45,6 +45,7 @@ import { getCompanyInfo } from "../lib/documents/theme";
 import { buildCalendar } from "../lib/ical.js";
 import { getSpaceCalendarEvents } from "../lib/spaceCalendar.js";
 import { timingSafeEqual } from "node:crypto";
+import { formatPersonName } from "../lib/nameFormat";
 
 /** Constant-time string compare that tolerates differing lengths. */
 function tokensMatch(a: string, b: string): boolean {
@@ -1398,7 +1399,7 @@ router.post("/v1/public/owner-applications", async (req, res): Promise<void> => 
   void sendApplicationAck({
     type: "landlord",
     to: email,
-    toName: `${first_name} ${last_name}`.trim(),
+    toName: formatPersonName(first_name, last_name),
     appTypeLabel: "Property Owner Application",
     ref: row.lead_ref,
     buildDoc: (): ApplicationDocInput => ({
@@ -1409,7 +1410,7 @@ router.post("/v1/public/owner-applications", async (req, res): Promise<void> => 
       sections: [{
         heading: "Applicant",
         rows: [
-          { label: "Name", value: `${first_name} ${last_name}`.trim() },
+          { label: "Name", value: formatPersonName(first_name, last_name) },
           { label: "Email", value: email },
           ...(phone ? [{ label: "Phone", value: phone }] : []),
           ...(property_address ? [{ label: "Property address", value: property_address }] : []),

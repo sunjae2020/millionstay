@@ -73,6 +73,7 @@ import {
   Target,
 } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
+import { formatPersonName } from "@/lib/nameFormat";
 
 type NavChild = {
   href: string;
@@ -625,7 +626,7 @@ function SidebarFooter({ collapsed }: { collapsed?: boolean }) {
   if (collapsed) {
     return (
       <div className="border-t border-sidebar-border px-2 py-2 flex flex-col items-center gap-1">
-        <div className="h-7 w-7 rounded-full bg-primary/10 flex items-center justify-center" title={user ? `${user.first_name ?? ""} ${user.last_name ?? ""}`.trim() || user.email : "Admin"}>
+        <div className="h-7 w-7 rounded-full bg-primary/10 flex items-center justify-center" title={user ? formatPersonName(user.first_name, user.last_name) || user.email : "Admin"}>
           <User className="h-3.5 w-3.5 text-primary" />
         </div>
         <button
@@ -647,7 +648,7 @@ function SidebarFooter({ collapsed }: { collapsed?: boolean }) {
         </div>
         <div className="flex-1 min-w-0">
           <p className="text-xs font-medium text-sidebar-foreground truncate">
-            {user ? `${user.first_name ?? ""} ${user.last_name ?? ""}`.trim() || user.email : "Admin"}
+            {user ? formatPersonName(user.first_name, user.last_name) || user.email : "Admin"}
           </p>
           <p className="text-[10px] text-sidebar-foreground/40 truncate">{user?.role ?? ""}</p>
         </div>

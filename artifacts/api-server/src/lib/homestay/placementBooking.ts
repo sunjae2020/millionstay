@@ -20,6 +20,7 @@ import {
   homestayStudentRequestsTable,
   homestayHostApplicationsTable,
 } from "@workspace/db";
+import { formatPersonName } from "../../lib/nameFormat";
 
 type Placement = typeof homestayPlacementsTable.$inferSelect;
 type Student = typeof homestayStudentRequestsTable.$inferSelect;
@@ -85,7 +86,7 @@ export async function createBookingForPlacement({
     const [acct] = await db
       .insert(accountsTable)
       .values({
-        name: `${student.student_first_name} ${student.student_last_name}`.trim(),
+        name: formatPersonName(student.student_first_name, student.student_last_name),
         account_type: "Guest",
         account_email: student.student_email ?? null,
         status: "Active",

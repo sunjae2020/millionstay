@@ -10,6 +10,7 @@ import crypto from "node:crypto";
 import { eq } from "drizzle-orm";
 import { db, partnerUsersTable, type PartnerUser } from "@workspace/db";
 import { sendPasswordResetEmail } from "./email";
+import { formatPersonName } from "../lib/nameFormat";
 
 export const PORTAL_TYPES = ["agent", "owner", "service_host"] as const;
 export type PortalTypeName = (typeof PORTAL_TYPES)[number];
@@ -46,7 +47,7 @@ export async function issuePartnerResetLink(
   const resetUrl = `${portalBaseUrl(user.portal_type)}/reset-password#token=${rawToken}`;
   return sendPasswordResetEmail({
     to: user.email,
-    name: [user.first_name, user.last_name].filter(Boolean).join(" ") || "Partner",
+    name: formatPersonName(user.first_name, user.last_name) || "Partner",
     resetUrl,
   });
 }

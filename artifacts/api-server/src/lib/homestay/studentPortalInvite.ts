@@ -22,6 +22,7 @@ import { resolveEmailBrand, renderEmailShell } from "../emailBrand";
 import { escapeHtml } from "../htmlEscape";
 import { eq } from "drizzle-orm";
 import { db, guestUsersTable, homestayStudentRequestsTable } from "@workspace/db";
+import { formatPersonName } from "../../lib/nameFormat";
 
 // Mirror guest-auth.ts constants so the provisioned token is interchangeable
 // with the existing reset flow.
@@ -118,7 +119,7 @@ export async function sendStudentPortalInvite(
 
   const emailed = await sendInviteEmail({
     to: email,
-    name: [request.student_first_name, request.student_last_name].filter(Boolean).join(" ") || email,
+    name: formatPersonName(request.student_first_name, request.student_last_name) || email,
     inviteUrl,
   });
 

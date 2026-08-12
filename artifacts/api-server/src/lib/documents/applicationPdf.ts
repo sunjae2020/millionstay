@@ -13,6 +13,7 @@ import { renderDocumentShell, escapeHtml, getCompanyInfo, formatDocMoney, type C
 import { serviceLabel, statusLabel, formatDocDate, formatDocDateTime, normalizeLang, type DocLang } from "./i18n";
 import { al, roleLabel, yesNoLabel } from "./applicationLabels";
 import type { HomestayStudentRequest, HomestayHostApplication, HomestayPlacement, ShortTermApplication } from "@workspace/db";
+import { formatPersonName } from "../../lib/nameFormat";
 
 /* ─────────────────────────────────────────────────────────────────────────────
    Input shapes
@@ -230,7 +231,7 @@ export function studentApplicationToDoc(
   const push = (s: ApplicationDocSection | null) => { if (s) sections.push(s); };
 
   push(section(L("Student"), [
-    [L("Name"), `${row.student_first_name} ${row.student_last_name}`.trim()],
+    [L("Name"), formatPersonName(row.student_first_name, row.student_last_name)],
     [L("Date of birth"), fmtDate(row.date_of_birth, lang)],
     [L("Minor (under 18)"), row.is_minor ? L("Yes") : L("No")],
     [L("Gender"), val(row.gender)],
@@ -337,7 +338,7 @@ export function hostApplicationToDoc(
   const push = (s: ApplicationDocSection | null) => { if (s) sections.push(s); };
 
   push(section(L("Host family"), [
-    [L("Name"), `${row.first_name} ${row.last_name}`.trim()],
+    [L("Name"), formatPersonName(row.first_name, row.last_name)],
     [L("Email"), val(row.email)],
     [L("Phone"), val(row.phone)],
     [L("Date of birth"), fmtDate(row.date_of_birth, lang)],
@@ -429,7 +430,7 @@ export function shortTermApplicationToDoc(
   const push = (s: ApplicationDocSection | null) => { if (s) sections.push(s); };
 
   push(section(L("Applicant"), [
-    [L("Name"), `${row.first_name} ${row.last_name}`.trim()],
+    [L("Name"), formatPersonName(row.first_name, row.last_name)],
     [L("Email"), val(row.email)],
     [L("Phone"), val(row.phone)],
     [L("Nationality"), val(row.nationality)],
@@ -503,8 +504,8 @@ export function placementToDoc(
   const L = (s: string) => al(lang, s);
   const signed = opts.signed ?? (signing?.status === "signed");
   const money = (n: unknown) => formatDocMoney(n as number, placement.currency);
-  const studentName = student ? `${student.student_first_name} ${student.student_last_name}`.trim() : "—";
-  const hostName = host ? `${host.first_name} ${host.last_name}`.trim() : "—";
+  const studentName = student ? formatPersonName(student.student_first_name, student.student_last_name) : "—";
+  const hostName = host ? formatPersonName(host.first_name, host.last_name) : "—";
 
   // Summarise a jsonb list (array of strings or {name|label|type} objects).
   const listSummary = (v: unknown): string =>

@@ -13,6 +13,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Link } from "wouter";
 import { AuthLayout } from "../components/auth-layout";
 import { Eye, EyeOff, Lock, Mail } from "lucide-react";
+import { formatPersonName } from "@/lib/nameFormat";
 
 const COUNTRIES = [
   "Australia","South Korea","China","Japan","Vietnam","India","Philippines",
@@ -78,7 +79,7 @@ export default function Register() {
       {
         onSuccess: (res) => {
           setAuth(res.token, res.user);
-          const displayName = [res.user.first_name, res.user.last_name].filter(Boolean).join(" ") || res.user.email;
+          const displayName = formatPersonName(res.user.first_name, res.user.last_name) || res.user.email;
           toast({ title: t("auth.welcome_toast"), description: t("auth.welcome_desc", { name: displayName }) });
           setLocation(redirectTo);
         },

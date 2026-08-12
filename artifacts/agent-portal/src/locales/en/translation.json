@@ -59,7 +59,9 @@
     "invalid": "Invalid credentials",
     "secure": "Secure access · {{appName}} Agent Portal",
     "apply_prompt": "Want to partner as an agent?",
-    "apply_cta": "Apply to join {{appName}}"
+    "apply_cta": "Apply to join {{appName}}",
+    "identifier": "Email or mobile",
+    "identifier_placeholder": "you@example.com or 010-0000-0000"
   },
   "dashboard": {
     "welcome": "Welcome back",

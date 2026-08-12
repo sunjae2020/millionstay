@@ -3,7 +3,9 @@ import { ilike, and, eq, isNull, SQL, asc } from "drizzle-orm";
 import { keywordCondition, columnMatches } from "../lib/listSearch";
 import { db, contactsTable, accountsTable, commissionsTable, paymentInfoTable, spacesTable, suburbsTable, propertiesTable, accommodationCatalogTable, productGroupsTable, productTypesTable, contractTypesTable, usersTable } from "@workspace/db";
 
-import { formatPersonName } from "../lib/nameFormat";
+import { formatPersonName, formatPersonLabel } from "../lib/nameFormat";
+import { productRates } from "../lib/productRates";
+import { formatDocMoney } from "../lib/documents/theme";
 
 const router: IRouter = Router();
 
@@ -23,12 +25,19 @@ router.get("/v1/lookup/contacts", async (req, res): Promise<void> => {
     first_name: contactsTable.first_name,
     last_name: contactsTable.last_name,
     email: contactsTable.email,
+    mobile_number: contactsTable.mobile_number,
   }).from(contactsTable)
     .where(conditions.length ? conditions[0] : undefined)
     .limit(20);
+  // A person is labelled 임경임_010-5252-5232 platform-wide (see formatPersonLabel).
+  // The email trails it only when there is one — KR lease tenants often have none.
   res.json(rows.map((r) => ({
     id: r.id,
-    display: `${formatPersonName(r.first_name, r.last_name)} — ${r.email}`,
+    display: [formatPersonLabel(r.first_name, r.last_name, r.mobile_number), r.email]
+      .filter(Boolean).join(" — "),
+    name: formatPersonName(r.first_name, r.last_name),
+    email: r.email,
+    mobile_number: r.mobile_number,
   })));
 });
 
@@ -203,15 +212,38 @@ router.get("/v1/lookup/product-types", async (req, res): Promise<void> => {
 router.get("/v1/lookup/products", async (req, res): Promise<void> => {
   const q = (req.query["q"] as string) || "";
   const rows = await db
-    .select({ id: accommodationCatalogTable.id, name: accommodationCatalogTable.name, price: accommodationCatalogTable.price })
+    .select({
+      id: accommodationCatalogTable.id,
+      name: accommodationCatalogTable.name,
+      item_description: accommodationCatalogTable.item_description,
+      product_tag: accommodationCatalogTable.product_tag,
+      price: accommodationCatalogTable.price,
+      weekly_rate: accommodationCatalogTable.weekly_rate,
+      currency: accommodationCatalogTable.currency,
+      billing_frequency: accommodationCatalogTable.billing_frequency,
+      deposit_amount: accommodationCatalogTable.deposit_amount,
+    })
     .from(accommodationCatalogTable)
     .where(q ? columnMatches(accommodationCatalogTable.name, q) : undefined)
     .orderBy(asc(accommodationCatalogTable.name))
     .limit(20);
-  res.json(rows.map(r => ({
-    id: r.id,
-    display: `${r.name}${r.price != null ? ` — $${r.price}/wk` : ""}`,
-  })));
+  // The price is quoted in the product's OWN currency (a KRW rate card must not
+  // render as "$583333"), and in the unit it was entered in — `rates` ships the
+  // whole 일일/주간/월간 card so the caller can label it however it likes.
+  res.json(rows.map(r => {
+    const rates = productRates(r);
+    const amount = rates[rates.base_unit];
+    const unit = { daily: "일", weekly: "주", monthly: "월" }[rates.base_unit];
+    return {
+      id: r.id,
+      display: `${r.name}${amount != null ? ` — ${formatDocMoney(amount, rates.currency)}/${unit}` : ""}`,
+      name: r.name,
+      item_description: r.item_description,
+      product_tag: r.product_tag,
+      deposit_amount: r.deposit_amount,
+      rates,
+    };
+  }));
 });
 
 router.get("/v1/lookup/contract-types", async (req, res): Promise<void> => {

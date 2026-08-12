@@ -2311,7 +2311,9 @@
     "role_agent": "에이전트",
     "role_owner": "소유주",
     "role_service_host": "서비스 호스트",
-    "secure": "256비트 암호화로 보호됩니다"
+    "secure": "256비트 암호화로 보호됩니다",
+    "identifier": "이메일 또는 휴대폰 번호",
+    "identifier_placeholder": "you@example.com 또는 010-0000-0000"
   },
   "inspectionSign": {
     "add_photo": "사진 첨부",

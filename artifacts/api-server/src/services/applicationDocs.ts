@@ -40,6 +40,7 @@ import { sendDocumentEmail, sendApplicationAckEmail } from "../lib/email.js";
 import { resolveTemplate } from "../lib/documents/templateEngine.js";
 import { getHomestayBillingSettings } from "../lib/homestay/billingSettings.js";
 import { getAckRule, type ApplicationType } from "../lib/applicationEmails.js";
+import { formatPersonName } from "../lib/nameFormat";
 
 type SigningRow = typeof contractSigningRequestsTable.$inferSelect;
 
@@ -305,7 +306,7 @@ export async function resolveRecipients(signing: SigningRow): Promise<ResolvedRe
         .where(eq(homestayStudentRequestsTable.id, signing.context_id)).limit(1);
       if (row) {
         const email = row.student_email || row.guardian_email;
-        if (email) out.applicant = { email, name: `${row.student_first_name} ${row.student_last_name}`.trim() };
+        if (email) out.applicant = { email, name: formatPersonName(row.student_first_name, row.student_last_name) };
         if (row.agent_account_id) {
           const [agent] = await db.select().from(accountsTable)
             .where(eq(accountsTable.id, row.agent_account_id)).limit(1);
@@ -315,11 +316,11 @@ export async function resolveRecipients(signing: SigningRow): Promise<ResolvedRe
     } else if (signing.context_type === "host_app") {
       const [row] = await db.select().from(homestayHostApplicationsTable)
         .where(eq(homestayHostApplicationsTable.id, signing.context_id)).limit(1);
-      if (row?.email) out.applicant = { email: row.email, name: `${row.first_name} ${row.last_name}`.trim() };
+      if (row?.email) out.applicant = { email: row.email, name: formatPersonName(row.first_name, row.last_name) };
     } else if (signing.context_type === "short_term_app") {
       const [row] = await db.select().from(shortTermApplicationsTable)
         .where(eq(shortTermApplicationsTable.id, signing.context_id)).limit(1);
-      if (row?.email) out.applicant = { email: row.email, name: `${row.first_name} ${row.last_name}`.trim() };
+      if (row?.email) out.applicant = { email: row.email, name: formatPersonName(row.first_name, row.last_name) };
     } else if (signing.context_type === "contract") {
       const [row] = await db.select().from(contractsTable)
         .where(eq(contractsTable.id, signing.context_id)).limit(1);
@@ -337,8 +338,8 @@ export async function resolveRecipients(signing: SigningRow): Promise<ResolvedRe
         const [host] = await db.select().from(homestayHostApplicationsTable)
           .where(eq(homestayHostApplicationsTable.id, placement.host_application_id)).limit(1);
         const studentEmail = student?.student_email || student?.guardian_email;
-        if (studentEmail) out.applicant = { email: studentEmail, name: `${student!.student_first_name} ${student!.student_last_name}`.trim() };
-        if (host?.email) out.host = { email: host.email, name: `${host.first_name} ${host.last_name}`.trim() };
+        if (studentEmail) out.applicant = { email: studentEmail, name: formatPersonName(student!.student_first_name, student!.student_last_name) };
+        if (host?.email) out.host = { email: host.email, name: formatPersonName(host.first_name, host.last_name) };
         if (placement.agent_account_id) {
           const [agent] = await db.select().from(accountsTable)
             .where(eq(accountsTable.id, placement.agent_account_id)).limit(1);
@@ -505,7 +506,7 @@ export async function sendServiceBriefs(placementId: number, ref: string): Promi
         eq(partnerUsersTable.is_active, true),
       )).limit(1);
       let email: string | null = pu?.email ?? null;
-      const name = (pu ? `${pu.first_name ?? ""} ${pu.last_name ?? ""}`.trim() : "") || sh.name;
+      const name = (pu ? formatPersonName(pu.first_name, pu.last_name) : "") || sh.name;
       if (!email) {
         const [acc] = await db.select().from(accountsTable).where(eq(accountsTable.id, sh.account_id)).limit(1);
         email = acc?.account_email ?? null;

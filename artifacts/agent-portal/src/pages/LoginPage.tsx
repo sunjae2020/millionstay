@@ -103,14 +103,15 @@ export default function LoginPage() {
             <form onSubmit={handleSubmit} className="space-y-5">
               <div className="space-y-1.5">
                 <label htmlFor="email" className="block text-sm font-medium text-slate-700">
-                  {t("login.email")}
+                  {t("login.identifier")}
                 </label>
                 <input
                   id="email"
-                  type="email"
+                  type="text"
+                  inputMode="email"
                   autoComplete="email"
                   required
-                  placeholder={t("login.email_placeholder")}
+                  placeholder={t("login.identifier_placeholder")}
                   value={email}
                   onChange={e => setEmail(e.target.value)}
                   className="w-full h-11 px-3 rounded-lg border border-slate-200 bg-white text-slate-900 text-sm placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:border-transparent"

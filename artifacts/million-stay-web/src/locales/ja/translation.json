@@ -2417,7 +2417,9 @@
     "role_agent": "エージェント",
     "role_owner": "オーナー",
     "role_service_host": "サービスホスト",
-    "secure": "256ビット暗号化で保護されています"
+    "secure": "256ビット暗号化で保護されています",
+    "identifier": "メールアドレスまたは携帯番号",
+    "identifier_placeholder": "you@example.com または 010-0000-0000"
   },
   "inspectionSign": {
     "add_photo": "写真を追加",

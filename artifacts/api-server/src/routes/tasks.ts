@@ -12,6 +12,7 @@ import {
 } from "@workspace/api-zod";
 
 import { keywordCondition } from "../lib/listSearch";
+import { formatPersonName } from "../lib/nameFormat";
 const router: IRouter = Router();
 
 router.get("/v1/tasks", async (req, res): Promise<void> => {
@@ -109,7 +110,7 @@ router.get("/v1/tasks/:id", async (req, res): Promise<void> => {
   if (rows[0].primary_contact_id) {
     const [c] = await db.select({ first_name: contactsTable.first_name, last_name: contactsTable.last_name })
       .from(contactsTable).where(eq(contactsTable.id, rows[0].primary_contact_id));
-    if (c) primary_contact_name = `${c.first_name} ${c.last_name}`;
+    if (c) primary_contact_name = formatPersonName(c.first_name, c.last_name);
   }
   if (rows[0].account_id) {
     const [a] = await db.select({ name: accountsTable.name })

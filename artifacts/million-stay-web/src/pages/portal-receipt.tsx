@@ -12,6 +12,7 @@ import { BrandMark } from "../components/brand-mark";
 import { COMPANY } from "../lib/company";
 import { formatCurrencyAmount } from "@/contexts/DisplayCurrencyContext";
 import { DEFAULT_CURRENCY } from "@/lib/defaultCurrency";
+import { formatPersonName } from "@/lib/nameFormat";
 
 const BRAND = "hsl(var(--primary))"; // instance primary (white-label)
 
@@ -50,7 +51,7 @@ export default function PortalReceipt() {
   const isPaid = inv?.status === "Paid";
 
   const tenantName = inv?.guest
-    ? [inv.guest.first_name, inv.guest.last_name].filter(Boolean).join(" ") || guest?.email
+    ? formatPersonName(inv.guest.first_name, inv.guest.last_name) || guest?.email
     : [guest?.first_name, guest?.last_name].filter(Boolean).join(" ") || guest?.email;
   const tenantEmail = inv?.guest?.email ?? guest?.email ?? "";
 

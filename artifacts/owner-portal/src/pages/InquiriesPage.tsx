@@ -5,6 +5,7 @@ import { useServerList } from "@/lib/useServerList";
 import { TablePagination } from "@/components/TablePagination";
 import { formatDate } from "@/lib/dateFormat";
 import { Inbox, Mail, Phone, Search } from "lucide-react";
+import { formatPersonName } from "@/lib/nameFormat";
 
 export interface Inquiry {
   id: number;
@@ -32,7 +33,7 @@ export function InquiryRow({ q }: { q: Inquiry }) {
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <p className="text-sm font-medium text-foreground">
-            {[q.first_name, q.last_name].filter(Boolean).join(" ") || "—"}
+            {formatPersonName(q.first_name, q.last_name) || "—"}
           </p>
           <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 text-xs text-muted-foreground mt-0.5">
             <a href={`mailto:${q.email}`} className="inline-flex items-center gap-1 hover:text-foreground">

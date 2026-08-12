@@ -19,6 +19,7 @@ import { requireAgentAuth, type PartnerAuthPayload } from "../middlewares/requir
 import { isCloudinaryConfigured, uploadPrivateToCloudinary, generateSignedUrl, deleteFromCloudinary, cldFolder } from "../utils/cloudinary";
 import { parsePageParams, pageMeta, paginateArray } from "../utils/pagination";
 import { decodeUploadFilename } from "../lib/uploadFilename";
+import { formatPersonName } from "../lib/nameFormat";
 
 const router: IRouter = Router();
 
@@ -29,7 +30,7 @@ router.use("/v1/agent", requireAgentAuth);
 /* ─── helpers ─── */
 function maskTenantForAgent(contact: { first_name: string | null; last_name: string | null; email: string | null }) {
   return {
-    display_name: [contact.first_name, contact.last_name].filter(Boolean).join(" ") || "—",
+    display_name: formatPersonName(contact.first_name, contact.last_name) || "—",
     email: contact.email ?? "—",
   };
 }

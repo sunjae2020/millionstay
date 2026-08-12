@@ -16,6 +16,7 @@ import {
   setLandingActive, submitDraft, updateCompliance, updateBank, HomestayApiError,
   type HomestayApplication, type HomestayDocument, type HomestayWwccRecord,
 } from "@/lib/homestay-api";
+import { formatPersonName } from "@/lib/nameFormat";
 
 const STATUS_META: Record<string, { color: string; icon: typeof CheckCircle2; key: string }> = {
   Draft: { color: "text-gray-700 bg-gray-50 border-gray-200", icon: FileEdit, key: "draft" },
@@ -563,7 +564,7 @@ export default function HostPortal() {
                 )}
               </div>
               <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3 text-sm">
-                <SummaryRow label={t("homestay.apply.first_name")} value={`${app?.first_name ?? ""} ${app?.last_name ?? ""}`.trim()} />
+                <SummaryRow label={t("homestay.apply.first_name")} value={formatPersonName(app?.first_name, app?.last_name)} />
                 <SummaryRow label={t("homestay.apply.email")} value={app?.email} />
                 <SummaryRow label={t("homestay.apply.phone")} value={app?.phone} />
                 <SummaryRow label={t("homestay.apply.address")} value={[app?.address, app?.suburb].filter(Boolean).join(", ")} />

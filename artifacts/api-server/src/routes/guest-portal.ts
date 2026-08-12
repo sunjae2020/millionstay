@@ -27,6 +27,7 @@ import { logAction } from "../utils/auditLog";
 import { getRateToAud } from "../lib/rateSnapshot";
 import multer from "multer";
 import { isCloudinaryConfigured, uploadToCloudinary, deleteFromCloudinary, cldFolder } from "../utils/cloudinary";
+import { formatPersonName } from "../lib/nameFormat";
 
 const avatarUpload = multer({
   storage: multer.memoryStorage(),
@@ -180,7 +181,7 @@ router.post("/v1/guest/bookings", async (req, res): Promise<void> => {
 
     // Send confirmation email (non-blocking, fail silently)
     if (guestUser?.email) {
-      const guestName = [guestUser.first_name, guestUser.last_name].filter(Boolean).join(" ") || "Guest";
+      const guestName = formatPersonName(guestUser.first_name, guestUser.last_name) || "Guest";
       const propertyAddress = [spaceRow.property_address, spaceRow.property_city].filter(Boolean).join(", ") || "Melbourne";
       sendBookingConfirmation({
         to: guestUser.email,

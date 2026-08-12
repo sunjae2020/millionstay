@@ -44,3 +44,45 @@ export function formatPersonName(first?: string | null, last?: string | null): s
 export function personSortKey(first?: string | null, last?: string | null): string {
   return `${(last ?? "").trim()} ${(first ?? "").trim()}`.trim().toLocaleLowerCase();
 }
+
+/* ── Phone numbers ───────────────────────────────────────────────────────────
+ * Korean mobiles are always the same shape (010-0000-0000), so a stored number
+ * may arrive as 01052525232, +82 10 5252 5232 or 010.5252.5232 and must render
+ * identically. `digitsOnly` is the comparison key (login lookup); `formatPhone`
+ * is the display form.
+ */
+
+/** Comparison key for a phone number: digits only, +82 collapsed to a 0 prefix. */
+export function phoneDigits(s?: string | null): string {
+  let d = (s ?? "").replace(/\D/g, "");
+  if (d.startsWith("82")) d = `0${d.slice(2)}`;
+  return d;
+}
+
+/** Display form of a phone number. Korean numbers get 010-0000-0000 hyphenation. */
+export function formatPhone(s?: string | null): string {
+  const raw = (s ?? "").trim();
+  if (!raw) return "";
+  const d = phoneDigits(raw);
+  // 010-5252-5232 / 011-252-5232 (mobile), 02-1234-5678 & 061-123-4567 (landline)
+  const m = /^(01[016789])(\d{3,4})(\d{4})$/.exec(d)
+    ?? /^(02)(\d{3,4})(\d{4})$/.exec(d)
+    ?? /^(0[3-6]\d)(\d{3,4})(\d{4})$/.exec(d);
+  return m ? `${m[1]}-${m[2]}-${m[3]}` : raw;
+}
+
+/**
+ * How a person is labelled across the platform: name, then mobile, joined by an
+ * underscore — 임경임_010-5252-5232. Falls back to the bare name when no mobile
+ * is on record (common for bulk-imported KR lease tenants).
+ */
+export function formatPersonLabel(
+  first?: string | null,
+  last?: string | null,
+  mobile?: string | null,
+): string {
+  const name = formatPersonName(first, last);
+  const phone = formatPhone(mobile);
+  if (!name) return phone;
+  return phone ? `${name}_${phone}` : name;
+}

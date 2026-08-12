@@ -3,6 +3,7 @@ import { DEFAULT_CURRENCY } from "../lib/currency";
 import { db, bookingsTable, contactsTable, accountsTable, spacesTable } from "@workspace/db";
 import { eq, and, SQL, inArray } from "drizzle-orm";
 import { sql } from "drizzle-orm";
+import { formatPersonName } from "../lib/nameFormat";
 
 const router: IRouter = Router();
 
@@ -48,7 +49,7 @@ router.get("/v1/reports/bookings", async (req, res): Promise<void> => {
     ]);
 
     const contactMap: Record<number, string> = Object.fromEntries(
-      contacts.map((c: any) => [c.id, `${c.first_name ?? ""} ${c.last_name ?? ""}`.trim()])
+      contacts.map((c: any) => [c.id, formatPersonName(c.first_name, c.last_name)])
     );
     const accountMap: Record<number, string> = Object.fromEntries(accounts.map((a: any) => [a.id, a.name]));
     const spaceMap: Record<number, string> = Object.fromEntries(spaces.map((s: any) => [s.id, s.name]));

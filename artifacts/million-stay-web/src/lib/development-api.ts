@@ -4,6 +4,7 @@
 // they flow into the admin Leads pipeline — no separate table. No auth: intake
 // is open, follow-up is admin-brokered.
 import { getApiBase } from "./api-base";
+import { formatPersonName } from "@/lib/nameFormat";
 
 const BASE = getApiBase();
 
@@ -137,7 +138,7 @@ export interface ListingInquiryInput {
 // back to the legacy lead endpoint if no listing id is present.
 export async function submitListingInquiry(input: ListingInquiryInput): Promise<LeadResult> {
   if (input.listing_id) {
-    const name = [input.first_name, input.last_name].filter(Boolean).join(" ").trim();
+    const name = formatPersonName(input.first_name, input.last_name).trim();
     const res = await fetch(`${BASE}/api/v1/public/sale-listings/${input.listing_id}/inquiry`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },

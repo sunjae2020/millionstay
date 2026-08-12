@@ -11,6 +11,7 @@ import { KpiCard, DashCard, Pill, ACCENT } from "@/components/dashboard/Dashboar
 import { useBrand } from "@/contexts/ThemeContext";
 
 import { ExportableTable } from "@/components/ui/ExportCsvButton";
+import { formatPersonName } from "@/lib/nameFormat";
 const LEAD_PIPELINE = ["New", "Contacted", "Qualified", "Converted"] as const;
 const PIPELINE_COLOR: Record<string, string> = {
   New: "#94a3b8", Contacted: "#3b82f6", Qualified: "#d97706", Converted: "#16a34a",
@@ -195,7 +196,7 @@ export default function CrmTab() {
                     <td className="px-3 py-2 font-mono font-medium">
                       <Link href={`/account/leads/${l.id}`} className="hover:text-primary">{l.lead_ref}</Link>
                     </td>
-                    <td className="px-3 py-2">{[l.first_name, l.last_name].filter(Boolean).join(" ") || "—"}</td>
+                    <td className="px-3 py-2">{formatPersonName(l.first_name, l.last_name) || "—"}</td>
                     <td className="px-3 py-2">{l.lead_source ?? "—"}</td>
                     <td className="px-3 py-2 text-muted-foreground">{fmtBudget(l)}</td>
                     <td className="px-3 py-2">

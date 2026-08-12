@@ -62,7 +62,9 @@
     "invalid": "資格情報が無効です",
     "secure": "セキュアアクセス · {{appName}} オーナーポータル",
     "apply_prompt": "新規オーナーの方へ",
-    "apply_cta": "パートナー登録を申請"
+    "apply_cta": "パートナー登録を申請",
+    "identifier": "メールアドレスまたは携帯番号",
+    "identifier_placeholder": "you@example.com または 010-0000-0000"
   },
   "apply": {
     "back_to_login": "ログイン画面へ戻る",

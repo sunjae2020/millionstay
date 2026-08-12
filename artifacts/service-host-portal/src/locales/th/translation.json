@@ -62,7 +62,9 @@
     "secure": "การเข้าถึงที่ปลอดภัย · {{appName}} พอร์ทัลผู้ให้บริการ",
     "apply_prompt": "ต้องการเสนอบริการของคุณใช่ไหม?",
     "apply_cta": "สมัครเป็นผู้ให้บริการ",
-    "forgot_password": "ลืมรหัสผ่าน?"
+    "forgot_password": "ลืมรหัสผ่าน?",
+    "identifier": "อีเมลหรือเบอร์มือถือ",
+    "identifier_placeholder": "you@example.com หรือ 010-0000-0000"
   },
   "trigger": {
     "at_checkin": "ที่เช็คอิน",

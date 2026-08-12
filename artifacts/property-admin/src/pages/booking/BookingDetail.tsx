@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useLocation, useParams, Link } from "wouter";
-import { formatDate } from "@/lib/date";
+import { formatDate, stayDuration, formatStayDuration } from "@/lib/date";
 import { useForm, Controller } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { Layout, PageHeader } from "@/components/Layout";
@@ -28,7 +28,8 @@ import { LookupSelect } from "@/components/LookupSelect";
 import { AccountLookupSelect } from "@/components/AccountLookupSelect";
 import { apiFetch } from "@/lib/apiFetch";
 import { useBrand } from "@/contexts/ThemeContext";
-import { SUPPORTED_CURRENCIES } from "@/lib/currency";
+import { SUPPORTED_CURRENCIES, formatMoney } from "@/lib/currency";
+import { productRates } from "@/lib/productRates";
 import { BookingConditionReports } from "./BookingConditionReports";
 import { BookingDepositSettlement } from "./BookingDepositSettlement";
 import { DocumentPreviewDialog, useDocumentPreview } from "@/components/DocumentPreviewDialog";
@@ -66,6 +67,8 @@ interface FormData {
   num_guests: number;
   product_id: number | null;
   status: string;
+  rent_due_day: string;
+  prorate_with_next_month: boolean;
 }
 
 function isoDay(date: Date) {
@@ -93,6 +96,41 @@ function calcStay(checkIn: string, checkOut: string, rate: string) {
   const weeks = parseFloat((nights / 7).toFixed(2));
   const total = rate ? parseFloat((weeks * parseFloat(rate)).toFixed(2)) : 0;
   return { nights, weeks, total };
+}
+
+/**
+ * First-period 일할 계산 for a month-billed stay.
+ *
+ * Rent falls due on `dueDay` each month; moving in after that day leaves a
+ * part-month owing. The amount is the monthly rate × days ÷ days-in-month,
+ * truncated to the nearest 1,000 for KRW/JPY exactly as the server's
+ * `roundProrata` does, so the preview matches the invoice that is later issued.
+ * Returns null when the stay starts exactly on the due day (nothing to prorate).
+ */
+function firstPeriodProration(
+  checkIn: string,
+  dueDay: string,
+  monthly: number | null,
+  currency: string,
+) {
+  if (!checkIn || !monthly) return null;
+  const day = parseInt(dueDay, 10);
+  if (!Number.isFinite(day) || day < 1 || day > 31) return null;
+  const cin = new Date(`${checkIn}T00:00:00`);
+  if (isNaN(cin.getTime())) return null;
+
+  const daysInMonth = new Date(cin.getFullYear(), cin.getMonth() + 1, 0).getDate();
+  const anchor = Math.min(day, daysInMonth);
+  // Days from check-in up to the next due date — the part-month being charged.
+  const startDay = cin.getDate();
+  if (startDay === anchor) return null;
+  const days = startDay < anchor ? anchor - startDay : daysInMonth - startDay + anchor;
+
+  const raw = (monthly * days) / daysInMonth;
+  const prorated = (currency === "KRW" || currency === "JPY")
+    ? Math.floor(raw / 1000) * 1000
+    : Math.round(raw * 100) / 100;
+  return { days, prorated, monthly, currency };
 }
 
 export default function BookingDetail() {
@@ -134,7 +172,7 @@ export default function BookingDetail() {
   const [svcPrice, setSvcPrice] = useState("");
   const [svcFreq, setSvcFreq] = useState("");
   const [svcNotes, setSvcNotes] = useState("");
-  const { currency: brandCurrency } = useBrand();
+  const { currency: brandCurrency, currencyPosition } = useBrand();
   function resetServiceForm() { setSvcName(""); setSvcType("one_time"); setSvcQty("1"); setSvcPrice(""); setSvcFreq(""); setSvcNotes(""); }
 
   const { data: booking, refetch } = useGetBooking(Number(id), { query: { enabled: !isNew, queryKey: getGetBookingQueryKey(Number(id)) } });
@@ -197,6 +235,7 @@ export default function BookingDetail() {
       account_id: null, contact_id: null, booking_source: "", customer_notes: "",
       space_id: null, check_in_date: "", check_out_date: "", agreed_weekly_rate: "",
       currency: brandCurrency, num_guests: 1, product_id: null, status: "Active",
+      rent_due_day: "", prorate_with_next_month: true,
     },
   });
 
@@ -215,6 +254,8 @@ export default function BookingDetail() {
         num_guests: booking.num_guests ?? 1,
         product_id: (booking as any).product_id ?? null,
         status: booking.status ?? "Active",
+        rent_due_day: (booking as any).rent_due_day != null ? String((booking as any).rent_due_day) : "",
+        prorate_with_next_month: (booking as any).prorate_with_next_month ?? true,
       });
     }
   }, [booking, reset]);
@@ -238,7 +279,11 @@ export default function BookingDetail() {
   const createDocMutation = useCreateBookingDocument({ mutation: { onSuccess: () => { qc.invalidateQueries({ queryKey: getListBookingDocumentsQueryKey(Number(id)) }); setUploadDocOpen(false); setDocType(""); setDocUrl(""); setDocExpiry(""); } } });
 
   const onSubmit = (data: FormData) => {
-    const payload = { ...data, num_guests: Number(data.num_guests) };
+    const payload = {
+      ...data,
+      num_guests: Number(data.num_guests),
+      rent_due_day: data.rent_due_day === "" ? null : Number(data.rent_due_day),
+    };
     if (isNew) createMutation.mutate({ data: payload });
     else updateMutation.mutate({ id: Number(id), data: payload });
   };
@@ -246,7 +291,34 @@ export default function BookingDetail() {
   const watchCheckIn = watch("check_in_date");
   const watchCheckOut = watch("check_out_date");
   const watchRate = watch("agreed_weekly_rate");
+  const watchProductId = watch("product_id");
   const stay = calcStay(watchCheckIn, watchCheckOut, watchRate);
+  // 체크인~체크아웃 전체 기간을 년·월·일로. calcStay 의 주/박 수와 함께 보여준다.
+  const duration = stayDuration(watchCheckIn, watchCheckOut);
+
+  // The rate card shown under the product picker has to follow the CURRENTLY
+  // selected product, not the saved one, so it stays truthful while editing.
+  const { data: selectedProduct } = useQuery({
+    queryKey: ["accommodation-product", watchProductId],
+    queryFn: async () => {
+      const r = await apiFetch(`/api/v1/accommodations/${watchProductId}`);
+      const body = await r.json();
+      return body?.data ?? body;
+    },
+    enabled: !!watchProductId,
+  });
+  const bookingProduct = (booking as any)?.product ?? null;
+  const product = (selectedProduct && selectedProduct.id === watchProductId)
+    ? selectedProduct
+    : (bookingProduct?.id === watchProductId ? bookingProduct : null);
+  const rates = product ? (product.rates ?? productRates(product)) : null;
+
+  const watchProrate = watch("prorate_with_next_month");
+  const watchDueDay = watch("rent_due_day");
+  // 월 단위 청구 상품일 때만 정산 방식을 묻는다.
+  const isMonthlyBilled = rates?.base_unit === "monthly"
+    || (product?.billing_frequency ?? "").toLowerCase() === "monthly";
+  const firstPeriod = firstPeriodProration(watchCheckIn, watchDueDay, rates?.monthly ?? null, rates?.currency ?? brandCurrency);
 
   const status = booking?.booking_status ?? "Draft";
   const isReadOnly = ["CheckedOut", "Cancelled"].includes(status);
@@ -372,7 +444,7 @@ export default function BookingDetail() {
                   placeholder={t("booking.placeholder_contact")}
                   value={field.value}
                   onChange={field.onChange}
-                  displayValue={booking?.contact_name ?? undefined}
+                  displayValue={(booking as any)?.contact_label ?? booking?.contact_name ?? undefined}
                 />
               )} />
             </div>
@@ -421,7 +493,20 @@ export default function BookingDetail() {
             </div>
           )}
           <div>
-            <Label>{t("booking.label_product")}</Label>
+            <div className="flex items-center justify-between gap-2">
+              <Label>{t("booking.label_product")}</Label>
+              {/* 이 상품이 실제로 세팅되는 곳 — 상품 카탈로그 상세로 바로 이동한다. */}
+              <div className="flex items-center gap-3 text-xs">
+                {watchProductId ? (
+                  <Link href={`/products/products/${watchProductId}`} className="text-primary hover:underline inline-flex items-center gap-1">
+                    <ExternalLink className="w-3 h-3" /> {t("booking.product_open_settings")}
+                  </Link>
+                ) : null}
+                <Link href="/products/products" className="text-muted-foreground hover:underline inline-flex items-center gap-1">
+                  <ExternalLink className="w-3 h-3" /> {t("booking.product_open_list")}
+                </Link>
+              </div>
+            </div>
             <Controller name="product_id" control={control} render={({ field }) => (
               <LookupSelect
                 lookupUrl="/api/v1/lookup/products"
@@ -431,6 +516,50 @@ export default function BookingDetail() {
                 displayValue={(booking as any)?.product_name ?? (booking as any)?.contract_product_name ?? undefined}
               />
             )} />
+            {product && (
+              <div className="mt-3 rounded-md border bg-gray-50 p-3 space-y-2">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="text-sm font-medium">{product.name}</p>
+                    {product.item_description && (
+                      <p className="text-xs text-muted-foreground mt-0.5">{product.item_description}</p>
+                    )}
+                  </div>
+                  <div className="flex gap-1 flex-wrap justify-end">
+                    {product.product_tag && <span className="bg-gray-200 text-gray-700 text-xs px-2 py-0.5 rounded">{product.product_tag}</span>}
+                    {product.room_type && <span className="bg-gray-200 text-gray-700 text-xs px-2 py-0.5 rounded">{product.room_type}</span>}
+                    {product.contract_term && <span className="bg-gray-200 text-gray-700 text-xs px-2 py-0.5 rounded">{product.contract_term}</span>}
+                  </div>
+                </div>
+                {/* 요금은 상품에 설정된 통화 그대로 — 한화 상품은 ₩175,000 으로 표기된다. */}
+                {rates && (
+                  <div className="grid grid-cols-3 gap-2 pt-1">
+                    {([
+                      ["daily", t("booking.rate_daily")],
+                      ["weekly", t("booking.rate_weekly")],
+                      ["monthly", t("booking.rate_monthly")],
+                    ] as const).map(([unit, label]) => (
+                      <div
+                        key={unit}
+                        className={`rounded border px-2 py-1.5 bg-white ${rates.base_unit === unit ? "border-primary" : "border-gray-200"}`}
+                      >
+                        <p className="text-[11px] text-muted-foreground">
+                          {label}{rates.base_unit === unit ? ` · ${t("booking.rate_base")}` : ""}
+                        </p>
+                        <p className="text-sm font-medium tabular-nums">
+                          {rates[unit] != null ? formatMoney(rates[unit], rates.currency, currencyPosition) : "—"}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                {product.deposit_amount != null && (
+                  <p className="text-xs text-muted-foreground">
+                    {t("booking.product_deposit")}: {formatMoney(product.deposit_amount, rates?.currency ?? product.currency, currencyPosition)}
+                  </p>
+                )}
+              </div>
+            )}
           </div>
         </div>
 
@@ -456,9 +585,22 @@ export default function BookingDetail() {
               )} />
             </div>
           </div>
-          {stay && (
-            <div className="rounded-md bg-blue-50 border border-blue-200 p-3 text-sm text-blue-800">
-              {t("booking.stay_summary", { weeks: stay.weeks, nights: stay.nights, rate: watchRate, total: stay.total.toFixed(2) })}
+          {duration && (
+            <div className="rounded-md bg-blue-50 border border-blue-200 p-3 text-sm text-blue-800 space-y-1">
+              <p className="font-medium">
+                {t("booking.stay_total_period")}: {formatStayDuration(duration, {
+                  year: t("booking.unit_year"), month: t("booking.unit_month"), day: t("booking.unit_day"),
+                })}
+                <span className="font-normal"> ({t("booking.stay_nights_count", { count: duration.nights })})</span>
+              </p>
+              {stay && (
+                <p>{t("booking.stay_summary", {
+                  weeks: stay.weeks,
+                  nights: stay.nights,
+                  rate: formatMoney(watchRate, watch("currency") || brandCurrency, currencyPosition),
+                  total: formatMoney(stay.total, watch("currency") || brandCurrency, currencyPosition),
+                })}</p>
+              )}
             </div>
           )}
         </div>
@@ -487,6 +629,62 @@ export default function BookingDetail() {
             </div>
           </div>
         </div>
+
+        {/* ── 월세 정산 방식 ─────────────────────────────────────────────────
+            월 단위로 청구되는 상품에서 달 중간에 입주하면 첫 달은 일할 금액이
+            생긴다. 그 일할분을 다음 달 월세와 한 장으로 합쳐 청구할지, 즉시
+            따로 청구할지를 예약 단위로 정한다. */}
+        {isMonthlyBilled && (
+          <div className="rounded-lg border bg-white p-4 sm:p-6 space-y-4">
+            <h3 className="text-xs font-semibold text-primary uppercase tracking-wider border-b pb-2">{t("booking.section_rent_settlement")}</h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <Label>{t("booking.label_rent_due_day")}</Label>
+                <Input
+                  type="number"
+                  min={1}
+                  max={31}
+                  {...register("rent_due_day")}
+                  className="mt-1"
+                  placeholder={t("booking.ph_rent_due_day")}
+                />
+                <p className="text-xs text-muted-foreground mt-1">{t("booking.hint_rent_due_day")}</p>
+              </div>
+              <div>
+                <Label>{t("booking.label_prorate_mode")}</Label>
+                <Controller name="prorate_with_next_month" control={control} render={({ field }) => (
+                  <Select value={field.value ? "combined" : "separate"} onValueChange={(v) => field.onChange(v === "combined")}>
+                    <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="combined">{t("booking.prorate_combined")}</SelectItem>
+                      <SelectItem value="separate">{t("booking.prorate_separate")}</SelectItem>
+                    </SelectContent>
+                  </Select>
+                )} />
+                <p className="text-xs text-muted-foreground mt-1">{t("booking.hint_prorate_mode")}</p>
+              </div>
+            </div>
+            {firstPeriod && (
+              <div className="rounded-md bg-amber-50 border border-amber-200 p-3 text-sm text-amber-900 space-y-1">
+                <p>
+                  {t("booking.prorate_first_days", { days: firstPeriod.days })} ·{" "}
+                  <span className="tabular-nums font-medium">{formatMoney(firstPeriod.prorated, firstPeriod.currency, currencyPosition)}</span>
+                </p>
+                <p>
+                  {watchProrate
+                    ? t("booking.prorate_preview_combined", {
+                        first: formatMoney(firstPeriod.prorated, firstPeriod.currency, currencyPosition),
+                        month: formatMoney(firstPeriod.monthly, firstPeriod.currency, currencyPosition),
+                        total: formatMoney(firstPeriod.prorated + firstPeriod.monthly, firstPeriod.currency, currencyPosition),
+                      })
+                    : t("booking.prorate_preview_separate", {
+                        first: formatMoney(firstPeriod.prorated, firstPeriod.currency, currencyPosition),
+                      })}
+                </p>
+              </div>
+            )}
+          </div>
+        )}
 
         {!isNew && (
           <>

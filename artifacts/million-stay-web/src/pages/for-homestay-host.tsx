@@ -19,6 +19,7 @@ import {
 import { HomestayTermsBody } from "@/lib/homestay-terms-content";
 import { ScrollToAgree } from "@/components/ScrollToAgree";
 import { HS } from "@/lib/homestay-theme";
+import { formatPersonName } from "@/lib/nameFormat";
 
 // ─── Option constants ─────────────────────────────────────────────────────────
 const GENDERS = ["Male", "Female", "Other"];
@@ -580,7 +581,7 @@ export default function ForHomestayHost() {
             <>
               <h3 className="font-semibold text-gray-800">{t("homestay.apply.review_title")}</h3>
               <div className="max-h-64 overflow-y-auto rounded-xl border border-gray-200 bg-gray-50 p-4 text-sm text-gray-600 space-y-1.5">
-                <p><strong>{t("homestay.apply.first_name")}:</strong> {f.first_name} {f.last_name}</p>
+                <p><strong>{t("homestay.apply.first_name")}:</strong> {formatPersonName(f.first_name, f.last_name)}</p>
                 <p><strong>{t("homestay.apply.email")}:</strong> {f.email}</p>
                 <p><strong>{t("homestay.apply.phone")}:</strong> {f.phone}</p>
                 <p><strong>{t("homestay.apply.address")}:</strong> {f.address}, {f.suburb}</p>

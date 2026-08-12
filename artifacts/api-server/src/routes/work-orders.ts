@@ -70,7 +70,7 @@ async function enrichWorkOrders(rows: (typeof workOrdersTable.$inferSelect)[]) {
   ]);
   for (const p of propertyRows) propertyMap[p.id] = p.name;
   for (const s of spaceRows) spaceMap[s.id] = s.name;
-  for (const c of contactRows) contactMap[c.id] = `${c.first_name} ${c.last_name}`.trim();
+  for (const c of contactRows) contactMap[c.id] = formatPersonName(c.first_name, c.last_name);
   for (const h of hostRows) hostMap[h.id] = h.name;
   for (const u of userRows) userMap[u.id] = formatPersonName(u.first_name, u.last_name) || u.email;
 

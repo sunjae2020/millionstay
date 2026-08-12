@@ -19,7 +19,11 @@ import {
   accommodationCatalogTable,
   bookingServicePhotosTable,
 } from "@workspace/db";
+import { z } from "zod/v4";
 import { logAction } from "../utils/auditLog";
+import { formatPersonName, formatPersonLabel } from "../lib/nameFormat";
+import { stayDuration } from "../lib/stayDuration";
+import { productRates } from "../lib/productRates";
 import { getRateToAud } from "../lib/rateSnapshot";
 import { resolveLeaseTermsFromProduct } from "../lib/leaseTerms";
 import { createBookingRecurringSchedule } from "../lib/billing/bookingSchedule";
@@ -38,6 +42,82 @@ import {
 
 const router: IRouter = Router();
 
+/**
+ * 월세 정산 방식 — the two settlement fields are not part of the generated
+ * `CreateBookingBody` (the OpenAPI spec predates them), so they are validated
+ * separately and merged into the write. Absent keys are left untouched.
+ */
+const RentSettlementBody = z.object({
+  rent_due_day: z.coerce.number().int().min(1).max(31).nullish(),
+  prorate_with_next_month: z.coerce.boolean().nullish(),
+}).partial();
+
+function rentSettlementPatch(body: unknown): Record<string, unknown> {
+  const parsed = RentSettlementBody.safeParse(body ?? {});
+  if (!parsed.success) return {};
+  const patch: Record<string, unknown> = {};
+  if ("rent_due_day" in (body as object)) patch["rent_due_day"] = parsed.data.rent_due_day ?? null;
+  if ("prorate_with_next_month" in (body as object)) {
+    patch["prorate_with_next_month"] = parsed.data.prorate_with_next_month ?? true;
+  }
+  return patch;
+}
+
+interface BookingRelations {
+  account?: typeof accountsTable.$inferSelect | null;
+  contact?: typeof contactsTable.$inferSelect | null;
+  space?: typeof spacesTable.$inferSelect | null;
+  property?: typeof propertiesTable.$inferSelect | null;
+  product?: typeof accommodationCatalogTable.$inferSelect | null;
+}
+
+/**
+ * Shape one booking for the API. Pure — the related rows are handed in, so the
+ * list endpoint can batch-load them once (see `buildBookingResponses`) instead
+ * of issuing five queries per booking.
+ */
+function shapeBooking(booking: typeof bookingsTable.$inferSelect, rel: BookingRelations) {
+  const { account, contact, space, property, product } = rel;
+  return {
+    ...booking,
+    account_name: account?.name ?? null,
+    // 임경임 (no separating space for CJK), with the mobile appended as
+    // 임경임_010-5252-5232 in `contact_label` for screens that show both.
+    contact_name: contact ? formatPersonName(contact.first_name, contact.last_name) : null,
+    contact_mobile: contact?.mobile_number ?? null,
+    contact_email: contact?.email ?? null,
+    contact_label: contact
+      ? formatPersonLabel(contact.first_name, contact.last_name, contact.mobile_number)
+      : null,
+    // The product/숙박 패키지 is configured in the product catalog — the booking
+    // screen links straight to it and mirrors its rate card, so `product` ships
+    // the full pricing set rather than just a name.
+    product_name: product?.name ?? null,
+    product: product
+      ? {
+          id: product.id,
+          name: product.name,
+          item_description: product.item_description ?? null,
+          product_tag: product.product_tag ?? null,
+          currency: product.currency,
+          rates: productRates(product),
+          deposit_amount: product.deposit_amount ?? null,
+          billing_frequency: product.billing_frequency ?? null,
+          term_type: product.term_type ?? null,
+          contract_term: product.contract_term ?? null,
+          room_type: product.room_type ?? null,
+          status: product.status,
+        }
+      : null,
+    stay_duration: stayDuration(booking.check_in_date, booking.check_out_date),
+    space_name: space?.name ?? null,
+    space_type: space?.space_type ?? null,
+    booking_mode: space?.booking_mode ?? null,
+    property_address: property ? `${property.address ?? ""} ${property.city ?? ""}`.trim() : null,
+  };
+}
+
+/** Single-booking loader — five point reads, then `shapeBooking`. */
 async function buildBookingResponse(booking: typeof bookingsTable.$inferSelect) {
   const [account] = booking.account_id
     ? await db.select().from(accountsTable).where(eq(accountsTable.id, booking.account_id))
@@ -51,16 +131,57 @@ async function buildBookingResponse(booking: typeof bookingsTable.$inferSelect) 
   const [property] = space?.property_id
     ? await db.select().from(propertiesTable).where(eq(propertiesTable.id, space.property_id))
     : [null];
+  const [product] = booking.product_id
+    ? await db.select().from(accommodationCatalogTable).where(eq(accommodationCatalogTable.id, booking.product_id))
+    : [null];
+  return shapeBooking(booking, { account, contact, space, property, product });
+}
 
-  return {
-    ...booking,
-    account_name: account?.name ?? null,
-    contact_name: contact ? `${contact.first_name} ${contact.last_name}`.trim() : null,
-    space_name: space?.name ?? null,
-    space_type: space?.space_type ?? null,
-    booking_mode: space?.booking_mode ?? null,
-    property_address: property ? `${property.address ?? ""} ${property.city ?? ""}`.trim() : null,
-  };
+/**
+ * List loader — five batched `inArray` reads for the whole page, regardless of
+ * how many bookings it holds. Keeps the list off the N+1 path that made other
+ * admin lists hang.
+ */
+async function buildBookingResponses(bookings: (typeof bookingsTable.$inferSelect)[]) {
+  if (bookings.length === 0) return [];
+  const ids = <T,>(xs: (T | null | undefined)[]) => [...new Set(xs.filter((x): x is T => x != null))];
+
+  const accountIds = ids(bookings.map((b) => b.account_id));
+  const contactIds = ids(bookings.map((b) => b.contact_id));
+  const spaceIds = ids(bookings.map((b) => b.space_id));
+  const productIds = ids(bookings.map((b) => b.product_id));
+
+  const [accounts, contacts, spaces, products] = await Promise.all([
+    accountIds.length ? db.select().from(accountsTable).where(inArray(accountsTable.id, accountIds)) : [],
+    contactIds.length ? db.select().from(contactsTable).where(inArray(contactsTable.id, contactIds)) : [],
+    spaceIds.length ? db.select().from(spacesTable).where(inArray(spacesTable.id, spaceIds)) : [],
+    productIds.length
+      ? db.select().from(accommodationCatalogTable).where(inArray(accommodationCatalogTable.id, productIds))
+      : [],
+  ]);
+
+  const propertyIds = ids(spaces.map((sp) => sp.property_id));
+  const properties = propertyIds.length
+    ? await db.select().from(propertiesTable).where(inArray(propertiesTable.id, propertyIds))
+    : [];
+
+  const byId = <T extends { id: number }>(rows: T[]) => new Map(rows.map((r) => [r.id, r]));
+  const accountMap = byId(accounts);
+  const contactMap = byId(contacts);
+  const spaceMap = byId(spaces);
+  const productMap = byId(products);
+  const propertyMap = byId(properties);
+
+  return bookings.map((b) => {
+    const space = b.space_id ? spaceMap.get(b.space_id) ?? null : null;
+    return shapeBooking(b, {
+      account: b.account_id ? accountMap.get(b.account_id) ?? null : null,
+      contact: b.contact_id ? contactMap.get(b.contact_id) ?? null : null,
+      space,
+      property: space?.property_id ? propertyMap.get(space.property_id) ?? null : null,
+      product: b.product_id ? productMap.get(b.product_id) ?? null : null,
+    });
+  });
 }
 
 async function generateBookingRef(): Promise<string> {
@@ -183,7 +304,7 @@ router.get("/v1/bookings", async (req, res): Promise<void> => {
     .where(and(...conditions))
     .orderBy(bookingsTable.created_at);
 
-  const enriched = await Promise.all(rows.map(buildBookingResponse));
+  const enriched = await buildBookingResponses(rows);
 
   let filtered = enriched;
   if (search) {
@@ -235,13 +356,13 @@ router.post("/v1/bookings", async (req, res): Promise<void> => {
   const [contact] = data.contact_id
     ? await db.select().from(contactsTable).where(eq(contactsTable.id, data.contact_id))
     : [null];
-  const contactName = contact ? `${contact.first_name}_${contact.last_name}`.replace(/\s+/g, "_") : "Guest";
+  const contactName = contact ? formatPersonName(contact.first_name, contact.last_name).replace(/\s+/g, "_") : "Guest";
   const name = `GuestBook_${contactName}_${new Date().toISOString().slice(0, 10)}`;
 
   const exchange_rate_to_aud = await getRateToAud((data as any).currency ?? DEFAULT_CURRENCY);
   const [row] = await db
     .insert(bookingsTable)
-    .values({ ...data, ...stayDetails, booking_ref, name, booking_status: "Draft", exchange_rate_to_aud })
+    .values({ ...data, ...rentSettlementPatch(req.body), ...stayDetails, booking_ref, name, booking_status: "Draft", exchange_rate_to_aud })
     .returning();
   res.status(201).json(await buildBookingResponse(row));
 });
@@ -282,7 +403,7 @@ router.get("/v1/bookings/calendar", async (req, res): Promise<void> => {
     const contacts = contactIds.length
       ? await db.select({ id: contactsTable.id, first_name: contactsTable.first_name, last_name: contactsTable.last_name }).from(contactsTable).where(or(...contactIds.map(id => eq(contactsTable.id, id))))
       : [];
-    const contactMap = Object.fromEntries(contacts.map(c => [c.id, `${c.first_name ?? ""} ${c.last_name ?? ""}`.trim()]));
+    const contactMap = Object.fromEntries(contacts.map(c => [c.id, formatPersonName(c.first_name, c.last_name)]));
 
     const spaceRows = spaces.map(s => ({
       id: s.id,
@@ -311,7 +432,7 @@ router.get("/v1/bookings/today/arrivals", async (req, res): Promise<void> => {
   try {
     const bookings = await db.select().from(bookingsTable)
       .where(and(eq(bookingsTable.check_in_date, today), eq(bookingsTable.booking_status, "Confirmed")));
-    const enriched = await Promise.all(bookings.map(b => buildBookingResponse(b)));
+    const enriched = await buildBookingResponses(bookings);
     res.json(enriched);
   } catch (err) {
     res.status(500).json({ error: "Failed to fetch arrivals" });
@@ -323,7 +444,7 @@ router.get("/v1/bookings/today/departures", async (req, res): Promise<void> => {
   try {
     const bookings = await db.select().from(bookingsTable)
       .where(and(eq(bookingsTable.check_out_date, today), eq(bookingsTable.booking_status, "Active")));
-    const enriched = await Promise.all(bookings.map(b => buildBookingResponse(b)));
+    const enriched = await buildBookingResponses(bookings);
     res.json(enriched);
   } catch (err) {
     res.status(500).json({ error: "Failed to fetch departures" });
@@ -364,7 +485,7 @@ router.put("/v1/bookings/:id", async (req, res): Promise<void> => {
     ? calcStayDetails(data.check_in_date, data.check_out_date, data.agreed_weekly_rate ?? existing.agreed_weekly_rate)
     : {};
 
-  const [row] = await db.update(bookingsTable).set({ ...data, ...stayDetails }).where(eq(bookingsTable.id, paramParsed.data.id)).returning();
+  const [row] = await db.update(bookingsTable).set({ ...data, ...rentSettlementPatch(req.body), ...stayDetails }).where(eq(bookingsTable.id, paramParsed.data.id)).returning();
   res.json(await buildBookingResponse(row));
 });
 

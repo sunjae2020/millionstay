@@ -62,7 +62,9 @@
     "secure": "安全访问 · {{appName}} 服务主管门户",
     "apply_prompt": "想为我们提供服务？",
     "apply_cta": "申请成为服务承包方",
-    "forgot_password": "忘记密码？"
+    "forgot_password": "忘记密码？",
+    "identifier": "邮箱或手机号",
+    "identifier_placeholder": "you@example.com 或 010-0000-0000"
   },
   "trigger": {
     "at_checkin": "入住时",

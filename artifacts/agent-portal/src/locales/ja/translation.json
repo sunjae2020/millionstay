@@ -59,7 +59,9 @@
     "invalid": "資格情報が無効です",
     "secure": "セキュアアクセス · {{appName}} エージェントポータル",
     "apply_prompt": "エージェントとして提携しませんか？",
-    "apply_cta": "{{appName}}へ申請する"
+    "apply_cta": "{{appName}}へ申請する",
+    "identifier": "メールアドレスまたは携帯番号",
+    "identifier_placeholder": "you@example.com または 010-0000-0000"
   },
   "dashboard": {
     "welcome": "おかえりなさい",

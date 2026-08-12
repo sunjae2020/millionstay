@@ -62,7 +62,9 @@
     "invalid": "Invalid credentials",
     "secure": "Secure access · {{appName}} Owner Portal",
     "apply_prompt": "New property owner?",
-    "apply_cta": "Apply to partner with us"
+    "apply_cta": "Apply to partner with us",
+    "identifier": "Email or mobile",
+    "identifier_placeholder": "you@example.com or 010-0000-0000"
   },
   "apply": {
     "back_to_login": "Back to sign in",

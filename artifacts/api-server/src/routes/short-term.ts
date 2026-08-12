@@ -17,7 +17,7 @@ import { normalizeLang } from "../lib/documents/i18n.js";
 import { sendLeadNotificationEmail } from "../lib/email.js";
 import { logAction } from "../utils/auditLog.js";
 import { parsePageParams, pageMeta } from "../utils/pagination.js";
-import { formatFirstName, formatLastName } from "../lib/nameFormat.js";
+import { formatFirstName, formatLastName, formatPersonName } from "../lib/nameFormat.js";
 
 const SHORT_TERM_ENTITY = "short_term_application";
 
@@ -74,7 +74,7 @@ shortTermPublicRouter.post("/v1/public/short-term-applications", async (req, res
     }).returning();
 
     // E-signature request — the applicant draws their signature at /sign/:token.
-    const applicantName = `${first_name} ${last_name}`.trim();
+    const applicantName = formatPersonName(first_name, last_name);
     const signers: SignerSpec[] = [
       { role: "applicant", name: applicantName, email, required: true },
     ];
@@ -161,7 +161,7 @@ shortTermAdminRouter.get("/v1/short-term-applications/:id", async (req, res): Pr
   if (row.assigned_staff_user_id != null) {
     const [u] = await db.select({ first_name: usersTable.first_name, last_name: usersTable.last_name })
       .from(usersTable).where(eq(usersTable.id, row.assigned_staff_user_id));
-    if (u) assigned_staff_name = `${u.first_name} ${u.last_name}`.trim() || null;
+    if (u) assigned_staff_name = formatPersonName(u.first_name, u.last_name) || null;
   }
   res.json({ success: true, request: { ...row, assigned_staff_name } });
 });

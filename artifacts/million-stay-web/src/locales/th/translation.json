@@ -2416,7 +2416,9 @@
     "role_agent": "ตัวแทน",
     "role_owner": "เจ้าของ",
     "role_service_host": "ผู้ให้บริการ",
-    "secure": "ปกป้องด้วยการเข้ารหัส 256 บิต"
+    "secure": "ปกป้องด้วยการเข้ารหัส 256 บิต",
+    "identifier": "อีเมลหรือเบอร์มือถือ",
+    "identifier_placeholder": "you@example.com หรือ 010-0000-0000"
   },
   "inspectionSign": {
     "add_photo": "แนบรูป",

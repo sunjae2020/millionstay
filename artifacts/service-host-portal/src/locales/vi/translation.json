@@ -54,7 +54,9 @@
     "secure": "Truy cập an toàn · Cổng Đối Tác Dịch Vụ {{appName}}",
     "apply_prompt": "Bạn muốn cung cấp dịch vụ?",
     "apply_cta": "Đăng ký trở thành đối tác dịch vụ",
-    "forgot_password": "Quên mật khẩu?"
+    "forgot_password": "Quên mật khẩu?",
+    "identifier": "Email hoặc số di động",
+    "identifier_placeholder": "you@example.com hoặc 010-0000-0000"
   },
   "trigger": {
     "at_checkin": "Khi Nhận Phòng",

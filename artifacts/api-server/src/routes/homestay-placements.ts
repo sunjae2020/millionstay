@@ -276,11 +276,11 @@ homestayPlacementAdminRouter.post("/v1/homestay-placements/:id/contract", async 
     const signers: SignerSpec[] = [
       {
         role: "student",
-        name: `${student.student_first_name} ${student.student_last_name}`.trim(),
+        name: formatPersonName(student.student_first_name, student.student_last_name),
         email: student.student_email ?? student.guardian_email ?? "",
         required: true,
       },
-      { role: "host", name: `${host.first_name} ${host.last_name}`.trim(), email: host.email, required: true },
+      { role: "host", name: formatPersonName(host.first_name, host.last_name), email: host.email, required: true },
     ];
     if (student.is_minor) {
       signers.splice(1, 0, { role: "guardian", name: student.guardian_name ?? "Guardian", email: student.guardian_email ?? "", required: true });
@@ -474,7 +474,7 @@ homestayPlacementAdminRouter.post("/v1/homestay-placement-payments/:paymentId/se
     if (studentEmail && process.env.RESEND_API_KEY && session.url) {
       const vars = {
         ref: row.placement_ref,
-        name: student ? `${student.student_first_name} ${student.student_last_name}`.trim() : "there",
+        name: student ? formatPersonName(student.student_first_name, student.student_last_name) : "there",
         amount: `${pay.currency} ${Number(pay.amount).toLocaleString("en-AU", { minimumFractionDigits: 2 })}`,
         period: pay.period_start ?? "",
         pay_url: session.url,

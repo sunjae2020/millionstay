@@ -51,7 +51,9 @@
     "invalid": "Thông tin đăng nhập không hợp lệ",
     "secure": "Truy cập an toàn · Cổng thông tin Đại lý {{appName}}",
     "apply_prompt": "Muốn trở thành đối tác đại lý?",
-    "apply_cta": "Đăng ký tham gia {{appName}}"
+    "apply_cta": "Đăng ký tham gia {{appName}}",
+    "identifier": "Email hoặc số di động",
+    "identifier_placeholder": "you@example.com hoặc 010-0000-0000"
   },
   "dashboard": {
     "welcome": "Chào mừng trở lại",

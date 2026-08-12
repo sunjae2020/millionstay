@@ -9,6 +9,7 @@ import {
   LayoutDashboard, Briefcase, CalendarDays, DollarSign,
   LogOut, User, ChevronRight, Menu, X, Sun, Moon, LifeBuoy, Wrench, FolderOpen,
 } from "lucide-react";
+import { formatPersonName } from "@/lib/nameFormat";
 
 // White-label logo: tenants set VITE_LOGO_URL (e.g. MetHeim's teal wordmark).
 // When present we use it everywhere, knocked white only on dark surfaces (dark
@@ -123,7 +124,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
             </div>
             <div className="flex-1 min-w-0">
               <div className="text-sm font-medium text-sidebar-foreground truncate">
-                {user?.first_name} {user?.last_name}
+                {formatPersonName(user?.first_name, user?.last_name)}
               </div>
               <div className="text-xs text-sidebar-accent-foreground truncate">{user?.email}</div>
             </div>

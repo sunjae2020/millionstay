@@ -16,7 +16,7 @@ import {
   accommodationCatalogTable,
 } from "@workspace/db";
 import { generateHomestayRef } from "../lib/homestayRef.js";
-import { formatFirstName, formatLastName } from "../lib/nameFormat.js";
+import { formatFirstName, formatLastName, formatPersonName } from "../lib/nameFormat.js";
 import { signPartnerJWT, requireHomestayAuth, invalidatePartnerCache, type PartnerAuthPayload } from "../middlewares/requirePartnerAuth.js";
 import { createSigningRequest } from "../services/contractSigning.js";
 import { renderApplicationPdf } from "../services/applicationDocs.js";
@@ -109,7 +109,7 @@ async function ensureHomestayListings(app: typeof homestayHostApplicationsTable.
   }
 
   const [property] = await db.insert(propertiesTable).values({
-    name: `${app.first_name} ${app.last_name}`.trim() + " — Homestay",
+    name: formatPersonName(app.first_name, app.last_name) + " — Homestay",
     address: app.address ?? null,
     suburb_id,
     owner_account_id: app.account_id,
@@ -204,7 +204,7 @@ homestayPublicRouter.post("/v1/public/homestay-host-applications", async (req, r
 
     // 1) Account (container) + 2) partner_user (host portal login, active immediately)
     const [account] = await db.insert(accountsTable).values({
-      name: `${first_name} ${last_name}`.trim(),
+      name: formatPersonName(first_name, last_name),
       account_type: "HomestayHost",
       account_email: email,
       phone1: body.phone ?? null,
@@ -250,7 +250,7 @@ homestayPublicRouter.post("/v1/public/homestay-host-applications", async (req, r
         const signing = await createSigningRequest({
           contextType: "host_app",
           contextId: appRow!.id,
-          signers: [{ role: "host", name: `${first_name} ${last_name}`.trim(), email, required: true }],
+          signers: [{ role: "host", name: formatPersonName(first_name, last_name), email, required: true }],
         });
         signing_token = signing.token;
       } catch (e) {
@@ -273,7 +273,7 @@ homestayPublicRouter.post("/v1/public/homestay-host-applications", async (req, r
               kind: "application",
               entityType: "homestay_host_application",
               entityId: appRow!.id,
-              party: [`${first_name ?? ""} ${last_name ?? ""}`.trim()],
+              party: [formatPersonName(first_name, last_name)],
               issueDate: appRow!.created_at,
             });
             attachments = [{ filename: `${filename}.pdf`, content: pdf }];

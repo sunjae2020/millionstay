@@ -62,7 +62,9 @@
     "invalid": "잘못된 자격 증명",
     "secure": "보안 액세스 · {{appName}} 오너 포털",
     "apply_prompt": "처음이신가요?",
-    "apply_cta": "자산 위탁 신청하기"
+    "apply_cta": "자산 위탁 신청하기",
+    "identifier": "이메일 또는 휴대폰 번호",
+    "identifier_placeholder": "you@example.com 또는 010-0000-0000"
   },
   "apply": {
     "back_to_login": "로그인으로 돌아가기",

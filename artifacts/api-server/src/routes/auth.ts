@@ -13,6 +13,7 @@ import {
 } from "../lib/refreshTokens";
 import { validatePassword } from "../utils/passwordPolicy";
 import { checkLockout, recordAttempt } from "../lib/loginLockout";
+import { formatPersonName } from "../lib/nameFormat";
 
 function clientMeta(req: any) {
   const ip =
@@ -275,7 +276,7 @@ router.post("/v1/auth/forgot-password", async (req, res): Promise<void> => {
     // Token in URL FRAGMENT (#) so it isn't sent to the server in Referer headers
     // and doesn't end up in access logs of any embedded resource.
     const resetUrl = `${adminBase}/reset-password#token=${rawToken}`;
-    const name = `${user.first_name} ${user.last_name}`.trim() || user.email;
+    const name = formatPersonName(user.first_name, user.last_name) || user.email;
 
     await sendPasswordResetEmail({ to: user.email, name, resetUrl, product: "Admin" });
   } catch (err) {

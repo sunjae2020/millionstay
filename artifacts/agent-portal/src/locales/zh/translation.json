@@ -59,7 +59,9 @@
     "invalid": "凭证无效",
     "secure": "安全访问 · {{appName}} 代理门户",
     "apply_prompt": "想成为合作经纪人？",
-    "apply_cta": "申请加入 {{appName}}"
+    "apply_cta": "申请加入 {{appName}}",
+    "identifier": "邮箱或手机号",
+    "identifier_placeholder": "you@example.com 或 010-0000-0000"
   },
   "dashboard": {
     "welcome": "欢迎回来",

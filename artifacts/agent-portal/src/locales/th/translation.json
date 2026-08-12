@@ -59,7 +59,9 @@
     "invalid": "ข้อมูลรับรองไม่ถูกต้อง",
     "secure": "การเข้าถึงที่ปลอดภัย · {{appName}} พอร์ทัลตัวแทน",
     "apply_prompt": "ต้องการเป็นเอเจนต์ร่วมกับเราใช่ไหม?",
-    "apply_cta": "สมัครร่วมงานกับ {{appName}}"
+    "apply_cta": "สมัครร่วมงานกับ {{appName}}",
+    "identifier": "อีเมลหรือเบอร์มือถือ",
+    "identifier_placeholder": "you@example.com หรือ 010-0000-0000"
   },
   "dashboard": {
     "welcome": "ยินดีต้อนรับกลับ",

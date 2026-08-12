@@ -21,6 +21,7 @@ import { Label } from "@/components/ui/label";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
+import { formatPersonName } from "@/lib/nameFormat";
 
 interface AdminUser {
   id: number;
@@ -243,7 +244,7 @@ export function UserManagement() {
                     <User className="h-4 w-4 text-amber-600" />
                   </div>
                   <div>
-                    <p className="text-sm font-medium">{user.first_name} {user.last_name}</p>
+                    <p className="text-sm font-medium">{formatPersonName(user.first_name, user.last_name)}</p>
                     <p className="text-xs text-muted-foreground">{user.email}</p>
                   </div>
                 </div>
@@ -346,7 +347,7 @@ export function UserManagement() {
                           <Checkbox
                             checked={selectedIds.has(user.id)}
                             onCheckedChange={() => toggleSelect(user.id)}
-                            aria-label={t("settings_users.select_user_aria", { name: `${user.first_name} ${user.last_name}` })}
+                            aria-label={t("settings_users.select_user_aria", { name: formatPersonName(user.first_name, user.last_name) })}
                           />
                         )}
                       </div>
@@ -360,7 +361,7 @@ export function UserManagement() {
                     </div>
                     <div>
                       <p className="text-sm font-medium">
-                        {user.first_name} {user.last_name}
+                        {formatPersonName(user.first_name, user.last_name)}
                         {!user.first_name && !user.last_name && <span className="text-muted-foreground">—</span>}
                       </p>
                       <p className="text-xs text-muted-foreground">{user.email}</p>
@@ -420,7 +421,7 @@ export function UserManagement() {
             <AlertDialogDescription>
               {deleteTarget && (
                 <span>
-                  <strong>{deleteTarget.first_name} {deleteTarget.last_name}</strong> ({deleteTarget.email})
+                  <strong>{formatPersonName(deleteTarget.first_name, deleteTarget.last_name)}</strong> ({deleteTarget.email})
                   {isSuperAdmin
                     ? t("settings_users.remove_user_desc_superadmin")
                     : t("settings_users.remove_user_desc_admin")}

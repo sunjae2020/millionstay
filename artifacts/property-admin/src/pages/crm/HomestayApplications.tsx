@@ -101,7 +101,7 @@ export default function HomestayApplications() {
       {
         key: "host",
         header: "homestay.col_host",
-        sortAccessor: (a) => `${a.first_name} ${a.last_name}`,
+        sortAccessor: (a) => formatPersonName(a.first_name, a.last_name),
         cell: (a) => (
           <Link href={`/account/homestay-applications/${a.id}`} className="font-medium hover:underline">
             {formatPersonName(a.first_name, a.last_name)}

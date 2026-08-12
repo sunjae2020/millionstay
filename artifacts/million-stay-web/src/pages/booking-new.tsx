@@ -27,6 +27,7 @@ import { COMPANY } from "../lib/company";
 import { formatCurrencyAmount } from "@/contexts/DisplayCurrencyContext";
 import { DEFAULT_CURRENCY } from "@/lib/defaultCurrency";
 import { PRICE_UNIT } from "@/lib/priceUnit";
+import { formatPersonName } from "@/lib/nameFormat";
 
 // Instance base currency (KRW for Metheim, AUD default) + rate-period suffix.
 // De-Australianises the booking flow: money() renders ₩ for a Korean instance,
@@ -292,7 +293,7 @@ export default function BookingNew() {
   /* form state */
   const [numGuests, setNumGuests]           = useState(1);
   const [specialRequests, setSpecialRequests] = useState("");
-  const [guestName, setGuestName]           = useState(guest ? [guest.first_name, guest.last_name].filter(Boolean).join(" ") : "");
+  const [guestName, setGuestName]           = useState(guest ? formatPersonName(guest.first_name, guest.last_name) : "");
   const [guestEmail, setGuestEmail]         = useState(guest?.email ?? "");
   const [guestPhone, setGuestPhone]         = useState("");
   const [selectedServices, setSelectedServices] = useState<number[]>([]);

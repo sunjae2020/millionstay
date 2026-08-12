@@ -54,7 +54,9 @@
     "invalid": "Thông tin đăng nhập không hợp lệ",
     "secure": "Truy cập bảo mật · Cổng thông tin Chủ sở hữu {{appName}}",
     "apply_prompt": "Chủ sở hữu bất động sản mới?",
-    "apply_cta": "Đăng ký hợp tác với chúng tôi"
+    "apply_cta": "Đăng ký hợp tác với chúng tôi",
+    "identifier": "Email hoặc số di động",
+    "identifier_placeholder": "you@example.com hoặc 010-0000-0000"
   },
   "apply": {
     "back_to_login": "Quay lại đăng nhập",

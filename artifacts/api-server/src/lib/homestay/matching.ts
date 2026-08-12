@@ -7,6 +7,7 @@
 // The LLM rationale layer (matchRationale.ts) only EXPLAINS this ranking; it
 // never decides it. See docs/proposals/HOMESTAY_WORKFLOW.md §6.
 import type { HomestayHostApplication, HomestayStudentRequest, HomestayHostAvailability } from "@workspace/db";
+import { formatPersonName } from "../../lib/nameFormat";
 
 export interface HostSuggestion {
   host_application_id: number;
@@ -168,7 +169,7 @@ export function scoreHostForStudent(
 
   return {
     host_application_id: host.id,
-    host_name: `${host.first_name ?? ""} ${host.last_name ?? ""}`.trim(),
+    host_name: formatPersonName(host.first_name, host.last_name),
     suburb: host.suburb ?? null,
     score,
     matched,

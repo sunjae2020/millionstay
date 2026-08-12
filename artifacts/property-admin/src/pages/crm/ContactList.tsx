@@ -22,7 +22,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useAuth } from "@/contexts/AuthContext";
 import { apiFetch } from "@/lib/apiFetch";
-import { formatPersonName, personSortKey } from "@/lib/nameFormat";
+import { formatPersonName, personSortKey, formatPersonLabel, formatPhone } from "@/lib/nameFormat";
 
 export default function ContactList() {
   const { t } = useTranslation();
@@ -90,8 +90,9 @@ export default function ContactList() {
         sortAccessor: (c) => personSortKey(c.first_name, c.last_name),
         cell: (c) => (
           <>
+            {/* 임경임_010-5252-5232 — 한국식 이름은 공백 없이, 뒤에 휴대폰 번호. */}
             <Link href={`/crm/contacts/${c.id}`} className="font-medium hover:underline">
-              {formatPersonName(c.first_name, c.last_name)}
+              {formatPersonLabel(c.first_name, c.last_name, c.mobile_number)}
             </Link>
             {c.nationality && <span className="ml-1 text-xs text-muted-foreground">({c.nationality})</span>}
           </>
@@ -107,7 +108,7 @@ export default function ContactList() {
         key: "mobile_number",
         header: "contact.col_mobile",
         editable: { type: "text", getValue: (c) => c.mobile_number ?? "" },
-        cell: (c) => <span className="text-muted-foreground">{c.mobile_number ?? "—"}</span>,
+        cell: (c) => <span className="text-muted-foreground">{formatPhone(c.mobile_number) || "—"}</span>,
       },
       {
         key: "nationality",

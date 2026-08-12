@@ -62,7 +62,9 @@
     "secure": "보안 액세스 · {{appName}} 서비스 호스트 포털",
     "apply_prompt": "서비스를 제공하시겠어요?",
     "apply_cta": "서비스 호스트 신청하기",
-    "forgot_password": "비밀번호를 잊으셨나요?"
+    "forgot_password": "비밀번호를 잊으셨나요?",
+    "identifier": "이메일 또는 휴대폰 번호",
+    "identifier_placeholder": "you@example.com 또는 010-0000-0000"
   },
   "trigger": {
     "at_checkin": "체크인 시",

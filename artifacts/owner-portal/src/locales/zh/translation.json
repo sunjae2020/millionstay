@@ -62,7 +62,9 @@
     "invalid": "凭证无效",
     "secure": "安全访问 · {{appName}} 业主门户",
     "apply_prompt": "新业主?",
-    "apply_cta": "申请与我们合作"
+    "apply_cta": "申请与我们合作",
+    "identifier": "邮箱或手机号",
+    "identifier_placeholder": "you@example.com 或 010-0000-0000"
   },
   "apply": {
     "back_to_login": "返回登录",

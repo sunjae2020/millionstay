@@ -23,7 +23,7 @@ import { apiFetch, apiJson } from "@/lib/apiFetch";
 import { LinkContactAccountDialog } from "@/components/LinkContactAccountDialog";
 import { accountTypeLabel } from "@/lib/accountTypes";
 import { useToast } from "@/hooks/use-toast";
-import { formatPersonName } from "@/lib/nameFormat";
+import { formatPersonName, formatPersonLabel } from "@/lib/nameFormat";
 import { COUNTRIES, normaliseCountry, defaultCountry } from "@/lib/countries";
 import { KoreanAddressSearch } from "@/components/KoreanAddressSearch";
 import { differenceInDays, parseISO } from "date-fns";
@@ -338,7 +338,7 @@ export default function ContactDetail() {
         title={
           isNew ? `${t("common.new")} ${t("nav.contact")}` : (
             <div className="flex items-center gap-2">
-              <span>{contact ? formatPersonName(contact.first_name, contact.last_name) : t("nav.contact")}</span>
+              <span>{contact ? formatPersonLabel(contact.first_name, contact.last_name, contact.mobile_number) : t("nav.contact")}</span>
               {/* 고객 ID — 서류 파일명·보관 폴더가 이 번호를 쓴다. */}
               {(contact as any)?.party_code && (
                 <Badge variant="secondary" className="font-mono text-xs" title={t("account.party_code")}>

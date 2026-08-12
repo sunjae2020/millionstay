@@ -9,6 +9,8 @@ import { validatePassword } from "../utils/passwordPolicy";
 import { checkLockout, recordAttempt } from "../lib/loginLockout";
 import { issueRefreshToken, revokeRefreshToken, rotateRefreshToken, revokeAllForUser } from "../lib/refreshTokens";
 import { sendPasswordResetEmail } from "../lib/email";
+import { loginIdentityFilter, lockoutKey } from "../lib/loginIdentifier";
+import { formatPersonName } from "../lib/nameFormat";
 
 const router: IRouter = Router();
 
@@ -172,15 +174,18 @@ router.post("/v1/auth/guest/register", async (req, res): Promise<void> => {
 ──────────────────────────────────────────────────────── */
 router.post("/v1/auth/guest/login", async (req, res): Promise<void> => {
   try {
+    // `email` may hold an email address OR a mobile number — both are valid
+    // personal IDs across the platform (see loginIdentifier).
     const { email, password } = req.body as { email: string; password: string };
-    const normalised = (email || "").toLowerCase().trim();
+    const identity = loginIdentityFilter(email, guestUsersTable.email, guestUsersTable.phone);
 
-    if (!normalised || !password) {
-      res.status(400).json({ success: false, error: "Email and password are required" });
+    if (!identity || !password) {
+      res.status(400).json({ success: false, error: "Email or mobile number and password are required" });
       return;
     }
+    const attemptKey = lockoutKey(identity.id, email);
 
-    const lock = await checkLockout(normalised, "guest");
+    const lock = await checkLockout(attemptKey, "guest");
     if (lock.locked) {
       res.setHeader("Retry-After", String(lock.retryAfterSeconds ?? 900));
       res.status(429).json({ success: false, error: "Too many failed login attempts. Try again later." });
@@ -190,7 +195,7 @@ router.post("/v1/auth/guest/login", async (req, res): Promise<void> => {
     const [guest] = await db
       .select()
       .from(guestUsersTable)
-      .where(and(eq(guestUsersTable.email, normalised), isNull(guestUsersTable.deleted_at)))
+      .where(and(identity.filter, isNull(guestUsersTable.deleted_at)))
       .limit(1);
 
     const dummyHash = "$2b$12$LF0J1vePdhsBvJBuA77ei.2sdaANBSwnHyWAn66pyzJz9Ew9km0E.";
@@ -198,12 +203,12 @@ router.post("/v1/auth/guest/login", async (req, res): Promise<void> => {
     const passwordMatches = await bcrypt.compare(password, candidateHash);
 
     if (!guest || !guest.is_active || !passwordMatches) {
-      await recordAttempt(normalised, "guest", false, ipOf(req));
+      await recordAttempt(attemptKey, "guest", false, ipOf(req));
       res.status(401).json({ success: false, error: "Invalid credentials" });
       return;
     }
 
-    await recordAttempt(normalised, "guest", true, ipOf(req));
+    await recordAttempt(attemptKey, "guest", true, ipOf(req));
 
     const token = signGuestJWT({
       id: guest.id,
@@ -280,18 +285,20 @@ router.post("/v1/auth/guest/logout", async (req, res): Promise<void> => {
 router.post("/v1/auth/guest/forgot-password", async (req, res): Promise<void> => {
   const generic = () => { res.json({ success: true, message: "If an account exists, a reset link has been sent." }); };
   try {
+    // Accepts an email address or a mobile number, matching the login prompt.
     const { email } = req.body as { email: string };
-    if (!email) { generic(); return; }
-    const normalised = email.toLowerCase().trim();
+    const identity = loginIdentityFilter(email, guestUsersTable.email, guestUsersTable.phone);
+    if (!identity) { generic(); return; }
 
     generic();
 
     const [guest] = await db
       .select()
       .from(guestUsersTable)
-      .where(and(eq(guestUsersTable.email, normalised), isNull(guestUsersTable.deleted_at)))
+      .where(and(identity.filter, isNull(guestUsersTable.deleted_at)))
       .limit(1);
-    if (!guest || !guest.is_active) return;
+    // The reset link is delivered by email, so a phone-only account gets nothing.
+    if (!guest || !guest.is_active || !guest.email) return;
 
     const rawToken = crypto.randomBytes(32).toString("hex");
     const tokenHash = crypto.createHash("sha256").update(rawToken).digest("hex");
@@ -304,7 +311,7 @@ router.post("/v1/auth/guest/forgot-password", async (req, res): Promise<void> =>
 
     const baseUrl = process.env["PUBLIC_WEB_URL"] || process.env["CLIENT_URL"] || "https://millionstay.com";
     const resetUrl = `${baseUrl}/reset-password#token=${rawToken}`;
-    const name = [guest.first_name, guest.last_name].filter(Boolean).join(" ") || guest.email;
+    const name = formatPersonName(guest.first_name, guest.last_name) || guest.email;
 
     await sendPasswordResetEmail({ to: guest.email, name, resetUrl, product: "Guest" });
   } catch (err) {

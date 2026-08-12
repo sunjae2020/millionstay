@@ -20,7 +20,7 @@ import { rankHosts } from "../lib/homestay/matching.js";
 import { attachRationales } from "../lib/homestay/matchRationale.js";
 import { sendStudentPortalInvite } from "../lib/homestay/studentPortalInvite.js";
 import { parsePageParams, pageMeta } from "../utils/pagination.js";
-import { formatFirstName, formatLastName } from "../lib/nameFormat.js";
+import { formatFirstName, formatLastName, formatPersonName } from "../lib/nameFormat.js";
 
 const STUDENT_ENTITY = "homestay_student_request";
 
@@ -106,7 +106,7 @@ homestayStudentPublicRouter.post("/v1/public/homestay-student-requests", async (
 
     // Signers: the student, plus the guardian for under-18s. The signer email
     // falls back to the guardian's when the student has none.
-    const studentName = `${student_first_name} ${student_last_name}`.trim();
+    const studentName = formatPersonName(student_first_name, student_last_name);
     const signers: SignerSpec[] = [
       { role: "student", name: studentName, email: student_email ?? guardian_email ?? "", required: true },
     ];
@@ -222,7 +222,7 @@ homestayStudentAdminRouter.get("/v1/homestay-student-requests/:id", async (req, 
   if (row.assigned_staff_user_id != null) {
     const [u] = await db.select({ first_name: usersTable.first_name, last_name: usersTable.last_name })
       .from(usersTable).where(eq(usersTable.id, row.assigned_staff_user_id));
-    if (u) assigned_staff_name = `${u.first_name} ${u.last_name}`.trim() || null;
+    if (u) assigned_staff_name = formatPersonName(u.first_name, u.last_name) || null;
   }
 
   res.json({ success: true, request: { ...row, agent_account_name, assigned_staff_name } });

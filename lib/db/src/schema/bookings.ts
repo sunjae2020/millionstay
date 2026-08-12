@@ -39,6 +39,16 @@ export const bookingsTable = pgTable("bookings", {
   host_application_id: integer("host_application_id"),
   // Internal ops owner of this booking (담당직원). → users.id
   assigned_staff_user_id: integer("assigned_staff_user_id"),
+  // ── 월세 정산 방식 (month-billed stays only) ──────────────────────────────
+  // A month-billed stay that starts mid-month owes a part-month (일할) amount
+  // for the first period. `rent_due_day` is the day of the month rent falls due
+  // (납부일); `prorate_with_next_month` decides whether that part-month amount
+  // is carried onto the NEXT month's invoice as one combined charge
+  //   (월세 30만 · 15일 입주 → 다음 달 청구서에 15만 + 30만 = 45만)
+  // or billed on its own straight away. Mirrors the account-level
+  // `consolidated_prorate_enabled` switch, decided per booking.
+  rent_due_day: integer("rent_due_day"),
+  prorate_with_next_month: boolean("prorate_with_next_month").notNull().default(true),
   cancellation_reason: text("cancellation_reason"),
   cancelled_at: timestamp("cancelled_at", { withTimezone: true }),
   status: text("status").notNull().default("Active"),

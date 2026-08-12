@@ -62,7 +62,9 @@
     "secure": "Secure access · {{appName}} Service Host Portal",
     "apply_prompt": "Want to offer your services?",
     "apply_cta": "Apply to become a service host",
-    "forgot_password": "Forgot password?"
+    "forgot_password": "Forgot password?",
+    "identifier": "Email or mobile",
+    "identifier_placeholder": "you@example.com or 010-0000-0000"
   },
   "trigger": {
     "at_checkin": "At Check-In",

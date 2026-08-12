@@ -8,6 +8,7 @@ import { validatePassword } from "../utils/passwordPolicy";
 import { checkLockout, recordAttempt } from "../lib/loginLockout";
 import { issueRefreshToken, revokeRefreshToken, rotateRefreshToken, revokeAllForUser } from "../lib/refreshTokens";
 import { issuePartnerResetLink, PORTAL_TYPES, BCRYPT_COST } from "../lib/partnerPortal";
+import { loginIdentityFilter, lockoutKey } from "../lib/loginIdentifier";
 
 const router: IRouter = Router();
 
@@ -21,14 +22,17 @@ function ipOf(req: any): string {
 /* POST /api/v1/auth/partner/login */
 router.post("/v1/auth/partner/login", async (req, res): Promise<void> => {
   try {
+    // `email` is the historical field name; the value may be an email address
+    // OR a mobile number — both are valid personal IDs (see loginIdentifier).
     const { email, password } = req.body as { email: string; password: string };
-    const normalisedEmail = (email || "").toLowerCase().trim();
-    if (!normalisedEmail || !password) {
-      res.status(400).json({ success: false, error: "Email and password are required" });
+    const identity = loginIdentityFilter(email, partnerUsersTable.email, partnerUsersTable.phone);
+    if (!identity || !password) {
+      res.status(400).json({ success: false, error: "Email or mobile number and password are required" });
       return;
     }
+    const attemptKey = lockoutKey(identity.id, email);
 
-    const lockout = await checkLockout(normalisedEmail, "partner");
+    const lockout = await checkLockout(attemptKey, "partner");
     if (lockout.locked) {
       res.setHeader("Retry-After", String(lockout.retryAfterSeconds ?? 900));
       res.status(429).json({ success: false, error: "Too many failed attempts. Try again later." });
@@ -38,13 +42,13 @@ router.post("/v1/auth/partner/login", async (req, res): Promise<void> => {
     const [user] = await db
       .select()
       .from(partnerUsersTable)
-      .where(and(eq(partnerUsersTable.email, normalisedEmail), isNull(partnerUsersTable.deleted_at)))
+      .where(and(identity.filter, isNull(partnerUsersTable.deleted_at)))
       .limit(1);
 
     const valid = user && user.is_active && (await bcrypt.compare(password, user.password_hash));
 
     if (!valid) {
-      await recordAttempt(normalisedEmail, "partner", false, ipOf(req));
+      await recordAttempt(attemptKey, "partner", false, ipOf(req));
       // Generic message to prevent enumeration
       res.status(401).json({ success: false, error: "Invalid credentials" });
       return;
@@ -56,7 +60,7 @@ router.post("/v1/auth/partner/login", async (req, res): Promise<void> => {
       return;
     }
 
-    await recordAttempt(normalisedEmail, "partner", true, ipOf(req));
+    await recordAttempt(attemptKey, "partner", true, ipOf(req));
     await db
       .update(partnerUsersTable)
       .set({ last_login_at: new Date() })
@@ -190,19 +194,22 @@ router.post("/v1/auth/partner/change-password", requirePartnerAuth, async (req, 
 /* POST /api/v1/auth/partner/forgot-password
    Generic success response — no account enumeration. */
 router.post("/v1/auth/partner/forgot-password", async (req, res): Promise<void> => {
+  // Accepts an email address or a mobile number, matching the login prompt.
+  // The reset link is always delivered by email, so an account identified by
+  // phone but holding no email address simply gets nothing (still a 200).
   const { email } = req.body as { email: string };
-  const normalised = (email || "").toLowerCase().trim();
+  const identity = loginIdentityFilter(email, partnerUsersTable.email, partnerUsersTable.phone);
   // Always return success regardless of whether the account exists.
   res.json({ success: true, message: "If an account exists, a reset link has been sent." });
-  if (!normalised) return;
+  if (!identity) return;
 
   try {
     const [user] = await db
       .select()
       .from(partnerUsersTable)
-      .where(and(eq(partnerUsersTable.email, normalised), isNull(partnerUsersTable.deleted_at)))
+      .where(and(identity.filter, isNull(partnerUsersTable.deleted_at)))
       .limit(1);
-    if (!user || !user.is_active) return;
+    if (!user || !user.is_active || !user.email) return;
 
     await issuePartnerResetLink(user);
   } catch (err) {

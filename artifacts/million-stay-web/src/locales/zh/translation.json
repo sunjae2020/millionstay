@@ -2270,7 +2270,9 @@
     "role_agent": "代理",
     "role_owner": "业主",
     "role_service_host": "服务管家",
-    "secure": "采用 256 位加密保护"
+    "secure": "采用 256 位加密保护",
+    "identifier": "邮箱或手机号",
+    "identifier_placeholder": "you@example.com 或 010-0000-0000"
   },
   "inspectionSign": {
     "add_photo": "添加照片",
