@@ -549,7 +549,16 @@
     "hint_prorate_mode": "달 중간에 입주해 생긴 일할 금액을 어떻게 청구할지 정합니다.",
     "prorate_first_days": "첫 기간 {{days}}일 일할계산",
     "prorate_preview_combined": "다음 청구서: {{first}}(일할) + {{month}}(1개월) = {{total}}",
-    "prorate_preview_separate": "지금 청구: {{first}}(일할). 다음 달은 전액을 따로 청구합니다."
+    "prorate_preview_separate": "지금 청구: {{first}}(일할). 다음 달은 전액을 따로 청구합니다.",
+    "btn_manual_pricing": "메뉴얼 선택",
+    "btn_pricing_from_product": "상품 요금 사용",
+    "hint_manual_pricing": "메뉴얼 선택이 켜져 있습니다 — 아래 통화·보증금·월세는 직접 입력한 값을 쓰며 숙박 상품 요금표를 따르지 않습니다.",
+    "hint_product_pricing": "통화·보증금·월세는 선택한 숙박 상품의 요금표를 따릅니다. 직접 입력하려면 메뉴얼 선택을 켜세요.",
+    "label_deposit_amount": "보증금",
+    "label_monthly_rent": "월세",
+    "label_special_terms": "특약",
+    "ph_special_terms": "이 계약에 합의된 특약 사항...",
+    "label_contract_date": "계약일"
   },
   "contact": {
     "new": "새 연락처",

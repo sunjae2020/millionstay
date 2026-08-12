@@ -549,7 +549,16 @@
     "hint_prorate_mode": "月の途中に入居して発生した日割額の請求方法を選びます。",
     "prorate_first_days": "最初の期間 {{days}}日分の日割計算",
     "prorate_preview_combined": "次回請求書: {{first}}（日割）+ {{month}}（1か月）= {{total}}",
-    "prorate_preview_separate": "今すぐ請求: {{first}}（日割）。翌月分は全額を別途請求します。"
+    "prorate_preview_separate": "今すぐ請求: {{first}}（日割）。翌月分は全額を別途請求します。",
+    "btn_manual_pricing": "手動入力",
+    "btn_pricing_from_product": "商品料金を使用",
+    "hint_manual_pricing": "手動入力がオンです — 下の通貨・保証金・月額賃料は直接入力した値を使用し、宿泊商品の料金表には従いません。",
+    "hint_product_pricing": "通貨・保証金・月額賃料は選択した宿泊商品の料金表に従います。直接入力するには手動入力をオンにしてください。",
+    "label_deposit_amount": "保証金",
+    "label_monthly_rent": "月額賃料",
+    "label_special_terms": "特約",
+    "ph_special_terms": "この契約で合意した特約事項...",
+    "label_contract_date": "契約日"
   },
   "contact": {
     "new": "新規連絡先",

@@ -43,23 +43,44 @@ import {
 const router: IRouter = Router();
 
 /**
- * 월세 정산 방식 — the two settlement fields are not part of the generated
- * `CreateBookingBody` (the OpenAPI spec predates them), so they are validated
- * separately and merged into the write. Absent keys are left untouched.
+ * 월세 정산 방식 + 요금 직접 입력(메뉴얼 선택) + 계약일 — none of these are part
+ * of the generated `CreateBookingBody` (the OpenAPI spec predates them), so they
+ * are validated separately and merged into the write. Absent keys are left
+ * untouched.
  */
+/** An emptied form field arrives as `""` — that means "clear it", not zero. */
+const blankToNull = <T extends z.ZodTypeAny>(schema: T) =>
+  z.preprocess((v) => (v === "" ? null : v), schema);
+
 const RentSettlementBody = z.object({
-  rent_due_day: z.coerce.number().int().min(1).max(31).nullish(),
+  rent_due_day: blankToNull(z.coerce.number().int().min(1).max(31).nullish()),
   prorate_with_next_month: z.coerce.boolean().nullish(),
+  manual_pricing: z.coerce.boolean().nullish(),
+  deposit_amount: blankToNull(z.coerce.number().nullish()),
+  monthly_rent: blankToNull(z.coerce.number().nullish()),
+  special_terms: z.string().nullish(),
+  contract_date: z.string().nullish(),
 }).partial();
+
+/** Drizzle `numeric` columns are strings; `null` clears the amount. */
+function money(v: number | null | undefined): string | null {
+  return v == null || !Number.isFinite(v) ? null : String(v);
+}
 
 function rentSettlementPatch(body: unknown): Record<string, unknown> {
   const parsed = RentSettlementBody.safeParse(body ?? {});
   if (!parsed.success) return {};
+  const has = (k: string) => k in (body as object);
   const patch: Record<string, unknown> = {};
-  if ("rent_due_day" in (body as object)) patch["rent_due_day"] = parsed.data.rent_due_day ?? null;
-  if ("prorate_with_next_month" in (body as object)) {
+  if (has("rent_due_day")) patch["rent_due_day"] = parsed.data.rent_due_day ?? null;
+  if (has("prorate_with_next_month")) {
     patch["prorate_with_next_month"] = parsed.data.prorate_with_next_month ?? true;
   }
+  if (has("manual_pricing")) patch["manual_pricing"] = parsed.data.manual_pricing ?? false;
+  if (has("deposit_amount")) patch["deposit_amount"] = money(parsed.data.deposit_amount);
+  if (has("monthly_rent")) patch["monthly_rent"] = money(parsed.data.monthly_rent);
+  if (has("special_terms")) patch["special_terms"] = parsed.data.special_terms || null;
+  if (has("contract_date")) patch["contract_date"] = parsed.data.contract_date || null;
   return patch;
 }
 

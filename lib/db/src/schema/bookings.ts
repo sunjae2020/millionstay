@@ -49,6 +49,20 @@ export const bookingsTable = pgTable("bookings", {
   // `consolidated_prorate_enabled` switch, decided per booking.
   rent_due_day: integer("rent_due_day"),
   prorate_with_next_month: boolean("prorate_with_next_month").notNull().default(true),
+  // ── 요금 직접 입력 (메뉴얼 선택) ──────────────────────────────────────────
+  // Pricing normally mirrors the 숙박 상품 (accommodation_catalog) the booking
+  // points at. `manual_pricing` releases that link so an operator can type the
+  // agreed terms straight onto the booking — the case for one-off deals that no
+  // rate card covers. The three amounts below are the booking's own copy and are
+  // only authoritative while `manual_pricing` is TRUE; otherwise they are kept in
+  // step with the product's rate card.
+  manual_pricing: boolean("manual_pricing").notNull().default(false),
+  deposit_amount: numeric("deposit_amount", { precision: 12, scale: 2 }),
+  monthly_rent: numeric("monthly_rent", { precision: 12, scale: 2 }),
+  // 특약 — free-text special conditions agreed for this stay.
+  special_terms: text("special_terms"),
+  // 계약일 — the day the contract was signed, distinct from check-in.
+  contract_date: date("contract_date"),
   cancellation_reason: text("cancellation_reason"),
   cancelled_at: timestamp("cancelled_at", { withTimezone: true }),
   status: text("status").notNull().default("Active"),

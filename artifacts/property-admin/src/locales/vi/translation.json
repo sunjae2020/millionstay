@@ -549,7 +549,16 @@
     "hint_prorate_mode": "Chọn cách thu khoản tính theo ngày phát sinh khi vào ở giữa tháng.",
     "prorate_first_days": "Kỳ đầu {{days}} ngày tính theo ngày",
     "prorate_preview_combined": "Hóa đơn kế tiếp: {{first}} (theo ngày) + {{month}} (một tháng) = {{total}}",
-    "prorate_preview_separate": "Xuất ngay: {{first}} (theo ngày). Tháng sau thu đủ riêng."
+    "prorate_preview_separate": "Xuất ngay: {{first}} (theo ngày). Tháng sau thu đủ riêng.",
+    "btn_manual_pricing": "Nhập thủ công",
+    "btn_pricing_from_product": "Dùng giá sản phẩm",
+    "hint_manual_pricing": "Đang bật nhập thủ công — tiền tệ, tiền đặt cọc và tiền thuê hằng tháng bên dưới dùng giá trị bạn nhập, không theo bảng giá của sản phẩm lưu trú.",
+    "hint_product_pricing": "Tiền tệ, tiền đặt cọc và tiền thuê hằng tháng theo bảng giá của sản phẩm lưu trú đã chọn. Bật nhập thủ công để tự nhập.",
+    "label_deposit_amount": "Tiền đặt cọc",
+    "label_monthly_rent": "Tiền thuê hằng tháng",
+    "label_special_terms": "Điều khoản đặc biệt",
+    "ph_special_terms": "Các điều khoản đã thỏa thuận cho kỳ lưu trú này...",
+    "label_contract_date": "Ngày ký hợp đồng"
   },
   "contact": {
     "new": "Liên hệ mới",

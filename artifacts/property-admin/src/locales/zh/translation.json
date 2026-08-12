@@ -549,7 +549,16 @@
     "hint_prorate_mode": "选择月中入住所产生的按日计算金额如何收取。",
     "prorate_first_days": "首期 {{days}} 天按日计算",
     "prorate_preview_combined": "下期账单：{{first}}（按日）+ {{month}}（一个月）= {{total}}",
-    "prorate_preview_separate": "立即开票：{{first}}（按日）。下月租金全额单独开票。"
+    "prorate_preview_separate": "立即开票：{{first}}（按日）。下月租金全额单独开票。",
+    "btn_manual_pricing": "手动输入",
+    "btn_pricing_from_product": "使用产品价格",
+    "hint_manual_pricing": "手动输入已开启 — 下方的币种、押金和月租使用直接输入的数值，不再跟随住宿产品的价目表。",
+    "hint_product_pricing": "币种、押金和月租跟随所选住宿产品的价目表。如需直接输入，请开启手动输入。",
+    "label_deposit_amount": "押金",
+    "label_monthly_rent": "月租",
+    "label_special_terms": "特别约定",
+    "ph_special_terms": "本次入住约定的特别条款...",
+    "label_contract_date": "签约日期"
   },
   "contact": {
     "new": "新建联系人",

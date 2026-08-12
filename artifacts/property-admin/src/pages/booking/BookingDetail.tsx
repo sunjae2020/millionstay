@@ -69,6 +69,12 @@ interface FormData {
   status: string;
   rent_due_day: string;
   prorate_with_next_month: boolean;
+  /** 메뉴얼 선택 — 요금을 숙박 상품에서 가져오지 않고 직접 입력한다. */
+  manual_pricing: boolean;
+  deposit_amount: string;
+  monthly_rent: string;
+  special_terms: string;
+  contract_date: string;
 }
 
 function isoDay(date: Date) {
@@ -230,12 +236,14 @@ export default function BookingDetail() {
     Cancelled: "bg-red-100 text-red-700",
   };
 
-  const { register, handleSubmit, reset, control, watch } = useForm<FormData>({
+  const { register, handleSubmit, reset, control, watch, setValue } = useForm<FormData>({
     defaultValues: {
       account_id: null, contact_id: null, booking_source: "", customer_notes: "",
       space_id: null, check_in_date: "", check_out_date: "", agreed_weekly_rate: "",
       currency: brandCurrency, num_guests: 1, product_id: null, status: "Active",
       rent_due_day: "", prorate_with_next_month: true,
+      manual_pricing: false, deposit_amount: "", monthly_rent: "",
+      special_terms: "", contract_date: "",
     },
   });
 
@@ -256,6 +264,11 @@ export default function BookingDetail() {
         status: booking.status ?? "Active",
         rent_due_day: (booking as any).rent_due_day != null ? String((booking as any).rent_due_day) : "",
         prorate_with_next_month: (booking as any).prorate_with_next_month ?? true,
+        manual_pricing: (booking as any).manual_pricing ?? false,
+        deposit_amount: (booking as any).deposit_amount != null ? String((booking as any).deposit_amount) : "",
+        monthly_rent: (booking as any).monthly_rent != null ? String((booking as any).monthly_rent) : "",
+        special_terms: (booking as any).special_terms ?? "",
+        contract_date: (booking as any).contract_date ?? "",
       });
     }
   }, [booking, reset]);
@@ -283,6 +296,10 @@ export default function BookingDetail() {
       ...data,
       num_guests: Number(data.num_guests),
       rent_due_day: data.rent_due_day === "" ? null : Number(data.rent_due_day),
+      deposit_amount: data.deposit_amount === "" ? null : Number(data.deposit_amount),
+      monthly_rent: data.monthly_rent === "" ? null : Number(data.monthly_rent),
+      special_terms: data.special_terms || null,
+      contract_date: data.contract_date || null,
     };
     if (isNew) createMutation.mutate({ data: payload });
     else updateMutation.mutate({ id: Number(id), data: payload });
@@ -312,6 +329,17 @@ export default function BookingDetail() {
     ? selectedProduct
     : (bookingProduct?.id === watchProductId ? bookingProduct : null);
   const rates = product ? (product.rates ?? productRates(product)) : null;
+
+  // 메뉴얼 선택이 꺼져 있는 동안 요금은 숙박 상품의 요금표를 그대로 따라간다.
+  // 켜는 순간부터는 손댄 값이 우선이므로 더 이상 덮어쓰지 않는다.
+  const watchManual = watch("manual_pricing");
+  useEffect(() => {
+    if (watchManual || !product) return;
+    const cardRates = product.rates ?? productRates(product);
+    setValue("currency", cardRates?.currency ?? brandCurrency);
+    setValue("deposit_amount", product.deposit_amount != null ? String(product.deposit_amount) : "");
+    setValue("monthly_rent", cardRates?.monthly != null ? String(cardRates.monthly) : "");
+  }, [watchManual, product, setValue, brandCurrency]);
 
   const watchProrate = watch("prorate_with_next_month");
   const watchDueDay = watch("rent_due_day");
@@ -497,6 +525,18 @@ export default function BookingDetail() {
               <Label>{t("booking.label_product")}</Label>
               {/* 이 상품이 실제로 세팅되는 곳 — 상품 카탈로그 상세로 바로 이동한다. */}
               <div className="flex items-center gap-3 text-xs">
+                {/* 메뉴얼 선택 — 요금표를 벗어난 개별 조건은 요금 섹션에 직접 입력한다. */}
+                <Controller name="manual_pricing" control={control} render={({ field }) => (
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant={field.value ? "default" : "outline"}
+                    className="h-7 px-2 text-xs"
+                    onClick={() => field.onChange(!field.value)}
+                  >
+                    {field.value ? t("booking.btn_pricing_from_product") : t("booking.btn_manual_pricing")}
+                  </Button>
+                )} />
                 {watchProductId ? (
                   <Link href={`/products/products/${watchProductId}`} className="text-primary hover:underline inline-flex items-center gap-1">
                     <ExternalLink className="w-3 h-3" /> {t("booking.product_open_settings")}
@@ -516,6 +556,9 @@ export default function BookingDetail() {
                 displayValue={(booking as any)?.product_name ?? (booking as any)?.contract_product_name ?? undefined}
               />
             )} />
+            <p className="text-xs text-muted-foreground mt-1">
+              {watchManual ? t("booking.hint_manual_pricing") : t("booking.hint_product_pricing")}
+            </p>
             {product && (
               <div className="mt-3 rounded-md border bg-gray-50 p-3 space-y-2">
                 <div className="flex items-start justify-between gap-3">
@@ -565,7 +608,19 @@ export default function BookingDetail() {
 
         <div className="rounded-lg border bg-white p-4 sm:p-6 space-y-4">
           <h3 className="text-xs font-semibold text-primary uppercase tracking-wider border-b pb-2">{t("booking.section_period")}</h3>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            {/* 계약일은 체크인과 별개 — 보통 입주보다 앞선다. */}
+            <div>
+              <Label>{t("booking.label_contract_date")}</Label>
+              <Controller name="contract_date" control={control} render={({ field }) => (
+                <DateInput
+                  value={field.value ?? ""}
+                  onChange={field.onChange}
+                  max={tenYearsAheadIso()}
+                  className="mt-1"
+                />
+              )} />
+            </div>
             <div>
               <Label>{t("booking.label_checkin_date")} *</Label>
               <Controller name="check_in_date" control={control} render={({ field }) => (
@@ -615,7 +670,7 @@ export default function BookingDetail() {
             <div>
               <Label>{t("booking.label_currency")}</Label>
               <Controller name="currency" control={control} render={({ field }) => (
-                <Select value={field.value} onValueChange={field.onChange}>
+                <Select value={field.value} onValueChange={field.onChange} disabled={!watchManual}>
                   <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
                   <SelectContent>
                     {SUPPORTED_CURRENCIES.map((c) => <SelectItem key={c.code} value={c.code}>{c.code}</SelectItem>)}
@@ -627,6 +682,37 @@ export default function BookingDetail() {
               <Label>{t("booking.label_num_guests")}</Label>
               <Input type="number" min={1} {...register("num_guests", { valueAsNumber: true })} className="mt-1" />
             </div>
+          </div>
+          {/* 보증금·월세는 메뉴얼 선택일 때만 직접 입력한다. 꺼져 있으면 숙박
+              상품의 요금표를 그대로 비추므로 읽기 전용. */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div>
+              <Label>{t("booking.label_deposit_amount")}</Label>
+              <Input
+                {...register("deposit_amount")}
+                readOnly={!watchManual}
+                className={`mt-1 ${!watchManual ? "bg-gray-50 text-muted-foreground" : ""}`}
+                placeholder="0"
+              />
+            </div>
+            <div>
+              <Label>{t("booking.label_monthly_rent")}</Label>
+              <Input
+                {...register("monthly_rent")}
+                readOnly={!watchManual}
+                className={`mt-1 ${!watchManual ? "bg-gray-50 text-muted-foreground" : ""}`}
+                placeholder="0"
+              />
+            </div>
+          </div>
+          <div>
+            <Label>{t("booking.label_special_terms")}</Label>
+            <Textarea
+              {...register("special_terms")}
+              rows={3}
+              className="mt-1"
+              placeholder={t("booking.ph_special_terms")}
+            />
           </div>
         </div>
 

@@ -549,7 +549,16 @@
     "hint_prorate_mode": "How the part-month owed for a mid-month move-in is charged.",
     "prorate_first_days": "First period: {{days}} days (pro rata)",
     "prorate_preview_combined": "Next invoice: {{first}} (pro rata) + {{month}} (one month) = {{total}}",
-    "prorate_preview_separate": "Issued now: {{first}} (pro rata). Next month is billed in full on its own."
+    "prorate_preview_separate": "Issued now: {{first}} (pro rata). Next month is billed in full on its own.",
+    "btn_manual_pricing": "Manual entry",
+    "btn_pricing_from_product": "Use product rates",
+    "hint_manual_pricing": "Manual entry is on — currency, deposit and monthly rent below are typed in and no longer follow the product's rate card.",
+    "hint_product_pricing": "Currency, deposit and monthly rent follow the selected accommodation product. Switch to manual entry to type them in.",
+    "label_deposit_amount": "Deposit",
+    "label_monthly_rent": "Monthly Rent",
+    "label_special_terms": "Special Terms",
+    "ph_special_terms": "Conditions agreed for this stay...",
+    "label_contract_date": "Contract Date"
   },
   "contact": {
     "new": "New Contact",
