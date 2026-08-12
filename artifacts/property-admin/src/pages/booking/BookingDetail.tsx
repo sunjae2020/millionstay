@@ -68,6 +68,23 @@ interface FormData {
   status: string;
 }
 
+function isoDay(date: Date) {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, "0");
+  const d = String(date.getDate()).padStart(2, "0");
+  return `${y}-${m}-${d}`;
+}
+
+/** 오늘 ~ 10년 후: 체크아웃 선택 가능 범위 */
+function todayIso() {
+  return isoDay(new Date());
+}
+
+function tenYearsAheadIso() {
+  const d = new Date();
+  return isoDay(new Date(d.getFullYear() + 10, d.getMonth(), d.getDate()));
+}
+
 function calcStay(checkIn: string, checkOut: string, rate: string) {
   if (!checkIn || !checkOut) return null;
   const cin = new Date(checkIn);
@@ -429,7 +446,13 @@ export default function BookingDetail() {
             <div>
               <Label>{t("booking.label_checkout_date")} *</Label>
               <Controller name="check_out_date" control={control} render={({ field }) => (
-                <DateInput value={field.value ?? ""} onChange={field.onChange} className="mt-1" />
+                <DateInput
+                  value={field.value ?? ""}
+                  onChange={field.onChange}
+                  min={watchCheckIn || todayIso()}
+                  max={tenYearsAheadIso()}
+                  className="mt-1"
+                />
               )} />
             </div>
           </div>

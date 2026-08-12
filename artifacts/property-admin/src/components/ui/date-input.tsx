@@ -58,6 +58,13 @@ export function DateInput({
   const maxDate = isoToDate(max ?? "");
   const selectedDate = isoToDate(value);
 
+  // react-day-picker v9 limits the caption dropdowns to the current year unless
+  // startMonth/endMonth are given. Derive them from min/max, falling back to a
+  // wide window so date-of-birth style fields stay reachable too.
+  const anchor = selectedDate ?? new Date();
+  const navStart = minDate ?? new Date(anchor.getFullYear() - 100, 0, 1);
+  const navEnd = maxDate ?? new Date(anchor.getFullYear() + 10, 11, 31);
+
   const isDisabledDay = (date: Date) => {
     if (minDate) {
       const d = new Date(date); d.setHours(0, 0, 0, 0);
@@ -120,6 +127,8 @@ export function DateInput({
           onSelect={handleCalendarSelect}
           disabled={isDisabledDay}
           defaultMonth={selectedDate ?? minDate}
+          startMonth={navStart}
+          endMonth={navEnd}
           captionLayout="dropdown"
         />
       </PopoverContent>
