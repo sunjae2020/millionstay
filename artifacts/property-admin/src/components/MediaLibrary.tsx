@@ -18,7 +18,23 @@ import { apiFetch, apiJson } from "@/lib/apiFetch";
 
 // Folders exposed in the library — must match the api-server ALLOWED_FOLDERS.
 export const MEDIA_FOLDERS = ["content", "spaces", "listings", "branding"] as const;
-export type MediaFolder = (typeof MEDIA_FOLDERS)[number];
+export type MediaTopFolder = (typeof MEDIA_FOLDERS)[number];
+
+// The website bucket is split into sub-folders so marketing assets stay sorted.
+// Keep in sync with CONTENT_SUBFOLDERS in api-server/src/routes/media.ts.
+export const CONTENT_SUBFOLDERS = [
+  "brand",
+  "hero",
+  "programs",
+  "team",
+  "gallery",
+  "blog",
+  "icons",
+] as const;
+export type ContentSubfolder = (typeof CONTENT_SUBFOLDERS)[number];
+
+/** A browsable folder path, e.g. "spaces" or "content/hero". */
+export type MediaFolder = MediaTopFolder | `content/${ContentSubfolder}`;
 
 export interface MediaResource {
   public_id: string;
@@ -56,6 +72,8 @@ export function MediaGrid({
   const { toast } = useToast();
   const qc = useQueryClient();
   const [folder, setFolder] = useState<MediaFolder>(initialFolder);
+  const topFolder = (folder.split("/")[0] ?? "content") as MediaTopFolder;
+  const subFolder = folder.startsWith("content/") ? (folder.slice("content/".length) as ContentSubfolder) : null;
   const [uploading, setUploading] = useState(false);
   const [copied, setCopied] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
@@ -63,7 +81,10 @@ export function MediaGrid({
   const queryKey = ["media", folder];
   const { data, isLoading, isError } = useQuery({
     queryKey,
-    queryFn: () => apiJson<{ resources: MediaResource[]; next_cursor: string | null }>(`/api/v1/media?folder=${folder}`),
+    queryFn: () =>
+      apiJson<{ resources: MediaResource[]; next_cursor: string | null }>(
+        `/api/v1/media?folder=${encodeURIComponent(folder)}`,
+      ),
   });
 
   const deleteMutation = useMutation({
@@ -117,7 +138,7 @@ export function MediaGrid({
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <Tabs value={folder} onValueChange={(v) => setFolder(v as MediaFolder)}>
+        <Tabs value={topFolder} onValueChange={(v) => setFolder(v as MediaFolder)}>
           <TabsList>
             {MEDIA_FOLDERS.map((f) => (
               <TabsTrigger key={f} value={f}>
@@ -144,6 +165,37 @@ export function MediaGrid({
           </Button>
         </div>
       </div>
+
+      {topFolder === "content" && (
+        <div className="flex flex-wrap gap-1.5">
+          <button
+            type="button"
+            onClick={() => setFolder("content")}
+            className={`rounded-full border px-3 py-1 text-xs transition-colors ${
+              subFolder === null
+                ? "border-primary bg-primary text-primary-foreground"
+                : "border-border bg-background text-muted-foreground hover:bg-muted"
+            }`}
+          >
+            {t("media.subfolder_all")}
+          </button>
+          {CONTENT_SUBFOLDERS.map((s) => (
+            <button
+              key={s}
+              type="button"
+              onClick={() => setFolder(`content/${s}`)}
+              title={t(`media.subfolder_${s}_hint`)}
+              className={`rounded-full border px-3 py-1 text-xs transition-colors ${
+                subFolder === s
+                  ? "border-primary bg-primary text-primary-foreground"
+                  : "border-border bg-background text-muted-foreground hover:bg-muted"
+              }`}
+            >
+              {t(`media.subfolder_${s}`)}
+            </button>
+          ))}
+        </div>
+      )}
 
       <FileDropZone onFiles={(files) => void handleUpload(files)} busy={uploading}>
       {isLoading ? (

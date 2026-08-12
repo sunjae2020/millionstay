@@ -190,7 +190,7 @@ export interface MediaResource {
  */
 export async function listCloudinaryResources(
   subFolder: string,
-  opts: { max?: number; nextCursor?: string } = {},
+  opts: { max?: number; nextCursor?: string; excludePrefixes?: string[] } = {},
 ): Promise<{ resources: MediaResource[]; next_cursor: string | null }> {
   const res = await cloudinary.api.resources({
     type: "upload",
@@ -199,7 +199,15 @@ export async function listCloudinaryResources(
     direction: "desc",
     ...(opts.nextCursor ? { next_cursor: opts.nextCursor } : {}),
   });
-  const resources: MediaResource[] = ((res.resources as unknown[]) ?? []).map((raw) => {
+  // A prefix query is recursive, so a parent folder would otherwise show every
+  // asset filed under its sub-folders as well. Callers pass the sub-folder
+  // prefixes they want kept out of the parent listing.
+  const excluded = (opts.excludePrefixes ?? []).map((p) => cldFolder(p));
+  const rawResources = ((res.resources as unknown[]) ?? []).filter((raw) => {
+    const id = (raw as { public_id: string }).public_id;
+    return !excluded.some((p) => id.startsWith(`${p}/`));
+  });
+  const resources: MediaResource[] = rawResources.map((raw) => {
     const r = raw as { public_id: string; secure_url: string; version: number; format: string; bytes: number; width: number; height: number; created_at: string };
     return {
       public_id: r.public_id,
@@ -220,6 +228,15 @@ export async function listCloudinaryResources(
     };
   });
   return { resources, next_cursor: (res.next_cursor as string | undefined) ?? null };
+}
+
+/**
+ * Create an (empty) folder under the instance root so it shows up in the media
+ * library and Cloudinary's Media Explorer before anything is uploaded into it.
+ * Idempotent — Cloudinary returns success for a folder that already exists.
+ */
+export async function createCloudinaryFolder(subFolder: string): Promise<void> {
+  await cloudinary.api.create_folder(cldFolder(subFolder));
 }
 
 export async function deleteFromCloudinary(publicId: string, resourceType = "image"): Promise<void> {

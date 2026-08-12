@@ -18,15 +18,34 @@ const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 15 
 // (private, condition, cs, jobs, avatars) that may hold personal / identifying
 // images — the library is for marketing & CMS assets only. Keep this list in
 // sync with the folders used by uploadToCloudinary callers.
-const ALLOWED_FOLDERS = ["content", "spaces", "listings", "branding"] as const;
-type AllowedFolder = (typeof ALLOWED_FOLDERS)[number];
-function isAllowedFolder(f: string): f is AllowedFolder {
+//
+// `content` (the website bucket) is further split into sub-folders so marketing
+// assets don't pile into one flat list. Sub-folders are plain Cloudinary path
+// segments — `content/hero` lives at `<root>/content/hero`.
+export const CONTENT_SUBFOLDERS = [
+  "brand", // 로고, 파비콘, OG 이미지 — 거의 안 바뀜
+  "hero", // 페이지별 상단 배너
+  "programs", // 프로그램·상품 이미지
+  "team", // 직원·강사 프로필
+  "gallery", // 캠프·활동 사진
+  "blog", // 포스트 본문 이미지
+  "icons", // 아이콘·일러스트
+] as const;
+
+const ALLOWED_FOLDERS = [
+  "content",
+  ...CONTENT_SUBFOLDERS.map((s) => `content/${s}`),
+  "spaces",
+  "listings",
+  "branding",
+] as const satisfies readonly string[];
+function isAllowedFolder(f: string): boolean {
   return (ALLOWED_FOLDERS as readonly string[]).includes(f);
 }
 
 // GET /api/v1/media/folders — the folders the UI may browse.
 router.get("/v1/media/folders", (_req, res): void => {
-  res.json({ folders: ALLOWED_FOLDERS });
+  res.json({ folders: ALLOWED_FOLDERS, content_subfolders: CONTENT_SUBFOLDERS });
 });
 
 // GET /api/v1/media?folder=content&cursor=... — list images in a folder.
@@ -42,7 +61,15 @@ router.get("/v1/media", async (req, res): Promise<void> => {
   }
   try {
     const cursor = req.query["cursor"] ? String(req.query["cursor"]) : undefined;
-    const out = await listCloudinaryResources(folder, { max: 60, nextCursor: cursor });
+    const out = await listCloudinaryResources(folder, {
+      max: 60,
+      nextCursor: cursor,
+      // The website bucket lists only its own loose assets — the sub-folders
+      // have their own tabs.
+      ...(folder === "content"
+        ? { excludePrefixes: CONTENT_SUBFOLDERS.map((s) => `content/${s}`) }
+        : {}),
+    });
     res.json(out);
   } catch (err) {
     const message = err instanceof Error ? err.message : "List failed";
