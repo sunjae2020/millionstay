@@ -75,6 +75,37 @@ interface FormData {
   monthly_rent: string;
   special_terms: string;
   contract_date: string;
+  /** 임대 유형 — 계약(contracts.lease_mode)과 같은 축. 확정 시 계약으로 승계된다. */
+  lease_mode: LeaseMode;
+  rate_period: string;
+  rate_amount: string;
+  advance_amount: string;
+  down_payment: string;
+  down_payment_date: string;
+  interim_payment: string;
+  interim_payment_date: string;
+  balance_amount: string;
+  balance_date: string;
+}
+
+type LeaseMode = "long" | "short";
+const RATE_PERIODS = [
+  { value: "daily", labelKey: "booking.rate_period_daily" },
+  { value: "weekly", labelKey: "booking.rate_period_weekly" },
+  { value: "monthly", labelKey: "booking.rate_period_monthly" },
+];
+/** 주간 요금 환산 — 체류 기간 합계(calcStay)와 계약 승계가 주간 요금을 기준으로 돈다. */
+function toWeeklyRate(amount: string, period: string): string {
+  const n = Number(amount);
+  if (!Number.isFinite(n) || n === 0) return "";
+  if (period === "daily") return String(n * 7);
+  if (period === "monthly") return String(Math.round((n * 12) / 52));
+  return String(n);
+}
+/** 백필 전(lease_mode = NULL) 예약은 월세 유무로 유형을 갈음한다. */
+function resolveLeaseMode(b: any): LeaseMode {
+  if (b?.lease_mode === "long" || b?.lease_mode === "short") return b.lease_mode;
+  return Number(b?.monthly_rent ?? 0) > 0 ? "long" : "short";
 }
 
 function isoDay(date: Date) {
@@ -244,6 +275,9 @@ export default function BookingDetail() {
       rent_due_day: "", prorate_with_next_month: true,
       manual_pricing: false, deposit_amount: "", monthly_rent: "",
       special_terms: "", contract_date: "",
+      lease_mode: "long", rate_period: "monthly", rate_amount: "", advance_amount: "",
+      down_payment: "", down_payment_date: "", interim_payment: "", interim_payment_date: "",
+      balance_amount: "", balance_date: "",
     },
   });
 
@@ -269,6 +303,18 @@ export default function BookingDetail() {
         monthly_rent: (booking as any).monthly_rent != null ? String((booking as any).monthly_rent) : "",
         special_terms: (booking as any).special_terms ?? "",
         contract_date: (booking as any).contract_date ?? "",
+        lease_mode: resolveLeaseMode(booking),
+        rate_period: (booking as any).rate_period ?? (booking.agreed_weekly_rate ? "weekly" : "monthly"),
+        rate_amount: (booking as any).rate_amount != null
+          ? String((booking as any).rate_amount)
+          : (booking.agreed_weekly_rate ?? ""),
+        advance_amount: (booking as any).advance_amount != null ? String((booking as any).advance_amount) : "",
+        down_payment: (booking as any).down_payment != null ? String((booking as any).down_payment) : "",
+        down_payment_date: (booking as any).down_payment_date ?? "",
+        interim_payment: (booking as any).interim_payment != null ? String((booking as any).interim_payment) : "",
+        interim_payment_date: (booking as any).interim_payment_date ?? "",
+        balance_amount: (booking as any).balance_amount != null ? String((booking as any).balance_amount) : "",
+        balance_date: (booking as any).balance_date ?? "",
       });
     }
   }, [booking, reset]);
@@ -292,14 +338,32 @@ export default function BookingDetail() {
   const createDocMutation = useCreateBookingDocument({ mutation: { onSuccess: () => { qc.invalidateQueries({ queryKey: getListBookingDocumentsQueryKey(Number(id)) }); setUploadDocOpen(false); setDocType(""); setDocUrl(""); setDocExpiry(""); } } });
 
   const onSubmit = (data: FormData) => {
+    const isShort = data.lease_mode === "short";
+    const num = (v: string) => (v === "" ? null : Number(v));
     const payload = {
       ...data,
       num_guests: Number(data.num_guests),
-      rent_due_day: data.rent_due_day === "" ? null : Number(data.rent_due_day),
-      deposit_amount: data.deposit_amount === "" ? null : Number(data.deposit_amount),
-      monthly_rent: data.monthly_rent === "" ? null : Number(data.monthly_rent),
+      rent_due_day: isShort ? null : num(data.rent_due_day),
+      deposit_amount: num(data.deposit_amount),
+      monthly_rent: isShort ? null : num(data.monthly_rent),
       special_terms: data.special_terms || null,
       contract_date: data.contract_date || null,
+      // 고르지 않은 유형의 금액은 비워 보낸다 — 유형을 바꾼 뒤 예전 값이 남으면
+      // 계약 승계·자동청구가 엉뚱한 금액을 집는다.
+      lease_mode: data.lease_mode,
+      rate_period: isShort ? (data.rate_period || null) : null,
+      rate_amount: isShort ? num(data.rate_amount) : null,
+      // 체류 합계와 계약 승계는 주간 요금 기준이라 단기일 때 환산해 함께 저장한다.
+      agreed_weekly_rate: isShort
+        ? (toWeeklyRate(data.rate_amount, data.rate_period) || null)
+        : null,
+      advance_amount: isShort ? num(data.advance_amount) : null,
+      down_payment: isShort ? null : num(data.down_payment),
+      down_payment_date: isShort ? null : (data.down_payment_date || null),
+      interim_payment: isShort ? null : num(data.interim_payment),
+      interim_payment_date: isShort ? null : (data.interim_payment_date || null),
+      balance_amount: num(data.balance_amount),
+      balance_date: data.balance_date || null,
     };
     if (isNew) createMutation.mutate({ data: payload });
     else updateMutation.mutate({ id: Number(id), data: payload });
@@ -315,6 +379,7 @@ export default function BookingDetail() {
 
   // The rate card shown under the product picker has to follow the CURRENTLY
   // selected product, not the saved one, so it stays truthful while editing.
+  // Falls back to the product the booking already carries.
   const { data: selectedProduct } = useQuery({
     queryKey: ["accommodation-product", watchProductId],
     queryFn: async () => {
@@ -339,12 +404,22 @@ export default function BookingDetail() {
     setValue("currency", cardRates?.currency ?? brandCurrency);
     setValue("deposit_amount", product.deposit_amount != null ? String(product.deposit_amount) : "");
     setValue("monthly_rent", cardRates?.monthly != null ? String(cardRates.monthly) : "");
-  }, [watchManual, product, setValue, brandCurrency]);
+    // 단기 요금도 같은 요금표를 따라간다 — 고른 주기의 요금을 그대로 비춘다.
+    const byPeriod: Record<string, number | null | undefined> = {
+      daily: cardRates?.daily, weekly: cardRates?.weekly, monthly: cardRates?.monthly,
+    };
+    const period = watch("rate_period") || "weekly";
+    setValue("rate_amount", byPeriod[period] != null ? String(byPeriod[period]) : "");
+  }, [watchManual, product, setValue, brandCurrency, watch]);
 
+  const watchLeaseMode = watch("lease_mode");
   const watchProrate = watch("prorate_with_next_month");
   const watchDueDay = watch("rent_due_day");
-  // 월 단위 청구 상품일 때만 정산 방식을 묻는다.
-  const isMonthlyBilled = rates?.base_unit === "monthly"
+  // 월 단위 청구 상품일 때만 정산 방식을 묻는다. 장기(전월세) 유형은 상품이
+  // 붙어 있지 않아도 월세 납입일을 받아야 하므로 함께 연다 — 이 값이 비면
+  // 계약으로 넘어간 뒤 자동 월세청구 납기일이 매달 1일로 떨어진다.
+  const isMonthlyBilled = watchLeaseMode === "long"
+    || rates?.base_unit === "monthly"
     || (product?.billing_frequency ?? "").toLowerCase() === "monthly";
   const firstPeriod = firstPeriodProration(watchCheckIn, watchDueDay, rates?.monthly ?? null, rates?.currency ?? brandCurrency);
 
@@ -661,12 +736,52 @@ export default function BookingDetail() {
         </div>
 
         <div className="rounded-lg border bg-white p-4 sm:p-6 space-y-4">
-          <h3 className="text-xs font-semibold text-primary uppercase tracking-wider border-b pb-2">{t("booking.section_rate")}</h3>
+          {/* 임대 유형 — 계약과 같은 스위치. 고른 쪽 항목만 보여주고, 예약 확정 시
+              이 값들이 그대로 계약의 임대 조건으로 넘어간다. */}
+          <div className="flex flex-wrap items-center justify-between gap-3 border-b pb-2">
+            <h3 className="text-xs font-semibold text-primary uppercase tracking-wider">
+              {watchLeaseMode === "short" ? t("booking.section_terms_short") : t("booking.section_terms_long")}
+            </h3>
+            <Controller name="lease_mode" control={control} render={({ field }) => (
+              <div className="inline-flex rounded-md border overflow-hidden text-xs">
+                {(["long", "short"] as const).map((m) => (
+                  <button
+                    key={m}
+                    type="button"
+                    onClick={() => field.onChange(m)}
+                    className={`px-3 py-1.5 ${field.value === m ? "bg-primary text-primary-foreground" : "bg-white text-muted-foreground hover:bg-muted"}`}
+                  >
+                    {t(m === "long" ? "booking.lease_mode_long" : "booking.lease_mode_short")}
+                  </button>
+                ))}
+              </div>
+            )} />
+          </div>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div>
-              <Label>{t("booking.label_weekly_rate")} *</Label>
-              <Input {...register("agreed_weekly_rate")} className="mt-1" placeholder="0.00" />
-            </div>
+            {watchLeaseMode === "short" && (
+              <>
+                <div>
+                  <Label>{t("booking.label_rate_period")}</Label>
+                  <Controller name="rate_period" control={control} render={({ field }) => (
+                    <Select value={field.value || "weekly"} onValueChange={field.onChange} disabled={!watchManual}>
+                      <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        {RATE_PERIODS.map((p) => <SelectItem key={p.value} value={p.value}>{t(p.labelKey)}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  )} />
+                </div>
+                <div>
+                  <Label>{t("booking.label_rate_amount")} *</Label>
+                  <Input
+                    {...register("rate_amount")}
+                    readOnly={!watchManual}
+                    className={`mt-1 ${!watchManual ? "bg-gray-50 text-muted-foreground" : ""}`}
+                    placeholder="0.00"
+                  />
+                </div>
+              </>
+            )}
             <div>
               <Label>{t("booking.label_currency")}</Label>
               <Controller name="currency" control={control} render={({ field }) => (
@@ -695,14 +810,59 @@ export default function BookingDetail() {
                 placeholder="0"
               />
             </div>
+            {watchLeaseMode === "short" ? (
+              <>
+                <div>
+                  <Label>{t("booking.label_total_rent")}</Label>
+                  <Input value={stay?.total ? String(stay.total) : ""} readOnly className="mt-1 bg-gray-50 text-muted-foreground" />
+                </div>
+                <div>
+                  <Label>{t("booking.label_advance_amount")}</Label>
+                  <Input {...register("advance_amount")} className="mt-1" placeholder="0" />
+                </div>
+              </>
+            ) : (
+              <>
+                <div>
+                  <Label>{t("booking.label_monthly_rent")}</Label>
+                  <Input
+                    {...register("monthly_rent")}
+                    readOnly={!watchManual}
+                    className={`mt-1 ${!watchManual ? "bg-gray-50 text-muted-foreground" : ""}`}
+                    placeholder="0"
+                  />
+                </div>
+                <div>
+                  <Label>{t("booking.label_down_payment")}</Label>
+                  <Input {...register("down_payment")} className="mt-1" placeholder="0" />
+                </div>
+                <div>
+                  <Label>{t("booking.label_down_payment_date")}</Label>
+                  <Controller name="down_payment_date" control={control} render={({ field }) => (
+                    <DateInput value={field.value ?? ""} onChange={field.onChange} className="mt-1" />
+                  )} />
+                </div>
+                <div>
+                  <Label>{t("booking.label_interim_payment")}</Label>
+                  <Input {...register("interim_payment")} className="mt-1" placeholder="0" />
+                </div>
+                <div>
+                  <Label>{t("booking.label_interim_payment_date")}</Label>
+                  <Controller name="interim_payment_date" control={control} render={({ field }) => (
+                    <DateInput value={field.value ?? ""} onChange={field.onChange} className="mt-1" />
+                  )} />
+                </div>
+              </>
+            )}
             <div>
-              <Label>{t("booking.label_monthly_rent")}</Label>
-              <Input
-                {...register("monthly_rent")}
-                readOnly={!watchManual}
-                className={`mt-1 ${!watchManual ? "bg-gray-50 text-muted-foreground" : ""}`}
-                placeholder="0"
-              />
+              <Label>{t("booking.label_balance_amount")}</Label>
+              <Input {...register("balance_amount")} className="mt-1" placeholder="0" />
+            </div>
+            <div>
+              <Label>{t("booking.label_balance_date")}</Label>
+              <Controller name="balance_date" control={control} render={({ field }) => (
+                <DateInput value={field.value ?? ""} onChange={field.onChange} className="mt-1" />
+              )} />
             </div>
           </div>
           <div>

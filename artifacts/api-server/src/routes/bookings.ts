@@ -60,6 +60,17 @@ const RentSettlementBody = z.object({
   monthly_rent: blankToNull(z.coerce.number().nullish()),
   special_terms: z.string().nullish(),
   contract_date: z.string().nullish(),
+  // ── 임대 조건 (장기/단기) — 계약과 같은 축, 확정 시 계약으로 승계된다 ──────
+  lease_mode: z.enum(["long", "short"]).nullish(),
+  rate_period: z.enum(["daily", "weekly", "monthly"]).nullish(),
+  rate_amount: blankToNull(z.coerce.number().nullish()),
+  advance_amount: blankToNull(z.coerce.number().nullish()),
+  down_payment: blankToNull(z.coerce.number().nullish()),
+  down_payment_date: z.string().nullish(),
+  interim_payment: blankToNull(z.coerce.number().nullish()),
+  interim_payment_date: z.string().nullish(),
+  balance_amount: blankToNull(z.coerce.number().nullish()),
+  balance_date: z.string().nullish(),
 }).partial();
 
 /** Drizzle `numeric` columns are strings; `null` clears the amount. */
@@ -81,6 +92,16 @@ function rentSettlementPatch(body: unknown): Record<string, unknown> {
   if (has("monthly_rent")) patch["monthly_rent"] = money(parsed.data.monthly_rent);
   if (has("special_terms")) patch["special_terms"] = parsed.data.special_terms || null;
   if (has("contract_date")) patch["contract_date"] = parsed.data.contract_date || null;
+  if (has("lease_mode")) patch["lease_mode"] = parsed.data.lease_mode ?? null;
+  if (has("rate_period")) patch["rate_period"] = parsed.data.rate_period ?? null;
+  if (has("rate_amount")) patch["rate_amount"] = money(parsed.data.rate_amount);
+  if (has("advance_amount")) patch["advance_amount"] = money(parsed.data.advance_amount);
+  if (has("down_payment")) patch["down_payment"] = money(parsed.data.down_payment);
+  if (has("down_payment_date")) patch["down_payment_date"] = parsed.data.down_payment_date || null;
+  if (has("interim_payment")) patch["interim_payment"] = money(parsed.data.interim_payment);
+  if (has("interim_payment_date")) patch["interim_payment_date"] = parsed.data.interim_payment_date || null;
+  if (has("balance_amount")) patch["balance_amount"] = money(parsed.data.balance_amount);
+  if (has("balance_date")) patch["balance_date"] = parsed.data.balance_date || null;
   return patch;
 }
 
@@ -580,12 +601,17 @@ router.patch("/v1/bookings/:id/confirm", async (req, res): Promise<void> => {
     const totalRent = parseFloat(existing.total_rent ?? "0");
     const advanceAmount = weeklyRate * 2;
 
-    // Auto-fill 보증금 / 월세 / 프로모션 from the selected 숙박상품 (Korean rent tier).
-    // For such products the deposit + promo-adjusted monthly become the contract's
-    // bond_amount / monthly_rent; otherwise fall back to the western 4-week bond.
+    // 보증금 / 월세 — 예약에 직접 입력된 값이 상품 rate card 를 이긴다. 예약 화면의
+    // "요금 직접 입력"(manual_pricing)으로 합의한 조건이 계약으로 넘어오지 않으면
+    // 자동 월세청구가 상품 정가로 잡히므로, 예약 값 → 상품 → 서구식 4주 본드 순.
     const lease = await resolveLeaseTermsFromProduct(existing.product_id);
-    const bondAmount = lease?.deposit_amount != null ? lease.deposit_amount : weeklyRate * 4;
-    const monthlyRent = lease?.effective_monthly ?? null;
+    const bookedDeposit = existing.deposit_amount != null ? parseFloat(existing.deposit_amount) : null;
+    const bookedMonthly = existing.monthly_rent != null ? parseFloat(existing.monthly_rent) : null;
+    const bondAmount = bookedDeposit ?? lease?.deposit_amount ?? weeklyRate * 4;
+    const monthlyRent = bookedMonthly ?? lease?.effective_monthly ?? null;
+    // 임대 유형은 예약에서 고른 값을 따르고, 없으면 월세 유무로 갈음한다.
+    const leaseMode = existing.lease_mode ?? (monthlyRent != null && monthlyRent > 0 ? "long" : "short");
+    const numOrNull = (v: string | null) => (v == null ? null : parseFloat(v));
 
     const serviceLines = services.length > 0
       ? services.map(s => `  - ${s.name} (x${s.quantity}): ${existing.currency} ${s.total_price}`).join("\n")
@@ -635,6 +661,7 @@ router.patch("/v1/bookings/:id/confirm", async (req, res): Promise<void> => {
       "  4. The tenant must give 2 weeks notice prior to vacating.",
       "  5. Subletting is not permitted without prior written consent.",
       "",
+      ...(existing.special_terms ? ["특약 (SPECIAL CONDITIONS)", existing.special_terms, ""] : []),
       `Generated on: ${new Date().toISOString().slice(0, 10)}`,
       `Booking Reference: ${existing.booking_ref}`,
     ].join("\n");
@@ -655,8 +682,20 @@ router.patch("/v1/bookings/:id/confirm", async (req, res): Promise<void> => {
       weekly_rate: weeklyRate,
       total_rent: totalRent,
       bond_amount: bondAmount,
-      advance_amount: advanceAmount,
+      advance_amount: numOrNull(existing.advance_amount) ?? advanceAmount,
       monthly_rent: monthlyRent,
+      // ── 예약에서 확정한 임대 조건을 그대로 승계 ─────────────────────────────
+      lease_mode: leaseMode,
+      rate_period: existing.rate_period ?? (existing.agreed_weekly_rate ? "weekly" : null),
+      rate_amount: numOrNull(existing.rate_amount) ?? (weeklyRate || null),
+      rent_due_day: existing.rent_due_day ?? null,
+      down_payment: numOrNull(existing.down_payment),
+      down_payment_date: existing.down_payment_date ?? null,
+      interim_payment: numOrNull(existing.interim_payment),
+      interim_payment_date: existing.interim_payment_date ?? null,
+      balance_amount: numOrNull(existing.balance_amount),
+      balance_date: existing.balance_date ?? null,
+      effective_date: existing.contract_date ?? null,
       currency: existing.currency ?? DEFAULT_CURRENCY,
       exchange_rate_to_aud: await getRateToAud(existing.currency ?? DEFAULT_CURRENCY),
       status: "Draft",

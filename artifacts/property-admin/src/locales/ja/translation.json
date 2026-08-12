@@ -558,7 +558,25 @@
     "label_monthly_rent": "月額賃料",
     "label_special_terms": "特約",
     "ph_special_terms": "この契約で合意した特約事項...",
-    "label_contract_date": "契約日"
+    "label_contract_date": "契約日",
+    "col_amount": "金額",
+    "section_terms_long": "賃貸条件（長期）",
+    "section_terms_short": "賃貸条件（短期）",
+    "lease_mode_long": "長期",
+    "lease_mode_short": "短期",
+    "label_rate_period": "料金周期",
+    "label_rate_amount": "料金",
+    "rate_period_daily": "日単位",
+    "rate_period_weekly": "週単位",
+    "rate_period_monthly": "月単位",
+    "label_total_rent": "賃料合計",
+    "label_advance_amount": "前払金",
+    "label_down_payment": "手付金",
+    "label_down_payment_date": "手付金入金日",
+    "label_interim_payment": "中間金",
+    "label_interim_payment_date": "中間金支払日",
+    "label_balance_amount": "残金",
+    "label_balance_date": "残金入金日"
   },
   "contact": {
     "new": "新規連絡先",
@@ -1377,7 +1395,17 @@
     "year_value": "{{year}}年",
     "filter_date_from": "期間 開始",
     "filter_date_to": "期間 終了",
-    "filter_reset": "リセット"
+    "filter_reset": "リセット",
+    "col_amount": "金額",
+    "section_terms_long": "賃貸条件（長期）",
+    "section_terms_short": "賃貸条件（短期）",
+    "lease_mode_long": "長期",
+    "lease_mode_short": "短期",
+    "label_rate_period": "料金周期",
+    "label_rate_amount": "料金",
+    "rate_period_daily": "日単位",
+    "rate_period_weekly": "週単位",
+    "rate_period_monthly": "月単位"
   },
   "invoice": {
     "new": "新規請求書",
@@ -6558,5 +6586,17 @@
     "verdict_new": "新規",
     "verdict_suppressed": "ブロック",
     "website": "ウェブサイト"
+  },
+  "lease": {
+    "mode_long": "長期",
+    "mode_short": "短期",
+    "all_modes": "すべての種別",
+    "deposit_short": "保証金",
+    "total_short": "合計",
+    "per_month_suffix": "/月",
+    "per_week_suffix": "/週",
+    "per_weekly_suffix": "/週",
+    "per_daily_suffix": "/日",
+    "per_monthly_suffix": "/月"
   }
 }

@@ -47,6 +47,15 @@ const SOURCE_COLORS: Record<Source, { dot: string; chip: string }> = {
   invoices: { dot: "bg-purple-600", chip: "bg-purple-50 text-purple-800 border-purple-200" },
 };
 
+/**
+ * 계약금·중도금·잔금 입금 예정일은 계약/예약과 같은 소스로 오지만 성격이 달라
+ * (돈이 오가는 날) 한눈에 갈라 보이도록 별도 색을 쓴다. 계약일은 소스 색 유지.
+ */
+const MONEY_KINDS = new Set(["down_payment", "interim_payment", "balance"]);
+const MONEY_CHIP = "bg-amber-50 text-amber-900 border-amber-200";
+const chipClass = (ev: CalendarEvent) =>
+  MONEY_KINDS.has(ev.kind) ? MONEY_CHIP : SOURCE_COLORS[ev.source].chip;
+
 const STORAGE_KEY = "admin.calendar.sources";
 
 function loadSources(): Record<Source, boolean> {
@@ -190,7 +199,7 @@ export default function CalendarPage() {
                     </div>
                     <div className="mt-1 space-y-0.5">
                       {dayEvents.slice(0, 3).map((ev) => (
-                        <div key={ev.id} className={`truncate rounded border px-1 py-0.5 text-[11px] leading-tight ${SOURCE_COLORS[ev.source].chip}`}>
+                        <div key={ev.id} className={`truncate rounded border px-1 py-0.5 text-[11px] leading-tight ${chipClass(ev)}`}>
                           {timeLabel(ev) ? `${timeLabel(ev)} ` : ""}{ev.title}
                         </div>
                       ))}
@@ -215,7 +224,7 @@ export default function CalendarPage() {
                 {selectedEvents.map((ev) => (
                   <li key={ev.id}>
                     <Link href={ev.url}>
-                      <div className={`rounded border px-3 py-2 hover:opacity-80 ${SOURCE_COLORS[ev.source].chip}`}>
+                      <div className={`rounded border px-3 py-2 hover:opacity-80 ${chipClass(ev)}`}>
                         <div className="flex items-center justify-between gap-2">
                           <span className="text-sm font-medium">{ev.title}</span>
                           {timeLabel(ev) && <span className="text-xs whitespace-nowrap">{timeLabel(ev)}</span>}

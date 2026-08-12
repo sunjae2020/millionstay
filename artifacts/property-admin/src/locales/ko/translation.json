@@ -558,7 +558,25 @@
     "label_monthly_rent": "월세",
     "label_special_terms": "특약",
     "ph_special_terms": "이 계약에 합의된 특약 사항...",
-    "label_contract_date": "계약일"
+    "label_contract_date": "계약일",
+    "col_amount": "금액",
+    "section_terms_long": "임대 조건 (장기)",
+    "section_terms_short": "임대 조건 (단기)",
+    "lease_mode_long": "장기",
+    "lease_mode_short": "단기",
+    "label_rate_period": "요금 주기",
+    "label_rate_amount": "요금",
+    "rate_period_daily": "일일",
+    "rate_period_weekly": "주간",
+    "rate_period_monthly": "월간",
+    "label_total_rent": "총 임대료",
+    "label_advance_amount": "선급금",
+    "label_down_payment": "계약금",
+    "label_down_payment_date": "계약금 입금일",
+    "label_interim_payment": "중도금",
+    "label_interim_payment_date": "중도금 지급일",
+    "label_balance_amount": "잔금",
+    "label_balance_date": "잔금 입금일"
   },
   "contact": {
     "new": "새 연락처",
@@ -1377,7 +1395,17 @@
     "year_value": "{{year}}년",
     "filter_date_from": "기간 시작",
     "filter_date_to": "기간 종료",
-    "filter_reset": "초기화"
+    "filter_reset": "초기화",
+    "col_amount": "금액",
+    "section_terms_long": "임대 조건 (장기)",
+    "section_terms_short": "임대 조건 (단기)",
+    "lease_mode_long": "장기",
+    "lease_mode_short": "단기",
+    "label_rate_period": "요금 주기",
+    "label_rate_amount": "요금",
+    "rate_period_daily": "일일",
+    "rate_period_weekly": "주간",
+    "rate_period_monthly": "월간"
   },
   "invoice": {
     "new": "새 청구서",
@@ -6558,5 +6586,17 @@
     "verdict_new": "신규",
     "verdict_suppressed": "차단됨",
     "website": "웹사이트"
+  },
+  "lease": {
+    "mode_long": "장기",
+    "mode_short": "단기",
+    "all_modes": "전체 유형",
+    "deposit_short": "보증금",
+    "total_short": "총",
+    "per_month_suffix": "/월",
+    "per_week_suffix": "/주",
+    "per_weekly_suffix": "/주",
+    "per_daily_suffix": "/일",
+    "per_monthly_suffix": "/월"
   }
 }

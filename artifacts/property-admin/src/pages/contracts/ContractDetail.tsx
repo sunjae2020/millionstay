@@ -82,6 +82,25 @@ const MLT_YES_NO = ["", "yes", "no"] as const;
 const toTriState = (v: unknown): string => (v === true ? "yes" : v === false ? "no" : "");
 const fromTriState = (v: string): boolean | null => (v === "yes" ? true : v === "no" ? false : null);
 
+/**
+ * 임대 유형 — 계약이 어떤 결제 모델을 쓰는지. 상세 화면은 이 값에 따라 결제 조건
+ * 섹션을 하나만 보여준다(예전에는 한국식 "결제 조건"과 호주식 "재무"가 동시에
+ * 떠서 어느 칸을 채워야 하는지 알 수 없었다).
+ *   long  — 계약금 · 중도금 · 잔금 · 보증금 · 월세 · 납입일
+ *   short — 요금 주기(일·주·월) × 요금 · 총 임대료 · 선급금 · 잔금
+ * 기간·잔금·보증금·통화는 두 유형이 같은 컬럼을 공유한다.
+ */
+type LeaseMode = "long" | "short";
+const RATE_PERIODS = [
+  { value: "daily", labelKey: "contract.rate_period_daily" },
+  { value: "weekly", labelKey: "contract.rate_period_weekly" },
+  { value: "monthly", labelKey: "contract.rate_period_monthly" },
+];
+/** 백필 전(lease_mode = NULL) 계약은 월세 유무로 유형을 갈음한다. */
+function resolveLeaseMode(c: any): LeaseMode {
+  if (c?.lease_mode === "long" || c?.lease_mode === "short") return c.lease_mode;
+  return Number(c?.monthly_rent ?? 0) > 0 ? "long" : "short";
+}
 const statusColors: Record<string, string> = {
   Draft: "bg-gray-100 text-gray-700",
   Sent: "bg-blue-100 text-blue-700",
@@ -99,6 +118,9 @@ interface FormData {
   space_id: number | null;
   start_date: string;
   end_date: string;
+  lease_mode: LeaseMode;
+  rate_period: string;
+  rate_amount: string;
   weekly_rate: string;
   total_rent: string;
   bond_amount: string;
@@ -307,6 +329,7 @@ export default function ContractDetail() {
       booking_id: null, product_id: null, tenant_account_id: null,
       landlord_account_id: null, space_id: null,
       start_date: "", end_date: "", weekly_rate: "", total_rent: "",
+      lease_mode: "long", rate_period: "monthly", rate_amount: "",
       bond_amount: "", advance_amount: "",
       contract_category: "", lease_form: "", doc_attachments: [],
       down_payment: "", down_payment_date: "", interim_payment: "", interim_payment_date: "",
@@ -331,6 +354,11 @@ export default function ContractDetail() {
         space_id: contract.space_id ?? null,
         start_date: contract.start_date ?? "",
         end_date: contract.end_date ?? "",
+        lease_mode: resolveLeaseMode(contract),
+        rate_period: (contract as any).rate_period ?? (contract.weekly_rate != null ? "weekly" : "monthly"),
+        rate_amount: (contract as any).rate_amount != null
+          ? String((contract as any).rate_amount)
+          : contract.weekly_rate != null ? String(contract.weekly_rate) : "",
         weekly_rate: contract.weekly_rate != null ? String(contract.weekly_rate) : "",
         total_rent: contract.total_rent != null ? String(contract.total_rent) : "",
         bond_amount: contract.bond_amount != null ? String(contract.bond_amount) : "",
@@ -559,7 +587,9 @@ export default function ContractDetail() {
     else addSchedMutation.mutate(payload);
   };
 
-  const buildPayload = (data: FormData) => ({
+  const buildPayload = (data: FormData) => {
+  const isShort = data.lease_mode === "short";
+  return ({
     booking_id: data.booking_id ?? null,
     product_id: data.product_id ?? null,
     tenant_account_id: data.tenant_account_id ?? null,
@@ -567,16 +597,22 @@ export default function ContractDetail() {
     space_id: data.space_id ?? null,
     start_date: data.start_date || null,
     end_date: data.end_date || null,
-    weekly_rate: data.weekly_rate ? Number(data.weekly_rate) : null,
-    total_rent: data.total_rent ? Number(data.total_rent) : null,
+    // 선택하지 않은 유형의 금액은 비워서 보낸다 — 유형을 바꿨을 때 예전 모델의
+    // 값이 남아 있으면 월세 자동청구·계약서 발급이 엉뚱한 금액을 집는다.
+    lease_mode: data.lease_mode,
+    rate_period: isShort ? (data.rate_period || null) : null,
+    rate_amount: isShort && data.rate_amount ? Number(data.rate_amount) : null,
+    // weekly_rate 는 문서 생성 등 기존 경로가 아직 읽으므로 주간 요금일 때만 동기화한다.
+    weekly_rate: isShort && data.rate_period === "weekly" && data.rate_amount ? Number(data.rate_amount) : null,
+    total_rent: isShort && data.total_rent ? Number(data.total_rent) : null,
     bond_amount: data.bond_amount ? Number(data.bond_amount) : null,
-    advance_amount: data.advance_amount ? Number(data.advance_amount) : null,
+    advance_amount: isShort && data.advance_amount ? Number(data.advance_amount) : null,
     contract_category: data.contract_category || null,
     lease_form: data.lease_form || null,
     doc_attachments: data.doc_attachments ?? [],
-    down_payment: data.down_payment ? Number(data.down_payment) : null,
-    interim_payment: data.interim_payment ? Number(data.interim_payment) : null,
-    interim_payment_date: data.interim_payment_date || null,
+    down_payment: !isShort && data.down_payment ? Number(data.down_payment) : null,
+    interim_payment: !isShort && data.interim_payment ? Number(data.interim_payment) : null,
+    interim_payment_date: !isShort ? (data.interim_payment_date || null) : null,
     mlt_landlord_rental_biz_no: data.mlt_landlord_rental_biz_no || null,
     mlt_housing_type: data.mlt_housing_type || null,
     mlt_rental_type: data.mlt_rental_type || null,
@@ -595,19 +631,21 @@ export default function ContractDetail() {
     mlt_guarantee_amount: data.mlt_guarantee_amount ? Number(data.mlt_guarantee_amount) : null,
     mlt_guarantee_none_reason: data.mlt_guarantee_none_reason || null,
     mlt_late_fee_rate: data.mlt_late_fee_rate ? Number(data.mlt_late_fee_rate) : null,
-    down_payment_date: data.down_payment_date || null,
+    down_payment_date: !isShort ? (data.down_payment_date || null) : null,
     balance_amount: data.balance_amount ? Number(data.balance_amount) : null,
     balance_date: data.balance_date || null,
-    monthly_rent: data.monthly_rent ? Number(data.monthly_rent) : null,
-    rent_due_day: data.rent_due_day ? Number(data.rent_due_day) : null,
+    monthly_rent: !isShort && data.monthly_rent ? Number(data.monthly_rent) : null,
+    rent_due_day: !isShort && data.rent_due_day ? Number(data.rent_due_day) : null,
     currency: data.currency || brandCurrency,
     document_url: data.document_url || null,
     terms_text: data.terms_text || null,
     notes: data.notes || null,
   });
+  };
 
   // 서식·종류에 따라 보여 줄 칸이 달라진다(민간임대주택 표준임대차계약서 전용 항목).
   const leaseForm = watch("lease_form");
+  const watchLeaseMode = watch("lease_mode");
   const rentalType = watch("mlt_rental_type");
   const seniorLien = watch("mlt_senior_lien");
   const guaranteeStatus = watch("mlt_guarantee_status");
@@ -1060,10 +1098,29 @@ export default function ContractDetail() {
             </div>
             )}
 
-            {/* Payment Terms (Korean lease structure) */}
+            {/* 임대 조건 — 유형(장기/단기) 하나만 펼쳐진다 */}
             <div className="border rounded-lg bg-white p-4 sm:p-6">
-              <h2 className="text-sm font-semibold uppercase text-primary tracking-wide mb-4">{t('contract.section_payment_terms')}</h2>
+              <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+                <h2 className="text-sm font-semibold uppercase text-primary tracking-wide">
+                  {watchLeaseMode === "short" ? t('contract.section_terms_short') : t('contract.section_terms_long')}
+                </h2>
+                <Controller name="lease_mode" control={control} render={({ field }) => (
+                  <div className="inline-flex rounded-md border overflow-hidden text-xs">
+                    {(["long", "short"] as const).map(m => (
+                      <button
+                        key={m}
+                        type="button"
+                        onClick={() => field.onChange(m)}
+                        className={`px-3 py-1.5 ${field.value === m ? "bg-primary text-primary-foreground" : "bg-white text-muted-foreground hover:bg-muted"}`}
+                      >
+                        {t(m === "long" ? 'contract.lease_mode_long' : 'contract.lease_mode_short')}
+                      </button>
+                    ))}
+                  </div>
+                )} />
+              </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {/* 공통 — 기간·통화·보증금 */}
                 <div>
                   <Label>{t('contract.label_move_in')}</Label>
                   <Controller name="start_date" control={control} render={({ field }) => (
@@ -1077,55 +1134,6 @@ export default function ContractDetail() {
                   )} />
                 </div>
                 <div>
-                  <Label>{t('contract.label_down_payment')}</Label>
-                  <Input {...register("down_payment")} type="number" step="0.01" min="0" />
-                </div>
-                <div>
-                  <Label>{t('contract.label_down_payment_date')}</Label>
-                  <Controller name="down_payment_date" control={control} render={({ field }) => (
-                    <DateInput value={field.value ?? ""} onChange={field.onChange} />
-                  )} />
-                </div>
-                <div>
-                  <Label>{t('contract.label_interim_payment')}</Label>
-                  <Input {...register("interim_payment")} type="number" step="0.01" min="0" />
-                </div>
-                <div>
-                  <Label>{t('contract.label_interim_payment_date')}</Label>
-                  <Controller name="interim_payment_date" control={control} render={({ field }) => (
-                    <DateInput value={field.value ?? ""} onChange={field.onChange} />
-                  )} />
-                </div>
-                <div>
-                  <Label>{t('contract.label_balance')}</Label>
-                  <Input {...register("balance_amount")} type="number" step="0.01" min="0" />
-                </div>
-                <div>
-                  <Label>{t('contract.label_balance_date')}</Label>
-                  <Controller name="balance_date" control={control} render={({ field }) => (
-                    <DateInput value={field.value ?? ""} onChange={field.onChange} />
-                  )} />
-                </div>
-                <div>
-                  <Label>{t('contract.label_deposit')}</Label>
-                  <Input {...register("bond_amount")} type="number" step="0.01" min="0" />
-                </div>
-                <div>
-                  <Label>{t('contract.label_monthly_rent')}</Label>
-                  <Input {...register("monthly_rent")} type="number" step="0.01" min="0" />
-                </div>
-                <div>
-                  <Label>{t('contract.label_rent_due_day')}</Label>
-                  <Input {...register("rent_due_day")} type="number" step="1" min="1" max="31" />
-                </div>
-              </div>
-            </div>
-
-            {/* Financial */}
-            <div className="border rounded-lg bg-white p-4 sm:p-6">
-              <h2 className="text-sm font-semibold uppercase text-primary tracking-wide mb-4">{t('contract.section_financial')}</h2>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
                   <Label>{t('contract.label_currency')}</Label>
                   <Controller name="currency" control={control} render={({ field }) => (
                     <Select value={field.value} onValueChange={field.onChange}>
@@ -1137,17 +1145,88 @@ export default function ContractDetail() {
                   )} />
                 </div>
                 <div>
-                  <Label>{t('contract.label_weekly_rate')}</Label>
-                  <Input {...register("weekly_rate")} type="number" step="0.01" min="0" />
+                  <Label>{t('contract.label_deposit')}</Label>
+                  <Input {...register("bond_amount")} type="number" step="0.01" min="0" />
                 </div>
-                <div>
-                  <Label>{t('contract.label_total_rent')}</Label>
-                  <Input {...register("total_rent")} type="number" step="0.01" min="0" />
-                </div>
-                <div>
-                  <Label>{t('contract.label_advance')}</Label>
-                  <Input {...register("advance_amount")} type="number" step="0.01" min="0" />
-                </div>
+
+                {watchLeaseMode === "short" ? (
+                  <>
+                    <div>
+                      <Label>{t('contract.label_rate_period')}</Label>
+                      <Controller name="rate_period" control={control} render={({ field }) => (
+                        <Select value={field.value || "weekly"} onValueChange={field.onChange}>
+                          <SelectTrigger><SelectValue /></SelectTrigger>
+                          <SelectContent>
+                            {RATE_PERIODS.map(pd => <SelectItem key={pd.value} value={pd.value}>{t(pd.labelKey)}</SelectItem>)}
+                          </SelectContent>
+                        </Select>
+                      )} />
+                    </div>
+                    <div>
+                      <Label>{t('contract.label_rate_amount')}</Label>
+                      <Input {...register("rate_amount")} type="number" step="0.01" min="0" />
+                    </div>
+                    <div>
+                      <Label>{t('contract.label_total_rent')}</Label>
+                      <Input {...register("total_rent")} type="number" step="0.01" min="0" />
+                    </div>
+                    <div>
+                      <Label>{t('contract.label_advance')}</Label>
+                      <Input {...register("advance_amount")} type="number" step="0.01" min="0" />
+                    </div>
+                    <div>
+                      <Label>{t('contract.label_balance')}</Label>
+                      <Input {...register("balance_amount")} type="number" step="0.01" min="0" />
+                    </div>
+                    <div>
+                      <Label>{t('contract.label_balance_date')}</Label>
+                      <Controller name="balance_date" control={control} render={({ field }) => (
+                        <DateInput value={field.value ?? ""} onChange={field.onChange} />
+                      )} />
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div>
+                      <Label>{t('contract.label_down_payment')}</Label>
+                      <Input {...register("down_payment")} type="number" step="0.01" min="0" />
+                    </div>
+                    <div>
+                      <Label>{t('contract.label_down_payment_date')}</Label>
+                      <Controller name="down_payment_date" control={control} render={({ field }) => (
+                        <DateInput value={field.value ?? ""} onChange={field.onChange} />
+                      )} />
+                    </div>
+                    <div>
+                      <Label>{t('contract.label_interim_payment')}</Label>
+                      <Input {...register("interim_payment")} type="number" step="0.01" min="0" />
+                    </div>
+                    <div>
+                      <Label>{t('contract.label_interim_payment_date')}</Label>
+                      <Controller name="interim_payment_date" control={control} render={({ field }) => (
+                        <DateInput value={field.value ?? ""} onChange={field.onChange} />
+                      )} />
+                    </div>
+                    <div>
+                      <Label>{t('contract.label_balance')}</Label>
+                      <Input {...register("balance_amount")} type="number" step="0.01" min="0" />
+                    </div>
+                    <div>
+                      <Label>{t('contract.label_balance_date')}</Label>
+                      <Controller name="balance_date" control={control} render={({ field }) => (
+                        <DateInput value={field.value ?? ""} onChange={field.onChange} />
+                      )} />
+                    </div>
+                    <div>
+                      <Label>{t('contract.label_monthly_rent')}</Label>
+                      <Input {...register("monthly_rent")} type="number" step="0.01" min="0" />
+                    </div>
+                    <div>
+                      <Label>{t('contract.label_rent_due_day')}</Label>
+                      <Input {...register("rent_due_day")} type="number" step="1" min="1" max="31" />
+                    </div>
+                  </>
+                )}
               </div>
             </div>
 

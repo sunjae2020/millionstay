@@ -59,6 +59,21 @@ export const bookingsTable = pgTable("bookings", {
   manual_pricing: boolean("manual_pricing").notNull().default(false),
   deposit_amount: numeric("deposit_amount", { precision: 12, scale: 2 }),
   monthly_rent: numeric("monthly_rent", { precision: 12, scale: 2 }),
+  // ── 임대 조건 (장기/단기 스위치) ──────────────────────────────────────────
+  // 계약(contracts)과 같은 축으로 예약에서도 결제 조건을 확정할 수 있게 한다.
+  // 예약 확정 시 이 값들이 그대로 계약으로 승계된다(routes/bookings.ts confirm).
+  //   'long'  — 계약금 · 중도금 · 잔금 · 보증금 · 월세 · 납입일
+  //   'short' — 요금 주기(일·주·월) × 요금 · 총 임대료 · 선급금 · 잔금
+  lease_mode: text("lease_mode"),
+  rate_period: text("rate_period"),
+  rate_amount: numeric("rate_amount", { precision: 12, scale: 2 }),
+  advance_amount: numeric("advance_amount", { precision: 12, scale: 2 }),
+  down_payment: numeric("down_payment", { precision: 12, scale: 2 }),
+  down_payment_date: date("down_payment_date"),
+  interim_payment: numeric("interim_payment", { precision: 12, scale: 2 }),
+  interim_payment_date: date("interim_payment_date"),
+  balance_amount: numeric("balance_amount", { precision: 12, scale: 2 }),
+  balance_date: date("balance_date"),
   // 특약 — free-text special conditions agreed for this stay.
   special_terms: text("special_terms"),
   // 계약일 — the day the contract was signed, distinct from check-in.

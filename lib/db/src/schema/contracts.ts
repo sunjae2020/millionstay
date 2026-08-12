@@ -13,6 +13,15 @@ export const contractsTable = pgTable("contracts", {
   space_id: integer("space_id"),
   start_date: text("start_date"),
   end_date: text("end_date"),
+  // 임대 유형 — 'long'(전월세형: 계약금·중도금·잔금·보증금·월세) / 'short'(요금형:
+  // 일·주·월 요금 + 총 임대료 + 선급금 + 잔금). 계약 상세는 이 값으로 결제 조건
+  // 섹션 하나만 보여준다. 잔금·보증금·기간 컬럼은 두 유형이 공유한다.
+  lease_mode: text("lease_mode"),
+  // 단기 요금 주기 — 'daily' | 'weekly' | 'monthly'. 값이 열려 있으므로(text)
+  // 격주 등은 마이그레이션 없이 추가할 수 있다. weekly_rate 의 후신.
+  rate_period: text("rate_period"),
+  rate_amount: numeric("rate_amount", { precision: 12, scale: 2, mode: "number" }),
+  /** @deprecated rate_amount + rate_period='weekly' 로 대체됨. 읽기 호환용으로 남긴다. */
   weekly_rate: numeric("weekly_rate", { precision: 12, scale: 2, mode: "number" }),
   total_rent: numeric("total_rent", { precision: 12, scale: 2, mode: "number" }),
   bond_amount: numeric("bond_amount", { precision: 12, scale: 2, mode: "number" }),

@@ -558,7 +558,25 @@
     "label_monthly_rent": "ค่าเช่ารายเดือน",
     "label_special_terms": "ข้อตกลงพิเศษ",
     "ph_special_terms": "เงื่อนไขที่ตกลงกันสำหรับการเข้าพักครั้งนี้...",
-    "label_contract_date": "วันที่ทำสัญญา"
+    "label_contract_date": "วันที่ทำสัญญา",
+    "col_amount": "จำนวนเงิน",
+    "section_terms_long": "เงื่อนไขการเช่า (ระยะยาว)",
+    "section_terms_short": "เงื่อนไขการเช่า (ระยะสั้น)",
+    "lease_mode_long": "ระยะยาว",
+    "lease_mode_short": "ระยะสั้น",
+    "label_rate_period": "รอบค่าเช่า",
+    "label_rate_amount": "ค่าเช่า",
+    "rate_period_daily": "รายวัน",
+    "rate_period_weekly": "รายสัปดาห์",
+    "rate_period_monthly": "รายเดือน",
+    "label_total_rent": "ค่าเช่ารวม",
+    "label_advance_amount": "เงินจ่ายล่วงหน้า",
+    "label_down_payment": "เงินดาวน์",
+    "label_down_payment_date": "วันชำระเงินดาวน์",
+    "label_interim_payment": "เงินงวดกลาง",
+    "label_interim_payment_date": "วันชำระเงินงวดกลาง",
+    "label_balance_amount": "เงินงวดสุดท้าย",
+    "label_balance_date": "วันชำระเงินงวดสุดท้าย"
   },
   "contact": {
     "new": "ผู้ติดต่อใหม่",
@@ -1377,7 +1395,17 @@
     "year_value": "ปี {{year}}",
     "filter_date_from": "ช่วงเวลาเริ่ม",
     "filter_date_to": "ช่วงเวลาสิ้นสุด",
-    "filter_reset": "ล้างตัวกรอง"
+    "filter_reset": "ล้างตัวกรอง",
+    "col_amount": "จำนวนเงิน",
+    "section_terms_long": "เงื่อนไขการเช่า (ระยะยาว)",
+    "section_terms_short": "เงื่อนไขการเช่า (ระยะสั้น)",
+    "lease_mode_long": "ระยะยาว",
+    "lease_mode_short": "ระยะสั้น",
+    "label_rate_period": "รอบค่าเช่า",
+    "label_rate_amount": "ค่าเช่า",
+    "rate_period_daily": "รายวัน",
+    "rate_period_weekly": "รายสัปดาห์",
+    "rate_period_monthly": "รายเดือน"
   },
   "invoice": {
     "new": "ใบแจ้งหนี้ใหม่",
@@ -6558,5 +6586,17 @@
     "verdict_new": "ใหม่",
     "verdict_suppressed": "ถูกบล็อก",
     "website": "เว็บไซต์"
+  },
+  "lease": {
+    "mode_long": "ระยะยาว",
+    "mode_short": "ระยะสั้น",
+    "all_modes": "ทุกประเภท",
+    "deposit_short": "เงินมัดจำ",
+    "total_short": "รวม",
+    "per_month_suffix": "/เดือน",
+    "per_week_suffix": "/สัปดาห์",
+    "per_weekly_suffix": "/สัปดาห์",
+    "per_daily_suffix": "/วัน",
+    "per_monthly_suffix": "/เดือน"
   }
 }

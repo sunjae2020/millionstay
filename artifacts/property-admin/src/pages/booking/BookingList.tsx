@@ -12,6 +12,7 @@ import {
 import { useQueryClient } from "@tanstack/react-query";
 import { Plus, Search, List, Calendar } from "lucide-react";
 import { DataTable, ACTIONS_KEY, type ColumnDef } from "@/components/ui/data-table";
+import { LeaseAmountCell, monthlyEquivalent, leaseModeOf } from "@/components/LeaseAmountCell";
 import { ALL, SearchBox, DateRangeFilter, FacetSelect, ResetFiltersButton, useListFacets, useYearLabel } from "@/components/list-filters";
 import { formatDate } from "@/lib/date";
 
@@ -125,6 +126,7 @@ export default function BookingList() {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [sourceFilter, setSourceFilter] = useState("");
+  const [leaseMode, setLeaseMode] = useState("");
   const [year, setYear] = useState(ALL);
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
@@ -150,6 +152,10 @@ export default function BookingList() {
   const { data: bookings, isLoading } = useListBookings(params, {
     query: { queryKey: getListBookingsQueryKey(params) },
   });
+  // 임대 유형은 목록 API 의 필터가 아니라 행의 값에서 바로 판정한다(백필 전 행 포함).
+  const rows = leaseMode
+    ? (bookings ?? []).filter((b) => leaseModeOf(b as any) === leaseMode)
+    : bookings;
 
   const confirmMutation = useConfirmBooking({
     mutation: { onSuccess: () => qc.invalidateQueries({ queryKey: getListBookingsQueryKey({}) }) },
@@ -196,9 +202,14 @@ export default function BookingList() {
         cell: (b) => b.stay_nights ?? "—",
       },
       {
-        key: "agreed_weekly_rate",
-        header: "booking.col_rate",
-        cell: (b) => <span className="whitespace-nowrap">{b.agreed_weekly_rate ? `$${parseFloat(b.agreed_weekly_rate).toFixed(0)}/wk` : "—"}</span>,
+        // 계약 리스트와 같은 규칙 — 유형 배지 + 그 유형의 문법으로 쓴 금액,
+        // 정렬은 월 환산액으로 통일한다.
+        key: "amount",
+        header: "booking.col_amount",
+        defaultWidth: 260,
+        cell: (b) => <LeaseAmountCell record={b as any} />,
+        sortAccessor: (b) => monthlyEquivalent(b as any),
+        csv: (b) => monthlyEquivalent(b as any),
       },
       {
         key: "booking_status",
@@ -266,7 +277,7 @@ export default function BookingList() {
           <DataTable
             tableKey="bookings"
             columns={columns}
-            data={bookings}
+            data={rows}
             isLoading={isLoading}
             rowKey={(b) => b.id}
             emptyText={t("booking.no_bookings")}
@@ -294,6 +305,14 @@ export default function BookingList() {
                   <SelectContent>
                     <SelectItem value="_all">{t("booking.all_sources")}</SelectItem>
                     {["Direct", "Agent", "Website", "Referral"].map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+                <Select value={leaseMode || "_all"} onValueChange={(v) => setLeaseMode(v === "_all" ? "" : v)}>
+                  <SelectTrigger className="w-[120px]"><SelectValue placeholder={t("lease.all_modes")} /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="_all">{t("lease.all_modes")}</SelectItem>
+                    <SelectItem value="long">{t("lease.mode_long")}</SelectItem>
+                    <SelectItem value="short">{t("lease.mode_short")}</SelectItem>
                   </SelectContent>
                 </Select>
                 <FacetSelect

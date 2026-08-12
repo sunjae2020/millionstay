@@ -443,11 +443,19 @@ async function contractKeywordCondition(q: string) {
 router.get("/v1/contracts", async (req, res): Promise<void> => {
   const {
     q, status, tenant_account_id, space_id, booking_id, account_id,
-    contract_category, lease_form, year, date_from, date_to,
+    contract_category, lease_form, lease_mode, year, date_from, date_to,
   } = req.query as Record<string, string>;
   const conditions: any[] = [deletedFilter(contractsTable.deleted_at, req)];
   if (q) conditions.push(await contractKeywordCondition(q));
   if (status) conditions.push(eq(contractsTable.status, status));
+  // 임대 유형(장기/단기). 백필 전 행은 lease_mode 가 NULL 이므로 월세 유무로 갈음한다.
+  if (lease_mode === "long") {
+    conditions.push(or(eq(contractsTable.lease_mode, "long"),
+      and(isNull(contractsTable.lease_mode), sql`coalesce(${contractsTable.monthly_rent}, 0) > 0`)));
+  } else if (lease_mode === "short") {
+    conditions.push(or(eq(contractsTable.lease_mode, "short"),
+      and(isNull(contractsTable.lease_mode), sql`coalesce(${contractsTable.monthly_rent}, 0) = 0`)));
+  }
   if (contract_category) conditions.push(eq(contractsTable.contract_category, contract_category));
   if (lease_form) conditions.push(eq(contractsTable.lease_form, lease_form));
   // 년도별·기간별 모두 "계약 기간이 걸쳐 있는" 기준(시작일만 보면 다년 계약이 빠진다).
@@ -529,6 +537,9 @@ router.post("/v1/contracts", async (req, res): Promise<void> => {
     space_id: data.space_id ?? null,
     start_date: data.start_date ?? null,
     end_date: data.end_date ?? null,
+    lease_mode: data.lease_mode ?? null,
+    rate_period: data.rate_period ?? null,
+    rate_amount: data.rate_amount ?? null,
     weekly_rate: data.weekly_rate ?? null,
     total_rent: data.total_rent ?? null,
     bond_amount: data.bond_amount ?? lease?.deposit_amount ?? null,
@@ -1341,6 +1352,9 @@ router.put("/v1/contracts/:id", async (req, res): Promise<void> => {
         space_id: data.space_id ?? null,
         start_date: data.start_date ?? null,
         end_date: data.end_date ?? null,
+        lease_mode: data.lease_mode ?? null,
+        rate_period: data.rate_period ?? null,
+        rate_amount: data.rate_amount ?? null,
         weekly_rate: data.weekly_rate ?? null,
         total_rent: data.total_rent ?? null,
         bond_amount: data.bond_amount ?? null,

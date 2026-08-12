@@ -558,7 +558,25 @@
     "label_monthly_rent": "Monthly Rent",
     "label_special_terms": "Special Terms",
     "ph_special_terms": "Conditions agreed for this stay...",
-    "label_contract_date": "Contract Date"
+    "label_contract_date": "Contract Date",
+    "col_amount": "Amount",
+    "section_terms_long": "Lease terms (long-term)",
+    "section_terms_short": "Lease terms (short-term)",
+    "lease_mode_long": "Long-term",
+    "lease_mode_short": "Short-term",
+    "label_rate_period": "Rate period",
+    "label_rate_amount": "Rate",
+    "rate_period_daily": "Daily",
+    "rate_period_weekly": "Weekly",
+    "rate_period_monthly": "Monthly",
+    "label_total_rent": "Total rent",
+    "label_advance_amount": "Advance payment",
+    "label_down_payment": "Down payment",
+    "label_down_payment_date": "Down payment date",
+    "label_interim_payment": "Interim payment",
+    "label_interim_payment_date": "Interim payment date",
+    "label_balance_amount": "Balance",
+    "label_balance_date": "Balance date"
   },
   "contact": {
     "new": "New Contact",
@@ -1377,7 +1395,17 @@
     "year_value": "{{year}}",
     "filter_date_from": "Period from",
     "filter_date_to": "Period to",
-    "filter_reset": "Reset"
+    "filter_reset": "Reset",
+    "col_amount": "Amount",
+    "section_terms_long": "Lease terms (long-term)",
+    "section_terms_short": "Lease terms (short-term)",
+    "lease_mode_long": "Long-term",
+    "lease_mode_short": "Short-term",
+    "label_rate_period": "Rate period",
+    "label_rate_amount": "Rate",
+    "rate_period_daily": "Daily",
+    "rate_period_weekly": "Weekly",
+    "rate_period_monthly": "Monthly"
   },
   "invoice": {
     "new": "New Invoice",
@@ -6558,5 +6586,17 @@
     "verdict_new": "New",
     "verdict_suppressed": "Blocked",
     "website": "Website"
+  },
+  "lease": {
+    "mode_long": "Long-term",
+    "mode_short": "Short-term",
+    "all_modes": "All types",
+    "deposit_short": "Deposit",
+    "total_short": "Total",
+    "per_month_suffix": "/mo",
+    "per_week_suffix": "/wk",
+    "per_weekly_suffix": "/wk",
+    "per_daily_suffix": "/day",
+    "per_monthly_suffix": "/mo"
   }
 }

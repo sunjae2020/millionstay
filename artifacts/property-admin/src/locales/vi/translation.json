@@ -558,7 +558,25 @@
     "label_monthly_rent": "Tiền thuê hằng tháng",
     "label_special_terms": "Điều khoản đặc biệt",
     "ph_special_terms": "Các điều khoản đã thỏa thuận cho kỳ lưu trú này...",
-    "label_contract_date": "Ngày ký hợp đồng"
+    "label_contract_date": "Ngày ký hợp đồng",
+    "col_amount": "Số tiền",
+    "section_terms_long": "Điều kiện thuê (dài hạn)",
+    "section_terms_short": "Điều kiện thuê (ngắn hạn)",
+    "lease_mode_long": "Dài hạn",
+    "lease_mode_short": "Ngắn hạn",
+    "label_rate_period": "Chu kỳ giá",
+    "label_rate_amount": "Giá thuê",
+    "rate_period_daily": "Theo ngày",
+    "rate_period_weekly": "Theo tuần",
+    "rate_period_monthly": "Theo tháng",
+    "label_total_rent": "Tổng tiền thuê",
+    "label_advance_amount": "Tiền trả trước",
+    "label_down_payment": "Tiền đặt cọc hợp đồng",
+    "label_down_payment_date": "Ngày nộp tiền đặt cọc",
+    "label_interim_payment": "Thanh toán giữa kỳ",
+    "label_interim_payment_date": "Ngày thanh toán giữa kỳ",
+    "label_balance_amount": "Tiền còn lại",
+    "label_balance_date": "Ngày nộp tiền còn lại"
   },
   "contact": {
     "new": "Liên hệ mới",
@@ -1377,7 +1395,17 @@
     "year_value": "Năm {{year}}",
     "filter_date_from": "Từ ngày",
     "filter_date_to": "Đến ngày",
-    "filter_reset": "Đặt lại"
+    "filter_reset": "Đặt lại",
+    "col_amount": "Số tiền",
+    "section_terms_long": "Điều kiện thuê (dài hạn)",
+    "section_terms_short": "Điều kiện thuê (ngắn hạn)",
+    "lease_mode_long": "Dài hạn",
+    "lease_mode_short": "Ngắn hạn",
+    "label_rate_period": "Chu kỳ giá",
+    "label_rate_amount": "Giá thuê",
+    "rate_period_daily": "Theo ngày",
+    "rate_period_weekly": "Theo tuần",
+    "rate_period_monthly": "Theo tháng"
   },
   "invoice": {
     "new": "Tạo hóa đơn mới",
@@ -6558,5 +6586,17 @@
     "verdict_new": "Mới",
     "verdict_suppressed": "Bị chặn",
     "website": "Website"
+  },
+  "lease": {
+    "mode_long": "Dài hạn",
+    "mode_short": "Ngắn hạn",
+    "all_modes": "Tất cả loại",
+    "deposit_short": "Tiền cọc",
+    "total_short": "Tổng",
+    "per_month_suffix": "/tháng",
+    "per_week_suffix": "/tuần",
+    "per_weekly_suffix": "/tuần",
+    "per_daily_suffix": "/ngày",
+    "per_monthly_suffix": "/tháng"
   }
 }

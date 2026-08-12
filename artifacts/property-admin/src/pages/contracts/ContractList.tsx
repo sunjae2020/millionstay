@@ -20,6 +20,7 @@ import { formatMoney } from "@/lib/currency";
 import { formatDate } from "@/lib/date";
 import { useDocumentRowActions } from "@/components/DocumentRowActions";
 import { apiJson } from "@/lib/apiFetch";
+import { LeaseAmountCell, monthlyEquivalent } from "@/components/LeaseAmountCell";
 
 /** 계약 구분 / 서식 코드 → i18n 키. 이관 데이터는 자유 문자열이라 매핑이 없으면 값 그대로 보여준다. */
 const CATEGORY_LABELS: Record<string, string> = {
@@ -53,6 +54,7 @@ export default function ContractList() {
   const [status, setStatus] = useState("_all");
   const [category, setCategory] = useState("_all");
   const [leaseForm, setLeaseForm] = useState("_all");
+  const [leaseMode, setLeaseMode] = useState("_all");
   const [year, setYear] = useState("_all");
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
@@ -69,6 +71,7 @@ export default function ContractList() {
     status: status === "_all" ? undefined : status,
     contract_category: category === "_all" ? undefined : category,
     lease_form: leaseForm === "_all" ? undefined : leaseForm,
+    lease_mode: leaseMode === "_all" ? undefined : leaseMode,
     year: year === "_all" ? undefined : year,
     date_from: dateFrom || undefined,
     date_to: dateTo || undefined,
@@ -77,10 +80,10 @@ export default function ContractList() {
 
   const hasFilters =
     !!q || status !== "_all" || category !== "_all" || leaseForm !== "_all" ||
-    year !== "_all" || !!dateFrom || !!dateTo;
+    leaseMode !== "_all" || year !== "_all" || !!dateFrom || !!dateTo;
   const resetFilters = () => {
     setQ(""); setStatus("_all"); setCategory("_all");
-    setLeaseForm("_all"); setYear("_all"); setDateFrom(""); setDateTo("");
+    setLeaseForm("_all"); setLeaseMode("_all"); setYear("_all"); setDateFrom(""); setDateTo("");
   };
   const categoryOptions = facets?.categories ?? [];
   const leaseFormOptions = facets?.lease_forms ?? [];
@@ -136,14 +139,14 @@ export default function ContractList() {
         cell: (c) => <span className="text-sm">{formatDate(c.end_date)}</span>,
       },
       {
-        key: "weekly_rate",
-        header: "contract.col_weekly_rate",
-        cell: (c) => <span className="text-sm">{c.weekly_rate != null ? `${formatMoney(c.weekly_rate, currency, currencyPosition)}/wk` : "—"}</span>,
-      },
-      {
-        key: "total_rent",
-        header: "contract.col_total_rent",
-        cell: (c) => <span className="text-sm">{c.total_rent != null ? formatMoney(c.total_rent, currency, currencyPosition) : "—"}</span>,
+        // 장기/단기를 한 칸에 — 유형 배지 + 그 유형의 문법으로 쓴 금액.
+        // 정렬은 월 환산액으로 통일해 유형이 달라도 줄 세울 수 있게 한다.
+        key: "amount",
+        header: "contract.col_amount",
+        defaultWidth: 260,
+        cell: (c) => <LeaseAmountCell record={c as any} />,
+        sortAccessor: (c) => monthlyEquivalent(c as any),
+        csv: (c) => monthlyEquivalent(c as any),
       },
       {
         key: "status",
@@ -209,6 +212,16 @@ export default function ContractList() {
                   <SelectItem value="Active">{t("contract.status_active")}</SelectItem>
                   <SelectItem value="Expired">{t("contract.status_expired")}</SelectItem>
                   <SelectItem value="Terminated">{t("contract.status_terminated")}</SelectItem>
+                </SelectContent>
+              </Select>
+              <Select value={leaseMode} onValueChange={setLeaseMode}>
+                <SelectTrigger className="w-32">
+                  <SelectValue placeholder={t("lease.all_modes")} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="_all">{t("lease.all_modes")}</SelectItem>
+                  <SelectItem value="long">{t("lease.mode_long")}</SelectItem>
+                  <SelectItem value="short">{t("lease.mode_short")}</SelectItem>
                 </SelectContent>
               </Select>
               {categoryOptions.length > 0 && (

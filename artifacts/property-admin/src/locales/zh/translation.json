@@ -558,7 +558,25 @@
     "label_monthly_rent": "月租",
     "label_special_terms": "特别约定",
     "ph_special_terms": "本次入住约定的特别条款...",
-    "label_contract_date": "签约日期"
+    "label_contract_date": "签约日期",
+    "col_amount": "金额",
+    "section_terms_long": "租赁条件（长租）",
+    "section_terms_short": "租赁条件（短租）",
+    "lease_mode_long": "长租",
+    "lease_mode_short": "短租",
+    "label_rate_period": "计价周期",
+    "label_rate_amount": "租金",
+    "rate_period_daily": "按日",
+    "rate_period_weekly": "按周",
+    "rate_period_monthly": "按月",
+    "label_total_rent": "租金合计",
+    "label_advance_amount": "预付款",
+    "label_down_payment": "定金",
+    "label_down_payment_date": "定金到账日",
+    "label_interim_payment": "中期款",
+    "label_interim_payment_date": "中期款支付日",
+    "label_balance_amount": "尾款",
+    "label_balance_date": "尾款到账日"
   },
   "contact": {
     "new": "新建联系人",
@@ -1377,7 +1395,17 @@
     "year_value": "{{year}}年",
     "filter_date_from": "起始日期",
     "filter_date_to": "结束日期",
-    "filter_reset": "重置"
+    "filter_reset": "重置",
+    "col_amount": "金额",
+    "section_terms_long": "租赁条件（长租）",
+    "section_terms_short": "租赁条件（短租）",
+    "lease_mode_long": "长租",
+    "lease_mode_short": "短租",
+    "label_rate_period": "计价周期",
+    "label_rate_amount": "租金",
+    "rate_period_daily": "按日",
+    "rate_period_weekly": "按周",
+    "rate_period_monthly": "按月"
   },
   "invoice": {
     "new": "新建发票",
@@ -6558,5 +6586,17 @@
     "verdict_new": "新增",
     "verdict_suppressed": "已拦截",
     "website": "网站"
+  },
+  "lease": {
+    "mode_long": "长租",
+    "mode_short": "短租",
+    "all_modes": "全部类型",
+    "deposit_short": "押金",
+    "total_short": "合计",
+    "per_month_suffix": "/月",
+    "per_week_suffix": "/周",
+    "per_weekly_suffix": "/周",
+    "per_daily_suffix": "/日",
+    "per_monthly_suffix": "/月"
   }
 }

@@ -163,19 +163,40 @@ router.get("/v1/calendar/events", async (req, res): Promise<void> => {
       isNull(contractsTable.deleted_at),
       ne(contractsTable.status, "Cancelled"),
       or(
-        and(isNotNull(contractsTable.start_date), gte(contractsTable.start_date, from), lte(contractsTable.start_date, to)),
-        and(isNotNull(contractsTable.end_date), gte(contractsTable.end_date, from), lte(contractsTable.end_date, to)),
+        ...([
+          contractsTable.start_date, contractsTable.end_date, contractsTable.effective_date,
+          contractsTable.down_payment_date, contractsTable.interim_payment_date, contractsTable.balance_date,
+        ].map(col => and(isNotNull(col), gte(col, from), lte(col, to)))),
       ),
     ));
     const labels = await spaceLabels(rows.map(r => r.space_id).filter(Boolean) as number[]);
     for (const r of rows) {
       const space = r.space_id ? (labels[r.space_id] ?? null) : null;
       const base = { source: "contracts" as const, status: r.status, url: `/booking/contracts/${r.id}`, ref: r.contract_ref, space_name: space, all_day: true, end: null };
-      if (r.start_date && r.start_date >= from && r.start_date <= to) {
-        events.push({ ...base, id: `contracts:${r.id}:move_in`, kind: "move_in", title: `입주 — ${space ?? r.contract_ref}`, start: r.start_date });
+      const inRange = (d: string | null | undefined) => !!d && d >= from && d <= to;
+      if (inRange(r.start_date)) {
+        events.push({ ...base, id: `contracts:${r.id}:move_in`, kind: "move_in", title: `입주 — ${space ?? r.contract_ref}`, start: r.start_date! });
       }
-      if (r.end_date && r.end_date >= from && r.end_date <= to) {
-        events.push({ ...base, id: `contracts:${r.id}:move_out`, kind: "move_out", title: `퇴거 — ${space ?? r.contract_ref}`, start: r.end_date });
+      if (inRange(r.end_date)) {
+        events.push({ ...base, id: `contracts:${r.id}:move_out`, kind: "move_out", title: `퇴거 — ${space ?? r.contract_ref}`, start: r.end_date! });
+      }
+      // 계약일 — 계약 발효일(effective_date). 예약에서 넘어온 경우 예약의 계약일이 그대로 들어온다.
+      if (inRange(r.effective_date)) {
+        events.push({ ...base, id: `contracts:${r.id}:contract_date`, kind: "contract_date", title: `계약일 — ${space ?? r.contract_ref}`, start: r.effective_date! });
+      }
+      // 계약금·중도금·잔금 입금 예정일. 금액이 있는 건만 — 날짜만 적힌 빈 일정은 소음이다.
+      const moneyDates: [string, string, string | null, number | null][] = [
+        ["down_payment", "계약금", r.down_payment_date, r.down_payment],
+        ["interim_payment", "중도금", r.interim_payment_date, r.interim_payment],
+        ["balance", "잔금", r.balance_date, r.balance_amount],
+      ];
+      for (const [kind, label, date, amount] of moneyDates) {
+        if (!inRange(date) || amount == null) continue;
+        events.push({
+          ...base, id: `contracts:${r.id}:${kind}`, kind,
+          title: `${label} — ${space ?? r.contract_ref}`, start: date!,
+          amount: Number(amount), currency: r.currency,
+        });
       }
     }
   }
@@ -186,8 +207,10 @@ router.get("/v1/calendar/events", async (req, res): Promise<void> => {
       isNull(bookingsTable.deleted_at),
       ne(bookingsTable.booking_status, "Cancelled"),
       or(
-        and(isNotNull(bookingsTable.check_in_date), gte(bookingsTable.check_in_date, from), lte(bookingsTable.check_in_date, to)),
-        and(isNotNull(bookingsTable.check_out_date), gte(bookingsTable.check_out_date, from), lte(bookingsTable.check_out_date, to)),
+        ...([
+          bookingsTable.check_in_date, bookingsTable.check_out_date, bookingsTable.contract_date,
+          bookingsTable.down_payment_date, bookingsTable.interim_payment_date, bookingsTable.balance_date,
+        ].map(col => and(isNotNull(col), gte(col, from), lte(col, to)))),
       ),
     ));
     const labels = await spaceLabels(rows.map(r => r.space_id).filter(Boolean) as number[]);
@@ -195,11 +218,28 @@ router.get("/v1/calendar/events", async (req, res): Promise<void> => {
       const space = r.space_id ? (labels[r.space_id] ?? null) : null;
       const who = r.name ?? r.booking_ref;
       const base = { source: "bookings" as const, status: r.booking_status, url: `/booking/bookings/${r.id}`, ref: r.booking_ref, space_name: space, all_day: true, end: null };
-      if (r.check_in_date && r.check_in_date >= from && r.check_in_date <= to) {
-        events.push({ ...base, id: `bookings:${r.id}:check_in`, kind: "check_in", title: `체크인 — ${who}`, start: r.check_in_date });
+      const inRange = (d: string | null | undefined) => !!d && d >= from && d <= to;
+      if (inRange(r.check_in_date)) {
+        events.push({ ...base, id: `bookings:${r.id}:check_in`, kind: "check_in", title: `체크인 — ${who}`, start: r.check_in_date! });
       }
-      if (r.check_out_date && r.check_out_date >= from && r.check_out_date <= to) {
-        events.push({ ...base, id: `bookings:${r.id}:check_out`, kind: "check_out", title: `체크아웃 — ${who}`, start: r.check_out_date });
+      if (inRange(r.check_out_date)) {
+        events.push({ ...base, id: `bookings:${r.id}:check_out`, kind: "check_out", title: `체크아웃 — ${who}`, start: r.check_out_date! });
+      }
+      if (inRange(r.contract_date)) {
+        events.push({ ...base, id: `bookings:${r.id}:contract_date`, kind: "contract_date", title: `계약일 — ${who}`, start: r.contract_date! });
+      }
+      const moneyDates: [string, string, string | null, string | null][] = [
+        ["down_payment", "계약금", r.down_payment_date, r.down_payment],
+        ["interim_payment", "중도금", r.interim_payment_date, r.interim_payment],
+        ["balance", "잔금", r.balance_date, r.balance_amount],
+      ];
+      for (const [kind, label, date, amount] of moneyDates) {
+        if (!inRange(date) || amount == null) continue;
+        events.push({
+          ...base, id: `bookings:${r.id}:${kind}`, kind,
+          title: `${label} — ${who}`, start: date!,
+          amount: Number(amount), currency: r.currency ?? undefined,
+        });
       }
     }
   }
