@@ -1478,7 +1478,17 @@
     "btn_renew": "Gia hạn hợp đồng",
     "confirm_renew": "Tạo hợp đồng gia hạn với nội dung giống hệt? Thời hạn bắt đầu từ ngày sau ngày kết thúc hiện tại và kéo dài bằng nhau.",
     "toast_renewed": "Đã tạo hợp đồng gia hạn",
-    "toast_renew_failed": "Không tạo được hợp đồng gia hạn"
+    "toast_renew_failed": "Không tạo được hợp đồng gia hạn",
+    "toast_saved": "Đã lưu",
+    "toast_created": "Đã tạo hợp đồng",
+    "toast_sent": "Đã gửi hợp đồng",
+    "toast_signed": "Đã đánh dấu đã ký",
+    "toast_activated": "Đã kích hoạt hợp đồng",
+    "toast_terminated": "Đã chấm dứt hợp đồng",
+    "toast_expired": "Đã đánh dấu hết hạn",
+    "toast_deleted": "Đã xoá hợp đồng",
+    "toast_action_failed": "Không thực hiện được",
+    "channel_fee_reset": "Dùng mức đề xuất {{amount}}"
   },
   "invoice": {
     "new": "Tạo hóa đơn mới",

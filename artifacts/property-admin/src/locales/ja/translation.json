@@ -1478,7 +1478,17 @@
     "btn_renew": "契約を更新",
     "confirm_renew": "同じ内容で更新契約を作成しますか？期間は現契約の終了日の翌日から同じ長さで設定されます。",
     "toast_renewed": "更新契約を作成しました",
-    "toast_renew_failed": "更新契約を作成できませんでした"
+    "toast_renew_failed": "更新契約を作成できませんでした",
+    "toast_saved": "保存しました",
+    "toast_created": "契約を作成しました",
+    "toast_sent": "契約書を送信しました",
+    "toast_signed": "署名済みにしました",
+    "toast_activated": "契約を有効にしました",
+    "toast_terminated": "契約を終了しました",
+    "toast_expired": "満了として処理しました",
+    "toast_deleted": "契約を削除しました",
+    "toast_action_failed": "処理できませんでした",
+    "channel_fee_reset": "基準表の提案額 {{amount}} を使う"
   },
   "invoice": {
     "new": "新規請求書",

@@ -589,9 +589,9 @@ router.post("/v1/contracts", async (req, res): Promise<void> => {
     monthly_rent: data.monthly_rent ?? lease?.effective_monthly ?? null,
     advance_amount: data.advance_amount ?? null,
     contract_category: data.contract_category ?? null,
-    // 서식 기본값은 법무부 주택임대차표준계약서 — 고르지 않고 만든 계약도 곧바로
-    // 그 서식으로 발급된다. 다른 서식은 계약 상세에서 직접 바꾼다.
-    lease_form: data.lease_form ?? "housing_standard",
+    // 서식 기본값은 자사 일반 임대차계약서 — 고르지 않고 만든 계약도 곧바로
+    // 그 서식으로 발급된다. 표준서식은 계약 상세에서 직접 바꾼다.
+    lease_form: data.lease_form ?? "general",
     doc_attachments: normalizeAttachmentsInput(data.doc_attachments, data.lease_form ?? null),
     ...mltLeaseFields(data),
     down_payment: data.down_payment ?? null,
@@ -1038,9 +1038,13 @@ export async function buildContractDocInput(
         address: landlordAddress || stored.address1 || null,
         // 임대인 계정의 연락처가 먼저고, 없으면 자사 대표 연락처로 떨어진다.
         phone: landlordParty?.phone || stored.phone || null,
-        email: landlordEmail || stored.email || null,
+        // 이메일은 임대인 계정(및 대표 연락처)의 값만 쓴다. 회사 정보(Settings →
+        // Organisation)의 대표 메일로 메워 버리면, 계정에 적어 두지도 않은 주소가
+        // 계약서에 찍혀 나간다 — 비어 있으면 비어 있는 채로 발급한다.
+        email: landlordEmail,
         business_no: landlordParty?.business_no || stored.biz_no || stored.abn || null,
-        corporate_no: stored.corp_no ?? null,
+        // 법인등록번호는 계약서 당사자 표에 싣지 않는다(사업자등록번호로 충분하다).
+        corporate_no: null,
       },
       tenant: {
         name: (c as any).tenant_name ?? null,

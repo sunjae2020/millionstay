@@ -1478,7 +1478,17 @@
     "btn_renew": "Renew contract",
     "confirm_renew": "Create a renewal contract with the same content? The term starts the day after the current one ends and runs for the same length.",
     "toast_renewed": "Renewal contract created",
-    "toast_renew_failed": "Could not create the renewal contract"
+    "toast_renew_failed": "Could not create the renewal contract",
+    "toast_saved": "Saved",
+    "toast_created": "Contract created",
+    "toast_sent": "Agreement sent",
+    "toast_signed": "Marked as signed",
+    "toast_activated": "Contract activated",
+    "toast_terminated": "Contract terminated",
+    "toast_expired": "Marked as expired",
+    "toast_deleted": "Contract deleted",
+    "toast_action_failed": "That did not go through",
+    "channel_fee_reset": "Use the suggested {{amount}}"
   },
   "invoice": {
     "new": "New Invoice",

@@ -24,7 +24,7 @@ import { LookupSelect } from "@/components/LookupSelect";
 import { ProductLookupSelect } from "@/components/ProductLookupSelect";
 import { ContractPartyCard } from "@/components/ContractPartyCard";
 import { ContractChannelCard, type ChannelValue } from "@/components/ContractChannelCard";
-import { ArrowLeft, Save, Trash2, CalendarDays, Plus, Pencil, List, FileDown, Eye, Mail, Receipt, ClipboardList, Wallet, Check, FileSignature, FileText, Scale, CopyPlus } from "lucide-react";
+import { ArrowLeft, Save, Loader2, Trash2, CalendarDays, Plus, Pencil, List, FileDown, Eye, Mail, Receipt, ClipboardList, Wallet, Check, FileSignature, FileText, Scale, CopyPlus } from "lucide-react";
 import { apiFetch } from "@/lib/apiFetch";
 import { useToast } from "@/hooks/use-toast";
 import { DocumentVersions } from "@/components/DocumentVersions";
@@ -341,7 +341,7 @@ export default function ContractDetail() {
       start_date: "", end_date: "", weekly_rate: "", total_rent: "",
       lease_mode: "long", rate_period: "monthly", rate_amount: "",
       bond_amount: "", advance_amount: "",
-      contract_category: "", lease_form: "housing_standard", doc_attachments: [],
+      contract_category: "", lease_form: "general", doc_attachments: [],
       rent_payment_info_id: null, deposit_payment_info_id: null, special_terms: "",
       acquisition_channel: "", channel_account_id: null,
       channel_contact_name: "", channel_contact_phone: "", channel_contact_email: "",
@@ -377,8 +377,8 @@ export default function ContractDetail() {
         bond_amount: contract.bond_amount != null ? String(contract.bond_amount) : "",
         advance_amount: contract.advance_amount != null ? String(contract.advance_amount) : "",
         contract_category: (contract as any).contract_category ?? "",
-        // 서식 기본값은 법무부 주택임대차표준계약서. 다른 서식은 직접 고른다.
-        lease_form: (contract as any).lease_form || "housing_standard",
+        // 서식 기본값은 자사 일반 임대차계약서. 표준서식은 직접 고른다.
+        lease_form: (contract as any).lease_form || "general",
         rent_payment_info_id: (contract as any).rent_payment_info_id ?? null,
         deposit_payment_info_id: (contract as any).deposit_payment_info_id ?? null,
         special_terms: (contract as any).special_terms ?? "",
@@ -429,14 +429,28 @@ export default function ContractDetail() {
     if (!isNew) qc.invalidateQueries({ queryKey: ["contract-related-costs", id] });
   };
 
-  const createMutation = useCreateContract({ mutation: { onSuccess: (d) => { invalidate(); navigate(`/contracts/contracts/${d.id}`); } } });
-  const updateMutation = useUpdateContract({ mutation: { onSuccess: () => { invalidate(); refetch(); } } });
-  const sendMutation = useSendContract({ mutation: { onSuccess: () => { invalidate(); refetch(); } } });
-  const signMutation = useSignContract({ mutation: { onSuccess: () => { invalidate(); refetch(); setSignOpen(false); } } });
-  const activateMutation = useActivateContract({ mutation: { onSuccess: () => { invalidate(); refetch(); } } });
-  const terminateMutation = useTerminateContract({ mutation: { onSuccess: () => { invalidate(); refetch(); setTerminateOpen(false); } } });
-  const expireMutation = useExpireContract({ mutation: { onSuccess: () => { invalidate(); refetch(); } } });
-  const deleteMutation = useDeleteContract({ mutation: { onSuccess: () => { invalidate(); navigate("/contracts/contracts"); } } });
+  const { toast } = useToast();
+  /**
+   * 저장·발송·서명 같은 동작은 눌러도 화면이 그대로라 "됐나?" 하고 다시 누르게 된다.
+   * 성공/실패를 모두 토스트로 알린다 — 실패했는데 조용히 지나가는 쪽이 더 위험하다.
+   */
+  const notify = (titleKey: string) => ({
+    onSuccess: () => toast({ title: t(titleKey) }),
+    onError: (err: unknown) => toast({
+      title: t('contract.toast_action_failed'),
+      description: err instanceof Error ? err.message : t('contract.error'),
+      variant: "destructive" as const,
+    }),
+  });
+
+  const createMutation = useCreateContract({ mutation: { ...notify('contract.toast_created'), onSuccess: (d) => { invalidate(); toast({ title: t('contract.toast_created') }); navigate(`/contracts/contracts/${d.id}`); } } });
+  const updateMutation = useUpdateContract({ mutation: { ...notify('contract.toast_saved'), onSuccess: () => { invalidate(); refetch(); toast({ title: t('contract.toast_saved') }); } } });
+  const sendMutation = useSendContract({ mutation: { ...notify('contract.toast_sent'), onSuccess: () => { invalidate(); refetch(); toast({ title: t('contract.toast_sent') }); } } });
+  const signMutation = useSignContract({ mutation: { ...notify('contract.toast_signed'), onSuccess: () => { invalidate(); refetch(); setSignOpen(false); toast({ title: t('contract.toast_signed') }); } } });
+  const activateMutation = useActivateContract({ mutation: { ...notify('contract.toast_activated'), onSuccess: () => { invalidate(); refetch(); toast({ title: t('contract.toast_activated') }); } } });
+  const terminateMutation = useTerminateContract({ mutation: { ...notify('contract.toast_terminated'), onSuccess: () => { invalidate(); refetch(); setTerminateOpen(false); toast({ title: t('contract.toast_terminated') }); } } });
+  const expireMutation = useExpireContract({ mutation: { ...notify('contract.toast_expired'), onSuccess: () => { invalidate(); refetch(); toast({ title: t('contract.toast_expired') }); } } });
+  const deleteMutation = useDeleteContract({ mutation: { ...notify('contract.toast_deleted'), onSuccess: () => { invalidate(); toast({ title: t('contract.toast_deleted') }); navigate("/contracts/contracts"); } } });
 
   // 계약 연장 — 서버가 기존 계약을 그대로 복제하고, 새 계약 상세로 넘어간다.
   // 기간은 기존 종료일 다음 날부터 같은 길이로 잡혀 오고, 나머지는 여기서 고친다.
@@ -719,6 +733,8 @@ export default function ContractDetail() {
   const seniorLien = watch("mlt_senior_lien");
   const guaranteeStatus = watch("mlt_guarantee_status");
 
+  const saving = createMutation.isPending || updateMutation.isPending;
+
   const onSubmit = (data: FormData) => {
     if (isNew) createMutation.mutate({ data: buildPayload(data) });
     else updateMutation.mutate({ id: Number(id), data: buildPayload(data) });
@@ -726,7 +742,6 @@ export default function ContractDetail() {
 
   const status = contract?.status ?? "Draft";
 
-  const { toast } = useToast();
   const [pdfBusy, setPdfBusy] = useState(false);
   const { previewConfig, openPreview, closePreview } = useDocumentPreview();
   const [wizardOpen, setWizardOpen] = useState(false);
@@ -835,7 +850,12 @@ export default function ContractDetail() {
                   <Trash2 className="h-4 w-4 mr-2" />{t('common.delete')}
                 </Button>
               )}
-              <Button type="submit"><Save className="h-4 w-4 mr-2" />{t('common.save')}</Button>
+              <Button type="submit" disabled={saving}>
+                {saving
+                  ? <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  : <Save className="h-4 w-4 mr-2" />}
+                {saving ? t('common.saving') : t('common.save')}
+              </Button>
             </div>
           </div>
 
@@ -1014,6 +1034,7 @@ export default function ContractDetail() {
               onChange={setChannelValue}
               currency={watch("currency") || brandCurrency}
               relatedCosts={relatedCosts}
+              onCostChanged={invalidateRelatedCosts}
               onOpenCosts={() => setActiveTab("related-costs")}
               accountDisplayName={(contract as any)?.channel_account_name ?? null}
             />

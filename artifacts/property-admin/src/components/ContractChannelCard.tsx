@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { Link } from "wouter";
 import { Info, Loader2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
@@ -34,6 +35,8 @@ interface Props {
   relatedCosts: any[];
   /** 관련 비용 탭으로 이동 — 자동 생성된 행을 바로 손보게. */
   onOpenCosts: () => void;
+  /** 금액을 이 카드에서 고친 뒤 관련 비용 목록을 다시 읽는다. */
+  onCostChanged?: () => void;
   /** 연결된 계정의 현재 이름(스냅숏과 다를 수 있다). */
   accountDisplayName?: string | null;
 }
@@ -44,11 +47,14 @@ interface Props {
  *
  * 경로를 고르고 계정을 연결하면 이름·연락처·이메일이 계정(대표 연락처 우선)에서
  * 채워져 계약에 스냅숏으로 저장되고, 저장 시점에 서버가 임대 수수료 기준표를 보고
- * 관련 비용에 수수료 한 행을 자동으로 만들어 둔다(송금일 없음 = 미지급). 금액·송금일
- * 수정은 관련 비용 탭 한 곳에서만 한다 — 같은 돈을 두 군데서 고치게 두지 않는다.
+ * 관련 비용에 수수료 한 행을 자동으로 만들어 둔다(송금일 없음 = 미지급).
+ *
+ * 기준표에서 나온 금액은 어디까지나 **제안값**이다. 실제로 지급하는 금액은 건마다
+ * 달라지므로 이 카드에서 바로 고칠 수 있고, 고친 값이 관련 비용 행에 그대로 저장된다
+ * (같은 돈을 두 군데에 적어 두지는 않는다 — 저장처는 관련 비용 행 하나뿐이다).
  */
 export function ContractChannelCard({
-  contractId, value, onChange, currency, relatedCosts, onOpenCosts, accountDisplayName,
+  contractId, value, onChange, currency, relatedCosts, onOpenCosts, onCostChanged, accountDisplayName,
 }: Props) {
   const { t } = useTranslation();
   const [preview, setPreview] = useState<ChannelPreview | null>(null);
@@ -95,6 +101,28 @@ export function ContractChannelCard({
   };
 
   const channelCost = relatedCosts.find((c) => c.origin === "channel");
+
+  // 최종 수수료 — 기준표 제안값에서 시작하지만 건마다 달라지므로 여기서 고친다.
+  // 저장처는 관련 비용 행 하나뿐이라, 고친 값은 관련 비용 탭에도 그대로 보인다.
+  const [amountDraft, setAmountDraft] = useState("");
+  const [savingAmount, setSavingAmount] = useState(false);
+  useEffect(() => {
+    setAmountDraft(channelCost ? String(Number(channelCost.amount ?? 0)) : "");
+  }, [channelCost?.id, channelCost?.amount]);
+
+  async function saveAmount() {
+    if (!channelCost || !contractId) return;
+    setSavingAmount(true);
+    try {
+      await apiFetch(`/api/v1/contracts/${contractId}/related-costs/${channelCost.id}`, {
+        method: "PATCH",
+        body: JSON.stringify({ amount: Number(amountDraft || 0) }),
+      });
+      onCostChanged?.();
+    } finally {
+      setSavingAmount(false);
+    }
+  }
   const feeAmount = preview?.fee?.amount ?? null;
 
   return (
@@ -173,16 +201,42 @@ export function ContractChannelCard({
                 )}
 
                 {channelCost ? (
-                  <p className="flex flex-wrap items-center gap-2">
-                    <span>{t('contract.channel_cost_linked', { type: channelCost.cost_type })}</span>
-                    <span className="font-medium">{formatMoney(Number(channelCost.amount ?? 0), channelCost.currency || currency)}</span>
-                    <Badge className={channelCost.remitted_on ? "bg-green-100 text-green-700 border-green-200" : "bg-amber-100 text-amber-700 border-amber-200"}>
-                      {channelCost.remitted_on ? t('contract.cost_paid') : t('contract.cost_unpaid')}
-                    </Badge>
-                    <button type="button" className="text-primary underline underline-offset-2" onClick={onOpenCosts}>
-                      {t('contract.channel_cost_manage')}
-                    </button>
-                  </p>
+                  <div className="space-y-1">
+                    <p className="flex flex-wrap items-center gap-2">
+                      <span>{t('contract.channel_cost_linked', { type: channelCost.cost_type })}</span>
+                      <Badge className={channelCost.remitted_on ? "bg-green-100 text-green-700 border-green-200" : "bg-amber-100 text-amber-700 border-amber-200"}>
+                        {channelCost.remitted_on ? t('contract.cost_paid') : t('contract.cost_unpaid')}
+                      </Badge>
+                      <button type="button" className="text-primary underline underline-offset-2" onClick={onOpenCosts}>
+                        {t('contract.channel_cost_manage')}
+                      </button>
+                    </p>
+                    {/* 최종 금액은 여기서 바로 고친다 — 기준표 값은 제안일 뿐이다. */}
+                    <div className="flex flex-wrap items-center gap-2">
+                      <Input
+                        type="number" step="1" min={0} className="h-8 w-40"
+                        value={amountDraft}
+                        onChange={(e) => setAmountDraft(e.target.value)}
+                        onFocus={(e) => e.target.select()}
+                      />
+                      <span className="text-xs text-muted-foreground">{channelCost.currency || currency}</span>
+                      <Button
+                        type="button" size="sm" variant="outline" className="h-8"
+                        disabled={savingAmount || amountDraft === String(Number(channelCost.amount ?? 0))}
+                        onClick={() => void saveAmount()}
+                      >
+                        {savingAmount ? t('common.saving') : t('common.save')}
+                      </Button>
+                      {feeAmount != null && Number(channelCost.amount ?? 0) !== feeAmount && (
+                        <button
+                          type="button" className="text-xs text-primary underline underline-offset-2"
+                          onClick={() => setAmountDraft(String(feeAmount))}
+                        >
+                          {t('contract.channel_fee_reset', { amount: formatMoney(feeAmount, preview?.fee.currency || currency) })}
+                        </button>
+                      )}
+                    </div>
+                  </div>
                 ) : (
                   <p className="text-muted-foreground">{t('contract.channel_cost_pending')}</p>
                 )}

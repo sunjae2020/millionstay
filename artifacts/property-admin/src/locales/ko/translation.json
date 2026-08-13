@@ -1478,7 +1478,17 @@
     "btn_renew": "계약 연장",
     "confirm_renew": "이 계약과 같은 내용으로 연장 계약을 만들까요? 기간은 기존 종료일 다음 날부터 같은 길이로 잡힙니다.",
     "toast_renewed": "연장 계약을 만들었습니다",
-    "toast_renew_failed": "연장 계약을 만들지 못했습니다"
+    "toast_renew_failed": "연장 계약을 만들지 못했습니다",
+    "toast_saved": "저장했습니다",
+    "toast_created": "계약을 만들었습니다",
+    "toast_sent": "계약서를 발송했습니다",
+    "toast_signed": "서명 처리했습니다",
+    "toast_activated": "계약을 활성화했습니다",
+    "toast_terminated": "계약을 종료했습니다",
+    "toast_expired": "만료 처리했습니다",
+    "toast_deleted": "계약을 삭제했습니다",
+    "toast_action_failed": "처리하지 못했습니다",
+    "channel_fee_reset": "기준표 제안값 {{amount}} 으로"
   },
   "invoice": {
     "new": "새 청구서",

@@ -1478,7 +1478,17 @@
     "btn_renew": "续签合同",
     "confirm_renew": "按相同内容创建续签合同吗？期限从现合同结束日的次日开始，长度相同。",
     "toast_renewed": "已创建续签合同",
-    "toast_renew_failed": "无法创建续签合同"
+    "toast_renew_failed": "无法创建续签合同",
+    "toast_saved": "已保存",
+    "toast_created": "已创建合同",
+    "toast_sent": "已发送合同",
+    "toast_signed": "已标记为签署",
+    "toast_activated": "已启用合同",
+    "toast_terminated": "已终止合同",
+    "toast_expired": "已标记为到期",
+    "toast_deleted": "已删除合同",
+    "toast_action_failed": "处理失败",
+    "channel_fee_reset": "使用建议金额 {{amount}}"
   },
   "invoice": {
     "new": "新建发票",
