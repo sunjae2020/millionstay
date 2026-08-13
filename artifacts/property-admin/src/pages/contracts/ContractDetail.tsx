@@ -22,7 +22,7 @@ import {
 } from "@workspace/api-client-react";
 import { LookupSelect } from "@/components/LookupSelect";
 import { ProductLookupSelect } from "@/components/ProductLookupSelect";
-import { AccountLookupSelect } from "@/components/AccountLookupSelect";
+import { ContractPartyCard } from "@/components/ContractPartyCard";
 import { ArrowLeft, Save, Trash2, CalendarDays, Plus, Pencil, List, FileDown, Eye, Mail, Receipt, ClipboardList, Wallet, Check, FileSignature, FileText, Scale } from "lucide-react";
 import { apiFetch } from "@/lib/apiFetch";
 import { useToast } from "@/hooks/use-toast";
@@ -904,34 +904,31 @@ export default function ContractDetail() {
               </div>
             </div>
 
-            {/* Parties */}
+            {/* Parties — 임대인(갑)/임차인(을) 를 각각 독립된 카드로 나눠, 계약서
+                당사자 표에 실제로 찍힐 계정관리 정보를 그대로 펼쳐 보여준다.
+                빈칸은 카드 안 팝업에서 바로 고칠 수 있다(계정 레코드에 저장). */}
             <div className="border rounded-lg bg-white p-4 sm:p-6">
               <h2 className="text-sm font-semibold uppercase text-primary tracking-wide mb-4">{t('contract.section_parties')}</h2>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <Label>{t('contract.label_tenant')} *</Label>
-                  <Controller name="tenant_account_id" control={control} render={({ field }) => (
-                    <AccountLookupSelect
-                      lookupUrl="/api/v1/lookup/accounts"
-                      value={field.value}
-                      onChange={field.onChange}
-                      placeholder={t('contract.ph_search_accounts')}
-                      displayValue={(contract as any)?.tenant_name ?? null}
-                    />
-                  )} />
-                </div>
-                <div>
-                  <Label>{t('contract.label_landlord')}</Label>
-                  <Controller name="landlord_account_id" control={control} render={({ field }) => (
-                    <AccountLookupSelect
-                      lookupUrl="/api/v1/lookup/accounts"
-                      value={field.value}
-                      onChange={field.onChange}
-                      placeholder={t('contract.ph_search_accounts')}
-                      displayValue={(contract as any)?.landlord_name ?? null}
-                    />
-                  )} />
-                </div>
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                <Controller name="landlord_account_id" control={control} render={({ field }) => (
+                  <ContractPartyCard
+                    title={t('contract.party_landlord')}
+                    variant="landlord"
+                    accountId={field.value ?? null}
+                    onAccountChange={field.onChange}
+                    fallbackName={(contract as any)?.landlord_name ?? null}
+                  />
+                )} />
+                <Controller name="tenant_account_id" control={control} render={({ field }) => (
+                  <ContractPartyCard
+                    title={t('contract.party_tenant')}
+                    variant="tenant"
+                    required
+                    accountId={field.value ?? null}
+                    onAccountChange={field.onChange}
+                    fallbackName={(contract as any)?.tenant_name ?? null}
+                  />
+                )} />
               </div>
             </div>
 

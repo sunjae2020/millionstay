@@ -58,7 +58,7 @@ export const contractsTable = pgTable("contracts", {
   doc_attachments: text("doc_attachments"),
   // 민간임대주택 표준임대차계약서(별지 제24호서식) 법정 기재사항 — 0033.
   // 계약 시점의 고지 내용이 그대로 계약서에 박히므로 물건이 아니라 계약에 스냅숏으로 남긴다.
-  // 주민등록번호는 일부러 저장하지 않는다(서식의 해당 칸은 비워 발급 → 수기 기재).
+  // 주민등록번호는 계약이 아니라 사람에게 붙는 값이라 연락처/계정관리에 둔다(0052).
   mlt_landlord_rental_biz_no: text("mlt_landlord_rental_biz_no"),
   mlt_housing_type: text("mlt_housing_type"),
   mlt_rental_type: text("mlt_rental_type"),

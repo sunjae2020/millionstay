@@ -709,7 +709,10 @@
     "unlink_account": "ยกเลิกการเชื่อมโยง",
     "unlink_account_confirm": "ยกเลิกการเชื่อมโยงบัญชีนี้กับผู้ติดต่อหรือไม่ ข้อมูลทั้งสองจะยังคงอยู่",
     "empty_accounts": "ผู้ติดต่อนี้ยังไม่ได้เชื่อมโยงกับบัญชีใด",
-    "accounts_save_first": "บันทึกผู้ติดต่อก่อน แล้วจึงเชื่อมโยงบัญชี"
+    "accounts_save_first": "บันทึกผู้ติดต่อก่อน แล้วจึงเชื่อมโยงบัญชี",
+    "label_resident_no": "เลขประจำตัวประชาชน",
+    "hint_resident_no": "ส่งผ่านข้อมูลบัญชีไปพิมพ์ในตารางคู่สัญญาของสัญญาเช่า",
+    "section_identity_kr": "ข้อมูลระบุตัวตน (สัญชาติเกาหลี)"
   },
   "account": {
     "new": "บัญชีใหม่",
@@ -1419,7 +1422,17 @@
     "label_rate_amount": "ค่าเช่า",
     "rate_period_daily": "รายวัน",
     "rate_period_weekly": "รายสัปดาห์",
-    "rate_period_monthly": "รายเดือน"
+    "rate_period_monthly": "รายเดือน",
+    "party_landlord": "ผู้ให้เช่า (ฝ่าย ก)",
+    "party_tenant": "ผู้เช่า (ฝ่าย ข)",
+    "party_address": "ที่อยู่",
+    "party_phone": "เบอร์ติดต่อ",
+    "party_email": "E-mail",
+    "party_missing": "ยังไม่ได้กรอก",
+    "party_none_selected": "เลือกบัญชีเพื่อดูข้อมูลที่จะปรากฏในสัญญา",
+    "party_edit_account": "แก้ไขข้อมูลบัญชี",
+    "party_edit_title": "แก้ไขข้อมูลบัญชี {{name}}",
+    "party_edit_hint": "การบันทึกที่นี่จะแก้ไขข้อมูลบัญชี และมีผลกับสัญญาอื่นที่ใช้บัญชีนี้ด้วย"
   },
   "invoice": {
     "new": "ใบแจ้งหนี้ใหม่",

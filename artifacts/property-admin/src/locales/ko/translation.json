@@ -709,7 +709,10 @@
     "unlink_account": "연결 해제",
     "unlink_account_confirm": "이 계정과의 연결을 해제할까요? 두 기록 모두 삭제되지 않습니다.",
     "empty_accounts": "연결된 계정이 없습니다",
-    "accounts_save_first": "연락처를 먼저 저장한 뒤 계정을 연결할 수 있습니다"
+    "accounts_save_first": "연락처를 먼저 저장한 뒤 계정을 연결할 수 있습니다",
+    "label_resident_no": "주민등록번호",
+    "hint_resident_no": "계정관리를 거쳐 임대차 계약서 당사자 표에 인쇄됩니다.",
+    "section_identity_kr": "신원 정보 (내국인)"
   },
   "account": {
     "new": "새 계정",
@@ -1419,7 +1422,17 @@
     "label_rate_amount": "요금",
     "rate_period_daily": "일일",
     "rate_period_weekly": "주간",
-    "rate_period_monthly": "월간"
+    "rate_period_monthly": "월간",
+    "party_landlord": "임대인 (갑)",
+    "party_tenant": "임차인 (을)",
+    "party_address": "주소",
+    "party_phone": "연락처",
+    "party_email": "E-mail",
+    "party_missing": "미입력",
+    "party_none_selected": "계정을 선택하면 계약서에 실릴 정보가 여기에 표시됩니다.",
+    "party_edit_account": "계정 정보 수정",
+    "party_edit_title": "{{name}} 계정 정보 수정",
+    "party_edit_hint": "여기서 저장하면 계정관리 레코드가 바뀌고, 이 계정을 쓰는 다른 계약서에도 반영됩니다."
   },
   "invoice": {
     "new": "새 청구서",

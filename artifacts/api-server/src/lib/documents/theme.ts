@@ -146,6 +146,20 @@ export interface RenderShellOptions {
   watermark?: { text: string; color: string } | null;
   /** When true, tighten spacing so a short (single-item) document fits one A4 page. */
   compact?: boolean;
+  /**
+   * Overrides the header's issuer block. The default — shared by every document
+   * — is the registration number alone: the full company identity (법인명 ·
+   * 대표자 · 주소 · 이메일) is already in the footer, and repeating it beside the
+   * document name crowded the top of the page. Lines are plain text and escaped
+   * here; an empty array prints no block at all.
+   */
+  issuerLines?: string[];
+  /**
+   * Header/body padding. Documents run tight by default so the document title
+   * sits near the top of the page instead of a third of the way down it; pass
+   * `false` for the old roomy header.
+   */
+  tightHeader?: boolean;
 }
 
 /**
@@ -183,6 +197,11 @@ export function renderDocumentShell(opts: RenderShellOptions): string {
   const print = opts.forPrint ?? false;
   const watermark = opts.watermark;
   const compact = opts.compact ?? false;
+  const tight = opts.tightHeader ?? true;
+  const issuerLines = (opts.issuerLines ?? (company.abn ? [`${company.regLabel} ${company.abn}`] : []))
+    .filter((l) => l?.trim())
+    .map(escapeHtml)
+    .join("<br/>");
 
   return `<!DOCTYPE html>
 <html lang="en">
@@ -227,7 +246,7 @@ export function renderDocumentShell(opts: RenderShellOptions): string {
     ${print ? "" : "box-shadow: 0 2px 8px rgba(0,0,0,0.08);"}
   }
   .doc-header {
-    padding: 32px;
+    padding: ${tight ? "16px 32px 12px" : "32px"};
     border-bottom: 1px solid ${t.border};
     display: flex;
     align-items: flex-start;
@@ -249,7 +268,7 @@ export function renderDocumentShell(opts: RenderShellOptions): string {
     margin-top: 4px;
     line-height: 1.4;
   }
-  .doc-body { padding: 32px; }
+  .doc-body { padding: ${tight ? "16px 32px 32px" : "32px"}; }
   .doc-footer {
     padding: 20px 32px;
     border-top: 1px solid ${t.border};
@@ -381,10 +400,7 @@ export function renderDocumentShell(opts: RenderShellOptions): string {
       <img src="${escapeHtml(company.logoUrl)}" alt="${escapeHtml(company.tradingName)}" />
       <div>
         <div class="doc-type">${escapeHtml(opts.docType)}</div>
-        <div class="issuer">
-          ${escapeHtml(company.legalName)}${company.ceo ? ` (${escapeHtml(company.ceo)})` : ""}${company.abn ? `<br/>${escapeHtml(company.regLabel)} ${escapeHtml(company.abn)}` : ""}<br/>
-          ${escapeHtml(company.email)}
-        </div>
+        ${issuerLines ? `<div class="issuer">${issuerLines}</div>` : ""}
       </div>
     </div>
     <div class="doc-body">

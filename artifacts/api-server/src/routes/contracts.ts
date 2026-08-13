@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { DEFAULT_CURRENCY } from "../lib/currency";
-import { db, contractsTable, accountsTable, spacesTable, propertiesTable, contractProductsTable, accommodationCatalogTable, bookingsTable, recurringSchedulesTable, bookingServicesTable, invoicesTable, invoiceLineItemsTable, contractLineItemsTable, contractRelatedCostsTable } from "@workspace/db";
+import { db, contractsTable, accountsTable, contactsTable, spacesTable, propertiesTable, contractProductsTable, accommodationCatalogTable, bookingsTable, recurringSchedulesTable, bookingServicesTable, invoicesTable, invoiceLineItemsTable, contractLineItemsTable, contractRelatedCostsTable } from "@workspace/db";
 import { eq, ilike, and, or, like, desc, isNull, inArray, gte, lte, sql } from "drizzle-orm";
 import multer from "multer";
 import { logAction } from "../utils/auditLog";
@@ -19,7 +19,7 @@ import { getRateToAud } from "../lib/rateSnapshot";
 import { resolveLeaseTermsFromProduct } from "../lib/leaseTerms";
 import { generateLeaseRentInvoices } from "../lib/billing/leaseRentInvoices";
 import { buildContractHtml, splitAnnex, type ContractDocInput, type ContractPremises, type ContractSignature } from "../lib/documents/contractDocument";
-import { buildKoreanLeaseHtml, leaseDate, type KoreanLeaseDocInput } from "../lib/documents/koreanLeaseDocument";
+import { buildKoreanLeaseHtml, koreanOnlyName, leaseDate, type KoreanLeaseDocInput } from "../lib/documents/koreanLeaseDocument";
 import { buildHousingStandardLeasePdf, type HousingStandardLeaseInput } from "../lib/documents/forms/housingStandardLeaseForm";
 import {
   buildMltStandardLeasePdf,
@@ -825,16 +825,37 @@ export async function buildContractDocInput(
           country: a.address_country,
         }, lang, { orderFallbackCountry: issuerCountry }) || null
       : null;
-  let tenantEmail: string | null = null, tenantAddress: string | null = null, tenantPhone: string | null = null;
-  let landlordEmail: string | null = null, landlordAddress: string | null = null;
-  if (row.tenant_account_id) {
-    const [a] = await db.select().from(accountsTable).where(eq(accountsTable.id, row.tenant_account_id));
-    tenantEmail = a?.account_email ?? null; tenantAddress = composeAddr(a); tenantPhone = a?.phone1 ?? a?.phone2 ?? null;
+  // 당사자 정보의 원천은 계정관리다. 계정에 비어 있는 칸은 그 계정의 대표
+  // 연락처로 메운다 — 연락처에만 적어 둔 전화·이메일·주민등록번호도 계약서에
+  // 그대로 실린다(연락처 → 계정관리 → 계약서 한 방향).
+  const pickText = (...values: Array<string | null | undefined>) =>
+    values.find((v) => typeof v === "string" && v.trim())?.trim() ?? null;
+  async function loadParty(accountId: number | null) {
+    if (!accountId) return null;
+    const [a] = await db.select().from(accountsTable).where(eq(accountsTable.id, accountId));
+    if (!a) return null;
+    let contact: typeof contactsTable.$inferSelect | undefined;
+    if (a.primary_contact_id) {
+      [contact] = await db.select().from(contactsTable).where(eq(contactsTable.id, a.primary_contact_id));
+    }
+    return {
+      address: pickText(composeAddr(a)),
+      phone: pickText(a.phone1, a.phone2, contact?.mobile_number, contact?.office_number),
+      email: pickText(a.account_email, contact?.email),
+      business_no: pickText(a.biz_registration_no),
+      // 주민등록번호는 사람에게 붙는 값이라 원본은 연락처에 있다.
+      resident_no: pickText(a.resident_no, contact?.resident_no),
+    };
   }
-  if (row.landlord_account_id) {
-    const [a] = await db.select().from(accountsTable).where(eq(accountsTable.id, row.landlord_account_id));
-    landlordEmail = a?.account_email ?? null; landlordAddress = composeAddr(a);
-  }
+  const [tenantParty, landlordParty] = await Promise.all([
+    loadParty(row.tenant_account_id ?? null),
+    loadParty(row.landlord_account_id ?? null),
+  ]);
+  const tenantEmail: string | null = tenantParty?.email ?? null;
+  const tenantAddress: string | null = tenantParty?.address ?? null;
+  const tenantPhone: string | null = tenantParty?.phone ?? null;
+  const landlordEmail: string | null = landlordParty?.email ?? null;
+  const landlordAddress: string | null = landlordParty?.address ?? null;
   let billingFrequency: string | null = null;
   if (row.product_id) {
     const [p] = await db.select({ f: accommodationCatalogTable.billing_frequency }).from(accommodationCatalogTable).where(eq(accommodationCatalogTable.id, row.product_id));
@@ -873,7 +894,9 @@ export async function buildContractDocInput(
     const buildingName = premises?.building ?? property?.name ?? "";
     lease = {
       contract_ref: c.contract_ref,
-      title: `${buildingName} 임대차 계약서`.trim(),
+      // 한글 서류이므로 건물명의 영문 병기는 떼고 낸다:
+      // "메트하임 여수 (Metheim Yeosu)" → "메트하임 여수 임대차 계약서".
+      title: `${koreanOnlyName(buildingName)} 임대차 계약서`.trim(),
       premises,
       registry: property
         ? {
@@ -889,9 +912,10 @@ export async function buildContractDocInput(
       landlord: {
         name: (c as any).landlord_name || stored.company_name || null,
         address: landlordAddress || stored.address1 || null,
-        phone: stored.phone ?? null,
+        // 임대인 계정의 연락처가 먼저고, 없으면 자사 대표 연락처로 떨어진다.
+        phone: landlordParty?.phone || stored.phone || null,
         email: landlordEmail || stored.email || null,
-        business_no: stored.biz_no ?? stored.abn ?? null,
+        business_no: landlordParty?.business_no || stored.biz_no || stored.abn || null,
         corporate_no: stored.corp_no ?? null,
       },
       tenant: {
@@ -899,6 +923,7 @@ export async function buildContractDocInput(
         address: tenantAddress,
         phone: tenantPhone,
         email: tenantEmail,
+        resident_no: tenantParty?.resident_no ?? null,
       },
       currency: c.currency ?? DEFAULT_CURRENCY,
       deposit_amount: row.bond_amount,
@@ -953,13 +978,15 @@ export async function buildContractDocInput(
       name: (c as any).tenant_name ?? null,
       address: tenantAddress,
       phone: tenantPhone,
+      // 주민등록번호 — 연락처/계정관리에 적혀 있을 때만 찍힌다.
+      id_no: tenantParty?.resident_no ?? null,
     },
   };
 
   // 민간임대주택 표준임대차계약서(별지 제24호서식) — 등록임대사업자 전용 법정서식.
   // 서식이 요구하는 법정 고지사항(종류·의무기간·선순위·체납·보증)은 계약에
-  // 스냅숏으로 저장해 둔 mlt_* 컬럼(0033)에서 온다. 주민등록번호는 저장하지
-  // 않으므로 해당 칸은 늘 비어 나가고 수기로 채운다.
+  // 스냅숏으로 저장해 둔 mlt_* 컬럼(0033)에서 온다. 주민등록번호는 사람에게 붙는
+  // 값이라 계약이 아니라 연락처/계정관리에 있고(0052), 거기 적혀 있을 때만 찍힌다.
   const mltAccounts = await resolveLeaseAccounts();
   const mltAccount = mltAccounts.find((a) => a.label.includes("보증금")) ?? mltAccounts[0] ?? null;
   const mlt: MltStandardLeaseInput = {
@@ -975,6 +1002,8 @@ export async function buildContractDocInput(
       name: (c as any).tenant_name ?? null,
       address: tenantAddress,
       phone: tenantPhone,
+      // 주민등록번호 — 연락처/계정관리에 적혀 있을 때만 찍힌다.
+      id_no: tenantParty?.resident_no ?? null,
     },
     property_address: [premises?.location, housingBuildingName, premises?.unit_no ? `${premises.unit_no}호` : null]
       .filter(Boolean).join(" ") || null,

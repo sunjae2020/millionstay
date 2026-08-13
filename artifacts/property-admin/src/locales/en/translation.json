@@ -709,7 +709,10 @@
     "unlink_account": "Unlink",
     "unlink_account_confirm": "Unlink this account from the contact? Both records are kept.",
     "empty_accounts": "This contact is not linked to any account",
-    "accounts_save_first": "Save the contact first, then link accounts"
+    "accounts_save_first": "Save the contact first, then link accounts",
+    "label_resident_no": "Resident registration number",
+    "hint_resident_no": "Flows through the account record onto the lease agreement's party table.",
+    "section_identity_kr": "Identity (Korean nationals)"
   },
   "account": {
     "new": "New Account",
@@ -1419,7 +1422,17 @@
     "label_rate_amount": "Rate",
     "rate_period_daily": "Daily",
     "rate_period_weekly": "Weekly",
-    "rate_period_monthly": "Monthly"
+    "rate_period_monthly": "Monthly",
+    "party_landlord": "Landlord (Party A)",
+    "party_tenant": "Tenant (Party B)",
+    "party_address": "Address",
+    "party_phone": "Phone",
+    "party_email": "E-mail",
+    "party_missing": "Not set",
+    "party_none_selected": "Pick an account to see the details that will appear on the agreement.",
+    "party_edit_account": "Edit account",
+    "party_edit_title": "Edit {{name}}",
+    "party_edit_hint": "Saving here updates the account record, so every agreement using it changes too."
   },
   "invoice": {
     "new": "New Invoice",

@@ -29,6 +29,9 @@ export const logger = pino({
       // Body — Australian Privacy Act sensitive PII
       "*.passport_no",
       "*.passport_number",
+      // 주민등록번호 — 한국 고유식별정보. 계약서 발급에만 쓰이고 로그에는 절대 남지 않는다.
+      "*.resident_no",
+      "*.resident_registration_no",
       "*.tfn",
       "*.medicare_number",
       "*.driver_license",

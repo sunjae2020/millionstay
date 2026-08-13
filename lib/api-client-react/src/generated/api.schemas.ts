@@ -640,6 +640,11 @@ export interface ContactResponse {
   /** @nullable */
   website?: string | null;
   is_foreigner?: boolean;
+  /**
+   * 주민등록번호. 계정관리를 거쳐 임대차 계약서 당사자 표에 인쇄된다.
+   * @nullable
+   */
+  resident_no?: string | null;
   /** @nullable */
   passport_number?: string | null;
   /** @nullable */
@@ -709,6 +714,11 @@ export interface CreateContactBody {
   /** @nullable */
   website?: string | null;
   is_foreigner?: boolean;
+  /**
+   * 주민등록번호. 계정관리를 거쳐 임대차 계약서 당사자 표에 인쇄된다.
+   * @nullable
+   */
+  resident_no?: string | null;
   /** @nullable */
   passport_number?: string | null;
   /** @nullable */
@@ -776,6 +786,11 @@ export interface UpdateContactBody {
   /** @nullable */
   website?: string | null;
   is_foreigner?: boolean;
+  /**
+   * 주민등록번호. 계정관리를 거쳐 임대차 계약서 당사자 표에 인쇄된다.
+   * @nullable
+   */
+  resident_no?: string | null;
   /** @nullable */
   passport_number?: string | null;
   /** @nullable */

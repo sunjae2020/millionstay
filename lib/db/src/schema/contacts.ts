@@ -28,6 +28,10 @@ export const contactsTable = pgTable("contacts", {
   // Passport/visa details only apply to foreign nationals — the admin form
   // keeps that block behind this toggle.
   is_foreigner: boolean("is_foreigner").notNull().default(false),
+  // 주민등록번호 — 한국 임대차 계약서 당사자 표의 법정 기재사항. 사람에게
+  // 붙는 번호이므로 원본은 연락처에 둔다(연락처 → 계정관리 → 계약서 한 방향).
+  // 민감정보: 로거 redact 대상이고 화면에서는 뒷자리를 가려 보여준다.
+  resident_no: text("resident_no"),
   passport_number: text("passport_number"),
   passport_expiry: text("passport_expiry"),
   visa_type: text("visa_type"),

@@ -956,6 +956,12 @@ export const ListContactsResponseItem = zod.object({
   department: zod.string().nullish(),
   website: zod.string().nullish(),
   is_foreigner: zod.boolean().optional(),
+  resident_no: zod
+    .string()
+    .nullish()
+    .describe(
+      "주민등록번호. 계정관리를 거쳐 임대차 계약서 당사자 표에 인쇄된다.",
+    ),
   passport_number: zod.string().nullish(),
   passport_expiry: zod.string().nullish(),
   visa_type: zod.string().nullish(),
@@ -1004,6 +1010,12 @@ export const CreateContactBody = zod.object({
   department: zod.string().nullish(),
   website: zod.string().nullish(),
   is_foreigner: zod.boolean().optional(),
+  resident_no: zod
+    .string()
+    .nullish()
+    .describe(
+      "주민등록번호. 계정관리를 거쳐 임대차 계약서 당사자 표에 인쇄된다.",
+    ),
   passport_number: zod.string().nullish(),
   passport_expiry: zod.string().nullish(),
   visa_type: zod.string().nullish(),
@@ -1050,6 +1062,12 @@ export const GetContactResponse = zod.object({
   department: zod.string().nullish(),
   website: zod.string().nullish(),
   is_foreigner: zod.boolean().optional(),
+  resident_no: zod
+    .string()
+    .nullish()
+    .describe(
+      "주민등록번호. 계정관리를 거쳐 임대차 계약서 당사자 표에 인쇄된다.",
+    ),
   passport_number: zod.string().nullish(),
   passport_expiry: zod.string().nullish(),
   visa_type: zod.string().nullish(),
@@ -1097,6 +1115,12 @@ export const UpdateContactBody = zod.object({
   department: zod.string().nullish(),
   website: zod.string().nullish(),
   is_foreigner: zod.boolean().optional(),
+  resident_no: zod
+    .string()
+    .nullish()
+    .describe(
+      "주민등록번호. 계정관리를 거쳐 임대차 계약서 당사자 표에 인쇄된다.",
+    ),
   passport_number: zod.string().nullish(),
   passport_expiry: zod.string().nullish(),
   visa_type: zod.string().nullish(),
@@ -1136,6 +1160,12 @@ export const UpdateContactResponse = zod.object({
   department: zod.string().nullish(),
   website: zod.string().nullish(),
   is_foreigner: zod.boolean().optional(),
+  resident_no: zod
+    .string()
+    .nullish()
+    .describe(
+      "주민등록번호. 계정관리를 거쳐 임대차 계약서 당사자 표에 인쇄된다.",
+    ),
   passport_number: zod.string().nullish(),
   passport_expiry: zod.string().nullish(),
   visa_type: zod.string().nullish(),

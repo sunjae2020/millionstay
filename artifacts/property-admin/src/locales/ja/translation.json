@@ -709,7 +709,10 @@
     "unlink_account": "リンク解除",
     "unlink_account_confirm": "このアカウントとのリンクを解除しますか？どちらの記録も削除されません。",
     "empty_accounts": "リンクされているアカウントはありません",
-    "accounts_save_first": "先に連絡先を保存してからアカウントをリンクしてください"
+    "accounts_save_first": "先に連絡先を保存してからアカウントをリンクしてください",
+    "label_resident_no": "住民登録番号",
+    "hint_resident_no": "アカウント管理を経由して賃貸借契約書の当事者欄に印字されます。",
+    "section_identity_kr": "本人確認情報（韓国国籍）"
   },
   "account": {
     "new": "新規アカウント",
@@ -1419,7 +1422,17 @@
     "label_rate_amount": "料金",
     "rate_period_daily": "日単位",
     "rate_period_weekly": "週単位",
-    "rate_period_monthly": "月単位"
+    "rate_period_monthly": "月単位",
+    "party_landlord": "賃貸人（甲）",
+    "party_tenant": "賃借人（乙）",
+    "party_address": "住所",
+    "party_phone": "連絡先",
+    "party_email": "E-mail",
+    "party_missing": "未入力",
+    "party_none_selected": "アカウントを選択すると、契約書に載る情報がここに表示されます。",
+    "party_edit_account": "アカウント情報を編集",
+    "party_edit_title": "{{name}} のアカウント情報を編集",
+    "party_edit_hint": "ここで保存するとアカウント情報が更新され、同じアカウントを使う他の契約書にも反映されます。"
   },
   "invoice": {
     "new": "新規請求書",

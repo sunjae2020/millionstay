@@ -67,6 +67,7 @@ interface ContactForm {
   job_title: string;
   department: string;
   website: string;
+  resident_no: string;
   passport_number: string;
   passport_expiry: string;
   visa_type: string;
@@ -131,7 +132,7 @@ export default function ContactDetail() {
       gender: "", sns_id: "", sns_type: "", is_foreigner: false,
       emergency_contact_name: "", emergency_contact_phone: "", emergency_contact_email: "",
       company_name: "", job_title: "", department: "", website: "",
-      passport_number: "", passport_expiry: "", visa_type: "",
+      resident_no: "", passport_number: "", passport_expiry: "", visa_type: "",
       visa_expiry: "", address_line1: "", suburb: "", state: "", postcode: "",
       country: defaultCountry(), portal_enabled: false, portal_user_id: "", profile_photo_url: "",
       description: "", manual_input: false, status: "Active",
@@ -167,6 +168,7 @@ export default function ContactDetail() {
         job_title: contact.job_title ?? "",
         department: contact.department ?? "",
         website: contact.website ?? "",
+        resident_no: (contact as any).resident_no ?? "",
         passport_number: contact.passport_number ?? "",
         passport_expiry: contact.passport_expiry ?? "",
         visa_type: contact.visa_type ?? "",
@@ -299,6 +301,7 @@ export default function ContactDetail() {
       gender: values.gender || null,
       mobile_number: values.mobile_number || null,
       office_number: values.office_number || null,
+      resident_no: values.resident_no || null,
       passport_number: values.passport_number || null,
       passport_expiry: values.passport_expiry || null,
       visa_type: values.visa_type || null,
@@ -500,6 +503,17 @@ export default function ContactDetail() {
                   <div className="grid gap-1.5">
                     <Label>{t('contact.label_website')}</Label>
                     <Input {...register("website")} placeholder="https://..." />
+                  </div>
+                </div>
+
+                {/* 주민등록번호 — 계정관리를 거쳐 임대차 계약서 당사자 표에 인쇄된다.
+                    여권·비자와 달리 내국인 항목이라 외국인 토글 바깥에 둔다. */}
+                <div className="rounded-lg border p-4 space-y-4">
+                  <h3 className="font-semibold text-sm">{t('contact.section_identity_kr')}</h3>
+                  <div className="grid gap-1.5">
+                    <Label>{t('contact.label_resident_no')}</Label>
+                    <Input {...register("resident_no")} placeholder="000000-0000000" autoComplete="off" />
+                    <p className="text-xs text-muted-foreground">{t('contact.hint_resident_no')}</p>
                   </div>
                 </div>
 

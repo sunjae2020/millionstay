@@ -709,7 +709,10 @@
     "unlink_account": "取消关联",
     "unlink_account_confirm": "要取消与该账户的关联吗？两条记录都会保留。",
     "empty_accounts": "该联系人尚未关联任何账户",
-    "accounts_save_first": "请先保存联系人，然后再关联账户"
+    "accounts_save_first": "请先保存联系人，然后再关联账户",
+    "label_resident_no": "居民登记号码",
+    "hint_resident_no": "经由账户管理印在租赁合同的当事人表中。",
+    "section_identity_kr": "身份信息（韩国籍）"
   },
   "account": {
     "new": "新建账户",
@@ -1419,7 +1422,17 @@
     "label_rate_amount": "租金",
     "rate_period_daily": "按日",
     "rate_period_weekly": "按周",
-    "rate_period_monthly": "按月"
+    "rate_period_monthly": "按月",
+    "party_landlord": "出租人（甲方）",
+    "party_tenant": "承租人（乙方）",
+    "party_address": "地址",
+    "party_phone": "联系方式",
+    "party_email": "E-mail",
+    "party_missing": "未填写",
+    "party_none_selected": "选择账户后，将在此显示合同上会出现的信息。",
+    "party_edit_account": "编辑账户信息",
+    "party_edit_title": "编辑 {{name}} 的账户信息",
+    "party_edit_hint": "在此保存会更新账户记录，使用该账户的其他合同也会一并变更。"
   },
   "invoice": {
     "new": "新建发票",

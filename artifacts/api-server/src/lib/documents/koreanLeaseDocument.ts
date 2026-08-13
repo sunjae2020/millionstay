@@ -139,6 +139,19 @@ export function leaseDate(value: string | Date | null | undefined, lang: DocLang
   return `${d.getFullYear()}년 ${mm}월 ${dd}일`;
 }
 
+/**
+ * Korean documents print the Korean name only — a building recorded as
+ * "메트하임 여수 (Metheim Yeosu)" appears as "메트하임 여수". Only a parenthetical
+ * that is purely Latin/ASCII is dropped, so "(주)HK" or "여수 (구항)" survive.
+ */
+export function koreanOnlyName(name: string | null | undefined): string {
+  if (!name) return "";
+  return name
+    .replace(/\s*[（(][^)）]*[)）]/g, (m) => (/[가-힣ㄱ-ㅎㅏ-ㅣ]/.test(m) ? m : ""))
+    .replace(/\s{2,}/g, " ")
+    .trim();
+}
+
 /** Area with the m² unit; empty when unset or zero. */
 function areaText(value: number | null | undefined): string {
   if (value == null || !Number.isFinite(Number(value)) || Number(value) === 0) return "";
@@ -157,7 +170,8 @@ function heading(text: string): string {
 /** ① 임대차 목적물의 부동산 표기. */
 function renderPremisesTable(d: KoreanLeaseDocInput): string {
   const p = d.premises;
-  const location = [p?.location, p?.building].filter(Boolean).join(" ");
+  // 표제부도 제목과 같이 한글만 — "메트하임 여수 (Metheim Yeosu)" 의 영문 병기는 뗀다.
+  const location = [p?.location, koreanOnlyName(p?.building)].filter(Boolean).join(" ");
   // Unit names are usually already written "802호"; only append 호 when absent.
   const unit = p?.unit_no ? (/호\s*$/.test(p.unit_no) ? p.unit_no : `${p.unit_no} 호`) : "";
   const exclusive = areaText(p?.exclusive_area_m2);
@@ -204,26 +218,33 @@ function renderTermsTable(d: KoreanLeaseDocInput, lang: DocLang): string {
     </table>`;
 }
 
-/** ④ 당사자 표 — 임대인(갑) / 임차인(을). */
-function renderParties(d: KoreanLeaseDocInput): string {
-  const side = (mark: string, p: LeaseParty, isLandlord: boolean) => {
-    const idLabel = isLandlord ? "사업자등록번호" : "주민 등록 번호";
-    const idValue = isLandlord ? p.business_no : p.resident_no;
-    return `
+/**
+ * ④ 당사자 — 임대인(갑) / 임차인(을) 를 각각 별도의 표로 낸다.
+ *
+ * 한 표에 rowspan 으로 두 당사자를 묶으면 "임대인 (갑)" 이 좁은 세로칸에서
+ * 줄바꿈되어 괘선 밖으로 밀려 나왔다. 이제 당사자별로 표를 나누고, 구분은 표의
+ * 첫 행(머리줄) 안에 넣는다 — 표 밖에 뜨는 글자가 없다.
+ */
+function renderParty(mark: string, p: LeaseParty, isLandlord: boolean): string {
+  const idLabel = isLandlord ? "사업자등록번호" : "주민등록번호";
+  const idValue = isLandlord ? p.business_no : p.resident_no;
+  return `<table style="${TABLE}margin-bottom:10px;">
       <tr>
-        <th style="${HEAD}width:6%;" rowspan="${isLandlord ? 4 : 3}">${escapeHtml(mark)}</th>
+        <th style="${HEAD}text-align:left;padding:7px 10px;font-size:12.5px;letter-spacing:0.04em;" colspan="4">${escapeHtml(mark)}</th>
+      </tr>
+      <tr>
         <th style="${HEAD}width:18%;">주 소</th>
         <td style="${CELL}" colspan="3">${escapeHtml(p.address ?? "")}</td>
       </tr>
       <tr>
         <th style="${HEAD}">성 명</th>
-        <td style="${CELL}">${escapeHtml(p.name ?? "")} ${
+        <td style="${CELL}width:32%;">${escapeHtml(p.name ?? "")} ${
           p.seal_image
             ? `<img src="${p.seal_image}" alt="" style="height:34px;vertical-align:middle;margin-left:6px;" />`
             : "(인)"
         }</td>
-        <th style="${HEAD}width:12%;">전 화</th>
-        <td style="${CELL}width:26%;">${escapeHtml(p.phone ?? "")}</td>
+        <th style="${HEAD}width:16%;">연 락 처</th>
+        <td style="${CELL}width:34%;">${escapeHtml(p.phone ?? "")}</td>
       </tr>
       <tr>
         <th style="${HEAD}">${escapeHtml(idLabel)}</th>
@@ -231,23 +252,81 @@ function renderParties(d: KoreanLeaseDocInput): string {
         <th style="${HEAD}">E-mail</th>
         <td style="${CELL}">${escapeHtml(p.email ?? "")}</td>
       </tr>
-      ${isLandlord ? `<tr>
-        <th style="${HEAD}">법인 등록 번호</th>
-        <td style="${CELL}" colspan="3">${escapeHtml(p.corporate_no ?? "")}</td>
-      </tr>` : ""}`;
-  };
-  return `<table style="${TABLE}">
-      ${side("임대인 (갑)", d.landlord, true)}
-      ${side("임차인 (을)", d.tenant, false)}
+      ${isLandlord && p.corporate_no ? `<tr>
+        <th style="${HEAD}">법인등록번호</th>
+        <td style="${CELL}" colspan="3">${escapeHtml(p.corporate_no)}</td>
+      </tr>` : ""}
     </table>`;
 }
 
-/** Plain-text clause body → escaped paragraphs, blank lines separating them. */
+function renderParties(d: KoreanLeaseDocInput): string {
+  return `<div style="page-break-inside:avoid;">
+      ${renderParty("임대인 (갑)", d.landlord, true)}
+      ${renderParty("임차인 (을)", d.tenant, false)}
+    </div>`;
+}
+
+/**
+ * Template bodies are authored as plain text, but the Templates Studio editor
+ * saves through a rich-text field — so a body that has been edited there comes
+ * back as one `<p>…</p>` blob with every newline collapsed to a space. Escaping
+ * that verbatim printed a literal `<p>` and one unreadable wall of text.
+ *
+ * So: unwrap the HTML back to text first (block tags → newlines, entities
+ * decoded, tags dropped) and let `reflowClauses` restore the clause structure.
+ */
+function htmlToText(input: string): string {
+  return input
+    .replace(/<\s*br\s*\/?\s*>/gi, "\n")
+    .replace(/<\s*\/\s*(p|div|li|h[1-6]|tr)\s*>/gi, "\n\n")
+    .replace(/<\s*li[^>]*>/gi, "\n· ")
+    .replace(/<[^>]+>/g, "")
+    .replace(/&nbsp;/gi, " ")
+    .replace(/&amp;/gi, "&")
+    .replace(/&lt;/gi, "<")
+    .replace(/&gt;/gi, ">")
+    .replace(/&quot;/gi, '"')
+    .replace(/&#39;/g, "'");
+}
+
+/**
+ * Rebuild the clause layout of a Korean lease body whose line breaks were lost:
+ * every 제N조 heading starts a new paragraph, every (n) / N. item its own line.
+ * Text that still has its own newlines is left exactly as authored.
+ */
+function reflowClauses(text: string): string {
+  if (/\n/.test(text.trim())) return text;
+  return text
+    // 제1조 (…) — blank line before, line break after the heading's closing ).
+    .replace(/\s*(제\s*\d+\s*조\s*\([^)]*\))\s*/g, "\n\n$1\n")
+    // (1) (2) … sub-items, and "- 다 음 -" style centred markers.
+    .replace(/\s+(\(\d+\))\s*/g, "\n$1 ")
+    .replace(/\s*(-\s*다\s*음\s*-)\s*/g, "\n\n$1\n\n")
+    // 1. 2. … numbered items (각 호 / 특약사항). The lookbehind keeps a date like
+    // "2025. 10. 31." in one piece — only a number that does NOT follow another
+    // "<숫자>." starts a new line.
+    .replace(/(?<![0-9]\.)\s(\d{1,2}\.)\s+(?=\S)/g, "\n$1 ")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
+}
+
+/** Clause body (plain text or editor HTML) → escaped, structured paragraphs. */
 function renderProse(text: string | null | undefined): string {
   if (!text?.trim()) return "";
-  return text
+  const plain = reflowClauses(/<[a-z/!][^>]*>/i.test(text) ? htmlToText(text) : text);
+  return plain
     .split(/\n{2,}/)
-    .map((p) => `<p style="margin:0 0 10px;font-size:12px;line-height:1.75;color:#111;white-space:pre-wrap;">${escapeHtml(p.trim())}</p>`)
+    .map((p) => p.trim())
+    .filter(Boolean)
+    .map((p) => {
+      // A 제N조 heading leads its own paragraph — print it bold on its own line.
+      const m = p.match(/^(제\s*\d+\s*조\s*\([^)]*\))\n?([\s\S]*)$/);
+      const head = m
+        ? `<strong style="display:block;margin-bottom:2px;">${escapeHtml(m[1])}</strong>`
+        : "";
+      const body = escapeHtml(m ? m[2].trim() : p);
+      return `<p style="margin:0 0 10px;font-size:12px;line-height:1.75;color:#111;white-space:pre-wrap;page-break-inside:avoid;">${head}${body}</p>`;
+    })
     .join("");
 }
 
@@ -290,7 +369,7 @@ function renderAnnexPage(d: KoreanLeaseDocInput): string {
 
 export function buildKoreanLeaseBody(d: KoreanLeaseDocInput, lang: DocLang = "ko"): string {
   return `
-    <h1 style="text-align:center;font-size:22px;letter-spacing:0.08em;margin:0 0 22px;">${escapeHtml(d.title)}</h1>
+    <h1 style="text-align:center;font-size:22px;letter-spacing:0.08em;margin:0 0 18px;">${escapeHtml(d.title)}</h1>
     ${renderPremisesTable(d)}
     ${renderTermsTable(d, lang)}
     ${heading(`계약 체결일 : ${leaseDate(d.signed_on, lang)}`)}
@@ -313,6 +392,8 @@ export function buildKoreanLeaseHtml(
   forPrint = true,
   lang: DocLang = "ko",
 ): string {
+  // 머릿말(서류명 + 사업자등록번호 두 줄, 좁은 여백)은 이제 모든 문서의 기본값이라
+  // 여기서 따로 지정할 것이 없다 — renderDocumentShell 참고.
   return renderDocumentShell({
     docType: "임대차 계약서",
     bodyHtml: buildKoreanLeaseBody(d, lang),

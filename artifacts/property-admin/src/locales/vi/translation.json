@@ -709,7 +709,10 @@
     "unlink_account": "Hủy liên kết",
     "unlink_account_confirm": "Hủy liên kết tài khoản này khỏi liên hệ? Cả hai hồ sơ đều được giữ lại.",
     "empty_accounts": "Liên hệ này chưa được liên kết với tài khoản nào",
-    "accounts_save_first": "Hãy lưu liên hệ trước, sau đó liên kết tài khoản"
+    "accounts_save_first": "Hãy lưu liên hệ trước, sau đó liên kết tài khoản",
+    "label_resident_no": "Số căn cước công dân",
+    "hint_resident_no": "Đi qua hồ sơ tài khoản để in vào bảng các bên của hợp đồng thuê.",
+    "section_identity_kr": "Thông tin định danh (công dân Hàn Quốc)"
   },
   "account": {
     "new": "Tài khoản mới",
@@ -1419,7 +1422,17 @@
     "label_rate_amount": "Giá thuê",
     "rate_period_daily": "Theo ngày",
     "rate_period_weekly": "Theo tuần",
-    "rate_period_monthly": "Theo tháng"
+    "rate_period_monthly": "Theo tháng",
+    "party_landlord": "Bên cho thuê (Bên A)",
+    "party_tenant": "Bên thuê (Bên B)",
+    "party_address": "Địa chỉ",
+    "party_phone": "Liên hệ",
+    "party_email": "E-mail",
+    "party_missing": "Chưa nhập",
+    "party_none_selected": "Chọn một tài khoản để xem thông tin sẽ xuất hiện trên hợp đồng.",
+    "party_edit_account": "Sửa thông tin tài khoản",
+    "party_edit_title": "Sửa thông tin tài khoản {{name}}",
+    "party_edit_hint": "Lưu ở đây sẽ cập nhật hồ sơ tài khoản và áp dụng cho mọi hợp đồng dùng tài khoản này."
   },
   "invoice": {
     "new": "Tạo hóa đơn mới",
