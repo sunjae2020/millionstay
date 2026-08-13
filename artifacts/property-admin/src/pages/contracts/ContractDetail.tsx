@@ -24,7 +24,7 @@ import { LookupSelect } from "@/components/LookupSelect";
 import { ProductLookupSelect } from "@/components/ProductLookupSelect";
 import { ContractPartyCard } from "@/components/ContractPartyCard";
 import { ContractChannelCard, type ChannelValue } from "@/components/ContractChannelCard";
-import { ArrowLeft, Save, Trash2, CalendarDays, Plus, Pencil, List, FileDown, Eye, Mail, Receipt, ClipboardList, Wallet, Check, FileSignature, FileText, Scale } from "lucide-react";
+import { ArrowLeft, Save, Trash2, CalendarDays, Plus, Pencil, List, FileDown, Eye, Mail, Receipt, ClipboardList, Wallet, Check, FileSignature, FileText, Scale, CopyPlus } from "lucide-react";
 import { apiFetch } from "@/lib/apiFetch";
 import { useToast } from "@/hooks/use-toast";
 import { DocumentVersions } from "@/components/DocumentVersions";
@@ -129,6 +129,9 @@ interface FormData {
   advance_amount: string;
   contract_category: string;
   lease_form: string;
+  rent_payment_info_id: number | null;
+  deposit_payment_info_id: number | null;
+  special_terms: string;
   doc_attachments: string[];
   acquisition_channel: string;
   channel_account_id: number | null;
@@ -338,7 +341,8 @@ export default function ContractDetail() {
       start_date: "", end_date: "", weekly_rate: "", total_rent: "",
       lease_mode: "long", rate_period: "monthly", rate_amount: "",
       bond_amount: "", advance_amount: "",
-      contract_category: "", lease_form: "", doc_attachments: [],
+      contract_category: "", lease_form: "housing_standard", doc_attachments: [],
+      rent_payment_info_id: null, deposit_payment_info_id: null, special_terms: "",
       acquisition_channel: "", channel_account_id: null,
       channel_contact_name: "", channel_contact_phone: "", channel_contact_email: "",
       down_payment: "", down_payment_date: "", interim_payment: "", interim_payment_date: "",
@@ -373,7 +377,11 @@ export default function ContractDetail() {
         bond_amount: contract.bond_amount != null ? String(contract.bond_amount) : "",
         advance_amount: contract.advance_amount != null ? String(contract.advance_amount) : "",
         contract_category: (contract as any).contract_category ?? "",
-        lease_form: (contract as any).lease_form ?? "",
+        // 서식 기본값은 법무부 주택임대차표준계약서. 다른 서식은 직접 고른다.
+        lease_form: (contract as any).lease_form || "housing_standard",
+        rent_payment_info_id: (contract as any).rent_payment_info_id ?? null,
+        deposit_payment_info_id: (contract as any).deposit_payment_info_id ?? null,
+        special_terms: (contract as any).special_terms ?? "",
         doc_attachments: parseAttachments((contract as any).doc_attachments),
         acquisition_channel: (contract as any).acquisition_channel ?? "",
         channel_account_id: (contract as any).channel_account_id ?? null,
@@ -429,6 +437,26 @@ export default function ContractDetail() {
   const terminateMutation = useTerminateContract({ mutation: { onSuccess: () => { invalidate(); refetch(); setTerminateOpen(false); } } });
   const expireMutation = useExpireContract({ mutation: { onSuccess: () => { invalidate(); refetch(); } } });
   const deleteMutation = useDeleteContract({ mutation: { onSuccess: () => { invalidate(); navigate("/contracts/contracts"); } } });
+
+  // 계약 연장 — 서버가 기존 계약을 그대로 복제하고, 새 계약 상세로 넘어간다.
+  // 기간은 기존 종료일 다음 날부터 같은 길이로 잡혀 오고, 나머지는 여기서 고친다.
+  const renewMutation = useMutation({
+    mutationFn: async () => {
+      const r = await apiFetch(`/api/v1/contracts/${id}/renew`, { method: "POST" });
+      if (!r.ok) throw new Error(t('contract.toast_renew_failed'));
+      return r.json();
+    },
+    onSuccess: (created: any) => {
+      invalidate();
+      toast({ title: t('contract.toast_renewed'), description: created?.contract_ref ?? "" });
+      navigate(`/contracts/contracts/${created.id}`);
+    },
+    onError: (err: unknown) => toast({
+      title: t('contract.toast_renew_failed'),
+      description: err instanceof Error ? err.message : t('contract.error'),
+      variant: "destructive",
+    }),
+  });
 
   const invalidateSchedule = () => qc.invalidateQueries({ queryKey: ["contract-schedule", id] });
   const invalidateLineItems = () => qc.invalidateQueries({ queryKey: ["contract-line-items", id] });
@@ -660,6 +688,9 @@ export default function ContractDetail() {
     rent_due_day: !isShort && data.rent_due_day ? Number(data.rent_due_day) : null,
     currency: data.currency || brandCurrency,
     document_url: data.document_url || null,
+    rent_payment_info_id: data.rent_payment_info_id ?? null,
+    deposit_payment_info_id: data.deposit_payment_info_id ?? null,
+    special_terms: data.special_terms || null,
     terms_text: data.terms_text || null,
     notes: data.notes || null,
   });
@@ -791,6 +822,10 @@ export default function ContractDetail() {
                   <Button type="button" variant="outline" disabled={pdfBusy} onClick={openContractPreview}>
                     <Eye className="h-4 w-4 mr-2" />{t('contract.btn_preview')}
                   </Button>
+                  <Button type="button" variant="outline" disabled={renewMutation.isPending}
+                    onClick={() => { if (confirm(t('contract.confirm_renew'))) renewMutation.mutate(); }}>
+                    <CopyPlus className="h-4 w-4 mr-2" />{t('contract.btn_renew')}
+                  </Button>
                   <DocumentVersions entityType="contract" entityId={Number(id)} freezeUrl={`/api/v1/contracts/${id}/freeze`} />
                 </>
               )}
@@ -906,6 +941,36 @@ export default function ContractDetail() {
                   <p className="text-xs text-muted-foreground mt-1">{t('contract.hint_lease_form')}</p>
                 </div>
               </div>
+
+              {/* 계약서에 찍히는 입금 계좌 — Settings → Payment Info 에 등록된 계좌.
+                  비워 두면 계좌 이름 규칙(임대료/보증금)으로 자동 지정된다. */}
+              <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <Label>{t('contract.label_rent_account')}</Label>
+                  <Controller name="rent_payment_info_id" control={control} render={({ field }) => (
+                    <LookupSelect
+                      lookupUrl="/api/v1/lookup/payment-info"
+                      value={field.value}
+                      onChange={field.onChange}
+                      placeholder={t('contract.ph_select_account')}
+                      displayValue={(contract as any)?.rent_payment_info_name ?? null}
+                    />
+                  )} />
+                </div>
+                <div>
+                  <Label>{t('contract.label_deposit_account')}</Label>
+                  <Controller name="deposit_payment_info_id" control={control} render={({ field }) => (
+                    <LookupSelect
+                      lookupUrl="/api/v1/lookup/payment-info"
+                      value={field.value}
+                      onChange={field.onChange}
+                      placeholder={t('contract.ph_select_account')}
+                      displayValue={(contract as any)?.deposit_payment_info_name ?? null}
+                    />
+                  )} />
+                </div>
+              </div>
+              <p className="text-xs text-muted-foreground mt-1">{t('contract.hint_payment_accounts')}</p>
 
               {/* Attachments printed after the agreement itself */}
               <div className="mt-4">
@@ -1286,8 +1351,9 @@ export default function ContractDetail() {
                   <Input {...register("document_url")} placeholder="https://..." />
                 </div>
                 <div>
-                  <Label>{t('contract.label_terms')}</Label>
-                  <Textarea {...register("terms_text")} placeholder={t('contract.ph_terms')} rows={6} />
+                  <Label>{t('contract.label_special_terms')}</Label>
+                  <Textarea {...register("special_terms")} placeholder={t('contract.ph_special_terms')} rows={6} />
+                  <p className="text-xs text-muted-foreground mt-1">{t('contract.hint_special_terms')}</p>
                 </div>
                 <div>
                   <Label>{t('contract.label_notes')}</Label>

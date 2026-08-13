@@ -134,7 +134,9 @@ export async function channelContactFromAccount(accountId: number): Promise<{
  * 계약 경로에서 파생되는 관련 비용 행(origin='channel')을 계약과 맞춘다.
  *
  * 규칙:
- *  - 경로 + 수취인 이름이 있으면 행이 없을 때 만들고, 있으면 항목·수취인·계정을 갱신한다.
+ *  - 경로가 정해져 있으면 행이 없을 때 만들고, 있으면 항목·수취인·계정을 갱신한다.
+ *    수취인·기준표가 없어도 금액 0 인 행을 만들어 둔다 — 수수료가 빠진 계약이
+ *    조용히 지나가는 것보다, 0 원짜리 미지급 행이 눈에 띄는 편이 낫다.
  *  - 금액은 **만들 때만** 기준표에서 채운다. 이미 있는 행의 금액은 사람이 고쳐 쓸 수 있으므로
  *    함부로 덮지 않는다 — 다만 경로 자체가 바뀌었고 금액이 예전 경로의 기준액 그대로(=손대지
  *    않은 값)이거나 0 이면 새 경로 기준액으로 다시 계산한다.
@@ -157,8 +159,11 @@ export async function syncChannelRelatedCost(
   const channel = contract.acquisition_channel;
   const payeeName = (contract.channel_contact_name ?? "").trim();
 
-  if (!isAcquisitionChannel(channel) || !payeeName) {
-    // 경로가 없거나 수취인을 아직 못 정했다 — 미지급 자동 행은 거둬들인다.
+  // 경로를 고른 순간 수수료 행은 항상 생긴다 — 수취인이나 기준표가 아직 없어도
+  // 마찬가지다. 빈 행이라도 있어야 "이 계약의 수수료는 얼마인가"가 관련 비용
+  // 한 곳에서 보이고, 금액 0 · 송금일 없음이 곧 "미지급"으로 잡힌다.
+  if (!isAcquisitionChannel(channel)) {
+    // 경로 자체를 지웠다 — 아직 송금 전인 자동 행은 거둬들인다.
     if (existing && !existing.remitted_on) {
       await db.update(contractRelatedCostsTable)
         .set({ status: "Deleted", updated_at: new Date() })
@@ -175,7 +180,7 @@ export async function syncChannelRelatedCost(
       contract_id: contract.id,
       cost_type: costType,
       remitted_on: null,
-      payee_name: payeeName,
+      payee_name: payeeName,   // 아직 못 정했으면 빈 칸 — 관련 비용 탭에서 채운다.
       account_id: contract.channel_account_id ?? null,
       amount: fee.amount ?? 0,
       currency: contract.currency || fee.currency,
@@ -198,7 +203,8 @@ export async function syncChannelRelatedCost(
 
   await db.update(contractRelatedCostsTable).set({
     cost_type: costType,
-    payee_name: payeeName,
+    // 계약에 수취인이 비어 있다고 해서 관련 비용 탭에 손으로 적어 둔 이름을 지우지는 않는다.
+    payee_name: payeeName || existing.payee_name,
     account_id: contract.channel_account_id ?? null,
     amount,
     updated_at: new Date(),

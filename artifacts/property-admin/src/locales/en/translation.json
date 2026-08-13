@@ -1467,7 +1467,18 @@
     "total_costs_unpaid": "Unpaid",
     "hint_remitted_on": "Leave blank until it is paid — the row shows as Unpaid.",
     "channel_renewal": "Renewal",
-    "channel_renewal_hint": "Existing tenant renewed the lease"
+    "channel_renewal_hint": "Existing tenant renewed the lease",
+    "label_rent_account": "Rent payment account",
+    "label_deposit_account": "Deposit payment account",
+    "ph_select_account": "Select an account...",
+    "hint_payment_accounts": "Accounts registered under Settings → Payment Info. Leave blank to pick by account name (rent/deposit); the agreement prints whichever is set here.",
+    "label_special_terms": "Article 11 (Special terms)",
+    "ph_special_terms": "One special term per line, for this contract only...",
+    "hint_special_terms": "Printed directly after Article 11 (Special terms) in the agreement.",
+    "btn_renew": "Renew contract",
+    "confirm_renew": "Create a renewal contract with the same content? The term starts the day after the current one ends and runs for the same length.",
+    "toast_renewed": "Renewal contract created",
+    "toast_renew_failed": "Could not create the renewal contract"
   },
   "invoice": {
     "new": "New Invoice",

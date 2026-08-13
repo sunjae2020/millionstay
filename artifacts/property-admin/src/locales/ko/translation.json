@@ -1467,7 +1467,18 @@
     "total_costs_unpaid": "미지급",
     "hint_remitted_on": "송금 전이면 비워 두세요 — 미지급으로 표시됩니다.",
     "channel_renewal": "연장",
-    "channel_renewal_hint": "기존 세입자가 재계약"
+    "channel_renewal_hint": "기존 세입자가 재계약",
+    "label_rent_account": "임대료 납부계좌",
+    "label_deposit_account": "보증금 납부계좌",
+    "ph_select_account": "계좌 선택...",
+    "hint_payment_accounts": "설정 → 결제 정보에 등록된 계좌입니다. 비워 두면 계좌 이름(임대료/보증금)으로 자동 지정되며, 계약서에는 여기서 정한 계좌가 찍힙니다.",
+    "label_special_terms": "제11조 (특약사항)",
+    "ph_special_terms": "이 계약에만 해당하는 특약을 한 줄에 하나씩 적습니다...",
+    "hint_special_terms": "계약서 본문 제11조 (특약사항) 다음 줄에 이어서 인쇄됩니다.",
+    "btn_renew": "계약 연장",
+    "confirm_renew": "이 계약과 같은 내용으로 연장 계약을 만들까요? 기간은 기존 종료일 다음 날부터 같은 길이로 잡힙니다.",
+    "toast_renewed": "연장 계약을 만들었습니다",
+    "toast_renew_failed": "연장 계약을 만들지 못했습니다"
   },
   "invoice": {
     "new": "새 청구서",

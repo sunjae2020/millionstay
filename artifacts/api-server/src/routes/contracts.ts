@@ -394,6 +394,7 @@ async function enrichContracts(rows: (typeof contractsTable.$inferSelect)[]) {
   // full round trip per contract — 40s+ on a remote pooler once the lease import
   // pushed the table to a few hundred rows.
   const channelIds = [...new Set(rows.map(r => r.channel_account_id).filter(Boolean))] as number[];
+  const payInfoIds = [...new Set(rows.flatMap(r => [r.rent_payment_info_id, r.deposit_payment_info_id]).filter(Boolean))] as number[];
   const accountIds = [...new Set([...tenantIds, ...landlordIds, ...channelIds])];
   const [accountRows, spaceRows, legacyProductRows, productRows, bookingRows] = await Promise.all([
     accountIds.length
@@ -418,6 +419,17 @@ async function enrichContracts(rows: (typeof contractsTable.$inferSelect)[]) {
   for (const p of productRows) accommodationMap[p.id] = p.name;
   for (const b of bookingRows) bookingMap[b.id] = b.booking_ref;
 
+  // 계약서에 찍히는 납부계좌 — 목록 표기는 인보이스와 같은 "은행 계좌번호 (예금주)".
+  const payInfoMap: Record<number, string> = {};
+  if (payInfoIds.length) {
+    const payInfoRows = await db.select().from(paymentInfoTable)
+      .where(inArray(paymentInfoTable.id, payInfoIds));
+    for (const p of payInfoRows) {
+      const line = [p.bank_name, p.account_number].filter(Boolean).join(" ");
+      payInfoMap[p.id] = line ? `${line}${p.account_name ? ` (${p.account_name})` : ""}` : p.name;
+    }
+  }
+
   return rows.map(r => ({
     ...r,
     tenant_name: r.tenant_account_id ? (accountMap[r.tenant_account_id] ?? null) : null,
@@ -430,6 +442,8 @@ async function enrichContracts(rows: (typeof contractsTable.$inferSelect)[]) {
       : r.contract_product_id ? (productMap[r.contract_product_id] ?? null) : null,
     contract_product_name: r.contract_product_id ? (productMap[r.contract_product_id] ?? null) : null,
     booking_ref: r.booking_id ? (bookingMap[r.booking_id] ?? null) : null,
+    rent_payment_info_name: r.rent_payment_info_id ? (payInfoMap[r.rent_payment_info_id] ?? null) : null,
+    deposit_payment_info_name: r.deposit_payment_info_id ? (payInfoMap[r.deposit_payment_info_id] ?? null) : null,
   }));
 }
 
@@ -575,7 +589,9 @@ router.post("/v1/contracts", async (req, res): Promise<void> => {
     monthly_rent: data.monthly_rent ?? lease?.effective_monthly ?? null,
     advance_amount: data.advance_amount ?? null,
     contract_category: data.contract_category ?? null,
-    lease_form: data.lease_form ?? null,
+    // 서식 기본값은 법무부 주택임대차표준계약서 — 고르지 않고 만든 계약도 곧바로
+    // 그 서식으로 발급된다. 다른 서식은 계약 상세에서 직접 바꾼다.
+    lease_form: data.lease_form ?? "housing_standard",
     doc_attachments: normalizeAttachmentsInput(data.doc_attachments, data.lease_form ?? null),
     ...mltLeaseFields(data),
     down_payment: data.down_payment ?? null,
@@ -588,10 +604,78 @@ router.post("/v1/contracts", async (req, res): Promise<void> => {
     status: "Draft",
     document_url: data.document_url ?? null,
     ...acquisitionChannelFields(data),
+    rent_payment_info_id: data.rent_payment_info_id ?? null,
+    deposit_payment_info_id: data.deposit_payment_info_id ?? null,
+    special_terms: data.special_terms ?? null,
     terms_text: data.terms_text ?? null,
     notes: data.notes ?? null,
   }).returning();
   await syncChannelRelatedCost(row, null);
+  const [result] = await enrichContracts([row]);
+  res.status(201).json(result);
+});
+
+/**
+ * 계약 연장 — 기존 계약을 그대로 복제해 새 계약을 만든다.
+ *
+ * 재계약은 세대·임차인·임대인·금액·서식·첨부까지 대부분 그대로이고 기간만
+ * 새로 잡히는 일이 많다. 그래서 "똑같은 계약을 하나 더" 만들어 주고, 달라진
+ * 부분만 새 계약에서 고쳐 쓰게 한다. 복제되지 않는 것은 실제로 일어난 일에
+ * 속하는 값들이다 — 서명·발송 시각, 발행된 문서 URL, 관련 비용(실제 송금액),
+ * 청구서. 새 계약은 늘 Draft 로 시작한다.
+ *
+ * 기간은 기존 기간 길이를 유지한 채 종료일 다음 날부터 다시 잡는다. 날짜가 없어
+ * 계산이 불가능하면 비워 두고 사람이 채운다.
+ */
+router.post("/v1/contracts/:id/renew", async (req, res): Promise<void> => {
+  const id = Number(req.params.id);
+  const [src] = await db.select().from(contractsTable).where(eq(contractsTable.id, id));
+  if (!src) { res.status(404).json({ error: "NOT_FOUND" }); return; }
+
+  const shift = (() => {
+    if (!src.start_date || !src.end_date) return null;
+    const start = new Date(src.start_date), end = new Date(src.end_date);
+    if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) return null;
+    const days = Math.round((end.getTime() - start.getTime()) / 86_400_000);
+    const nextStart = new Date(end.getTime() + 86_400_000);
+    const nextEnd = new Date(nextStart.getTime() + days * 86_400_000);
+    const iso = (d: Date) => d.toISOString().slice(0, 10);
+    return { start: iso(nextStart), end: iso(nextEnd) };
+  })();
+
+  const {
+    id: _id, contract_ref: _ref, created_at: _created, updated_at: _updated,
+    signed_at: _signed, sent_at: _sent, document_url: _doc, deleted_at: _deleted,
+    status: _status, start_date: _start, end_date: _end,
+    effective_date: _effective, expiry_date: _expiry, termination_reason: _termination,
+    booking_id: _booking,
+    ...carried
+  } = src;
+
+  const [row] = await db.insert(contractsTable).values({
+    ...carried,
+    contract_ref: await nextContractRef(),
+    status: "Draft",
+    start_date: shift?.start ?? null,
+    end_date: shift?.end ?? null,
+    effective_date: shift?.start ?? null,
+    // 재계약이라는 사실 자체가 계약 경로다 — 수수료 행도 그 기준으로 잡힌다.
+    acquisition_channel: "renewal",
+    notes: [src.notes, `${src.contract_ref} 연장 계약`].filter(Boolean).join("\n"),
+  }).returning();
+
+  // 부속 상품·서비스 라인은 계약 내용의 일부라 함께 복제한다.
+  const lines = await db.select().from(contractLineItemsTable)
+    .where(and(eq(contractLineItemsTable.contract_id, id), eq(contractLineItemsTable.status, "Active")));
+  if (lines.length) {
+    await db.insert(contractLineItemsTable).values(lines.map(({ id: _lineId, contract_id: _c, created_at: _lc, updated_at: _lu, ...line }) => ({
+      ...line,
+      contract_id: row.id,
+    })));
+  }
+
+  await syncChannelRelatedCost(row, null);
+  await logAction({ entityType: "contract", entityId: row.id, action: "CREATE", newValue: { renewed_from: src.contract_ref } });
   const [result] = await enrichContracts([row]);
   res.status(201).json(result);
 });
@@ -665,14 +749,20 @@ async function buildContractPremises(
  * keyword on the row name so ops control the mapping from Settings → Payment
  * Info; when only one active account exists it is used for both lines.
  */
-async function resolveLeaseAccounts(): Promise<KoreanLeaseDocInput["accounts"]> {
+async function resolveLeaseAccounts(
+  contract?: { rent_payment_info_id?: number | null; deposit_payment_info_id?: number | null },
+): Promise<KoreanLeaseDocInput["accounts"]> {
   const rows = await db.select().from(paymentInfoTable)
     .where(and(eq(paymentInfoTable.status, "Active"), isNull(paymentInfoTable.deleted_at)));
   if (!rows.length) return [];
   const find = (...keywords: string[]) =>
     rows.find((r) => keywords.some((k) => (r.name ?? "").includes(k)));
-  const rent = find("임대료", "월세", "차임") ?? rows[0];
-  const deposit = find("보증금") ?? rows[0];
+  // 계약에 지정된 계좌가 먼저다. 비어 있으면 예전처럼 이름 키워드로 고른다 —
+  // 지정 칸이 생기기 전에 발급된 계약도 같은 계좌로 계속 나가도록.
+  const byId = (id: number | null | undefined) =>
+    id ? rows.find((r) => r.id === id) : undefined;
+  const rent = byId(contract?.rent_payment_info_id) ?? find("임대료", "월세", "차임") ?? rows[0];
+  const deposit = byId(contract?.deposit_payment_info_id) ?? find("보증금") ?? rows[0];
   const line = (label: string, r: typeof rows[number]) => ({
     label,
     bank_name: r.bank_name,
@@ -854,7 +944,10 @@ export async function buildContractDocInput(
           state: a.address_state,
           postcode: a.address_postcode,
           country: a.address_country,
-        }, lang, { orderFallbackCountry: issuerCountry }) || null
+          // 계약 당사자 주소는 국가명 없이 그 나라 표기 순서대로만 쓴다:
+          // "전라남도 여수시 문수북5길 16 (우) 59000". 국내 서류에 자기 나라
+          // 이름을 적지 않는 관행이고, 해외 주소는 순서만 그 나라 것을 따른다.
+        }, lang, { orderFallbackCountry: issuerCountry, omitCountry: true }) || null
       : null;
   // 당사자 정보의 원천은 계정관리다. 계정에 비어 있는 칸은 그 계정의 대표
   // 연락처로 메운다 — 연락처에만 적어 둔 전화·이메일·주민등록번호도 계약서에
@@ -967,9 +1060,11 @@ export async function buildContractDocInput(
       start_date: row.start_date,
       end_date: row.end_date,
       signed_on: row.signed_at ?? row.effective_date ?? row.created_at,
-      accounts: await resolveLeaseAccounts(),
+      accounts: await resolveLeaseAccounts(row),
       clauses_text: termsText,
       annex_text: annexText,
+      // 제11조(특약사항) 본문 — 템플릿이 아니라 이 계약에 적어 둔 특약이 찍힌다.
+      special_terms: row.special_terms,
     };
   }
 
@@ -1018,7 +1113,7 @@ export async function buildContractDocInput(
   // 서식이 요구하는 법정 고지사항(종류·의무기간·선순위·체납·보증)은 계약에
   // 스냅숏으로 저장해 둔 mlt_* 컬럼(0033)에서 온다. 주민등록번호는 사람에게 붙는
   // 값이라 계약이 아니라 연락처/계정관리에 있고(0052), 거기 적혀 있을 때만 찍힌다.
-  const mltAccounts = await resolveLeaseAccounts();
+  const mltAccounts = await resolveLeaseAccounts(row);
   const mltAccount = mltAccounts.find((a) => a.label.includes("보증금")) ?? mltAccounts[0] ?? null;
   const mlt: MltStandardLeaseInput = {
     signed_on: row.signed_at ?? row.effective_date ?? row.created_at,
@@ -1099,7 +1194,8 @@ export async function buildContractDocInput(
     deposit_amount: row.bond_amount,
     monthly_rent: actualMonthlyRent,
     signed_on: row.signed_at ? String(row.signed_at) : row.effective_date ?? row.start_date,
-    special_terms: annexText,
+    // 첨부로 붙는 별지도 계약의 특약이 정본이고, 없을 때만 템플릿 별지를 쓴다.
+    special_terms: row.special_terms?.trim() ? row.special_terms : annexText,
   };
 
   return {
@@ -1435,6 +1531,10 @@ router.put("/v1/contracts/:id", async (req, res): Promise<void> => {
         currency: data.currency ?? DEFAULT_CURRENCY,
         document_url: data.document_url ?? null,
         ...acquisitionChannelFields(data),
+        // 계약서에 찍히는 납부계좌 — 비우면 payment_info 이름 규칙으로 자동 선택.
+        rent_payment_info_id: data.rent_payment_info_id ?? null,
+        deposit_payment_info_id: data.deposit_payment_info_id ?? null,
+        special_terms: data.special_terms ?? null,
         terms_text: data.terms_text ?? null,
         notes: data.notes ?? null,
       };

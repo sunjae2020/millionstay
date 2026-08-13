@@ -91,6 +91,13 @@ export const contractsTable = pgTable("contracts", {
   channel_contact_name: text("channel_contact_name"),
   channel_contact_phone: text("channel_contact_phone"),
   channel_contact_email: text("channel_contact_email"),
+  // 계약서에 찍히는 입금 계좌. 비워 두면 payment_info 의 이름 키워드로 자동 선택된다
+  // (기존 동작). 지정하면 그 계좌가 계약서·표준서식에 그대로 나간다 — 0054.
+  rent_payment_info_id: integer("rent_payment_info_id"),
+  deposit_payment_info_id: integer("deposit_payment_info_id"),
+  // 제11조(특약사항) — 이 계약에만 해당하는 특약. 계약일반조항 다음에 이어 찍힌다.
+  // terms_text 와 다르다: terms_text 는 본문 전체를 대체하는 이관 계약용 필드다.
+  special_terms: text("special_terms"),
   terms_text: text("terms_text"),
   notes: text("notes"),
   created_at: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),

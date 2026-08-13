@@ -1467,7 +1467,18 @@
     "total_costs_unpaid": "未払",
     "hint_remitted_on": "送金前は空欄のままにしてください — 未払と表示されます。",
     "channel_renewal": "更新",
-    "channel_renewal_hint": "既存の入居者が再契約"
+    "channel_renewal_hint": "既存の入居者が再契約",
+    "label_rent_account": "賃料の入金口座",
+    "label_deposit_account": "保証金の入金口座",
+    "ph_select_account": "口座を選択...",
+    "hint_payment_accounts": "設定 → 決済情報に登録された口座です。空欄なら口座名（賃料／保証金）で自動選択され、契約書にはここで指定した口座が印字されます。",
+    "label_special_terms": "第11条（特約事項）",
+    "ph_special_terms": "この契約だけの特約を1行に1つずつ記入します...",
+    "hint_special_terms": "契約書本文の第11条（特約事項）の次の行に続けて印字されます。",
+    "btn_renew": "契約を更新",
+    "confirm_renew": "同じ内容で更新契約を作成しますか？期間は現契約の終了日の翌日から同じ長さで設定されます。",
+    "toast_renewed": "更新契約を作成しました",
+    "toast_renew_failed": "更新契約を作成できませんでした"
   },
   "invoice": {
     "new": "新規請求書",

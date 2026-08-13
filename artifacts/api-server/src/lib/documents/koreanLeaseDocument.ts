@@ -81,8 +81,14 @@ export interface KoreanLeaseDocInput {
   accounts: LeaseBankAccount[];
   /** 계약일반조항 본문 (제1조~) — plain text from the editable template. */
   clauses_text: string | null;
-  /** 별지 특약사항 본문 — plain text from the editable template, after `[별지]`. */
+  /**
+   * 별지 특약사항 본문 — 이제 계약서 본문에는 찍히지 않는다. 첨부 문서
+   * "별지 특약사항"을 체크했을 때만 뒤에 붙으므로 여기서는 쓰지 않는다.
+   * @deprecated 첨부 경로(leaseAttachments)로 옮겨갔다.
+   */
   annex_text: string | null;
+  /** 제11조(특약사항) 본문 — 이 계약에만 적용되는 특약. 계약일반조항 뒤에 이어진다. */
+  special_terms?: string | null;
 }
 
 // ── Korean amount rendering (금 이천사백만 원정) ────────────────────────────
@@ -330,41 +336,13 @@ function renderProse(text: string | null | undefined): string {
     .join("");
 }
 
-/** ⑥ 별지 — 부동산의 표식 + 특약사항, page-broken into the SAME PDF. */
-function renderAnnexPage(d: KoreanLeaseDocInput): string {
-  if (!d.annex_text?.trim() && !d.registry) return "";
-  const r = d.registry;
-  const p = d.premises;
-  const typeSuffix = p?.unit_type ? ` (${p.unit_type})` : "";
-  const lot = [r?.lot_address, p?.unit_no ? (/호\s*$/.test(p.unit_no) ? p.unit_no : `${p.unit_no} 호`) : null].filter(Boolean).join(" ");
-  // 대지권비율 = 대지지분 / 토지면적, written as "3519분의 8.762".
-  const landRatio =
-    r?.land_area_m2 != null && p?.land_share_m2 != null
-      ? `${Number(r.land_area_m2)}분의 ${Number(p.land_share_m2)}`
-      : "";
-  const pair = (l1: string, v1: string, l2: string, v2: string) =>
-    v1 || v2
-      ? `<tr>
-          <th style="${HEAD}width:20%;">${escapeHtml(l1)}</th><td style="${CELL}text-align:center;width:30%;">${escapeHtml(v1)}</td>
-          <th style="${HEAD}width:20%;">${escapeHtml(l2)}</th><td style="${CELL}text-align:center;width:30%;">${escapeHtml(v2)}</td>
-        </tr>`
-      : "";
-  const registryTable = r
-    ? `<div style="font-size:13px;font-weight:700;margin:16px 0 4px;">◆ 부동산의 표식</div>
-       <table style="${TABLE}">
-         ${lot ? `<tr><th style="${HEAD}">소 재 지</th><td style="${CELL}" colspan="3">${escapeHtml(lot)}</td></tr>` : ""}
-         ${pair("건 물 용 도", r.building_use ?? "", "건 물 구 조", r.building_structure ?? "")}
-         ${pair("임 대 면 적", areaText(p?.exclusive_area_m2), "임 대 부 분", r.leased_portion ?? "")}
-         ${pair("토 지 지 목", r.land_category ?? "", "토 지 면 적", areaText(r.land_area_m2))}
-         ${pair("대지권종류", r.land_right_type ?? "", "대지권비율", landRatio)}
-       </table>`
-    : "";
-  return `<div style="page-break-before:always;break-before:page;">
-      <h2 style="text-align:center;font-size:19px;margin:0 0 18px;">${escapeHtml(d.title.replace(/임대차 계약서$/, "월세 계약서 별지"))}${escapeHtml(typeSuffix)}</h2>
-      ${registryTable}
-      ${d.annex_text?.trim() ? `<div style="font-size:13px;font-weight:700;margin:16px 0 6px;">◆ 특약사항</div>${renderProse(d.annex_text)}` : ""}
-      <div style="text-align:right;font-size:14px;font-weight:700;margin-top:36px;">${escapeHtml(d.landlord.name ?? "")}</div>
-    </div>`;
+/**
+ * 제11조(특약사항)의 내용 — 계약마다 다르므로 템플릿이 아니라 계약에서 온다.
+ * 조항 본문이 제11조 제목까지 찍고 끝나고, 그 다음 줄에 이 목록이 이어진다.
+ */
+function renderSpecialTerms(d: KoreanLeaseDocInput): string {
+  if (!d.special_terms?.trim()) return "";
+  return `<div style="margin-top:-4px;">${renderProse(d.special_terms)}</div>`;
 }
 
 export function buildKoreanLeaseBody(d: KoreanLeaseDocInput, lang: DocLang = "ko"): string {
@@ -382,7 +360,7 @@ export function buildKoreanLeaseBody(d: KoreanLeaseDocInput, lang: DocLang = "ko
     ${d.clauses_text?.trim() ? `
       <div style="text-align:center;font-size:15px;font-weight:700;background:#F2F2F2;padding:8px;margin:22px 0 14px;">계약일반조항</div>
       ${renderProse(d.clauses_text)}` : ""}
-    ${renderAnnexPage(d)}
+    ${renderSpecialTerms(d)}
   `;
 }
 

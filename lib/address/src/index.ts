@@ -70,6 +70,12 @@ export function formatPostalAddress(
      * on a document, only an assumed layout does.
      */
      orderFallbackCountry?: string | null;
+    /**
+     * Drop the country name entirely. A domestic document does not name its own
+     * country — a Korean lease agreement writes "전라남도 여수시 …", never
+     * "대한민국 전라남도 …". Ordering still follows the record's country.
+     */
+    omitCountry?: boolean;
   } = {},
 ): string {
   const line1 = clean(parts.line1);
@@ -77,7 +83,7 @@ export function formatPostalAddress(
   const suburb = clean(parts.suburb);
   const state = clean(parts.state);
   const postcode = clean(parts.postcode);
-  const country = countryName(parts.country, lang);
+  const country = opts.omitCountry ? "" : countryName(parts.country, lang);
 
   const orderCountry = clean(parts.country) || clean(opts.orderFallbackCountry);
   if (addressOrderFor(orderCountry) === "largest-first") {

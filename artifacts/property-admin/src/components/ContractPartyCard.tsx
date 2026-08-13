@@ -10,6 +10,7 @@ import { AccountLookupSelect } from "@/components/AccountLookupSelect";
 import { apiJson, ApiError } from "@/lib/apiFetch";
 import { ExternalLink, Loader2, Pencil } from "lucide-react";
 import { Link } from "wouter";
+import { formatPostalAddress, orderFallbackFromLang, type AddressLang } from "@workspace/address";
 
 /**
  * 계약 당사자(임대인 갑 / 임차인 을) 한 쪽을 담당하는 카드.
@@ -59,7 +60,7 @@ function maskResidentNo(value: string): string {
 export function ContractPartyCard({
   title, accountId, onAccountChange, fallbackName, variant, required,
 }: Props) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [account, setAccount] = useState<AccountRecord | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -78,10 +79,19 @@ export function ContractPartyCard({
     return () => { cancelled = true; };
   }, [accountId]);
 
-  const addressLine = [
-    account?.address_line1, account?.address_suburb, account?.address_state,
-    account?.address_postcode, account?.address_country,
-  ].filter(Boolean).join(", ");
+  // 주소는 그 나라 표기 순서대로, 국가명은 빼고 — 계약서에 찍히는 모양 그대로.
+  // 한국 주소는 "전라남도 여수시 문수북5길 16, 203동 203호 (우) 59723".
+  const addressLine = formatPostalAddress(
+    {
+      line1: account?.address_line1,
+      suburb: account?.address_suburb,
+      state: account?.address_state,
+      postcode: account?.address_postcode,
+      country: account?.address_country,
+    },
+    (i18n.language?.slice(0, 2) as AddressLang) || "en",
+    { orderFallbackCountry: orderFallbackFromLang((i18n.language?.slice(0, 2) as AddressLang) || "en"), omitCountry: true },
+  );
 
   const idLabel = variant === "landlord" ? t("account.label_biz_no") : t("account.label_resident_no");
   const idValueRaw = variant === "landlord" ? account?.biz_registration_no : account?.resident_no;

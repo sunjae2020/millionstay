@@ -1467,7 +1467,18 @@
     "total_costs_unpaid": "Chưa trả",
     "hint_remitted_on": "Để trống cho tới khi chuyển tiền — dòng sẽ hiển thị Chưa trả.",
     "channel_renewal": "Gia hạn",
-    "channel_renewal_hint": "Khách thuê hiện tại gia hạn hợp đồng"
+    "channel_renewal_hint": "Khách thuê hiện tại gia hạn hợp đồng",
+    "label_rent_account": "Tài khoản nhận tiền thuê",
+    "label_deposit_account": "Tài khoản nhận tiền cọc",
+    "ph_select_account": "Chọn tài khoản...",
+    "hint_payment_accounts": "Các tài khoản đã đăng ký ở Cài đặt → Thông tin thanh toán. Để trống thì hệ thống chọn theo tên tài khoản (tiền thuê/tiền cọc); hợp đồng in tài khoản được chỉ định ở đây.",
+    "label_special_terms": "Điều 11 (Điều khoản đặc biệt)",
+    "ph_special_terms": "Mỗi dòng một điều khoản riêng cho hợp đồng này...",
+    "hint_special_terms": "Được in ngay sau Điều 11 (Điều khoản đặc biệt) trong hợp đồng.",
+    "btn_renew": "Gia hạn hợp đồng",
+    "confirm_renew": "Tạo hợp đồng gia hạn với nội dung giống hệt? Thời hạn bắt đầu từ ngày sau ngày kết thúc hiện tại và kéo dài bằng nhau.",
+    "toast_renewed": "Đã tạo hợp đồng gia hạn",
+    "toast_renew_failed": "Không tạo được hợp đồng gia hạn"
   },
   "invoice": {
     "new": "Tạo hóa đơn mới",

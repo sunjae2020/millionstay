@@ -1467,7 +1467,18 @@
     "total_costs_unpaid": "未支付",
     "hint_remitted_on": "尚未汇款时请留空 — 将显示为未支付。",
     "channel_renewal": "续约",
-    "channel_renewal_hint": "现有租客续签合同"
+    "channel_renewal_hint": "现有租客续签合同",
+    "label_rent_account": "租金收款账户",
+    "label_deposit_account": "保证金收款账户",
+    "ph_select_account": "选择账户...",
+    "hint_payment_accounts": "来自设置 → 支付信息中登记的账户。留空则按账户名称（租金/保证金）自动选择，合同上会印出此处指定的账户。",
+    "label_special_terms": "第11条（特别约定）",
+    "ph_special_terms": "仅适用于本合同的特别约定，每行一条...",
+    "hint_special_terms": "印在合同正文第11条（特别约定）之后。",
+    "btn_renew": "续签合同",
+    "confirm_renew": "按相同内容创建续签合同吗？期限从现合同结束日的次日开始，长度相同。",
+    "toast_renewed": "已创建续签合同",
+    "toast_renew_failed": "无法创建续签合同"
   },
   "invoice": {
     "new": "新建发票",
