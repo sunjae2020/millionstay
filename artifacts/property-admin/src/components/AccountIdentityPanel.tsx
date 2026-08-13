@@ -9,9 +9,10 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
 } from "@/components/ui/dialog";
 import { apiFetch, apiPost } from "@/lib/apiFetch";
+import { formatPersonName } from "@/lib/nameFormat";
 import { ExportableTable } from "@/components/ui/ExportCsvButton";
 import {
-  Building2, Upload, Trash2, Sparkles, Loader2, UserRoundCheck, BadgeCheck, ShieldAlert, ShieldQuestion,
+  Building2, User, Upload, Trash2, Sparkles, Loader2, UserRoundCheck, BadgeCheck, ShieldAlert, ShieldQuestion,
 } from "lucide-react";
 
 /**
@@ -38,9 +39,24 @@ const FIELD_LABELS: Array<[string, string]> = [
   ["address_postcode", "account.label_postcode"],
   ["address_country", "account.label_country"],
   ["biz_registration_no", "account.label_biz_no"],
+  ["resident_no", "account.label_resident_no"],
   ["ceo_name", "account.label_ceo"],
   ["description", "account.label_notes"],
 ];
+
+/**
+ * 주체 구분에 따라 존재하지 않는 칸은 검토 팝업에도 올리지 않는다 — 개인 계정에
+ * 회사 웹사이트를, 회사 계정에 주민등록번호를 채워 넣을 일은 없다.
+ */
+const COMPANY_ONLY_FIELDS = new Set(["website_url", "phone2", "biz_registration_no", "ceo_name"]);
+const INDIVIDUAL_ONLY_FIELDS = new Set(["resident_no"]);
+
+/** "900101-1234567" → "900101-1******". 뒷자리는 성별 한 자리만 남긴다. */
+function maskResidentNo(value: string): string {
+  const digits = value.replace(/\D/g, "");
+  if (digits.length < 7) return value;
+  return `${digits.slice(0, 6)}-${digits[6]}${"*".repeat(Math.max(0, digits.length - 7))}`;
+}
 
 export type FillSource = "contact" | "crawl";
 
@@ -54,6 +70,10 @@ interface Props {
   currentValues: Record<string, string>;
   /** Applies the approved subset back onto the form. */
   onApplyFields: (fields: Record<string, string>, source: FillSource) => void;
+  /** 개인 계정이면 로고 → 프로필 사진, 사업자등록번호 → 주민등록번호로 바뀌고
+      웹사이트 크롤링은 사라진다. */
+  isIndividual: boolean;
+  residentNo: string;
   logoUrl: string;
   onLogoChange: (url: string) => void;
   /** Linked primary contact, or null when none is picked yet. */
@@ -88,7 +108,7 @@ const BIZ_STATUS_STYLES: Record<string, string> = {
 };
 
 export function AccountIdentityPanel({
-  currentValues, onApplyFields, logoUrl, onLogoChange,
+  currentValues, onApplyFields, isIndividual, residentNo, logoUrl, onLogoChange,
   primaryContactId, websiteUrl, bizNo, bizVerify, onBizVerified, fieldSources,
 }: Props) {
   const { t } = useTranslation();
@@ -108,9 +128,13 @@ export function AccountIdentityPanel({
   /** Builds the review state, pre-ticking only fields that change something. */
   function openReview(
     source: FillSource,
-    fields: Record<string, string>,
+    rawFields: Record<string, string>,
     extras: Partial<Pick<ReviewState, "confidence" | "notes" | "sourceUrl" | "logoCandidates" | "bizChecksumOk">> = {},
   ) {
+    const skip = isIndividual ? COMPANY_ONLY_FIELDS : INDIVIDUAL_ONLY_FIELDS;
+    const fields = Object.fromEntries(
+      Object.entries(rawFields).filter(([key]) => !skip.has(key)),
+    );
     const selected: Record<string, boolean> = {};
     for (const [key, value] of Object.entries(fields)) {
       selected[key] = !!value && value !== (currentValues[key] ?? "");
@@ -145,16 +169,19 @@ export function AccountIdentityPanel({
       const put = (key: string, value: unknown) => {
         if (typeof value === "string" && value.trim()) fields[key] = value.trim();
       };
-      put("name", c.company_name);
+      // 개인 계정의 이름은 사람 이름이다 — 다니는 회사 이름을 넣을 자리가 아니다.
+      put("name", isIndividual ? formatPersonName(c.first_name, c.last_name) : c.company_name);
       put("account_email", c.email);
       put("website_url", c.website);
-      put("phone1", c.office_number || c.mobile_number);
+      // 개인은 전화가 하나뿐이라 휴대폰이 곧 대표 번호다.
+      put("phone1", isIndividual ? (c.mobile_number || c.office_number) : (c.office_number || c.mobile_number));
       put("phone2", c.office_number ? c.mobile_number : "");
       put("address_line1", c.address_line1);
       put("address_suburb", c.suburb);
       put("address_state", c.state);
       put("address_postcode", c.postcode);
       put("address_country", c.country);
+      put("resident_no", c.resident_no);
 
       if (!Object.keys(fields).length) {
         setCopyError(t("account.fill_contact_empty"));
@@ -283,14 +310,20 @@ export function AccountIdentityPanel({
 
   return (
     <>
-      {/* Logo / profile image */}
+      {/* Logo (회사) / 프로필 사진 (개인) — 같은 컬럼(logo_url)을 쓴다. */}
       <div className="rounded-lg border p-4 space-y-3">
-        <h3 className="font-semibold text-sm">{t("account.section_identity")}</h3>
+        <h3 className="font-semibold text-sm">
+          {t(isIndividual ? "account.section_identity_person" : "account.section_identity")}
+        </h3>
         <div className="flex items-center gap-3">
-          <div className="h-20 w-20 shrink-0 rounded-lg border bg-muted/40 overflow-hidden flex items-center justify-center">
+          <div className={`h-20 w-20 shrink-0 border bg-muted/40 overflow-hidden flex items-center justify-center ${
+            isIndividual ? "rounded-full" : "rounded-lg"
+          }`}>
             {logoUrl
-              ? <img src={logoUrl} alt="" className="h-full w-full object-contain" />
-              : <Building2 className="h-8 w-8 text-muted-foreground" />}
+              ? <img src={logoUrl} alt="" className={`h-full w-full ${isIndividual ? "object-cover" : "object-contain"}`} />
+              : isIndividual
+                ? <User className="h-8 w-8 text-muted-foreground" />
+                : <Building2 className="h-8 w-8 text-muted-foreground" />}
           </div>
           <div className="flex flex-col gap-2">
             <input ref={logoInputRef} type="file" accept="image/*" className="hidden"
@@ -298,7 +331,7 @@ export function AccountIdentityPanel({
             <Button type="button" variant="outline" size="sm" className="gap-1.5"
               disabled={uploadingLogo} onClick={() => logoInputRef.current?.click()}>
               {uploadingLogo ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Upload className="h-3.5 w-3.5" />}
-              {t("account.logo_upload")}
+              {t(isIndividual ? "account.photo_upload" : "account.logo_upload")}
             </Button>
             {logoUrl && (
               <Button type="button" variant="ghost" size="sm" className="gap-1.5 text-destructive"
@@ -310,7 +343,9 @@ export function AccountIdentityPanel({
         </div>
         {logoError && <p className="text-xs text-destructive">{logoError}</p>}
         <div className="grid gap-1.5">
-          <Label className="text-xs text-muted-foreground">{t("account.label_logo_url")}</Label>
+          <Label className="text-xs text-muted-foreground">
+            {t(isIndividual ? "account.label_photo_url" : "account.label_logo_url")}
+          </Label>
           <Input value={logoUrl} placeholder="https://..." onChange={(e) => onLogoChange(e.target.value)} />
         </div>
       </div>
@@ -318,7 +353,9 @@ export function AccountIdentityPanel({
       {/* Auto-fill */}
       <div className="rounded-lg border p-4 space-y-3">
         <h3 className="font-semibold text-sm">{t("account.section_autofill")}</h3>
-        <p className="text-xs text-muted-foreground">{t("account.autofill_hint")}</p>
+        <p className="text-xs text-muted-foreground">
+          {t(isIndividual ? "account.autofill_hint_person" : "account.autofill_hint")}
+        </p>
 
         <Button type="button" variant="outline" size="sm" className="w-full gap-1.5"
           disabled={copying || !primaryContactId} onClick={() => void handleCopyFromContact()}>
@@ -328,18 +365,38 @@ export function AccountIdentityPanel({
         {!primaryContactId && <p className="text-xs text-muted-foreground">{t("account.fill_needs_contact")}</p>}
         {copyError && <p className="text-xs text-destructive">{copyError}</p>}
 
-        <Button type="button" size="sm" className="w-full gap-1.5"
-          disabled={crawling || !websiteUrl.trim()} onClick={() => void handleCrawl()}>
-          {crawling ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
-          {crawling ? t("account.crawl_running") : t("account.fill_from_website")}
-        </Button>
-        {!websiteUrl.trim() && <p className="text-xs text-muted-foreground">{t("account.crawl_needs_url")}</p>}
-        {crawlError && <p className="text-xs text-destructive">{crawlError}</p>}
+        {/* 개인 계정에는 읽어올 회사 웹사이트가 없다. */}
+        {!isIndividual && (
+          <>
+            <Button type="button" size="sm" className="w-full gap-1.5"
+              disabled={crawling || !websiteUrl.trim()} onClick={() => void handleCrawl()}>
+              {crawling ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
+              {crawling ? t("account.crawl_running") : t("account.fill_from_website")}
+            </Button>
+            {!websiteUrl.trim() && <p className="text-xs text-muted-foreground">{t("account.crawl_needs_url")}</p>}
+            {crawlError && <p className="text-xs text-destructive">{crawlError}</p>}
+          </>
+        )}
       </div>
 
-      {/* Company registration */}
+      {/* 사업자 정보 (회사) / 신원 확인 (개인) */}
       <div className="rounded-lg border p-4 space-y-3">
-        <h3 className="font-semibold text-sm">{t("account.section_registration")}</h3>
+        <h3 className="font-semibold text-sm">
+          {t(isIndividual ? "account.section_identity_no" : "account.section_registration")}
+        </h3>
+        {isIndividual ? (
+          <>
+            {/* 고유식별정보라 여기서는 뒷자리를 가려 보여준다 — 전체 값은 기본
+                정보 칸과 발급 문서에만 나타난다. */}
+            <div className="grid gap-1.5">
+              <Label className="text-xs text-muted-foreground">{t("account.label_resident_no")}</Label>
+              <Input value={maskResidentNo(residentNo)} readOnly tabIndex={-1}
+                className="bg-muted/40 font-mono" placeholder="000000-0000000" />
+            </div>
+            <p className="text-xs text-muted-foreground">{t("account.resident_no_edit_hint")}</p>
+          </>
+        ) : (
+          <>
         <div className="flex items-end gap-2">
           <div className="grid gap-1.5 flex-1">
             <Label className="text-xs text-muted-foreground">{t("account.label_biz_no")}</Label>
@@ -371,6 +428,8 @@ export function AccountIdentityPanel({
           <p className="text-xs text-destructive flex items-start gap-1">
             <ShieldQuestion className="h-3.5 w-3.5 shrink-0 mt-0.5" /> {verifyError}
           </p>
+        )}
+          </>
         )}
         {Object.keys(fieldSources).length > 0 && (
           <p className="text-xs text-muted-foreground">

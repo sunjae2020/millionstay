@@ -944,7 +944,21 @@
     "col_invoice_kind": "구분",
     "invoice_kind_consolidated": "통합",
     "invoice_kind_bundled": "통합에 포함",
-    "invoice_kind_standard": "개별"
+    "invoice_kind_standard": "개별",
+    "label_entity_kind": "주체 구분",
+    "hint_entity_kind": "개인 계정에는 웹사이트와 대표자 칸이 없고, 전화는 하나이며, 사업자등록번호 대신 주민등록번호를 받습니다.",
+    "entity_company": "회사",
+    "entity_individual": "개인",
+    "label_person_name": "이름",
+    "ph_person_name_example": "예: 김선재",
+    "section_identity_person": "프로필 사진",
+    "section_identity_no": "신원 확인",
+    "photo_upload": "사진 업로드",
+    "label_photo_url": "사진 URL",
+    "autofill_hint_person": "연결된 연락처에서 정보를 가져옵니다. 적용 전에 항목별로 확인할 수 있습니다.",
+    "resident_no_edit_hint": "번호는 기본 정보 섹션에서 수정합니다.",
+    "label_resident_no": "주민등록번호",
+    "hint_resident_no": "임대차 계약서 임차인 칸에 인쇄됩니다. 화면에는 뒷자리를 가려 표시합니다."
   },
   "lead": {
     "new": "새 리드",

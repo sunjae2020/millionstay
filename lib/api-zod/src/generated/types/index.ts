@@ -7,6 +7,7 @@
  */
 
 export * from "./accountResponse";
+export * from "./accountResponseEntityKind";
 export * from "./accountResponseFieldSources";
 export * from "./availabilityDay";
 export * from "./beneficiaryResponse";
@@ -24,6 +25,7 @@ export * from "./contractProduct";
 export * from "./convertLead200";
 export * from "./convertLeadBody";
 export * from "./createAccountBody";
+export * from "./createAccountBodyEntityKind";
 export * from "./createAccountBodyFieldSources";
 export * from "./createBeneficiaryBody";
 export * from "./createBookingBody";
@@ -112,6 +114,7 @@ export * from "./suburb";
 export * from "./task";
 export * from "./terminateContractBody";
 export * from "./updateAccountBody";
+export * from "./updateAccountBodyEntityKind";
 export * from "./updateAccountBodyFieldSources";
 export * from "./updateBeneficiaryBody";
 export * from "./updateBookingParams";

@@ -6,6 +6,12 @@ export const accountsTable = pgTable("accounts", {
   id: serial("id").primaryKey(),
   name: text("name").notNull(),
   account_type: text("account_type").notNull(),
+  // 계정 주체가 법인/사업체인지 개인인지 — "Company" | "Individual".
+  // account_type(세입자·소유주·에이전트…)이 관계를 말한다면 이 값은 상대의 성격을
+  // 말한다. 개인 계정에는 웹사이트·대표자·사업자등록번호 칸이 아예 없고, 전화는
+  // 하나, 사업자등록번호 자리에는 주민등록번호가, 로고 자리에는 프로필 사진이 온다.
+  // 기존 행은 전부 법인 기준으로 입력돼 있으므로 기본값은 Company.
+  entity_kind: text("entity_kind").notNull().default("Company"),
   primary_contact_id: integer("primary_contact_id"),
   secondary_contact_id: integer("secondary_contact_id"),
   account_email: text("account_email"),
@@ -36,6 +42,11 @@ export const accountsTable = pgTable("accounts", {
   biz_verify_status: text("biz_verify_status"),
   biz_verified_at: timestamp("biz_verified_at", { withTimezone: true }),
   ceo_name: text("ceo_name"),
+  // 개인 계정의 주민등록번호. 사람의 번호이므로 원본은 연락처(contacts.resident_no)에
+  // 두고, 여기에는 "연락처에서 채우기" 검토를 거쳐 복사된 값이 들어간다 — 계약서는
+  // 이 값을 먼저 보고, 비어 있으면 대표 연락처의 값으로 대체한다. 고유식별정보라
+  // 로거 redact 목록(lib/logger.ts)에 올라 있고 화면에서는 뒷자리를 가려 보여준다.
+  resident_no: text("resident_no"),
   // Provenance per column: { "<column>": "manual" | "contact" | "crawl" }.
   // Written when a field is filled from the linked contact or the website
   // crawler, so an admin can tell which values were auto-collected.

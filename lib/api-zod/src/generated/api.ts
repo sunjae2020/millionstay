@@ -1175,6 +1175,12 @@ export const ListAccountsResponseItem = zod.object({
   id: zod.number(),
   name: zod.string(),
   account_type: zod.string(),
+  entity_kind: zod
+    .enum(["Company", "Individual"])
+    .optional()
+    .describe(
+      "계정 주체가 법인\/사업체(Company)인지 개인(Individual)인지. 상세 화면은 이 값으로 한쪽 항목만 보여준다 — 개인은 웹사이트·대표자·사업자등록번호가 없고 전화 1개, 사업자등록번호 대신 주민등록번호, 로고 대신 프로필 사진을 쓴다.",
+    ),
   primary_contact_id: zod.number().nullish(),
   primary_contact_name: zod.string().nullish(),
   secondary_contact_id: zod.number().nullish(),
@@ -1206,6 +1212,10 @@ export const ListAccountsResponseItem = zod.object({
   biz_verify_status: zod.string().nullish(),
   biz_verified_at: zod.string().nullish(),
   ceo_name: zod.string().nullish(),
+  resident_no: zod
+    .string()
+    .nullish()
+    .describe("주민등록번호 (개인 계정). 임대차 계약서 당사자 표에 인쇄된다."),
   field_sources: zod.record(zod.string(), zod.string()).nullish(),
   manual_input: zod.boolean(),
   status: zod.string(),
@@ -1223,6 +1233,12 @@ export const createAccountBodyStatusDefault = `Active`;
 export const CreateAccountBody = zod.object({
   name: zod.string(),
   account_type: zod.string(),
+  entity_kind: zod
+    .enum(["Company", "Individual"])
+    .optional()
+    .describe(
+      "계정 주체가 법인\/사업체(Company)인지 개인(Individual)인지. 상세 화면은 이 값으로 한쪽 항목만 보여준다 — 개인은 웹사이트·대표자·사업자등록번호가 없고 전화 1개, 사업자등록번호 대신 주민등록번호, 로고 대신 프로필 사진을 쓴다.",
+    ),
   primary_contact_id: zod.number().nullish(),
   secondary_contact_id: zod.number().nullish(),
   account_email: zod.string().nullish(),
@@ -1249,6 +1265,10 @@ export const CreateAccountBody = zod.object({
   biz_verify_status: zod.string().nullish(),
   biz_verified_at: zod.string().nullish(),
   ceo_name: zod.string().nullish(),
+  resident_no: zod
+    .string()
+    .nullish()
+    .describe("주민등록번호 (개인 계정). 임대차 계약서 당사자 표에 인쇄된다."),
   field_sources: zod.record(zod.string(), zod.string()).nullish(),
   manual_input: zod.boolean().default(createAccountBodyManualInputDefault),
   status: zod.string().default(createAccountBodyStatusDefault),
@@ -1265,6 +1285,12 @@ export const GetAccountResponse = zod.object({
   id: zod.number(),
   name: zod.string(),
   account_type: zod.string(),
+  entity_kind: zod
+    .enum(["Company", "Individual"])
+    .optional()
+    .describe(
+      "계정 주체가 법인\/사업체(Company)인지 개인(Individual)인지. 상세 화면은 이 값으로 한쪽 항목만 보여준다 — 개인은 웹사이트·대표자·사업자등록번호가 없고 전화 1개, 사업자등록번호 대신 주민등록번호, 로고 대신 프로필 사진을 쓴다.",
+    ),
   primary_contact_id: zod.number().nullish(),
   primary_contact_name: zod.string().nullish(),
   secondary_contact_id: zod.number().nullish(),
@@ -1296,6 +1322,10 @@ export const GetAccountResponse = zod.object({
   biz_verify_status: zod.string().nullish(),
   biz_verified_at: zod.string().nullish(),
   ceo_name: zod.string().nullish(),
+  resident_no: zod
+    .string()
+    .nullish()
+    .describe("주민등록번호 (개인 계정). 임대차 계약서 당사자 표에 인쇄된다."),
   field_sources: zod.record(zod.string(), zod.string()).nullish(),
   manual_input: zod.boolean(),
   status: zod.string(),
@@ -1313,6 +1343,12 @@ export const UpdateAccountParams = zod.object({
 export const UpdateAccountBody = zod.object({
   name: zod.string().optional(),
   account_type: zod.string().optional(),
+  entity_kind: zod
+    .enum(["Company", "Individual"])
+    .optional()
+    .describe(
+      "계정 주체가 법인\/사업체(Company)인지 개인(Individual)인지. 상세 화면은 이 값으로 한쪽 항목만 보여준다 — 개인은 웹사이트·대표자·사업자등록번호가 없고 전화 1개, 사업자등록번호 대신 주민등록번호, 로고 대신 프로필 사진을 쓴다.",
+    ),
   primary_contact_id: zod.number().nullish(),
   secondary_contact_id: zod.number().nullish(),
   account_email: zod.string().nullish(),
@@ -1339,6 +1375,10 @@ export const UpdateAccountBody = zod.object({
   biz_verify_status: zod.string().nullish(),
   biz_verified_at: zod.string().nullish(),
   ceo_name: zod.string().nullish(),
+  resident_no: zod
+    .string()
+    .nullish()
+    .describe("주민등록번호 (개인 계정). 임대차 계약서 당사자 표에 인쇄된다."),
   field_sources: zod.record(zod.string(), zod.string()).nullish(),
   manual_input: zod.boolean().optional(),
   status: zod.string().optional(),
@@ -1348,6 +1388,12 @@ export const UpdateAccountResponse = zod.object({
   id: zod.number(),
   name: zod.string(),
   account_type: zod.string(),
+  entity_kind: zod
+    .enum(["Company", "Individual"])
+    .optional()
+    .describe(
+      "계정 주체가 법인\/사업체(Company)인지 개인(Individual)인지. 상세 화면은 이 값으로 한쪽 항목만 보여준다 — 개인은 웹사이트·대표자·사업자등록번호가 없고 전화 1개, 사업자등록번호 대신 주민등록번호, 로고 대신 프로필 사진을 쓴다.",
+    ),
   primary_contact_id: zod.number().nullish(),
   primary_contact_name: zod.string().nullish(),
   secondary_contact_id: zod.number().nullish(),
@@ -1379,6 +1425,10 @@ export const UpdateAccountResponse = zod.object({
   biz_verify_status: zod.string().nullish(),
   biz_verified_at: zod.string().nullish(),
   ceo_name: zod.string().nullish(),
+  resident_no: zod
+    .string()
+    .nullish()
+    .describe("주민등록번호 (개인 계정). 임대차 계약서 당사자 표에 인쇄된다."),
   field_sources: zod.record(zod.string(), zod.string()).nullish(),
   manual_input: zod.boolean(),
   status: zod.string(),

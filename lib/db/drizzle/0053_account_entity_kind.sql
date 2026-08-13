@@ -1,0 +1,22 @@
+-- 0053 — 계정 주체 구분(회사 / 개인)
+--
+-- 계정 상세는 지금까지 법인 하나만 상정하고 웹사이트·대표자·사업자등록번호·
+-- 전화 2개·로고를 늘 함께 보여줬다. 개인 임차인·개인 소유주에게는 이 칸들이
+-- 대부분 빈칸으로 남고, 정작 필요한 주민등록번호는 들어갈 자리가 없었다.
+--
+-- entity_kind 로 한쪽 항목만 보여준다:
+--   Company    — 현행 그대로(웹사이트·대표자·사업자등록번호·전화 2개·로고)
+--   Individual — 웹사이트/대표자 없음, 전화 1개, 사업자등록번호 대신
+--                주민등록번호(accounts.resident_no), 로고 대신 프로필 사진
+--
+-- account_type(Tenant/SpaceOwner/Agent…)은 우리와의 관계를, entity_kind 는 상대의
+-- 성격을 말한다 — 둘은 직교한다(개인 소유주, 법인 세입자 모두 있다).
+--
+-- 기존 행은 전부 법인 기준으로 입력돼 있으므로 Company 로 채운다.
+--
+-- ⚠ resident_no 는 고유식별정보다. 로거 redact 목록(lib/logger.ts)에 등록돼 있고,
+-- 화면에서는 뒷자리를 마스킹해 보여준다. 발급 문서에만 전체 값이 인쇄된다.
+--
+-- Additive only. 두 컬럼 모두 IF NOT EXISTS 라 재실행해도 안전하다.
+ALTER TABLE "accounts" ADD COLUMN IF NOT EXISTS "entity_kind" text NOT NULL DEFAULT 'Company';
+ALTER TABLE "accounts" ADD COLUMN IF NOT EXISTS "resident_no" text;

@@ -119,11 +119,30 @@ function toDate(value: string | null | undefined): Date | null | undefined {
   return Number.isNaN(parsed.getTime()) ? null : parsed;
 }
 
+/**
+ * 회사 계정과 개인 계정은 서로 다른 칸을 쓴다. 화면에서 감춘 칸이 예전 값을 그대로
+ * 들고 있으면 계약서·청구서에 유령 대표자나 남의 사업자등록번호가 찍히므로, 주체를
+ * 바꾼 저장에서 반대편 칸을 비운다. entity_kind 가 본문에 없으면(예: 다른 화면이
+ * 일부 필드만 보내는 경우) 아무것도 건드리지 않는다.
+ */
+function clearOtherKindFields<T extends { entity_kind?: string | null }>(data: T): T {
+  if (data.entity_kind === "Individual") {
+    return {
+      ...data,
+      website_url: null, phone2: null, ceo_name: null,
+      biz_registration_no: null, biz_verify_status: null, biz_verified_at: null,
+    };
+  }
+  if (data.entity_kind === "Company") return { ...data, resident_no: null };
+  return data;
+}
+
 router.post("/v1/accounts", async (req, res): Promise<void> => {
   const parsed = CreateAccountBody.safeParse(req.body);
   if (!parsed.success) { res.status(400).json({ error: parsed.error.message }); return; }
+  const values = clearOtherKindFields(parsed.data);
   const [row] = await db.insert(accountsTable)
-    .values({ ...parsed.data, biz_verified_at: toDate(parsed.data.biz_verified_at) })
+    .values({ ...values, biz_verified_at: toDate(values.biz_verified_at) })
     .returning();
   res.status(201).json(await enrichAccount(row));
 });
@@ -141,8 +160,9 @@ router.put("/v1/accounts/:id", async (req, res): Promise<void> => {
   if (!paramsParsed.success) { res.status(400).json({ error: paramsParsed.error.message }); return; }
   const bodyParsed = UpdateAccountBody.safeParse(req.body);
   if (!bodyParsed.success) { res.status(400).json({ error: bodyParsed.error.message }); return; }
+  const values = clearOtherKindFields(bodyParsed.data);
   const [row] = await db.update(accountsTable)
-    .set({ ...bodyParsed.data, biz_verified_at: toDate(bodyParsed.data.biz_verified_at), updated_at: new Date() })
+    .set({ ...values, biz_verified_at: toDate(values.biz_verified_at), updated_at: new Date() })
     .where(eq(accountsTable.id, paramsParsed.data.id))
     .returning();
   if (!row) { res.status(404).json({ error: "Not found" }); return; }

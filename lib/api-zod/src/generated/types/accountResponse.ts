@@ -5,12 +5,15 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
+import type { AccountResponseEntityKind } from "./accountResponseEntityKind";
 import type { AccountResponseFieldSources } from "./accountResponseFieldSources";
 
 export interface AccountResponse {
   id: number;
   name: string;
   account_type: string;
+  /** 계정 주체가 법인/사업체(Company)인지 개인(Individual)인지. 상세 화면은 이 값으로 한쪽 항목만 보여준다 — 개인은 웹사이트·대표자·사업자등록번호가 없고 전화 1개, 사업자등록번호 대신 주민등록번호, 로고 대신 프로필 사진을 쓴다. */
+  entity_kind?: AccountResponseEntityKind;
   /** @nullable */
   primary_contact_id?: number | null;
   /** @nullable */
@@ -73,6 +76,11 @@ export interface AccountResponse {
   biz_verified_at?: string | null;
   /** @nullable */
   ceo_name?: string | null;
+  /**
+   * 주민등록번호 (개인 계정). 임대차 계약서 당사자 표에 인쇄된다.
+   * @nullable
+   */
+  resident_no?: string | null;
   /** @nullable */
   field_sources?: AccountResponseFieldSources;
   manual_input: boolean;

@@ -944,7 +944,21 @@
     "col_invoice_kind": "区分",
     "invoice_kind_consolidated": "一括",
     "invoice_kind_bundled": "一括に含む",
-    "invoice_kind_standard": "個別"
+    "invoice_kind_standard": "個別",
+    "label_entity_kind": "主体区分",
+    "hint_entity_kind": "個人アカウントにはウェブサイトと代表者の欄がなく、電話は1つ、事業者登録番号の代わりに住民登録番号を入力します。",
+    "entity_company": "法人",
+    "entity_individual": "個人",
+    "label_person_name": "氏名",
+    "ph_person_name_example": "例: Sunjae KIM",
+    "section_identity_person": "プロフィール写真",
+    "section_identity_no": "本人確認",
+    "photo_upload": "写真をアップロード",
+    "label_photo_url": "写真 URL",
+    "autofill_hint_person": "紐づけた連絡先から情報を取得します。適用前に項目ごとに確認できます。",
+    "resident_no_edit_hint": "番号は基本情報セクションで修正します。",
+    "label_resident_no": "住民登録番号",
+    "hint_resident_no": "賃貸借契約書の賃借人欄に印字されます。画面上は下位桁を伏せて表示します。"
   },
   "lead": {
     "new": "新規リード",

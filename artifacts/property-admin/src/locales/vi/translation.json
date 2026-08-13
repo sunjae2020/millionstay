@@ -944,7 +944,21 @@
     "col_invoice_kind": "Loại",
     "invoice_kind_consolidated": "Gộp",
     "invoice_kind_bundled": "Thuộc hóa đơn gộp",
-    "invoice_kind_standard": "Riêng lẻ"
+    "invoice_kind_standard": "Riêng lẻ",
+    "label_entity_kind": "Loại chủ thể",
+    "hint_entity_kind": "Tài khoản cá nhân không có website và người đại diện, chỉ một số điện thoại, và dùng số căn cước công dân thay cho mã số kinh doanh.",
+    "entity_company": "Công ty",
+    "entity_individual": "Cá nhân",
+    "label_person_name": "Họ và tên",
+    "ph_person_name_example": "vd: Sunjae KIM",
+    "section_identity_person": "Ảnh đại diện",
+    "section_identity_no": "Thông tin định danh",
+    "photo_upload": "Tải lên ảnh",
+    "label_photo_url": "URL ảnh",
+    "autofill_hint_person": "Lấy thông tin từ liên hệ được liên kết. Bạn xác nhận từng trường trước khi áp dụng.",
+    "resident_no_edit_hint": "Sửa số này ở mục Thông tin chung.",
+    "label_resident_no": "Số căn cước công dân",
+    "hint_resident_no": "Được in ở ô bên thuê của hợp đồng thuê. Trên màn hình chỉ hiển thị một phần."
   },
   "lead": {
     "new": "Khách hàng tiềm năng mới",

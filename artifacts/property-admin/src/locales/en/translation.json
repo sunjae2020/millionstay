@@ -944,7 +944,21 @@
     "col_invoice_kind": "Type",
     "invoice_kind_consolidated": "Consolidated",
     "invoice_kind_bundled": "In consolidated",
-    "invoice_kind_standard": "Standard"
+    "invoice_kind_standard": "Standard",
+    "label_entity_kind": "Entity type",
+    "hint_entity_kind": "Individual accounts have no website or representative, a single phone number, and a resident registration number in place of a business number.",
+    "entity_company": "Company",
+    "entity_individual": "Individual",
+    "label_person_name": "Full name",
+    "ph_person_name_example": "e.g. Sunjae KIM",
+    "section_identity_person": "Profile photo",
+    "section_identity_no": "Identity",
+    "photo_upload": "Upload photo",
+    "label_photo_url": "Photo URL",
+    "autofill_hint_person": "Pull details from the linked contact. You approve every field before it is applied.",
+    "resident_no_edit_hint": "Edit the number in the General section.",
+    "label_resident_no": "Resident registration number",
+    "hint_resident_no": "Printed in the tenant block of the lease agreement. Shown masked on screen."
   },
   "lead": {
     "new": "New Lead",

@@ -944,7 +944,21 @@
     "col_invoice_kind": "ประเภท",
     "invoice_kind_consolidated": "รวม",
     "invoice_kind_bundled": "อยู่ในใบรวม",
-    "invoice_kind_standard": "แยกรายการ"
+    "invoice_kind_standard": "แยกรายการ",
+    "label_entity_kind": "ประเภทผู้ถือบัญชี",
+    "hint_entity_kind": "บัญชีบุคคลธรรมดาไม่มีช่องเว็บไซต์และผู้แทน มีเบอร์โทรเดียว และใช้เลขประจำตัวประชาชนแทนเลขทะเบียนธุรกิจ",
+    "entity_company": "บริษัท",
+    "entity_individual": "บุคคลธรรมดา",
+    "label_person_name": "ชื่อ-นามสกุล",
+    "ph_person_name_example": "เช่น Sunjae KIM",
+    "section_identity_person": "รูปโปรไฟล์",
+    "section_identity_no": "ข้อมูลระบุตัวตน",
+    "photo_upload": "อัปโหลดรูปภาพ",
+    "label_photo_url": "URL รูปภาพ",
+    "autofill_hint_person": "ดึงข้อมูลจากผู้ติดต่อที่เชื่อมโยง คุณจะยืนยันทีละช่องก่อนนำไปใช้",
+    "resident_no_edit_hint": "แก้ไขหมายเลขได้ในส่วนข้อมูลทั่วไป",
+    "label_resident_no": "เลขประจำตัวประชาชน",
+    "hint_resident_no": "จะพิมพ์ในช่องผู้เช่าของสัญญาเช่า และแสดงแบบปิดบางส่วนบนหน้าจอ"
   },
   "lead": {
     "new": "ลีดใหม่",

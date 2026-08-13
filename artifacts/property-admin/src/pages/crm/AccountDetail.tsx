@@ -25,7 +25,7 @@ import { AccountPortalUsers } from "@/components/AccountPortalUsers";
 import { ConsolidatedBillingCard, type ConsolidatedBillingSettings } from "@/components/ConsolidatedBillingCard";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiFetch, apiJson } from "@/lib/apiFetch";
-import { ArrowLeft, Save, ExternalLink, AlertTriangle, Building2, FileText, FolderUp, Eye, Upload, Trash2, UserPlus, X, Layers } from "lucide-react";
+import { ArrowLeft, Save, ExternalLink, AlertTriangle, Building2, FileText, FolderUp, Eye, Upload, Trash2, UserPlus, User, X, Layers } from "lucide-react";
 import { FileDropZone, DIRECTORY_INPUT_PROPS } from "@/components/FileDropZone";
 import { Link } from "wouter";
 import { useBrand } from "@/contexts/ThemeContext";
@@ -68,9 +68,18 @@ const INVOICE_STATUS_COLORS: Record<string, string> = {
   Void: "bg-red-100 text-red-600",
 };
 
+/**
+ * 계정 주체 구분. `account_type`(세입자·소유주·에이전트…)이 우리와의 관계를
+ * 말한다면 이쪽은 상대의 성격을 말한다 — 둘은 직교한다. 상세 화면은 이 값으로
+ * 한쪽 항목만 보여준다: 개인 계정에는 웹사이트·대표자 칸이 없고, 전화는 하나,
+ * 사업자등록번호 자리에는 주민등록번호가, 로고 자리에는 프로필 사진이 온다.
+ */
+type EntityKind = "Company" | "Individual";
+
 interface AccountForm {
   name: string;
   account_type: string;
+  entity_kind: EntityKind;
   primary_contact_id: number | null;
   secondary_contact_id: number | null;
   account_email: string;
@@ -95,6 +104,7 @@ interface AccountForm {
   logo_url: string;
   biz_registration_no: string;
   ceo_name: string;
+  resident_no: string;
   manual_input: boolean;
   status: string;
 }
@@ -273,18 +283,22 @@ export default function AccountDetail() {
 
   const { register, handleSubmit, reset, control, watch, setValue, getValues, formState: { errors } } = useForm<AccountForm>({
     defaultValues: {
-      name: "", account_type: "Tenant", primary_contact_id: null, secondary_contact_id: null,
+      name: "", account_type: "Tenant", entity_kind: "Company",
+      primary_contact_id: null, secondary_contact_id: null,
       account_email: "", website_url: "", phone1: "", phone2: "",
       address_line1: "", address_suburb: "", address_state: "", address_postcode: "", address_country: defaultCountry(),
       secondary_address_line1: "", secondary_address_suburb: "", secondary_address_state: "",
       secondary_address_postcode: "", secondary_address_country: "",
       payment_info_id: null, default_commission_id: null, default_currency: brandCurrency,
       parent_account_id: null, description: "", logo_url: "", biz_registration_no: "", ceo_name: "",
+      resident_no: "",
       manual_input: false, status: "Active",
     },
   });
 
   const accountType = watch("account_type");
+  const entityKind = watch("entity_kind");
+  const isIndividual = entityKind === "Individual";
   const showFinance = ACCOUNT_TYPES_WITH_FINANCE.includes(accountType);
   const primaryContactId = watch("primary_contact_id");
   const secondaryContactId = watch("secondary_contact_id");
@@ -298,6 +312,8 @@ export default function AccountDetail() {
       reset({
         name: account.name ?? "",
         account_type: account.account_type ?? "Tenant",
+        // 0053 이전에 만들어진 계정은 전부 법인 기준으로 입력돼 있다.
+        entity_kind: (account as any).entity_kind === "Individual" ? "Individual" : "Company",
         primary_contact_id: account.primary_contact_id ?? null,
         secondary_contact_id: account.secondary_contact_id ?? null,
         account_email: account.account_email ?? "",
@@ -322,6 +338,7 @@ export default function AccountDetail() {
         logo_url: (account as any).logo_url ?? "",
         biz_registration_no: (account as any).biz_registration_no ?? "",
         ceo_name: (account as any).ceo_name ?? "",
+        resident_no: (account as any).resident_no ?? "",
         manual_input: account.manual_input ?? false,
         status: account.status ?? "Active",
       });
@@ -353,15 +370,20 @@ export default function AccountDetail() {
   });
 
   const onSubmit = (values: AccountForm) => {
+    // 개인 계정에는 아예 없는 칸들이다. 화면에서 감춰졌을 뿐 예전 값이 남아 있으면
+    // 계약서·청구서에 유령 대표자가 찍히므로, 저장하는 쪽에서 함께 비운다.
+    // (서버도 같은 정리를 한 번 더 한다 — routes/accounts.ts clearOtherKindFields)
+    const individual = values.entity_kind === "Individual";
     const data = {
       name: values.name,
       account_type: values.account_type,
+      entity_kind: values.entity_kind,
       primary_contact_id: values.primary_contact_id,
       secondary_contact_id: values.secondary_contact_id,
       account_email: values.account_email || null,
-      website_url: values.website_url || null,
+      website_url: individual ? null : (values.website_url || null),
       phone1: values.phone1 || null,
-      phone2: values.phone2 || null,
+      phone2: individual ? null : (values.phone2 || null),
       address_line1: values.address_line1 || null,
       address_suburb: values.address_suburb || null,
       address_state: values.address_state || null,
@@ -378,12 +400,13 @@ export default function AccountDetail() {
       parent_account_id: values.parent_account_id,
       description: values.description || null,
       logo_url: values.logo_url || null,
-      biz_registration_no: values.biz_registration_no || null,
-      ceo_name: values.ceo_name || null,
+      biz_registration_no: individual ? null : (values.biz_registration_no || null),
+      ceo_name: individual ? null : (values.ceo_name || null),
+      resident_no: individual ? (values.resident_no || null) : null,
       // Verification only means anything alongside the number it was run on —
       // clearing the number clears the verdict with it.
-      biz_verify_status: values.biz_registration_no ? bizVerify.status : null,
-      biz_verified_at: values.biz_registration_no ? bizVerify.verified_at : null,
+      biz_verify_status: !individual && values.biz_registration_no ? bizVerify.status : null,
+      biz_verified_at: !individual && values.biz_registration_no ? bizVerify.verified_at : null,
       field_sources: Object.keys(fieldSources).length ? fieldSources : null,
       manual_input: values.manual_input,
       status: values.status,
@@ -498,10 +521,31 @@ export default function AccountDetail() {
         {/* Basic Info */}
         <div className="rounded-lg border p-4 space-y-4">
           <h3 className="font-semibold text-sm">{t('account.section_general')}</h3>
+          {/* 주체 구분 — 아래 항목의 절반이 이 스위치에 달려 있으므로 맨 위에 둔다. */}
+          <div className="grid gap-1.5">
+            <Label>{t('account.label_entity_kind')}</Label>
+            <Controller name="entity_kind" control={control} render={({ field }) => (
+              <div className="inline-flex rounded-md border p-0.5 w-fit">
+                {(["Company", "Individual"] as EntityKind[]).map((kind) => (
+                  <button key={kind} type="button" onClick={() => field.onChange(kind)}
+                    className={`inline-flex items-center gap-1.5 rounded px-3 py-1.5 text-sm transition-colors ${
+                      field.value === kind
+                        ? "bg-primary text-primary-foreground"
+                        : "text-muted-foreground hover:bg-muted"
+                    }`}>
+                    {kind === "Company" ? <Building2 className="h-3.5 w-3.5" /> : <User className="h-3.5 w-3.5" />}
+                    {t(kind === "Company" ? "account.entity_company" : "account.entity_individual")}
+                  </button>
+                ))}
+              </div>
+            )} />
+            <p className="text-xs text-muted-foreground">{t('account.hint_entity_kind')}</p>
+          </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="grid gap-1.5">
-              <Label>{t('account.label_name')} *</Label>
-              <Input {...register("name", { required: true })} placeholder={t('account.ph_name_example')} />
+              <Label>{isIndividual ? t('account.label_person_name') : t('account.label_name')} *</Label>
+              <Input {...register("name", { required: true })}
+                placeholder={isIndividual ? t('account.ph_person_name_example') : t('account.ph_name_example')} />
               {errors.name && <p className="text-xs text-destructive">{t('common.field_required')}</p>}
             </div>
             <div className="grid gap-1.5">
@@ -567,36 +611,50 @@ export default function AccountDetail() {
               )} />
             </div>
           </div>
+          {/* 개인에게는 회사 웹사이트도, 두 번째 전화도, 대표자도 없다 —
+              빈칸으로 남겨두는 대신 아예 감춘다. */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="grid gap-1.5">
               <Label>{t('account.label_email')}</Label>
               <Input {...register("account_email")} type="email" />
             </div>
             <div className="grid gap-1.5">
-              <Label>{t('account.label_website')}</Label>
-              <Input {...register("website_url")} placeholder="https://" />
-            </div>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div className="grid gap-1.5">
-              <Label>{t('account.label_phone')} 1</Label>
+              <Label>{isIndividual ? t('account.label_phone') : `${t('account.label_phone')} 1`}</Label>
               <Input {...register("phone1")} />
             </div>
-            <div className="grid gap-1.5">
-              <Label>{t('account.label_phone')} 2</Label>
-              <Input {...register("phone2")} />
-            </div>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div className="grid gap-1.5">
-              <Label>{t('account.label_biz_no')}</Label>
-              <Input {...register("biz_registration_no")} placeholder="000-00-00000" />
+          {!isIndividual && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="grid gap-1.5">
+                <Label>{t('account.label_website')}</Label>
+                <Input {...register("website_url")} placeholder="https://" />
+              </div>
+              <div className="grid gap-1.5">
+                <Label>{t('account.label_phone')} 2</Label>
+                <Input {...register("phone2")} />
+              </div>
             </div>
+          )}
+          {isIndividual ? (
+            /* 개인의 주민등록번호 — 연락처에서 복사돼 들어오고, 임대차 계약서
+               당사자 표(임차인 을)에 그대로 인쇄된다. */
             <div className="grid gap-1.5">
-              <Label>{t('account.label_ceo')}</Label>
-              <Input {...register("ceo_name")} />
+              <Label>{t('account.label_resident_no')}</Label>
+              <Input {...register("resident_no")} placeholder="000000-0000000" autoComplete="off" />
+              <p className="text-xs text-muted-foreground">{t('account.hint_resident_no')}</p>
             </div>
-          </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="grid gap-1.5">
+                <Label>{t('account.label_biz_no')}</Label>
+                <Input {...register("biz_registration_no")} placeholder="000-00-00000" />
+              </div>
+              <div className="grid gap-1.5">
+                <Label>{t('account.label_ceo')}</Label>
+                <Input {...register("ceo_name")} />
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Address */}
@@ -688,9 +746,12 @@ export default function AccountDetail() {
             address_country: getValues("address_country") ?? "",
             biz_registration_no: getValues("biz_registration_no") ?? "",
             ceo_name: getValues("ceo_name") ?? "",
+            resident_no: getValues("resident_no") ?? "",
             description: getValues("description") ?? "",
           }}
           onApplyFields={handleApplyFields}
+          isIndividual={isIndividual}
+          residentNo={watch("resident_no")}
           logoUrl={logoUrl}
           onLogoChange={(url) => setValue("logo_url", url, { shouldDirty: true })}
           primaryContactId={primaryContactId}
@@ -755,7 +816,9 @@ export default function AccountDetail() {
           isNew ? `${t("common.new")} ${t("nav.account")}` : (
             <div className="flex items-center gap-2">
               {logoUrl && (
-                <img src={logoUrl} alt="" className="h-7 w-7 rounded border object-contain bg-background" />
+                <img src={logoUrl} alt="" className={`h-7 w-7 border bg-background ${
+                  isIndividual ? "rounded-full object-cover" : "rounded object-contain"
+                }`} />
               )}
               <span>{account?.name ?? t("nav.account")}</span>
               {account && (
