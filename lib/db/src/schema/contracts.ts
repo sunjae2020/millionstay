@@ -77,6 +77,20 @@ export const contractsTable = pgTable("contracts", {
   mlt_guarantee_amount: numeric("mlt_guarantee_amount", { precision: 14, scale: 2, mode: "number" }),
   mlt_guarantee_none_reason: text("mlt_guarantee_none_reason"),
   mlt_late_fee_rate: numeric("mlt_late_fee_rate", { precision: 5, scale: 2, mode: "number" }),
+  // ── 계약 경로 (acquisition channel) ─────────────────────────────────────────
+  // 이 계약이 어떤 경로로 성사됐는지 — brokerage(중개) | self(자체) | renewal(연장) |
+  // online(온라인) | other(기타). rental_fee_schedules 의 중개/자체/Working 3열과 맞물려
+  // 수수료 기준액이 계산되고, 그 결과가 contract_related_costs 에 origin='channel' 행으로
+  // 자동 적재된다.
+  //
+  // 상대 업체·개인은 계정관리(accounts)에서 고른다. 이름/연락처/이메일은 선택 시점의
+  // 스냅숏으로 계약에 남긴다 — 계정 레코드가 나중에 바뀌어도 계약 시점의 사실이
+  // 보존돼야 하기 때문. 화면은 연결된 계정의 현재값을 함께 읽어 최신값도 보여준다.
+  acquisition_channel: text("acquisition_channel"),
+  channel_account_id: integer("channel_account_id"),
+  channel_contact_name: text("channel_contact_name"),
+  channel_contact_phone: text("channel_contact_phone"),
+  channel_contact_email: text("channel_contact_email"),
   terms_text: text("terms_text"),
   notes: text("notes"),
   created_at: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),

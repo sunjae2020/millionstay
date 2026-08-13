@@ -1,5 +1,11 @@
 import { Router } from "express";
 import { DEFAULT_CURRENCY } from "../lib/currency";
+import {
+  isAcquisitionChannel,
+  resolveChannelFee,
+  syncChannelRelatedCost,
+  channelContactFromAccount,
+} from "../lib/acquisitionChannel";
 import { db, contractsTable, accountsTable, contactsTable, spacesTable, propertiesTable, contractProductsTable, accommodationCatalogTable, bookingsTable, recurringSchedulesTable, bookingServicesTable, invoicesTable, invoiceLineItemsTable, contractLineItemsTable, contractRelatedCostsTable } from "@workspace/db";
 import { eq, ilike, and, or, like, desc, isNull, inArray, gte, lte, sql } from "drizzle-orm";
 import multer from "multer";
@@ -387,7 +393,8 @@ async function enrichContracts(rows: (typeof contractsTable.$inferSelect)[]) {
   // One batched query per lookup table. A per-id loop here is an N+1 that costs a
   // full round trip per contract — 40s+ on a remote pooler once the lease import
   // pushed the table to a few hundred rows.
-  const accountIds = [...new Set([...tenantIds, ...landlordIds])];
+  const channelIds = [...new Set(rows.map(r => r.channel_account_id).filter(Boolean))] as number[];
+  const accountIds = [...new Set([...tenantIds, ...landlordIds, ...channelIds])];
   const [accountRows, spaceRows, legacyProductRows, productRows, bookingRows] = await Promise.all([
     accountIds.length
       ? db.select({ id: accountsTable.id, name: accountsTable.name }).from(accountsTable).where(inArray(accountsTable.id, accountIds))
@@ -415,6 +422,9 @@ async function enrichContracts(rows: (typeof contractsTable.$inferSelect)[]) {
     ...r,
     tenant_name: r.tenant_account_id ? (accountMap[r.tenant_account_id] ?? null) : null,
     landlord_name: r.landlord_account_id ? (accountMap[r.landlord_account_id] ?? null) : null,
+    // 계약 경로로 연결된 계정의 *현재* 이름. 계약에 남은 스냅숏(channel_contact_name)과
+    // 다를 수 있어 화면에서 둘을 비교해 보여준다.
+    channel_account_name: r.channel_account_id ? (accountMap[r.channel_account_id] ?? null) : null,
     space_name: r.space_id ? (spaceMap[r.space_id] ?? null) : null,
     product_name: r.product_id ? (accommodationMap[r.product_id] ?? null)
       : r.contract_product_id ? (productMap[r.contract_product_id] ?? null) : null,
@@ -485,6 +495,25 @@ router.get("/v1/contracts/facets", async (req, res): Promise<void> => {
   ]);
   res.json({ years, categories, lease_forms });
 });
+
+/**
+ * 계약 경로(중개/자체/연장/온라인/기타)와 그 상대의 이름·연락처·이메일 스냅숏.
+ *
+ * 경로 값은 화이트리스트로 거른다 — 오타가 들어오면 수수료 기준표 매칭이 조용히
+ * 어긋나므로 아예 비운다. 이름/연락처/이메일은 계정에서 자동으로 채워 넣더라도
+ * 사람이 고칠 수 있는 값이라 문자열 그대로 받는다.
+ */
+function acquisitionChannelFields(data: Record<string, unknown>) {
+  const str = (v: unknown): string | null => (typeof v === "string" && v.trim() ? v.trim() : null);
+  const channel = isAcquisitionChannel(data.acquisition_channel) ? data.acquisition_channel : null;
+  return {
+    acquisition_channel: channel,
+    channel_account_id: channel && data.channel_account_id ? Number(data.channel_account_id) : null,
+    channel_contact_name: channel ? str(data.channel_contact_name) : null,
+    channel_contact_phone: channel ? str(data.channel_contact_phone) : null,
+    channel_contact_email: channel ? str(data.channel_contact_email) : null,
+  };
+}
 
 /**
  * 민간임대주택 표준임대차계약서(별지 제24호서식) 법정 기재사항을 요청 본문에서 뽑는다.
@@ -558,9 +587,11 @@ router.post("/v1/contracts", async (req, res): Promise<void> => {
     exchange_rate_to_aud: await getRateToAud(data.currency ?? lease?.currency ?? DEFAULT_CURRENCY),
     status: "Draft",
     document_url: data.document_url ?? null,
+    ...acquisitionChannelFields(data),
     terms_text: data.terms_text ?? null,
     notes: data.notes ?? null,
   }).returning();
+  await syncChannelRelatedCost(row, null);
   const [result] = await enrichContracts([row]);
   res.status(201).json(result);
 });
@@ -1367,9 +1398,12 @@ router.put("/v1/contracts/:id", async (req, res): Promise<void> => {
   // Signed/Active contracts are immutable except for internal annotations —
   // editing the terms/amounts would invalidate the captured e-signature (H-201).
   const locked = existing.status === "Signed" || existing.status === "Active";
+  // 계약 경로는 계약 조건이 아니라 내부 운영 기록(수수료를 누구에게 얼마나 주는가)이라
+  // 서명 후에도 고칠 수 있어야 한다 — 잠긴 계약에서도 통과시킨다.
   const updates = locked
     ? {
         document_url: data.document_url ?? existing.document_url,
+        ...(data.acquisition_channel !== undefined ? acquisitionChannelFields(data) : {}),
         notes: data.notes ?? existing.notes,
       }
     : {
@@ -1400,11 +1434,13 @@ router.put("/v1/contracts/:id", async (req, res): Promise<void> => {
         rent_due_day: data.rent_due_day ?? null,
         currency: data.currency ?? DEFAULT_CURRENCY,
         document_url: data.document_url ?? null,
+        ...acquisitionChannelFields(data),
         terms_text: data.terms_text ?? null,
         notes: data.notes ?? null,
       };
   const [row] = await db.update(contractsTable).set(updates).where(eq(contractsTable.id, id)).returning();
   if (!row) { res.status(404).json({ error: "NOT_FOUND" }); return; }
+  await syncChannelRelatedCost(row, existing.acquisition_channel);
   const [result] = await enrichContracts([row]);
   res.json(result);
 });
@@ -1930,21 +1966,25 @@ router.get("/v1/contracts/:id/related-costs", async (req, res): Promise<void> =>
   res.json({ data: rows, meta: { total: rows.length } });
 });
 
+// 송금일(remitted_on)은 필수가 아니다 — 비어 있는 행이 곧 "미지급"이고, 계약 경로에서
+// 자동 생성된 수수료 행도 송금 전 상태로 먼저 만들어진다.
 router.post("/v1/contracts/:id/related-costs", async (req, res): Promise<void> => {
   const id = Number(req.params.id);
-  const { cost_type, remitted_on, payee_name, amount, currency, note } = req.body;
-  if (!cost_type || !remitted_on || !payee_name || amount == null) {
-    res.status(400).json({ success: false, error: { message: "cost_type, remitted_on, payee_name and amount are required" } });
+  const { cost_type, remitted_on, payee_name, account_id, amount, currency, note } = req.body;
+  if (!cost_type || !payee_name || amount == null) {
+    res.status(400).json({ success: false, error: { message: "cost_type, payee_name and amount are required" } });
     return;
   }
   const [row] = await db.insert(contractRelatedCostsTable).values({
     contract_id: id,
     cost_type,
-    remitted_on,
+    remitted_on: remitted_on || null,
     payee_name,
+    account_id: account_id ? Number(account_id) : null,
     amount: Number(amount),
     currency: currency ?? DEFAULT_CURRENCY,
     note: note ?? "",
+    origin: "manual",
     status: "Active",
   }).returning();
   res.json(row);
@@ -1952,11 +1992,12 @@ router.post("/v1/contracts/:id/related-costs", async (req, res): Promise<void> =
 
 router.patch("/v1/contracts/:id/related-costs/:costId", async (req, res): Promise<void> => {
   const costId = Number(req.params.costId);
-  const { cost_type, remitted_on, payee_name, amount, currency, note } = req.body;
+  const { cost_type, remitted_on, payee_name, account_id, amount, currency, note } = req.body;
   const [row] = await db.update(contractRelatedCostsTable).set({
     ...(cost_type !== undefined && { cost_type }),
-    ...(remitted_on !== undefined && { remitted_on }),
+    ...(remitted_on !== undefined && { remitted_on: remitted_on || null }),
     ...(payee_name !== undefined && { payee_name }),
+    ...(account_id !== undefined && { account_id: account_id ? Number(account_id) : null }),
     ...(amount !== undefined && { amount: Number(amount) }),
     ...(currency !== undefined && { currency }),
     ...(note !== undefined && { note }),
@@ -1970,6 +2011,28 @@ router.delete("/v1/contracts/:id/related-costs/:costId", async (req, res): Promi
   const costId = Number(req.params.costId);
   await db.update(contractRelatedCostsTable).set({ status: "Deleted", updated_at: new Date() }).where(eq(contractRelatedCostsTable.id, costId));
   res.json({ success: true });
+});
+
+/**
+ * 계약 경로 미리보기 — 경로/계정을 고른 순간 화면이 채워 넣을 값을 한 번에 돌려준다.
+ *   GET /v1/contracts/:id/channel-preview?channel=brokerage&account_id=12
+ *   → { contact: { name, phone, email } | null, fee: { amount, currency, type_label, unit_type } }
+ *
+ * `contact` 는 계정관리에서 읽은 현재값(대표 연락처 우선)이고, 저장은 계약에 스냅숏으로
+ * 남는다. `fee` 는 세대 타입 × 경로로 임대 수수료 기준표에서 계산한 예상 수수료로,
+ * 관련 비용 행이 처음 만들어질 때 들어갈 금액과 같다.
+ */
+router.get("/v1/contracts/:id/channel-preview", async (req, res): Promise<void> => {
+  const id = Number(req.params.id);
+  const { channel, account_id } = req.query as Record<string, string>;
+  if (!isAcquisitionChannel(channel)) {
+    res.status(400).json({ success: false, error: { message: "unknown channel" } });
+    return;
+  }
+  const [contract] = await db.select().from(contractsTable).where(eq(contractsTable.id, id));
+  const contact = account_id ? await channelContactFromAccount(Number(account_id)) : null;
+  const fee = await resolveChannelFee(contract?.space_id ?? null, channel);
+  res.json({ contact, fee });
 });
 
 /**

@@ -12,6 +12,11 @@ export const contractRelatedCostsTable = pgTable("contract_related_costs", {
   cost_type: text("cost_type").notNull(),
   remitted_on: text("remitted_on"),
   payee_name: text("payee_name").notNull().default(""),
+  // 수취인 계정(accounts) 링크. 이름은 위 payee_name 에 스냅숏으로도 남는다.
+  account_id: integer("account_id"),
+  // 'manual' — 사람이 직접 추가한 행. 'channel' — 계약의 계약 경로(acquisition_channel)
+  // 에서 자동 생성된 수수료 행. 계약당 origin='channel' 행은 하나만 유지된다.
+  origin: text("origin").notNull().default("manual"),
   amount: numeric("amount", { precision: 14, scale: 2, mode: "number" }).notNull().default(0),
   currency: text("currency").notNull().default("AUD"),
   note: text("note").notNull().default(""),

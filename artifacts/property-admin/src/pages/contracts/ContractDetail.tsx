@@ -23,6 +23,7 @@ import {
 import { LookupSelect } from "@/components/LookupSelect";
 import { ProductLookupSelect } from "@/components/ProductLookupSelect";
 import { ContractPartyCard } from "@/components/ContractPartyCard";
+import { ContractChannelCard, type ChannelValue } from "@/components/ContractChannelCard";
 import { ArrowLeft, Save, Trash2, CalendarDays, Plus, Pencil, List, FileDown, Eye, Mail, Receipt, ClipboardList, Wallet, Check, FileSignature, FileText, Scale } from "lucide-react";
 import { apiFetch } from "@/lib/apiFetch";
 import { useToast } from "@/hooks/use-toast";
@@ -129,6 +130,11 @@ interface FormData {
   contract_category: string;
   lease_form: string;
   doc_attachments: string[];
+  acquisition_channel: string;
+  channel_account_id: number | null;
+  channel_contact_name: string;
+  channel_contact_phone: string;
+  channel_contact_email: string;
   mlt_landlord_rental_biz_no: string;
   mlt_housing_type: string;
   mlt_rental_type: string;
@@ -325,7 +331,7 @@ export default function ContractDetail() {
   const ledgerOpen = ledgerRows.filter((r) => r.invoice && r.invoice.status !== "Paid");
   const sumAmount = (rows: typeof ledgerRows) => rows.reduce((s, r) => s + Number(r.invoice?.amount ?? 0), 0);
 
-  const { register, handleSubmit, reset, control, watch } = useForm<FormData>({
+  const { register, handleSubmit, reset, control, watch, setValue } = useForm<FormData>({
     defaultValues: {
       booking_id: null, product_id: null, tenant_account_id: null,
       landlord_account_id: null, space_id: null,
@@ -333,6 +339,8 @@ export default function ContractDetail() {
       lease_mode: "long", rate_period: "monthly", rate_amount: "",
       bond_amount: "", advance_amount: "",
       contract_category: "", lease_form: "", doc_attachments: [],
+      acquisition_channel: "", channel_account_id: null,
+      channel_contact_name: "", channel_contact_phone: "", channel_contact_email: "",
       down_payment: "", down_payment_date: "", interim_payment: "", interim_payment_date: "",
       mlt_landlord_rental_biz_no: "", mlt_housing_type: "", mlt_rental_type: "", mlt_rental_term_years: "",
       mlt_rental_type_other: "", mlt_supply_kind: "", mlt_mandatory_start_date: "", mlt_over_100_units: "",
@@ -367,6 +375,11 @@ export default function ContractDetail() {
         contract_category: (contract as any).contract_category ?? "",
         lease_form: (contract as any).lease_form ?? "",
         doc_attachments: parseAttachments((contract as any).doc_attachments),
+        acquisition_channel: (contract as any).acquisition_channel ?? "",
+        channel_account_id: (contract as any).channel_account_id ?? null,
+        channel_contact_name: (contract as any).channel_contact_name ?? "",
+        channel_contact_phone: (contract as any).channel_contact_phone ?? "",
+        channel_contact_email: (contract as any).channel_contact_email ?? "",
         down_payment: (contract as any).down_payment != null ? String((contract as any).down_payment) : "",
         interim_payment: (contract as any).interim_payment != null ? String((contract as any).interim_payment) : "",
         interim_payment_date: (contract as any).interim_payment_date ?? "",
@@ -404,6 +417,8 @@ export default function ContractDetail() {
   const invalidate = () => {
     qc.invalidateQueries({ queryKey: getListContractsQueryKey() });
     if (!isNew) qc.invalidateQueries({ queryKey: getGetContractQueryKey(Number(id)) });
+    // 계약 저장은 계약 경로에 딸린 수수료 행을 서버에서 함께 손보므로 같이 무효화한다.
+    if (!isNew) qc.invalidateQueries({ queryKey: ["contract-related-costs", id] });
   };
 
   const createMutation = useCreateContract({ mutation: { onSuccess: (d) => { invalidate(); navigate(`/contracts/contracts/${d.id}`); } } });
@@ -544,7 +559,7 @@ export default function ContractDetail() {
 
   const submitCostForm = () => {
     const payload = {
-      cost_type: costType.trim(), remitted_on: costRemittedOn, payee_name: costPayeeName.trim(),
+      cost_type: costType.trim(), remitted_on: costRemittedOn || null, payee_name: costPayeeName.trim(),
       amount: Number(costAmount), currency: costCurrency, note: costNote.trim(),
     };
     if (costEditItem) updateCostMutation.mutate({ costId: costEditItem.id, payload });
@@ -611,6 +626,12 @@ export default function ContractDetail() {
     contract_category: data.contract_category || null,
     lease_form: data.lease_form || null,
     doc_attachments: data.doc_attachments ?? [],
+    // 계약 경로 — 저장되면 서버가 관련 비용에 수수료 행을 자동으로 맞춰 준다.
+    acquisition_channel: data.acquisition_channel || null,
+    channel_account_id: data.acquisition_channel ? (data.channel_account_id ?? null) : null,
+    channel_contact_name: data.acquisition_channel ? (data.channel_contact_name || null) : null,
+    channel_contact_phone: data.acquisition_channel ? (data.channel_contact_phone || null) : null,
+    channel_contact_email: data.acquisition_channel ? (data.channel_contact_email || null) : null,
     down_payment: !isShort && data.down_payment ? Number(data.down_payment) : null,
     interim_payment: !isShort && data.interim_payment ? Number(data.interim_payment) : null,
     interim_payment_date: !isShort ? (data.interim_payment_date || null) : null,
@@ -647,6 +668,22 @@ export default function ContractDetail() {
   // 서식·종류에 따라 보여 줄 칸이 달라진다(민간임대주택 표준임대차계약서 전용 항목).
   const leaseForm = watch("lease_form");
   const watchLeaseMode = watch("lease_mode");
+
+  // 계약 경로 카드 — 5개 필드를 하나의 값처럼 다룬다.
+  const channelValue: ChannelValue = {
+    channel: watch("acquisition_channel"),
+    accountId: watch("channel_account_id"),
+    name: watch("channel_contact_name"),
+    phone: watch("channel_contact_phone"),
+    email: watch("channel_contact_email"),
+  };
+  const setChannelValue = (patch: Partial<ChannelValue>) => {
+    if (patch.channel !== undefined) setValue("acquisition_channel", patch.channel, { shouldDirty: true });
+    if (patch.accountId !== undefined) setValue("channel_account_id", patch.accountId, { shouldDirty: true });
+    if (patch.name !== undefined) setValue("channel_contact_name", patch.name, { shouldDirty: true });
+    if (patch.phone !== undefined) setValue("channel_contact_phone", patch.phone, { shouldDirty: true });
+    if (patch.email !== undefined) setValue("channel_contact_email", patch.email, { shouldDirty: true });
+  };
   const rentalType = watch("mlt_rental_type");
   const seniorLien = watch("mlt_senior_lien");
   const guaranteeStatus = watch("mlt_guarantee_status");
@@ -903,6 +940,18 @@ export default function ContractDetail() {
                 <p className="text-xs text-muted-foreground mt-1">{t('contract.hint_doc_attachments')}</p>
               </div>
             </div>
+
+            {/* 계약 경로 — 중개/자체/연장/온라인/기타 중 하나를 고르고, 그 상대를 계정관리에서
+                연결한다. 저장하면 수수료가 관련 비용에 자동으로 적재된다. */}
+            <ContractChannelCard
+              contractId={isNew ? null : Number(id)}
+              value={channelValue}
+              onChange={setChannelValue}
+              currency={watch("currency") || brandCurrency}
+              relatedCosts={relatedCosts}
+              onOpenCosts={() => setActiveTab("related-costs")}
+              accountDisplayName={(contract as any)?.channel_account_name ?? null}
+            />
 
             {/* Parties — 임대인(갑)/임차인(을) 를 각각 독립된 카드로 나눠, 계약서
                 당사자 표에 실제로 찍힐 계정관리 정보를 그대로 펼쳐 보여준다.
@@ -1479,17 +1528,30 @@ export default function ContractDetail() {
                 <ExportableTable fileName="contract-related-costs" className="w-full text-sm">
                   <thead className="bg-gray-50 border-b">
                     <tr>
-                      {[t('contract.col_cost_type'), t('contract.col_remitted_on'), t('contract.col_payee_name'), t('common.amount'), t('contract.col_remarks'), ""].map((h, hi) => (
+                      {[t('contract.col_cost_type'), t('contract.col_cost_status'), t('contract.col_remitted_on'), t('contract.col_payee_name'), t('common.amount'), t('contract.col_remarks'), ""].map((h, hi) => (
                         <th key={hi} className="text-left px-4 py-3 font-medium text-muted-foreground whitespace-nowrap">{h}</th>
                       ))}
                     </tr>
                   </thead>
                   <tbody>
                     {!relatedCosts.length ? (
-                      <tr><td colSpan={6} className="text-center py-10 text-muted-foreground">{t('contract.no_related_costs')}</td></tr>
+                      <tr><td colSpan={7} className="text-center py-10 text-muted-foreground">{t('contract.no_related_costs')}</td></tr>
                     ) : relatedCosts.map((c: any) => (
                       <tr key={c.id} className="border-b hover:bg-gray-50">
-                        <td className="px-4 py-3 font-medium">{c.cost_type}</td>
+                        <td className="px-4 py-3 font-medium">
+                          <span className="flex items-center gap-1.5">
+                            {c.cost_type}
+                            {/* 계약 경로에서 자동으로 만들어진 행 — 사람이 추가한 행과 구분한다. */}
+                            {c.origin === "channel" && (
+                              <Badge className="bg-violet-100 text-violet-700 border-violet-200 text-[10px] px-1.5 py-0">{t('contract.cost_auto')}</Badge>
+                            )}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3">
+                          <Badge className={c.remitted_on ? "bg-green-100 text-green-700 border-green-200" : "bg-amber-100 text-amber-700 border-amber-200"}>
+                            {c.remitted_on ? t('contract.cost_paid') : t('contract.cost_unpaid')}
+                          </Badge>
+                        </td>
                         <td className="px-4 py-3 text-muted-foreground whitespace-nowrap">{c.remitted_on ? formatDate(c.remitted_on) : "—"}</td>
                         <td className="px-4 py-3">{c.payee_name || "—"}</td>
                         <td className="px-4 py-3 font-mono">{c.amount != null ? `${Number(c.amount).toLocaleString()} ${c.currency ?? ""}`.trim() : "—"}</td>
@@ -1510,11 +1572,18 @@ export default function ContractDetail() {
                   {relatedCosts.length > 0 && (
                     <tfoot className="bg-gray-50 border-t">
                       <tr>
-                        <td colSpan={3} className="px-4 py-3 text-right font-medium text-sm text-muted-foreground">{t('contract.total_related_costs')}</td>
+                        <td colSpan={4} className="px-4 py-3 text-right font-medium text-sm text-muted-foreground">{t('contract.total_related_costs')}</td>
                         <td className="px-4 py-3 font-mono font-bold text-sm whitespace-nowrap">
                           {relatedCosts.reduce((sum: number, c: any) => sum + Number(c.amount ?? 0), 0).toLocaleString()} {relatedCosts[0]?.currency ?? ""}
                         </td>
-                        <td colSpan={2} />
+                        {/* 미지급 = 송금일이 비어 있는 행. 결제 관리의 핵심 숫자라 합계 옆에 세운다. */}
+                        <td colSpan={2} className="px-4 py-3 text-sm">
+                          {relatedCosts.some((c: any) => !c.remitted_on) && (
+                            <span className="text-amber-700 font-medium">
+                              {t('contract.total_costs_unpaid')}: {relatedCosts.filter((c: any) => !c.remitted_on).reduce((sum: number, c: any) => sum + Number(c.amount ?? 0), 0).toLocaleString()} {relatedCosts[0]?.currency ?? ""} ({relatedCosts.filter((c: any) => !c.remitted_on).length})
+                            </span>
+                          )}
+                        </td>
                       </tr>
                     </tfoot>
                   )}
@@ -1773,8 +1842,10 @@ export default function ContractDetail() {
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <Label>{t('contract.col_remitted_on')} *</Label>
+                {/* 송금 전 비용도 등록해 둘 수 있어야 한다 — 비워 두면 "미지급"으로 잡힌다. */}
+                <Label>{t('contract.col_remitted_on')}</Label>
                 <DateInput value={costRemittedOn} onChange={setCostRemittedOn} className="mt-1" />
+                <p className="text-xs text-muted-foreground mt-1">{t('contract.hint_remitted_on')}</p>
               </div>
               <div>
                 <Label>{t('contract.col_payee_name')} *</Label>
@@ -1797,7 +1868,7 @@ export default function ContractDetail() {
               </div>
             </div>
             <div>
-              <Label>{t('contract.col_remarks')} *</Label>
+              <Label>{t('contract.col_remarks')}</Label>
               <Input value={costNote} onChange={e => setCostNote(e.target.value)} placeholder={t('contract.ph_remarks')} className="mt-1" />
             </div>
           </div>
@@ -1805,7 +1876,7 @@ export default function ContractDetail() {
             <Button variant="outline" onClick={() => { setCostDialogOpen(false); resetCostForm(); }}>{t('common.cancel')}</Button>
             <Button
               className="bg-primary hover:bg-[#d4561a] text-white"
-              disabled={!costType.trim() || !costRemittedOn || !costPayeeName.trim() || !costAmount || !costNote.trim() || addCostMutation.isPending || updateCostMutation.isPending}
+              disabled={!costType.trim() || !costPayeeName.trim() || !costAmount || addCostMutation.isPending || updateCostMutation.isPending}
               onClick={submitCostForm}
             >
               {costEditItem ? t('contract.btn_save_changes') : t('contract.dlg_add_cost')}
