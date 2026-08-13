@@ -5915,7 +5915,8 @@
     "send": "ส่ง",
     "role_customer": "ลูกค้า",
     "role_contact": "ผู้ดูแล",
-    "role_landlord": "เจ้าของ"
+    "role_landlord": "เจ้าของ",
+    "role_agency": "นายหน้าอสังหาฯ"
   },
   "entity_docs": {
     "tab_title": "เอกสาร",

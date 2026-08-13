@@ -5915,7 +5915,8 @@
     "send": "送信",
     "role_customer": "顧客",
     "role_contact": "担当者",
-    "role_landlord": "貸主"
+    "role_landlord": "貸主",
+    "role_agency": "不動産会社"
   },
   "entity_docs": {
     "tab_title": "書類",

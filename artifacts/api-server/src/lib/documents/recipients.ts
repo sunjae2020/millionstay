@@ -1,4 +1,4 @@
-import { db, accountsTable, contactsTable, leadsTable } from "@workspace/db";
+import { db, accountsTable, contactsTable, contractsTable, leadsTable } from "@workspace/db";
 import { eq, inArray } from "drizzle-orm";
 
 /**
@@ -8,7 +8,7 @@ import { eq, inArray } from "drizzle-orm";
 export interface DocumentRecipient {
   email: string;
   name: string | null;
-  role: "account" | "primary_contact" | "secondary_contact" | "lead" | "landlord";
+  role: "account" | "primary_contact" | "secondary_contact" | "lead" | "landlord" | "agency";
 }
 
 export interface DocumentRecipients {
@@ -69,6 +69,25 @@ export async function quotePartyRecipients(
   if (!email) return [];
   const name = [(lead as any)?.last_name, (lead as any)?.first_name].filter(Boolean).join(" ").trim() || null;
   return [{ email, name: name || null, role: "lead" }];
+}
+
+/**
+ * 계약 한 건에 걸린 상대방 전원 — 임차인(기본 수신자) · 부동산(중개) · 임대인.
+ * 부동산은 계약 시점 스냅숏 주소(channel_contact_email)와 연결된 계정 주소를 모두
+ * 후보로 올린다. 청구서·영수증도 계약이 걸려 있으면 이 목록을 함께 제안한다.
+ */
+export async function contractPartyRecipients(contractId: number | null | undefined): Promise<DocumentRecipient[]> {
+  if (!contractId) return [];
+  const [row] = await db.select().from(contractsTable).where(eq(contractsTable.id, contractId));
+  if (!row) return [];
+  const out: DocumentRecipient[] = [];
+  out.push(...await accountRecipients(row.tenant_account_id));
+  if (row.channel_contact_email) {
+    out.push({ email: row.channel_contact_email, name: row.channel_contact_name ?? null, role: "agency" });
+  }
+  out.push(...(await accountRecipients(row.channel_account_id)).map((r) => ({ ...r, role: "agency" as const })));
+  out.push(...(await accountRecipients(row.landlord_account_id)).map((r) => ({ ...r, role: "landlord" as const })));
+  return out;
 }
 
 /** Drop blanks/dupes/invalid addresses and shape the API response. */

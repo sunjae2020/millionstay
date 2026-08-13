@@ -5915,7 +5915,8 @@
     "send": "보내기",
     "role_customer": "고객",
     "role_contact": "담당자",
-    "role_landlord": "임대인"
+    "role_landlord": "임대인",
+    "role_agency": "부동산"
   },
   "entity_docs": {
     "tab_title": "서류",

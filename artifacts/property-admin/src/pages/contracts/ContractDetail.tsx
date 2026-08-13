@@ -16,7 +16,7 @@ import { useForm, Controller } from "react-hook-form";
 import { useQueryClient, useQuery, useMutation } from "@tanstack/react-query";
 import {
   useGetContract, useCreateContract, useUpdateContract,
-  useSendContract, useSignContract, useActivateContract,
+  useSignContract, useActivateContract,
   useTerminateContract, useExpireContract, useDeleteContract,
   getListContractsQueryKey, getGetContractQueryKey,
 } from "@workspace/api-client-react";
@@ -33,6 +33,7 @@ import ContractInspections from "@/components/ContractInspections";
 import SettlementBoard from "@/components/SettlementBoard";
 import ContractDocuments from "@/components/ContractDocuments";
 import { DocumentPreviewDialog, useDocumentPreview } from "@/components/DocumentPreviewDialog";
+import { DocumentEmailDialog, type DocumentEmailTarget } from "@/components/DocumentEmailDialog";
 import {
   ContractIssueWizard,
   LEASE_ATTACHMENT_OPTIONS,
@@ -445,7 +446,6 @@ export default function ContractDetail() {
 
   const createMutation = useCreateContract({ mutation: { ...notify('contract.toast_created'), onSuccess: (d) => { invalidate(); toast({ title: t('contract.toast_created') }); navigate(`/contracts/contracts/${d.id}`); } } });
   const updateMutation = useUpdateContract({ mutation: { ...notify('contract.toast_saved'), onSuccess: () => { invalidate(); refetch(); toast({ title: t('contract.toast_saved') }); } } });
-  const sendMutation = useSendContract({ mutation: { ...notify('contract.toast_sent'), onSuccess: () => { invalidate(); refetch(); toast({ title: t('contract.toast_sent') }); } } });
   const signMutation = useSignContract({ mutation: { ...notify('contract.toast_signed'), onSuccess: () => { invalidate(); refetch(); setSignOpen(false); toast({ title: t('contract.toast_signed') }); } } });
   const activateMutation = useActivateContract({ mutation: { ...notify('contract.toast_activated'), onSuccess: () => { invalidate(); refetch(); toast({ title: t('contract.toast_activated') }); } } });
   const terminateMutation = useTerminateContract({ mutation: { ...notify('contract.toast_terminated'), onSuccess: () => { invalidate(); refetch(); setTerminateOpen(false); toast({ title: t('contract.toast_terminated') }); } } });
@@ -776,6 +776,18 @@ export default function ContractDetail() {
     email: { recipientsPath: `/api/v1/contracts/${id}/email-recipients`, send: handleEmail },
     emailLabel: t('contract.btn_email'),
   });
+  /**
+   * "임차인에게 발송" — 미리보기를 거치지 않고 곧바로 수신자(임차인/부동산/임대인
+   * + 직접 입력)를 고르는 팝업을 연다. 발송은 계약서 이메일 엔드포인트가 맡고,
+   * 그쪽이 Draft → Sent 까지 올려준다.
+   */
+  const [sendTarget, setSendTarget] = useState<DocumentEmailTarget | null>(null);
+  const openSendDialog = () => setSendTarget({
+    title: `${contract?.contract_ref ?? ""} · ${t('contract.btn_email')}`.trim(),
+    recipientsPath: `/api/v1/contracts/${id}/email-recipients`,
+    send: handleEmail,
+  });
+
   const handleEmail = async (to: string[]) => {
     setPdfBusy(true);
     try {
@@ -802,7 +814,7 @@ export default function ContractDetail() {
       <div className="flex gap-2">
         {status === "Draft" && (
           <Button type="button" size="sm" className="bg-primary hover:bg-[#d4561a] text-white"
-            onClick={() => sendMutation.mutate({ id: Number(id) })}>
+            onClick={openSendDialog}>
             {t('contract.btn_send')}
           </Button>
         )}
@@ -2103,6 +2115,7 @@ export default function ContractDetail() {
         />
       )}
       <DocumentPreviewDialog config={previewConfig} onClose={closePreview} />
+      <DocumentEmailDialog target={sendTarget} onClose={() => setSendTarget(null)} />
     </Layout>
   );
 }

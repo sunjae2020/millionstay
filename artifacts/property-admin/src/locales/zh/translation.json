@@ -5915,7 +5915,8 @@
     "send": "发送",
     "role_customer": "客户",
     "role_contact": "负责人",
-    "role_landlord": "房东"
+    "role_landlord": "房东",
+    "role_agency": "房产中介"
   },
   "entity_docs": {
     "tab_title": "文件",

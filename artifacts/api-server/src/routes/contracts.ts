@@ -53,7 +53,7 @@ import { normalizeLang, t, type DocLang } from "../lib/documents/i18n";
 import { freezeDocument, snapshotDocType } from "../lib/documents/freeze";
 import { formatDocMoney } from "../lib/documents/theme";
 import { sendDocumentEmail, resolveDocEmailCopy } from "../lib/email";
-import { accountRecipients, parseRecipients, toRecipientsResponse } from "../lib/documents/recipients";
+import { accountRecipients, contractPartyRecipients, parseRecipients, toRecipientsResponse } from "../lib/documents/recipients";
 import { resolveTemplate, renderString } from "../lib/documents/templateEngine";
 import { createSigningRequest, type SignerSpec } from "../services/contractSigning";
 import { emailLogsTable } from "@workspace/db";
@@ -1414,16 +1414,14 @@ router.get("/v1/contracts/:id/pdf", async (req, res): Promise<void> => {
 /** Email a contract to the tenant as a branded PDF; advances Draft → Sent. */
 /**
  * Addresses offered by the send dialog for a contract: the tenant account (+its
- * contacts) first, then the landlord side as an optional extra recipient.
+ * contacts) first, then 부동산(중개) and the landlord side as optional extras.
  */
 router.get("/v1/contracts/:id/email-recipients", async (req, res): Promise<void> => {
   const id = Number(req.params.id);
   if (!Number.isFinite(id)) { res.status(400).json({ error: "Invalid id" }); return; }
   const [row] = await db.select().from(contractsTable).where(eq(contractsTable.id, id));
   if (!row) { res.status(404).json({ error: "Not found" }); return; }
-  const tenant = await accountRecipients(row.tenant_account_id);
-  const landlord = (await accountRecipients(row.landlord_account_id)).map((r) => ({ ...r, role: "landlord" as const }));
-  res.json(toRecipientsResponse([...tenant, ...landlord]));
+  res.json(toRecipientsResponse(await contractPartyRecipients(row.id)));
 });
 
 router.post("/v1/contracts/:id/email", async (req, res): Promise<void> => {

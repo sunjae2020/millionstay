@@ -5915,7 +5915,8 @@
     "send": "Gửi",
     "role_customer": "Khách hàng",
     "role_contact": "Người phụ trách",
-    "role_landlord": "Chủ nhà"
+    "role_landlord": "Chủ nhà",
+    "role_agency": "Công ty môi giới"
   },
   "entity_docs": {
     "tab_title": "Tài liệu",

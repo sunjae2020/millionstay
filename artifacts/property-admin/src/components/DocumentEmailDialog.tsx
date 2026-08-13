@@ -10,7 +10,7 @@ import { apiFetch } from "@/lib/apiFetch";
 interface RecipientCandidate {
   email: string;
   name: string | null;
-  role: "account" | "primary_contact" | "secondary_contact" | "lead" | "landlord";
+  role: "account" | "primary_contact" | "secondary_contact" | "lead" | "landlord" | "agency";
 }
 
 export interface DocumentEmailTarget {
@@ -90,7 +90,9 @@ export function DocumentEmailDialog({ target, onClose }: Props) {
       ? t("doc_email.role_customer", "Customer")
       : role === "landlord"
         ? t("doc_email.role_landlord", "Landlord")
-        : t("doc_email.role_contact", "Contact");
+        : role === "agency"
+          ? t("doc_email.role_agency", "Agency")
+          : t("doc_email.role_contact", "Contact");
 
   const unusedCandidates = candidates.filter(
     (c) => !filled.some((r) => r.toLowerCase() === c.email.toLowerCase()),

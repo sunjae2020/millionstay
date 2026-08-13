@@ -5915,7 +5915,8 @@
     "send": "Send",
     "role_customer": "Customer",
     "role_contact": "Contact",
-    "role_landlord": "Landlord"
+    "role_landlord": "Landlord",
+    "role_agency": "Agency"
   },
   "entity_docs": {
     "tab_title": "Documents",

@@ -15,7 +15,7 @@ import { resolveTemplateBody } from "../lib/documents/templateEngine";
 import { freezeDocument, snapshotDocType } from "../lib/documents/freeze";
 import { formatDocMoney } from "../lib/documents/theme";
 import { sendDocumentEmail, resolveDocEmailCopy } from "../lib/email";
-import { accountRecipients, parseRecipients, toRecipientsResponse } from "../lib/documents/recipients";
+import { accountRecipients, contractPartyRecipients, parseRecipients, toRecipientsResponse } from "../lib/documents/recipients";
 import { resolveDocFileName, setDocFileName } from "../lib/documents/docFileName";
 import { formatPostalAddress } from "@workspace/address";
 import { getStripe } from "./stripe";
@@ -679,7 +679,8 @@ async function emailInvoiceDocument(req: import("express").Request, res: import(
 
 /**
  * Addresses the send dialog offers for an invoice/receipt: the billing
- * account's own email plus its primary/secondary contacts.
+ * account's own email plus its primary/secondary contacts, and — when the
+ * invoice belongs to a contract — that contract's 임차인·부동산·임대인.
  *   GET /v1/invoices/:id/email-recipients        → { default, candidates }
  *   GET /v1/invoices/:id/receipt/email-recipients
  */
@@ -688,7 +689,11 @@ async function invoiceEmailRecipients(req: import("express").Request, res: impor
   if (!Number.isFinite(id)) { res.status(400).json({ error: "Invalid id" }); return; }
   const [row] = await db.select().from(invoicesTable).where(eq(invoicesTable.id, id));
   if (!row) { res.status(404).json({ error: "Not found" }); return; }
-  res.json(toRecipientsResponse(await accountRecipients(row.account_id)));
+  // 계약이 걸린 청구서는 그 계약의 임차인·부동산·임대인도 함께 제안한다.
+  res.json(toRecipientsResponse([
+    ...await accountRecipients(row.account_id),
+    ...await contractPartyRecipients(row.contract_id),
+  ]));
 }
 
 router.get("/v1/invoices/:id/email-recipients", invoiceEmailRecipients);
