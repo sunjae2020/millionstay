@@ -159,12 +159,21 @@ export async function sendDocumentEmail(
     <p class="muted">${t(lang, "email.questions", { email: `<a href="mailto:${supportEmail}">${escapeHtml(supportEmail)}</a>` })}</p>`,
   });
 
+  // 첨부 파일명에는 반드시 확장자가 있어야 한다. Resend 는 filename 의 확장자로
+  // content type 을 추론하므로, 확장자가 없으면 첨부가 PDF 로 인식되지 않아 메일
+  // 클라이언트에서 사라진다 — 문서명이 resolveDocFileName()(확장자 없는 기본명)
+  // 으로 바뀌면서 생긴 회귀다. contentType 도 함께 명시해 추론에 기대지 않는다.
+  const attachmentName = /\.[A-Za-z0-9]{2,4}$/.test(opts.filename) ? opts.filename : `${opts.filename}.pdf`;
   const payload = {
     ...emailSender(),
     to: recipients,
     subject,
     html,
-    attachments: [{ filename: opts.filename, content: opts.pdf.toString("base64") }],
+    attachments: [{
+      filename: attachmentName,
+      content: opts.pdf.toString("base64"),
+      contentType: "application/pdf",
+    }],
   };
 
   // Resend does NOT throw on API errors — it returns { data, error }. A null id
