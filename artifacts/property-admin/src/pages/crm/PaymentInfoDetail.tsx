@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { LEASE_FORM_OPTIONS } from "@/components/ContractIssueWizard";
 import { useForm, Controller } from "react-hook-form";
 import {
   useGetPaymentInfo, useCreatePaymentInfo, useUpdatePaymentInfo,
@@ -26,6 +27,7 @@ interface PaymentInfoForm {
   account_name: string;
   stripe_account_id: string;
   description: string;
+  default_for_lease_form: string;
   status: string;
 }
 
@@ -44,7 +46,8 @@ export default function PaymentInfoDetail() {
   const { register, handleSubmit, reset, control, watch, formState: { errors } } = useForm<PaymentInfoForm>({
     defaultValues: {
       name: "", payment_type: "BankTransfer", bank_name: "", swift_code: "", bsb_number: "",
-      account_number: "", account_name: "", stripe_account_id: "", description: "", status: "Active",
+      account_number: "", account_name: "", stripe_account_id: "", description: "",
+      default_for_lease_form: "", status: "Active",
     },
   });
 
@@ -62,6 +65,7 @@ export default function PaymentInfoDetail() {
         account_name: record.account_name ?? "",
         stripe_account_id: record.stripe_account_id ?? "",
         description: record.description ?? "",
+        default_for_lease_form: (record as any).default_for_lease_form ?? "",
         status: record.status ?? "Active",
       });
     }
@@ -97,6 +101,7 @@ export default function PaymentInfoDetail() {
       account_name: values.account_name || null,
       stripe_account_id: values.stripe_account_id || null,
       description: values.description || null,
+      default_for_lease_form: values.default_for_lease_form || null,
       status: values.status,
     };
     if (isNew) {
@@ -189,6 +194,24 @@ export default function PaymentInfoDetail() {
           <div className="grid gap-1.5">
             <Label>{t("common.description")}</Label>
             <Input {...register("description")} placeholder={t("payment_info.ph_notes")} />
+          </div>
+
+          {/* 이 계좌를 기본으로 쓰는 계약서 서식 — 해당 서식으로 계약을 만들면
+              임대료·보증금 계좌가 이 계좌로 채워지고, 계약에서 바꿀 수 있다. */}
+          <div className="grid gap-1.5">
+            <Label>{t("payment_info.label_default_lease_form")}</Label>
+            <Controller name="default_for_lease_form" control={control} render={({ field }) => (
+              <Select value={field.value || "none"} onValueChange={(v) => field.onChange(v === "none" ? "" : v)}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">{t("payment_info.default_lease_form_none")}</SelectItem>
+                  {LEASE_FORM_OPTIONS.map((f) => (
+                    <SelectItem key={f.value} value={f.value}>{t(f.labelKey)}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )} />
+            <p className="text-xs text-muted-foreground">{t("payment_info.hint_default_lease_form")}</p>
           </div>
 
           <div className="grid gap-1.5">

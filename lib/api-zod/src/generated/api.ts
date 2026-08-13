@@ -832,6 +832,7 @@ export const ListPaymentInfoResponseItem = zod.object({
   account_name: zod.string().nullish(),
   stripe_account_id: zod.string().nullish(),
   description: zod.string().nullish(),
+  default_for_lease_form: zod.string().nullish(),
   status: zod.string(),
   created_at: zod.string(),
   updated_at: zod.string(),
@@ -854,6 +855,7 @@ export const CreatePaymentInfoBody = zod.object({
   account_name: zod.string().nullish(),
   stripe_account_id: zod.string().nullish(),
   description: zod.string().nullish(),
+  default_for_lease_form: zod.string().nullish(),
   status: zod.string().default(createPaymentInfoBodyStatusDefault),
 });
 
@@ -875,6 +877,7 @@ export const GetPaymentInfoResponse = zod.object({
   account_name: zod.string().nullish(),
   stripe_account_id: zod.string().nullish(),
   description: zod.string().nullish(),
+  default_for_lease_form: zod.string().nullish(),
   status: zod.string(),
   created_at: zod.string(),
   updated_at: zod.string(),
@@ -897,6 +900,7 @@ export const UpdatePaymentInfoBody = zod.object({
   account_name: zod.string().nullish(),
   stripe_account_id: zod.string().nullish(),
   description: zod.string().nullish(),
+  default_for_lease_form: zod.string().nullish(),
   status: zod.string().optional(),
 });
 
@@ -911,6 +915,7 @@ export const UpdatePaymentInfoResponse = zod.object({
   account_name: zod.string().nullish(),
   stripe_account_id: zod.string().nullish(),
   description: zod.string().nullish(),
+  default_for_lease_form: zod.string().nullish(),
   status: zod.string(),
   created_at: zod.string(),
   updated_at: zod.string(),

@@ -23,5 +23,7 @@ export interface UpdatePaymentInfoBody {
   stripe_account_id?: string | null;
   /** @nullable */
   description?: string | null;
+  /** @nullable */
+  default_for_lease_form?: string | null;
   status?: string;
 }

@@ -2581,7 +2581,10 @@
     "dialog_title_archive": "支払情報をアーカイブ",
     "dialog_desc_delete": "このレコードの削除方法を選択してください。アーカイブすると表示から隠れますが、データは保持されます。完全な削除は元に戻せません。",
     "dialog_desc_archive": "この支払情報はアーカイブされ、表示から隠れます。必要に応じてスーパー管理者が復元できます。",
-    "delete_forever": "完全に削除"
+    "delete_forever": "完全に削除",
+    "label_default_lease_form": "既定として使う契約書書式",
+    "default_lease_form_none": "既定にしない",
+    "hint_default_lease_form": "この書式で契約を作成すると、賃料・敷金の入金口座がこの口座で埋まります。契約ごとに変更できます。"
   },
   "service": {
     "new": "新規サービス",

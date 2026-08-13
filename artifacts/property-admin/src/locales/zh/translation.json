@@ -2581,7 +2581,10 @@
     "dialog_title_archive": "归档付款信息",
     "dialog_desc_delete": "选择移除此记录的方式。归档会将其从视图中隐藏但保留数据。永久删除无法撤销。",
     "dialog_desc_archive": "此付款信息将被归档并从视图中隐藏。如有需要，超级管理员可以恢复。",
-    "delete_forever": "永久删除"
+    "delete_forever": "永久删除",
+    "label_default_lease_form": "默认适用的合同格式",
+    "default_lease_form_none": "不设为默认",
+    "hint_default_lease_form": "以该格式创建合同时，租金与押金收款账户将预填此账户，可在每份合同中另行修改。"
   },
   "service": {
     "new": "新建服务",

@@ -131,6 +131,7 @@ router.get("/v1/lookup/payment-info", async (req, res): Promise<void> => {
     bank_name: paymentInfoTable.bank_name,
     account_number: paymentInfoTable.account_number,
     account_name: paymentInfoTable.account_name,
+    default_for_lease_form: paymentInfoTable.default_for_lease_form,
   }).from(paymentInfoTable)
     .where(q ? columnMatches(paymentInfoTable.name, q) : undefined)
     .limit(20);
@@ -141,7 +142,7 @@ router.get("/v1/lookup/payment-info", async (req, res): Promise<void> => {
     const display = parts.length
       ? `${parts.join(" ")}${r.account_name ? ` (${r.account_name})` : ""}`
       : `${r.name} (${r.payment_type})`;
-    return { id: r.id, display };
+    return { id: r.id, display, default_for_lease_form: r.default_for_lease_form };
   }));
 });
 

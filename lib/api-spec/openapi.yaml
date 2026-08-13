@@ -3792,6 +3792,8 @@ components:
           type: ["string", "null"]
         description:
           type: ["string", "null"]
+        default_for_lease_form:
+          type: ["string", "null"]
         status:
           type: string
         created_at:
@@ -3822,6 +3824,8 @@ components:
           type: ["string", "null"]
         description:
           type: ["string", "null"]
+        default_for_lease_form:
+          type: ["string", "null"]
         status:
           type: string
           default: Active
@@ -3847,6 +3851,8 @@ components:
         stripe_account_id:
           type: ["string", "null"]
         description:
+          type: ["string", "null"]
+        default_for_lease_form:
           type: ["string", "null"]
         status:
           type: string

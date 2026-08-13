@@ -556,6 +556,8 @@ export interface PaymentInfoResponse {
   stripe_account_id?: string | null;
   /** @nullable */
   description?: string | null;
+  /** @nullable */
+  default_for_lease_form?: string | null;
   status: string;
   created_at: string;
   updated_at: string;
@@ -578,6 +580,8 @@ export interface CreatePaymentInfoBody {
   stripe_account_id?: string | null;
   /** @nullable */
   description?: string | null;
+  /** @nullable */
+  default_for_lease_form?: string | null;
   status?: string;
 }
 
@@ -598,6 +602,8 @@ export interface UpdatePaymentInfoBody {
   stripe_account_id?: string | null;
   /** @nullable */
   description?: string | null;
+  /** @nullable */
+  default_for_lease_form?: string | null;
   status?: string;
 }
 

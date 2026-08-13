@@ -2581,7 +2581,10 @@
     "dialog_desc_archive": "Thông tin thanh toán này sẽ được lưu trữ và ẩn khỏi danh sách hiển thị. Quản trị viên cấp cao có thể khôi phục nếu cần.",
     "delete_forever": "Xóa Vĩnh Viễn",
     "section_stripe": "STRIPE",
-    "label_bsb": "BSB"
+    "label_bsb": "BSB",
+    "label_default_lease_form": "Mặc định cho mẫu hợp đồng",
+    "default_lease_form_none": "Không đặt mặc định",
+    "hint_default_lease_form": "Hợp đồng lập theo mẫu này sẽ điền sẵn tài khoản nhận tiền thuê và tiền đặt cọc là tài khoản này, và có thể đổi ở từng hợp đồng."
   },
   "service": {
     "new": "Dịch Vụ Mới",

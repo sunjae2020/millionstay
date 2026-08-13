@@ -750,7 +750,11 @@ async function buildContractPremises(
  * Info; when only one active account exists it is used for both lines.
  */
 async function resolveLeaseAccounts(
-  contract?: { rent_payment_info_id?: number | null; deposit_payment_info_id?: number | null },
+  contract?: {
+    rent_payment_info_id?: number | null;
+    deposit_payment_info_id?: number | null;
+    lease_form?: string | null;
+  },
 ): Promise<KoreanLeaseDocInput["accounts"]> {
   const rows = await db.select().from(paymentInfoTable)
     .where(and(eq(paymentInfoTable.status, "Active"), isNull(paymentInfoTable.deleted_at)));
@@ -761,8 +765,13 @@ async function resolveLeaseAccounts(
   // 지정 칸이 생기기 전에 발급된 계약도 같은 계좌로 계속 나가도록.
   const byId = (id: number | null | undefined) =>
     id ? rows.find((r) => r.id === id) : undefined;
-  const rent = byId(contract?.rent_payment_info_id) ?? find("임대료", "월세", "차임") ?? rows[0];
-  const deposit = byId(contract?.deposit_payment_info_id) ?? find("보증금") ?? rows[0];
+  // 지정이 없으면 이 서식의 기본 계좌(Settings → Payment Info 에서 서식을 지정한 계좌)를
+  // 쓰고, 그것도 없을 때만 이름 키워드로 떨어진다.
+  const formDefault = contract?.lease_form
+    ? rows.find((r) => r.default_for_lease_form === contract.lease_form)
+    : undefined;
+  const rent = byId(contract?.rent_payment_info_id) ?? formDefault ?? find("임대료", "월세", "차임") ?? rows[0];
+  const deposit = byId(contract?.deposit_payment_info_id) ?? formDefault ?? find("보증금") ?? rows[0];
   const line = (label: string, r: typeof rows[number]) => ({
     label,
     bank_name: r.bank_name,

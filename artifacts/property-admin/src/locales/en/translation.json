@@ -2581,7 +2581,10 @@
     "dialog_title_archive": "Archive Payment Info",
     "dialog_desc_delete": "Choose how to remove this record. Archiving hides it from view but keeps the data. Permanent deletion cannot be undone.",
     "dialog_desc_archive": "This payment info will be archived and hidden from view. A Super Admin can restore it if needed.",
-    "delete_forever": "Delete Forever"
+    "delete_forever": "Delete Forever",
+    "label_default_lease_form": "Default for lease form",
+    "default_lease_form_none": "Not a default",
+    "hint_default_lease_form": "Contracts issued on this form start with this account for both rent and deposit. It can be changed on each contract."
   },
   "service": {
     "new": "New Service",

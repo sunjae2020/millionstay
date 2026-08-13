@@ -25,7 +25,7 @@ import { ProductLookupSelect } from "@/components/ProductLookupSelect";
 import { ContractPartyCard } from "@/components/ContractPartyCard";
 import { ContractChannelCard, type ChannelValue } from "@/components/ContractChannelCard";
 import { ArrowLeft, Save, Loader2, Trash2, CalendarDays, Plus, Pencil, List, FileDown, Eye, Mail, Receipt, ClipboardList, Wallet, Check, FileSignature, FileText, Scale, CopyPlus } from "lucide-react";
-import { apiFetch } from "@/lib/apiFetch";
+import { apiFetch, apiJson } from "@/lib/apiFetch";
 import { useToast } from "@/hooks/use-toast";
 import { DocumentVersions } from "@/components/DocumentVersions";
 import { HomestaySignatureCard } from "@/components/HomestaySignatureCard";
@@ -714,6 +714,27 @@ export default function ContractDetail() {
   const leaseForm = watch("lease_form");
   const watchLeaseMode = watch("lease_mode");
 
+  // 서식별 기본 납부 계좌 — Settings → Payment Info 에서 "기본 적용 서식"을 지정한
+  // 계좌를 그 서식의 계약에 미리 채운다. 이미 고른 계좌는 건드리지 않고, 여기서
+  // 다른 계좌로 바꾸면 그 선택이 그대로 저장된다.
+  const { data: paymentAccounts } = useQuery<{ id: number; display: string; default_for_lease_form?: string | null }[]>({
+    queryKey: ["lookup", "payment-info"],
+    queryFn: () => apiJson("/api/v1/lookup/payment-info"),
+  });
+  const rentAccountId = watch("rent_payment_info_id");
+  const depositAccountId = watch("deposit_payment_info_id");
+  // LookupSelect 는 라벨을 모르면 "#3" 을 보여준다 — 아직 저장 안 된 기본값도
+  // 은행·계좌번호로 읽히도록 조회 목록에서 표시명을 찾아 넘긴다.
+  const accountLabel = (id: number | null | undefined, saved: string | null) =>
+    saved ?? paymentAccounts?.find((a) => a.id === id)?.display ?? null;
+  useEffect(() => {
+    if (!leaseForm || !paymentAccounts?.length) return;
+    const fallback = paymentAccounts.find((a) => a.default_for_lease_form === leaseForm);
+    if (!fallback) return;
+    if (rentAccountId == null) setValue("rent_payment_info_id", fallback.id);
+    if (depositAccountId == null) setValue("deposit_payment_info_id", fallback.id);
+  }, [leaseForm, paymentAccounts, rentAccountId, depositAccountId, setValue]);
+
   // 계약 경로 카드 — 5개 필드를 하나의 값처럼 다룬다.
   const channelValue: ChannelValue = {
     channel: watch("acquisition_channel"),
@@ -973,7 +994,7 @@ export default function ContractDetail() {
                       value={field.value}
                       onChange={field.onChange}
                       placeholder={t('contract.ph_select_account')}
-                      displayValue={(contract as any)?.rent_payment_info_name ?? null}
+                      displayValue={accountLabel(rentAccountId, (contract as any)?.rent_payment_info_name ?? null)}
                     />
                   )} />
                 </div>
@@ -985,7 +1006,7 @@ export default function ContractDetail() {
                       value={field.value}
                       onChange={field.onChange}
                       placeholder={t('contract.ph_select_account')}
-                      displayValue={(contract as any)?.deposit_payment_info_name ?? null}
+                      displayValue={accountLabel(depositAccountId, (contract as any)?.deposit_payment_info_name ?? null)}
                     />
                   )} />
                 </div>
