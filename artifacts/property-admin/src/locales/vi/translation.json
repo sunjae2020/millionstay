@@ -122,9 +122,7 @@
     "document_intake": "Nhập hàng loạt",
     "document_library": "Chỉ mục tài liệu",
     "document_checklist": "Kiểm tra tài liệu",
-    "cms": "CMS",
     "cms_pages": "Trang",
-    "cms_blog": "Blog",
     "cms_company": "Thông tin công ty",
     "cms_media": "Trung tâm media",
     "cms_design": "Hướng dẫn thiết kế",
@@ -215,11 +213,9 @@
       "finance": "Tài chính",
       "operations": "Vận hành",
       "homestay_ops": "Vận hành Homestay",
-      "floor_board": "Sơ đồ tầng",
-      "crm": "CRM"
+      "floor_board": "Sơ đồ tầng"
     },
-    "live_data": "Dữ liệu thời gian thực",
-    "crm_section": "CRM"
+    "live_data": "Dữ liệu thời gian thực"
   },
   "login": {
     "title": "Đăng nhập Quản trị",
@@ -382,7 +378,6 @@
     "del_dialog_desc_super": "Chọn cách xử lý bản ghi này. Lưu trữ sẽ ẩn khỏi danh sách nhưng vẫn giữ dữ liệu; xoá vĩnh viễn thì không thể hoàn tác.",
     "del_dialog_desc_plain": "Bản ghi này sẽ được lưu trữ và ẩn khỏi danh sách. Quản trị viên cấp cao có thể khôi phục khi cần.",
     "delete_failed": "Xoá không thành công.",
-    "email": "Email",
     "done": "Xong",
     "unknown_error": "Lỗi không xác định",
     "switch_to_light": "Chuyển sang chế độ sáng",
@@ -402,13 +397,7 @@
     "export_csv_empty": "Không có dữ liệu để xuất"
   },
   "lang": {
-    "label": "Ngôn ngữ",
-    "en": "English",
-    "ko": "한국어",
-    "zh": "中文",
-    "ja": "日本語",
-    "th": "ภาษาไทย",
-    "vi": "Tiếng Việt"
+    "label": "Ngôn ngữ"
   },
   "booking": {
     "new": "Đặt phòng mới",
@@ -526,7 +515,6 @@
     "no_photos": "Chưa có ảnh nào được tải lên",
     "notes_coming_soon": "Tính năng ghi chú sắp ra mắt.",
     "activities_coming_soon": "Nhật ký hoạt động sắp ra mắt.",
-    "placeholder_url": "https://...",
     "product_open_settings": "Mở cài đặt sản phẩm",
     "product_open_list": "Danh sách sản phẩm",
     "product_deposit": "Tiền đặt cọc",
@@ -631,6 +619,7 @@
     "section_settings": "Cài đặt",
     "label_description_notes": "Mô tả / Ghi chú",
     "doc_passport": "Hộ chiếu",
+    "doc_visa": "Thị thực",
     "expiry_expired": "{{label}} đã hết hạn {{days}} ngày trước",
     "expiry_expires": "{{label}} sẽ hết hạn trong {{days}} ngày",
     "stub_bookings": "Nội dung xem đặt phòng...",
@@ -692,17 +681,6 @@
     "section_emergency": "Liên hệ khẩn cấp",
     "label_emergency_name": "Họ tên",
     "label_emergency_phone": "Số điện thoại",
-    "col_email": "Email",
-    "label_email": "Email",
-    "doc_visa": "Thị thực",
-    "sns_kakaotalk": "KakaoTalk",
-    "sns_line": "LINE",
-    "sns_whatsapp": "WhatsApp",
-    "sns_wechat": "WeChat",
-    "sns_telegram": "Telegram",
-    "sns_instagram": "Instagram",
-    "sns_facebook": "Facebook",
-    "label_emergency_email": "Email",
     "link_account": "Liên kết tài khoản",
     "pick_account": "Chọn tài khoản",
     "account_link_failed": "Không thể liên kết tài khoản",
@@ -871,8 +849,6 @@
     "country_other": "Khác (nhập vào)",
     "postcode_search": "Tìm mã bưu điện",
     "postcode_search_failed": "Không thể mở tìm kiếm địa chỉ",
-    "col_email": "Email",
-    "label_website": "Website",
     "add_contact": "Thêm liên hệ",
     "role_member": "Người phụ trách",
     "contact_mode_new": "Liên hệ mới",
@@ -1045,15 +1021,7 @@
     "label_check_out": "Ngày trả phòng",
     "label_weekly_rate": "Giá thuê theo tuần đã thỏa thuận",
     "ph_weekly_rate": "Tự động điền từ không gian",
-    "btn_confirm_conversion": "Xác nhận chuyển đổi",
-    "view_kanban": "Kanban",
-    "col_email": "Email",
-    "move_to": "→ {{stage}}",
-    "label_email": "Email",
-    "ph_email": "email@example.com",
-    "ph_phone": "+61 4xx xxx xxx",
-    "source_website": "Website",
-    "source_ota": "OTA"
+    "btn_confirm_conversion": "Xác nhận chuyển đổi"
   },
   "task": {
     "new": "Tác vụ mới",
@@ -1304,10 +1272,6 @@
     "settlement_created": "Đã soạn quyết toán tiền đặt cọc",
     "settlement_refund": "Hoàn tiền",
     "settlement_failed": "Không thể soạn quyết toán",
-    "col_gst": "GST",
-    "sched_type_gas": "Gas",
-    "sched_type_internet": "Internet",
-    "day_suffix": "",
     "section_mlt": "Thông tin pháp định của nhà cho thuê tư nhân đã đăng ký",
     "hint_mlt": "Được in trên mẫu hợp đồng thuê nhà tiêu chuẩn của Bộ Đất đai (Phụ lục số 24). Ô để trống sẽ được in trống trên biểu mẫu.",
     "ph_mlt_unset": "Chưa xác định",
@@ -1427,7 +1391,6 @@
     "party_tenant": "Bên thuê (Bên B)",
     "party_address": "Địa chỉ",
     "party_phone": "Liên hệ",
-    "party_email": "E-mail",
     "party_missing": "Chưa nhập",
     "party_none_selected": "Chọn một tài khoản để xem thông tin sẽ xuất hiện trên hợp đồng.",
     "party_edit_account": "Sửa thông tin tài khoản",
@@ -1450,7 +1413,6 @@
     "ph_channel_name": "Tên công ty hoặc cá nhân",
     "label_channel_phone": "Số điện thoại",
     "ph_channel_phone": "Số liên hệ",
-    "label_channel_email": "Email",
     "ph_channel_email": "Email liên hệ",
     "channel_fee_expected": "Phí theo biểu phí cho căn này: {{amount}} (loại {{type}})",
     "channel_fee_no_schedule": "Không có dòng biểu phí khớp với loại căn này — hãy nhập số tiền ở Chi phí liên quan.",
@@ -1543,7 +1505,6 @@
     "label_tax_rate": "Thuế suất VAT (%)",
     "label_total_amount": "Tổng phải trả",
     "hint_total_amount": "Ô số tiền là giá trị trước thuế. Số tiền người thuê thực trả hiển thị ở đây.",
-    "tax_breakdown": "= {{supply}} + VAT {{tax}}",
     "label_payment_info": "Tài khoản ngân hàng",
     "placeholder_payment_info": "Tìm tài khoản đã lưu...",
     "hint_payment_info": "Để trống sẽ dùng tài khoản chuyển khoản mặc định ở Cài đặt → Thông tin thanh toán.",
@@ -1605,9 +1566,6 @@
     "pay_link_created_desc": "Đã mở Stripe Checkout; liên kết đã được sao chép vào clipboard.",
     "pay_link_failed": "Không thể tạo liên kết thanh toán",
     "view_receipt": "Xem biên nhận",
-    "btn_pdf": "PDF",
-    "btn_email": "Email",
-    "method_stripe": "Stripe",
     "section_consolidated": "Chi tiết hóa đơn gộp",
     "consolidated_hint": "Chi tiết toàn bộ phòng được tính cho {{period}}.",
     "col_line_label": "Hạng mục",
@@ -2225,8 +2183,7 @@
     "placeholder_lng": "Ví dụ: 151.2093",
     "country_au": "Úc",
     "country_us": "Hoa Kỳ",
-    "country_gb": "Vương quốc Anh",
-    "country_nz": "New Zealand"
+    "country_gb": "Vương quốc Anh"
   },
   "product": {
     "new": "Sản phẩm mới",
@@ -2393,10 +2350,7 @@
     "col_term": "Kỳ hạn",
     "col_weekly_rate": "Giá theo tuần",
     "ph_weekly_rate": "VD: 430",
-    "ph_monthly_rate": "VD: 1720",
-    "label_wifi": "WiFi",
-    "type_suite": "Suite",
-    "type_studio": "Studio"
+    "ph_monthly_rate": "VD: 1720"
   },
   "promotion": {
     "new": "Khuyến mãi mới",
@@ -2580,8 +2534,6 @@
     "dialog_desc_delete": "Chọn cách xóa bản ghi này. Lưu trữ sẽ ẩn khỏi danh sách hiển thị nhưng vẫn giữ dữ liệu. Xóa vĩnh viễn không thể hoàn tác.",
     "dialog_desc_archive": "Thông tin thanh toán này sẽ được lưu trữ và ẩn khỏi danh sách hiển thị. Quản trị viên cấp cao có thể khôi phục nếu cần.",
     "delete_forever": "Xóa Vĩnh Viễn",
-    "section_stripe": "STRIPE",
-    "label_bsb": "BSB",
     "label_default_lease_form": "Mặc định cho mẫu hợp đồng",
     "default_lease_form_none": "Không đặt mặc định",
     "hint_default_lease_form": "Hợp đồng lập theo mẫu này sẽ điền sẵn tài khoản nhận tiền thuê và tiền đặt cọc là tài khoản này, và có thể đổi ở từng hợp đồng."
@@ -2815,8 +2767,7 @@
     "label_org_name": "Tên Tổ Chức",
     "label_primary_color": "Màu Chủ Đạo",
     "save_success": "Đã lưu cài đặt",
-    "save_error": "Lưu cài đặt thất bại",
-    "label_logo": "Logo"
+    "save_error": "Lưu cài đặt thất bại"
   },
   "dash_reservations": {
     "title": "Bảng Điều Khiển Đặt Chỗ",
@@ -3120,11 +3071,7 @@
     "seo_title_short_placeholder": "Tiêu đề SEO…",
     "meta_description_short_placeholder": "Mô tả meta…",
     "keywords_short_placeholder": "Từ khóa cách nhau bằng dấu phẩy…",
-    "site_guest": "Trang Khách",
-    "tab_seo": "SEO",
-    "field_slug": "Slug",
-    "slug_placeholder": "my-blog-post",
-    "site_homestay": "Homestay"
+    "site_guest": "Trang Khách"
   },
   "document_hub": {
     "title": "Tài liệu",
@@ -3150,8 +3097,7 @@
     "email_sent_desc": "Đã gửi {{type}} qua email cho {{recipient}}.",
     "recipient": "người nhận",
     "email_failed": "Gửi email thất bại",
-    "error": "Lỗi",
-    "email_lang": "Email ({{lang}})"
+    "error": "Lỗi"
   },
   "quote": {
     "title": "Báo giá",
@@ -3202,8 +3148,6 @@
     "toast_email_sent": "Đã gửi email",
     "toast_email_sent_desc": "Đã gửi báo giá qua email cho {{to}}.",
     "toast_email_failed": "Gửi email thất bại",
-    "pdf": "PDF",
-    "email": "Email",
     "doc_label": "Báo giá"
   },
   "media": {
@@ -3232,7 +3176,6 @@
     "subfolder_team_hint": "Ảnh nhân viên và giảng viên",
     "subfolder_gallery": "Thư viện ảnh",
     "subfolder_gallery_hint": "Ảnh trại hè và hoạt động",
-    "subfolder_blog": "Blog",
     "subfolder_blog_hint": "Ảnh trong nội dung bài viết",
     "subfolder_icons": "Biểu tượng",
     "subfolder_icons_hint": "Biểu tượng và minh hoạ",
@@ -3438,14 +3381,6 @@
     "page_desc_dev_privacy": "Tiêu đề, ngày hiệu lực và các mục",
     "page_label_dev_terms": "Điều khoản sử dụng",
     "page_desc_dev_terms": "Tiêu đề, ngày hiệu lực và các điều khoản",
-    "tab_seo": "SEO",
-    "url_placeholder": "https://…",
-    "tool_h2": "H2",
-    "tool_h3": "H3",
-    "ph_home_stat_rooms": "500+",
-    "ph_home_stat_universities": "40+",
-    "ph_home_stat_support": "24/7",
-    "site_homestay": "Homestay",
     "field_homestay_home_hero_title": "Tiêu đề hero",
     "field_homestay_home_hero_lead": "Đoạn dẫn hero",
     "field_homestay_home_hero_cta_find": "CTA chính — Tìm homestay",
@@ -3708,7 +3643,6 @@
     "field_dev_directions_phone_label": "Nhãn điện thoại",
     "field_dev_directions_phone": "Điện thoại",
     "field_dev_directions_email_label": "Nhãn email",
-    "field_dev_directions_email": "Email",
     "field_dev_directions_hours_label": "Nhãn giờ làm việc",
     "field_dev_directions_hours": "Giờ làm việc",
     "field_dev_directions_transit_title": "Giao thông — Tiêu đề",
@@ -3720,7 +3654,6 @@
     "field_dev_footer_biz_no": "Mã số doanh nghiệp (사업자등록번호)",
     "field_dev_footer_address": "Địa chỉ (주소)",
     "field_dev_footer_phone": "Điện thoại chính (대표전화)",
-    "field_dev_footer_email": "Email (이메일)",
     "field_dev_footer_privacy_officer": "Người phụ trách bảo vệ dữ liệu (개인정보 보호책임자)",
     "field_dev_privacy_title": "Tiêu đề trang",
     "field_dev_privacy_updated": "Ngày hiệu lực",
@@ -3975,9 +3908,6 @@
     "biz_no_label": "Số đăng ký kinh doanh",
     "privacy_officer_label": "Cán bộ phụ trách bảo mật",
     "privacy_officer_placeholder": "Tên (email)",
-    "abn_label": "ABN",
-    "website_label": "Website",
-    "country_nz": "New Zealand",
     "corp_no_label": "Số đăng ký pháp nhân"
   },
   "settings_dbsync": {
@@ -4085,10 +4015,7 @@
     "toast_save_failed_title": "Lưu thất bại",
     "toast_save_failed_desc": "Không thể lưu thương hiệu của bạn. Vui lòng thử lại.",
     "preset_teal": "Xanh mòng két",
-    "page_subtitle": "Logo, favicon, màu sắc, chế độ tối và tùy chọn hiển thị",
-    "logo_favicon": "Logo & Favicon",
-    "logo": "Logo",
-    "favicon": "Favicon"
+    "page_subtitle": "Logo, favicon, màu sắc, chế độ tối và tùy chọn hiển thị"
   },
   "settings_email": {
     "current_status_title": "Trạng thái Hiện tại",
@@ -4114,10 +4041,7 @@
     "from_email_label": "Email người gửi",
     "reply_to_label": "Trả lời tới (tùy chọn)",
     "toast_saved_title": "Đã lưu",
-    "toast_saved_desc": "Cài đặt email đã được cập nhật.",
-    "provider_smtp": "SMTP",
-    "security_starttls": "STARTTLS (587)",
-    "security_ssl": "SSL/TLS (465)"
+    "toast_saved_desc": "Cài đặt email đã được cập nhật."
   },
   "settings_integrations": {
     "title": "Tích hợp bên thứ ba",
@@ -4136,8 +4060,7 @@
     "desc_google_maps": "Bản đồ vị trí bất động sản và gợi ý tự động địa chỉ",
     "desc_twilio": "Thông báo SMS (xác nhận đặt phòng, cảnh báo thanh toán)",
     "desc_docusign": "Chữ ký điện tử cho việc ký hợp đồng tự động",
-    "desc_xero": "Đồng bộ phần mềm kế toán (hóa đơn, chi phí)",
-    "category_email": "Email"
+    "desc_xero": "Đồng bộ phần mềm kế toán (hóa đơn, chi phí)"
   },
   "settings_notifications": {
     "preferences_title": "Tùy chọn thông báo",
@@ -4168,8 +4091,7 @@
     "event_lead_assigned_label": "Khách hàng tiềm năng được phân công",
     "event_lead_assigned_desc": "Khi một khách hàng tiềm năng được phân công cho thành viên nhóm",
     "event_daily_summary_label": "Báo cáo tổng hợp hàng ngày",
-    "event_daily_summary_desc": "Tổng hợp hoạt động hàng ngày được gửi lúc 9 giờ sáng",
-    "column_email": "Email"
+    "event_daily_summary_desc": "Tổng hợp hoạt động hàng ngày được gửi lúc 9 giờ sáng"
   },
   "settings_payments": {
     "mode_live": "Thực tế",
@@ -4331,8 +4253,7 @@
     "toast_user_created": "Đã tạo người dùng",
     "toast_user_created_desc": "Tài khoản đã được tạo và đang hoạt động.",
     "toast_create_failed": "Tạo người dùng thất bại",
-    "page_subtitle": "Quản lý người dùng quản trị và quyền truy cập",
-    "field_email": "Email"
+    "page_subtitle": "Quản lý người dùng quản trị và quyền truy cập"
   },
   "coming_soon": {
     "heading": "Sắp ra mắt",
@@ -4390,7 +4311,6 @@
     "cur_vnd": "Đồng Việt Nam",
     "cur_php": "Peso Philippines",
     "cur_sgd": "Đô la Singapore",
-    "cur_eur": "Euro",
     "cur_gbp": "Bảng Anh"
   },
   "forgot_password": {
@@ -4409,8 +4329,7 @@
     "success_title": "Kiểm tra email của bạn",
     "success_message": "Nếu tài khoản tồn tại cho <1>{{email}}</1>, chúng tôi đã gửi một liên kết đặt lại mật khẩu. Vui lòng kiểm tra hộp thư đến (và thư mục spam).",
     "link_expiry": "Liên kết sẽ hết hạn sau <1>1 giờ</1>.",
-    "error_generic": "Đã xảy ra lỗi. Vui lòng thử lại.",
-    "email_placeholder": "your@email.com"
+    "error_generic": "Đã xảy ra lỗi. Vui lòng thử lại."
   },
   "not_found": {
     "heading": "404 Không Tìm Thấy Trang",
@@ -4428,7 +4347,9 @@
     "step_get_notified": "Nhận thông báo & đăng nhập",
     "copyright": "© {{year}} {{appName}} · Bảo lưu mọi quyền",
     "first_name": "Tên",
+    "first_name_placeholder": "Lan",
     "last_name": "Họ",
+    "last_name_placeholder": "Nguyễn",
     "work_email": "Email Công việc",
     "password": "Mật khẩu",
     "password_placeholder": "Tối thiểu 8 ký tự",
@@ -4447,9 +4368,7 @@
     "back_to_sign_in": "Quay lại Đăng nhập",
     "error_passwords_no_match": "Mật khẩu không khớp.",
     "error_password_too_short": "Mật khẩu phải có ít nhất 8 ký tự.",
-    "error_registration_failed": "Đăng ký thất bại. Vui lòng thử lại.",
-    "first_name_placeholder": "Lan",
-    "last_name_placeholder": "Nguyễn"
+    "error_registration_failed": "Đăng ký thất bại. Vui lòng thử lại."
   },
   "reset_password": {
     "admin_portal": "Cổng Quản trị",
@@ -4557,12 +4476,12 @@
       "loading": "Đang tải…",
       "empty": "Chưa có cuộc trò chuyện nào.",
       "visitor": "Khách truy cập {{id}}",
+      "lead": "Khách tiềm năng #{{id}}",
       "select_prompt": "Chọn một cuộc trò chuyện để xem bản ghi.",
       "loading_transcript": "Đang tải bản ghi…",
       "tool_label": "công cụ · {{name}}",
       "role_user": "người dùng",
-      "role_assistant": "trợ lý",
-      "lead": "Khách tiềm năng #{{id}}"
+      "role_assistant": "trợ lý"
     },
     "cs_translate": {
       "title": "Mô hình Tự động Dịch CS",
@@ -4588,8 +4507,7 @@
     "room_type": {
       "room_share": "Ở ghép phòng",
       "house_share": "Ở ghép nhà",
-      "entire_place": "Nguyên căn",
-      "homestay": "Homestay"
+      "entire_place": "Nguyên căn"
     },
     "meal_plan": {
       "none": "Không có bữa ăn",
@@ -4746,10 +4664,7 @@
     "f_bank_name": "Tên ngân hàng",
     "f_bank_account_name": "Tên tài khoản",
     "f_bank_bsb": "Mã BSB",
-    "f_bank_account_number": "Số tài khoản",
-    "col_email": "Email",
-    "f_email": "Email",
-    "f_bank_swift": "SWIFT / BIC"
+    "f_bank_account_number": "Số tài khoản"
   },
   "homestayStudent": {
     "list_title": "Đơn đăng ký Homestay Sinh viên",
@@ -4767,6 +4682,7 @@
     "invite_sent": "Đã gửi email mời cổng thông tin cho sinh viên",
     "invite_provisioned": "Đã tạo tài khoản đăng nhập cổng thông tin (chưa gửi email — kiểm tra cấu hình email)",
     "minor": "Dưới 18 tuổi",
+    "minor_short": "Dưới 18",
     "error": "Đã xảy ra lỗi",
     "create_placement": "Tạo sắp xếp chỗ ở",
     "placement_created": "Đã tạo sắp xếp chỗ ở",
@@ -4872,10 +4788,7 @@
     "gender_male": "Nam",
     "gender_female": "Nữ",
     "gender_either": "Không phân biệt",
-    "manual_search_no_match": "Không có gia đình bản xứ nào khớp với các bộ lọc này.",
-    "minor_short": "Dưới 18",
-    "col_email": "Email",
-    "f_email": "Email"
+    "manual_search_no_match": "Không có gia đình bản xứ nào khớp với các bộ lọc này."
   },
   "homestayPlacement": {
     "list_title": "Bố trí Homestay",
@@ -4991,9 +4904,7 @@
     "charge_pending_hint": "Thao tác này sẽ tạo một khoản thu đang chờ xử lý. Gửi khoản thu (liên kết thẻ / thông tin ngân hàng) từ danh sách Thanh toán.",
     "toast_charge_created": "Đã tạo khoản thu đang chờ xử lý",
     "toast_link_sent": "Đã mở liên kết thanh toán và gửi email cho học viên",
-    "search_placeholder": "Tìm mã placement…",
-    "bank_bsb": "BSB",
-    "bank_swift": "SWIFT"
+    "search_placeholder": "Tìm mã placement…"
   },
   "homestayDoc": {
     "title": "Chữ ký & tài liệu",
@@ -5056,8 +4967,6 @@
     "toast_test_sent": "Đã gửi email thử",
     "toast_created": "Đã tạo mẫu",
     "error": "Đã xảy ra lỗi",
-    "kind_email": "Email",
-    "kind_pdf": "PDF",
     "col_category": "Nhóm",
     "cat_common": "Dùng chung",
     "cat_customer": "Khách hàng & người thuê",
@@ -5163,7 +5072,6 @@
     "page_dev_nav": "Tòa nhà · Điều hướng",
     "page_dev_footer": "Tòa nhà · Chân trang",
     "page_dev_form": "Tòa nhà · Biểu mẫu dùng chung",
-    "site_homestay": "Homestay",
     "badge_default": "mặc định"
   },
   "blog_categories": {
@@ -5317,8 +5225,7 @@
     "res_operations": "Vận hành",
     "res_users": "Người dùng",
     "res_settings": "Cài đặt",
-    "new_role_name_placeholder": "vd: Tài chính",
-    "res_crm": "CRM"
+    "new_role_name_placeholder": "vd: Tài chính"
   },
   "commission_plans": {
     "title": "Kế hoạch hoa hồng",
@@ -5502,7 +5409,6 @@
     "card_ical_desc": "Đồng bộ tình trạng phòng từ Airbnb, Booking.com và các OTA khác qua iCal",
     "card_ai": "Chatbot AI",
     "card_ai_desc": "Trợ lý AI cho widget chat trên trang đích",
-    "card_sheets": "Google Sheets",
     "card_sheets_desc": "Đồng bộ đơn đăng ký học sinh homestay với Google Sheet (trạng thái & ghi chú)",
     "card_billing": "Thanh toán định kỳ",
     "card_billing_desc": "Tự động tạo hoá đơn tiền thuê định kỳ cho hợp đồng dài hạn",
@@ -5520,11 +5426,7 @@
     "badge_disabled": "Đang tắt",
     "test_stripe": "Kiểm tra Stripe",
     "test_cloudinary": "Kiểm tra Cloudinary",
-    "test_ai": "Kiểm tra AI",
-    "cloudinary_api_key": "API Key (CLOUDINARY_API_KEY)",
-    "cloudinary_api_secret": "API Secret (CLOUDINARY_API_SECRET)",
-    "resend_api_key": "API Key (RESEND_API_KEY)",
-    "anthropic_api_key": "Anthropic API Key (ANTHROPIC_API_KEY)"
+    "test_ai": "Kiểm tra AI"
   },
   "apiKeys": {
     "subtitle": "Cấp API key để các ứng dụng bên ngoài kết nối với {{app}}",
@@ -5544,13 +5446,11 @@
     "confirm_rotate": "Đổi secret cho \"{{name}}\"? Secret hiện tại sẽ ngừng hoạt động ngay lập tức.",
     "confirm_revoke": "Thu hồi \"{{name}}\"? Ứng dụng bên ngoài sẽ mất quyền truy cập ngay lập tức.",
     "status_revoked": "Đã thu hồi",
+    "secret_masked": "khoá bí mật ••••{{last4}}",
     "last_used": "Lần dùng cuối: {{value}}",
     "never": "chưa từng",
     "rotate": "Đổi mới",
-    "revoke": "Thu hồi",
-    "api_key_label": "API Key (X-API-Key)",
-    "api_secret_label": "API Secret (X-API-Secret)",
-    "secret_masked": "khoá bí mật ••••{{last4}}"
+    "revoke": "Thu hồi"
   },
   "contractTypes": {
     "subtitle": "Định nghĩa các danh mục loại hợp đồng và yêu cầu",
@@ -5569,8 +5469,7 @@
     "require_visa": "Yêu cầu Visa",
     "require_enrollment": "Yêu cầu Đăng ký",
     "toast_saved": "Đã lưu loại hợp đồng.",
-    "toast_save_failed": "Lưu thất bại.",
-    "col_visa": "Visa"
+    "toast_save_failed": "Lưu thất bại."
   },
   "productGroups": {
     "subtitle": "Sắp xếp sản phẩm thành các nhóm hợp lý",
@@ -5686,7 +5585,64 @@
   "settings_org": {
     "page_subtitle": "Hồ sơ công ty và thông tin liên hệ",
     "tab_info": "Thông tin công ty",
-    "tab_documents": "Hồ sơ công ty"
+    "tab_documents": "Hồ sơ công ty",
+    "tab_rental_business": "Kinh doanh cho thuê"
+  },
+  "settings_rental_biz": {
+    "cert_title": "Giấy chứng nhận đăng ký kinh doanh cho thuê",
+    "cert_subtitle": "Thông tin in trên giấy chứng nhận được cấp theo Luật Đặc biệt về Nhà ở cho thuê tư nhân (Mẫu số 3).",
+    "registration_no": "Số đăng ký",
+    "first_registered_on": "Ngày đăng ký lần đầu",
+    "operator_name": "Đơn vị/cá nhân kinh doanh cho thuê",
+    "operator_name_ph": "Tên công ty hoặc cá nhân trên giấy chứng nhận",
+    "operator_reg_no": "Số CMND/CCCD hoặc mã số doanh nghiệp",
+    "address": "Địa chỉ",
+    "address_ph": "Địa chỉ trụ sở chính trên giấy chứng nhận",
+    "phone": "Điện thoại",
+    "mobile": "Di động",
+    "issuing_authority": "Cơ quan cấp",
+    "issuing_authority_ph": "VD: Thị trưởng Yeosu",
+    "nationality": "Quốc tịch",
+    "foreigner_reg_no": "Số đăng ký người nước ngoài",
+    "visa_status": "Loại visa",
+    "visa_period": "Thời hạn cư trú",
+    "foreign_only": "Chỉ áp dụng cho đơn vị/cá nhân nước ngoài",
+    "note": "Ghi chú",
+    "saved": "Đã lưu thông tin đăng ký",
+    "save_failed": "Không thể lưu",
+    "units_title": "Nhà ở cho thuê đã đăng ký",
+    "units_subtitle": "Các căn hộ được liệt kê trên giấy chứng nhận. Mỗi dòng có thể được liên kết với không gian tương ứng trong kho dữ liệu của bạn.",
+    "unlinked_only": "Chỉ hiển thị chưa liên kết",
+    "unlinked": "Chưa liên kết",
+    "auto_link": "Tự động liên kết theo số căn",
+    "auto_link_done": "Đã hoàn tất tự động liên kết",
+    "auto_link_result": "Đã liên kết {{linked}}, còn {{remaining}} chưa liên kết",
+    "import": "Dán bảng từ giấy chứng nhận",
+    "add_unit": "Thêm căn",
+    "no_units": "Chưa có căn nào được đăng ký",
+    "footnote": "Giấy chứng nhận là hồ sơ của cơ quan chức năng; việc liên kết một dòng với không gian chỉ tạo tham chiếu chéo tại đây và không làm thay đổi bản thân không gian đó. Các căn có cùng số ở nhiều tòa nhà khác nhau sẽ cần bạn tự liên kết thủ công.",
+    "col_unit_no": "Căn / tầng",
+    "col_acquisition_type": "Hình thức sở hữu",
+    "col_housing_kind": "Loại hình nhà ở",
+    "col_housing_type": "Kiểu nhà ở",
+    "col_area": "Diện tích sử dụng riêng",
+    "col_registered_on": "Ngày đăng ký",
+    "col_lease_started_on": "Ngày bắt đầu cho thuê",
+    "col_history": "Lịch sử",
+    "col_space": "Không gian liên kết",
+    "col_building_address": "Địa chỉ tòa nhà",
+    "space_picker_ph": "Tìm không gian",
+    "import_title": "Dán bảng từ giấy chứng nhận",
+    "import_help": "Dán các dòng theo đúng thứ tự cột trên giấy chứng nhận: căn / hình thức sở hữu / loại hình nhà ở / kiểu nhà ở / diện tích sử dụng riêng / ngày đăng ký / ngày bắt đầu cho thuê / lịch sử. Các cột được phân tách bằng dấu tab, dấu phẩy hoặc từ hai khoảng trắng trở lên.",
+    "import_address": "Địa chỉ tòa nhà áp dụng cho tất cả các dòng",
+    "import_replace": "Thay thế danh sách hiện tại (lưu trữ các dòng hiện có trước)",
+    "import_preview": "Đã nhận diện {{count}} dòng",
+    "import_submit": "Nhập",
+    "import_done": "Đã hoàn tất nhập dữ liệu",
+    "import_result": "Đã nhập {{imported}}, đã liên kết {{linked}} với không gian",
+    "import_failed": "Nhập dữ liệu thất bại",
+    "space_card_title": "Đăng ký kinh doanh cho thuê",
+    "space_card_link": "Mở giấy chứng nhận đăng ký"
   },
   "settings_org_docs": {
     "description": "Hồ sơ quan trọng của công ty — giấy chứng nhận đăng ký kinh doanh, bản sao sổ ngân hàng và tương tự. Tệp được lưu riêng tư và chỉ mở qua liên kết có hiệu lực ngắn; chỉ vai trò quản trị mới thấy tab này.",
@@ -5783,6 +5739,7 @@
     "issue_link": "Cấp liên kết ký cho người thuê",
     "item_defect": "Lỗi",
     "item_label": "Tên mục",
+    "item_na": "Không áp dụng",
     "item_ok": "Không có vấn đề",
     "link_copied": "Đã sao chép liên kết",
     "link_expires": "Hết hạn vào {{date}}",
@@ -5835,9 +5792,7 @@
     "unhide_item": "Khôi phục dòng này",
     "unit_no": "Số căn hộ",
     "unit_type": "Loại căn hộ",
-    "upload_failed": "Tải ảnh lên không thành công",
-    "item_na": "Không áp dụng",
-    "meter_gas": "Gas"
+    "upload_failed": "Tải ảnh lên không thành công"
   },
   "inspection_template": {
     "active_count": "{{active}}/{{total}} dòng đang hoạt động",
@@ -5906,7 +5861,6 @@
   "doc_email": {
     "title": "Gửi qua email",
     "to": "Người nhận",
-    "placeholder": "name@example.com",
     "add": "Thêm người nhận",
     "remove": "Xóa",
     "suggestions": "Liên hệ trong hồ sơ này",
@@ -6135,7 +6089,6 @@
     "field_site": "Trang web",
     "field_site_hint": "Mỗi trang web có các trang và blog riêng.",
     "tab_body": "Nội dung",
-    "tab_seo": "SEO",
     "tab_settings": "Cài đặt",
     "tab_blocks": "Khối",
     "editing_locale_banner": "Bạn đang chỉnh sửa phiên bản {{locale}}.",
@@ -6245,7 +6198,6 @@
     "company_shared_notice": "Đây là những thông tin giống với thông tin dùng trên hóa đơn và hợp đồng.",
     "company_settings_link": "Mở Cài đặt → Tổ chức",
     "company_details": "Chi tiết",
-    "company_logo": "Logo",
     "company_public_preview": "Xem trước công khai",
     "company_preview_hint": "Đây là cách chân trang và các trang pháp lý hiển thị các thông tin này.",
     "company_name": "Tên pháp lý",
@@ -6254,7 +6206,6 @@
     "company_biz_no": "Số đăng ký kinh doanh",
     "company_abn": "ABN (mã số doanh nghiệp Úc)",
     "company_phone": "Điện thoại",
-    "company_email": "Email",
     "company_website": "Trang web",
     "company_address1": "Địa chỉ dòng 1",
     "company_address2": "Địa chỉ dòng 2",
@@ -6548,12 +6499,10 @@
     "field_contact_name": "Người liên hệ",
     "field_contact_title": "Chức danh",
     "field_country": "Quốc gia",
-    "field_email": "Email",
     "field_ignore": "(bỏ qua)",
     "field_notes": "Ghi chú",
     "field_phone": "Điện thoại",
     "field_segment": "Phân loại",
-    "field_website": "Website",
     "filter_country": "Quốc gia",
     "filter_min_score": "Điểm tối thiểu",
     "filter_never_contacted": "Chưa liên hệ",
@@ -6686,8 +6635,7 @@
     "verdict_error": "Lỗi",
     "verdict_existing_account": "Đã là người liên hệ",
     "verdict_new": "Mới",
-    "verdict_suppressed": "Bị chặn",
-    "website": "Website"
+    "verdict_suppressed": "Bị chặn"
   },
   "lease": {
     "mode_long": "Dài hạn",

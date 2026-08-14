@@ -50,6 +50,7 @@ import { ContentTranslationsPanel } from "@/components/ContentTranslationsPanel"
 import EntityDocuments from "@/components/EntityDocuments";
 import { SpaceDefectsPanel } from "@/components/SpaceDefectsPanel";
 import { SpaceWorkOrdersPanel } from "@/components/SpaceWorkOrdersPanel";
+import { SpaceRentalBusinessCard } from "@/components/SpaceRentalBusinessCard";
 import { Link } from "wouter";
 import { cn } from "@/lib/utils";
 import { format, parseISO, startOfMonth, endOfMonth, addMonths, getDay } from "date-fns";
@@ -1151,6 +1152,9 @@ export default function SpaceDetail() {
                   </div>
                 </div>
               )}
+
+              {/* 임대사업자 등록증에 등재된 세대라면 등록 정보를 되짚어 보여준다. */}
+              {!isNew && id ? <SpaceRentalBusinessCard spaceId={id} /> : null}
             </form>
           </TabsContent>
 
