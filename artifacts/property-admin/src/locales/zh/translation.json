@@ -947,7 +947,8 @@
     "autofill_hint_person": "从关联联系人获取资料。应用前可逐项确认。",
     "resident_no_edit_hint": "请在基本信息部分修改号码。",
     "label_resident_no": "居民登记号码",
-    "hint_resident_no": "将印在租赁合同的承租人栏中。屏幕上仅显示部分位数。"
+    "hint_resident_no": "将印在租赁合同的承租人栏中。屏幕上仅显示部分位数。",
+    "tab_rental_business": "租赁事业者"
   },
   "lead": {
     "new": "新建线索",
@@ -1467,7 +1468,12 @@
     "toast_expired": "已标记为到期",
     "toast_deleted": "已删除合同",
     "toast_action_failed": "处理失败",
-    "channel_fee_reset": "使用建议金额 {{amount}}"
+    "channel_fee_reset": "使用建议金额 {{amount}}",
+    "label_rental_business": "租赁事业者登记号",
+    "rental_business_none": "不选择",
+    "hint_rental_business": "所选登记号将印在合同的出租人（甲）栏中。",
+    "hint_rental_business_empty": "该出租人账户没有登记证。请先在账户管理 → 租赁事业者页签中登记。",
+    "hint_rental_business_no_landlord": "请先选择出租人账户。"
   },
   "invoice": {
     "new": "新建发票",
@@ -5638,12 +5644,11 @@
   "settings_org": {
     "page_subtitle": "公司资料和联系方式",
     "tab_info": "公司信息",
-    "tab_documents": "公司文件",
-    "tab_rental_business": "租赁业务"
+    "tab_documents": "公司文件"
   },
   "settings_rental_biz": {
     "cert_title": "租赁业务登记证",
-    "cert_subtitle": "根据《民间租赁住宅特别法》(第3号表格)签发的证书上所载的详细信息。",
+    "cert_subtitle": "《民间租赁住宅特别法施行规则》附表第3号样式登记证上的记载内容。同一账户可持有多份。",
     "registration_no": "登记编号",
     "first_registered_on": "首次登记日期",
     "operator_name": "租赁业务经营者",
@@ -5695,7 +5700,16 @@
     "import_result": "已导入 {{imported}} 项，其中 {{linked}} 项已关联到空间",
     "import_failed": "导入失败",
     "space_card_title": "租赁业务登记",
-    "space_card_link": "打开登记证"
+    "space_card_link": "打开出租人账户的租赁事业者登记证",
+    "add_registration": "添加登记证",
+    "no_registrations": "尚未登记租赁事业者登记证",
+    "no_reg_no": "未填写登记号",
+    "unit_count": "{{count}} 套",
+    "unassigned_title": "未指定归属的登记证",
+    "unassigned_help": "从公司设置迁移而来的登记证。若属于本账户，请认领。",
+    "claim": "认领到本账户",
+    "claimed": "登记证已移至本账户",
+    "confirm_delete_registration": "要一并删除该登记证及其登载的房源列表吗？"
   },
   "settings_org_docs": {
     "description": "公司主要文件，如营业执照、银行存折复印件等。文件以私密方式保存，仅通过短时有效链接查看；此标签页仅管理员角色可见。",

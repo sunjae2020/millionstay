@@ -56,6 +56,10 @@ export const contractsTable = pgTable("contracts", {
   signing_mode_reason: text("signing_mode_reason"),
   // 계약서 뒤에 붙일 첨부 문서 키 목록(JSON 배열). leaseAttachments.ts 의 종류와 1:1.
   doc_attachments: text("doc_attachments"),
+  // 이 계약서에 실을 임대사업자 등록증(rental_business_registrations) — 0058.
+  // 임대인 계정에 등록증이 여러 벌일 수 있고, 등록임대주택이 아닌 물건이면 아예
+  // 싣지 않는다. null 이 곧 "선택 안 함"이며 그것이 기본값이다.
+  rental_business_registration_id: integer("rental_business_registration_id"),
   // 민간임대주택 표준임대차계약서(별지 제24호서식) 법정 기재사항 — 0033.
   // 계약 시점의 고지 내용이 그대로 계약서에 박히므로 물건이 아니라 계약에 스냅숏으로 남긴다.
   // 주민등록번호는 계약이 아니라 사람에게 붙는 값이라 연락처/계정관리에 둔다(0052).

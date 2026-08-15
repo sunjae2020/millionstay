@@ -939,7 +939,8 @@
     "autofill_hint_person": "Lấy thông tin từ liên hệ được liên kết. Bạn xác nhận từng trường trước khi áp dụng.",
     "resident_no_edit_hint": "Sửa số này ở mục Thông tin chung.",
     "label_resident_no": "Số căn cước công dân",
-    "hint_resident_no": "Được in ở ô bên thuê của hợp đồng thuê. Trên màn hình chỉ hiển thị một phần."
+    "hint_resident_no": "Được in ở ô bên thuê của hợp đồng thuê. Trên màn hình chỉ hiển thị một phần.",
+    "tab_rental_business": "Kinh doanh cho thuê"
   },
   "lead": {
     "new": "Khách hàng tiềm năng mới",
@@ -1452,7 +1453,12 @@
     "toast_expired": "Đã đánh dấu hết hạn",
     "toast_deleted": "Đã xoá hợp đồng",
     "toast_action_failed": "Không thực hiện được",
-    "channel_fee_reset": "Dùng mức đề xuất {{amount}}"
+    "channel_fee_reset": "Dùng mức đề xuất {{amount}}",
+    "label_rental_business": "Số đăng ký kinh doanh cho thuê",
+    "rental_business_none": "Không chọn",
+    "hint_rental_business": "Số đã chọn sẽ được in vào ô bên cho thuê (giáp) của hợp đồng.",
+    "hint_rental_business_empty": "Tài khoản bên cho thuê này chưa có giấy đăng ký. Hãy thêm tại Quản lý tài khoản → Kinh doanh cho thuê.",
+    "hint_rental_business_no_landlord": "Hãy chọn tài khoản bên cho thuê trước."
   },
   "invoice": {
     "new": "Tạo hóa đơn mới",
@@ -5587,12 +5593,11 @@
   "settings_org": {
     "page_subtitle": "Hồ sơ công ty và thông tin liên hệ",
     "tab_info": "Thông tin công ty",
-    "tab_documents": "Hồ sơ công ty",
-    "tab_rental_business": "Kinh doanh cho thuê"
+    "tab_documents": "Hồ sơ công ty"
   },
   "settings_rental_biz": {
     "cert_title": "Giấy chứng nhận đăng ký kinh doanh cho thuê",
-    "cert_subtitle": "Thông tin in trên giấy chứng nhận được cấp theo Luật Đặc biệt về Nhà ở cho thuê tư nhân (Mẫu số 3).",
+    "cert_subtitle": "Nội dung ghi trên giấy đăng ký (Mẫu số 3, Quy tắc thi hành Luật đặc biệt về nhà ở cho thuê tư nhân). Một tài khoản có thể giữ nhiều giấy.",
     "registration_no": "Số đăng ký",
     "first_registered_on": "Ngày đăng ký lần đầu",
     "operator_name": "Đơn vị/cá nhân kinh doanh cho thuê",
@@ -5644,7 +5649,16 @@
     "import_result": "Đã nhập {{imported}}, đã liên kết {{linked}} với không gian",
     "import_failed": "Nhập dữ liệu thất bại",
     "space_card_title": "Đăng ký kinh doanh cho thuê",
-    "space_card_link": "Mở giấy chứng nhận đăng ký"
+    "space_card_link": "Mở giấy đăng ký kinh doanh cho thuê của bên cho thuê",
+    "add_registration": "Thêm giấy đăng ký",
+    "no_registrations": "Chưa có giấy đăng ký kinh doanh cho thuê",
+    "no_reg_no": "Chưa nhập số đăng ký",
+    "unit_count": "{{count}} căn",
+    "unassigned_title": "Giấy đăng ký chưa xác định chủ",
+    "unassigned_help": "Được chuyển từ cài đặt công ty. Nếu thuộc tài khoản này, hãy nhận về.",
+    "claim": "Nhận về tài khoản này",
+    "claimed": "Đã chuyển giấy đăng ký về tài khoản này",
+    "confirm_delete_registration": "Xóa giấy đăng ký này cùng danh sách căn hộ đã ghi trên đó?"
   },
   "settings_org_docs": {
     "description": "Hồ sơ quan trọng của công ty — giấy chứng nhận đăng ký kinh doanh, bản sao sổ ngân hàng và tương tự. Tệp được lưu riêng tư và chỉ mở qua liên kết có hiệu lực ngắn; chỉ vai trò quản trị mới thấy tab này.",

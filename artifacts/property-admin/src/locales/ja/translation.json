@@ -946,7 +946,8 @@
     "autofill_hint_person": "紐づけた連絡先から情報を取得します。適用前に項目ごとに確認できます。",
     "resident_no_edit_hint": "番号は基本情報セクションで修正します。",
     "label_resident_no": "住民登録番号",
-    "hint_resident_no": "賃貸借契約書の賃借人欄に印字されます。画面上は下位桁を伏せて表示します。"
+    "hint_resident_no": "賃貸借契約書の賃借人欄に印字されます。画面上は下位桁を伏せて表示します。",
+    "tab_rental_business": "賃貸事業者"
   },
   "lead": {
     "new": "新規リード",
@@ -1465,7 +1466,12 @@
     "toast_expired": "満了として処理しました",
     "toast_deleted": "契約を削除しました",
     "toast_action_failed": "処理できませんでした",
-    "channel_fee_reset": "基準表の提案額 {{amount}} を使う"
+    "channel_fee_reset": "基準表の提案額 {{amount}} を使う",
+    "label_rental_business": "賃貸事業者登録番号",
+    "rental_business_none": "選択しない",
+    "hint_rental_business": "選んだ登録番号が契約書の貸主（甲）欄に記載されます。",
+    "hint_rental_business_empty": "この貸主アカウントに登録証がありません。アカウント管理 → 賃貸事業者タブで先に登録してください。",
+    "hint_rental_business_no_landlord": "先に貸主アカウントを選んでください。"
   },
   "invoice": {
     "new": "新規請求書",
@@ -5634,12 +5640,11 @@
   "settings_org": {
     "page_subtitle": "会社プロフィールと連絡先",
     "tab_info": "会社情報",
-    "tab_documents": "会社書類",
-    "tab_rental_business": "賃貸事業"
+    "tab_documents": "会社書類"
   },
   "settings_rental_biz": {
     "cert_title": "임대사업자 등록증",
-    "cert_subtitle": "「民間賃貸住宅に関する特別法」に基づき交付される登録証（第3号様式）に記載される内容です。",
+    "cert_subtitle": "民間賃貸住宅に関する特別法施行規則 別紙第3号様式の登録証の記載内容です。1つのアカウントに複数保持できます。",
     "registration_no": "登録番号",
     "first_registered_on": "最初の登録日",
     "operator_name": "賃貸事業者",
@@ -5691,7 +5696,16 @@
     "import_result": "{{imported}}件インポート、{{linked}}件をスペースにリンクしました",
     "import_failed": "インポートに失敗しました",
     "space_card_title": "賃貸事業登録",
-    "space_card_link": "登録証を開く"
+    "space_card_link": "貸主アカウントの賃貸事業者登録証を開く",
+    "add_registration": "登録証を追加",
+    "no_registrations": "登録された賃貸事業者登録証はありません",
+    "no_reg_no": "登録番号未入力",
+    "unit_count": "{{count}}戸",
+    "unassigned_title": "所有者が未指定の登録証",
+    "unassigned_help": "会社設定から移された登録証です。このアカウントのものであれば取り込んでください。",
+    "claim": "このアカウントに取り込む",
+    "claimed": "登録証をこのアカウントに移しました",
+    "confirm_delete_registration": "この登録証と登載された住戸一覧をまとめて削除しますか？"
   },
   "settings_org_docs": {
     "description": "事業者登録証、通帳のコピーなど、会社の主要書類を保管します。ファイルは非公開で保存され、短時間だけ有効なリンクで表示されます。このタブは管理者権限のみ表示されます。",

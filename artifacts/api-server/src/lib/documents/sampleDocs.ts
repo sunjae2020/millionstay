@@ -262,6 +262,9 @@ export async function renderSampleDocumentHtml(key: string, bodyHtml: string, lo
         email: company.email,
         business_no: company.abn,
         corporate_no: (await readStoredCompanyInfo()).corp_no ?? null,
+        // 견본에서는 임대사업자 등록번호 칸의 생김새만 보이면 된다 — 실제 발급본은
+        // 계약에서 고른 등록증에서 온다(고르지 않으면 빈칸).
+        rental_business_no: "2026-여수시-임대사업자-11",
       },
       tenant: {
         name: LEASE.party, address: LEASE.tenantAddr,

@@ -16,35 +16,44 @@ import { apiFetch, apiJson } from "@/lib/apiFetch";
 import { formatDate } from "@/lib/date";
 
 /**
- * Settings → Organisation → 임대사업자 등록증.
+ * 계정관리 → 임대인·소유주 → 임대사업자 등록증.
  *
  * 민간임대주택에 관한 특별법 시행규칙 별지 제3호서식. 등록증 머릿말(등록번호·
  * 최초등록일·임대사업자·주소·전화)과, 등록증에 열거된 민간임대주택 목록을 함께
- * 관리한다. 목록의 각 줄은 우리 spaces 원장의 세대와 연결되며, 연결된 세대는
- * 공간 상세에서 "임대사업자 등록 세대"로 되짚어 볼 수 있다.
+ * 관리한다. 등록증은 회사가 아니라 임대인에게 붙는 문서라 계정에 매달려 있고,
+ * 한 계정이 여러 벌(재발급·관청 변경)을 가질 수 있다. 계약서는 이 목록에서 하나를
+ * 골라 임대사업자 등록번호를 싣는다.
  *
- * 등록증은 수백 세대가 수십 쪽에 걸쳐 적혀 있어 한 줄씩 입력받지 않는다 —
- * 표를 통째로 붙여넣으면 파싱해 등재하고 호수로 자동 연결한다.
+ * 목록의 각 줄은 우리 spaces 원장의 세대와 연결되며, 연결된 세대는 공간 상세에서
+ * "임대사업자 등록 세대"로 되짚어 볼 수 있다. 등록증은 수백 세대가 수십 쪽에 걸쳐
+ * 적혀 있어 한 줄씩 입력받지 않는다 — 표를 통째로 붙여넣으면 파싱해 등재하고
+ * 호수로 자동 연결한다.
  */
 
-interface Registration {
-  registration_no?: string;
-  first_registered_on?: string;
-  operator_name?: string;
-  operator_reg_no?: string;
-  foreigner_reg_no?: string;
-  nationality?: string;
-  visa_status?: string;
-  visa_period?: string;
-  address?: string;
-  phone?: string;
-  mobile?: string;
-  issuing_authority?: string;
-  note?: string;
+export interface RentalBusinessRegistrationRow {
+  id: number;
+  account_id: number | null;
+  registration_no: string;
+  first_registered_on: string | null;
+  operator_name: string;
+  operator_reg_no: string | null;
+  foreigner_reg_no: string | null;
+  nationality: string | null;
+  visa_status: string | null;
+  visa_period: string | null;
+  address: string | null;
+  phone: string | null;
+  mobile: string | null;
+  issuing_authority: string | null;
+  note: string;
+  unit_count?: number;
 }
+
+type RegistrationDraft = Omit<RentalBusinessRegistrationRow, "id" | "unit_count">;
 
 interface RegisteredUnit {
   id: number;
+  registration_id: number | null;
   unit_no: string;
   building_address: string;
   acquisition_type: string | null;
@@ -61,16 +70,298 @@ interface RegisteredUnit {
   property_name: string | null;
 }
 
-const REG_ENDPOINT = "/api/v1/rental-business";
+const REGS_ENDPOINT = "/api/v1/rental-business/registrations";
 const UNITS_ENDPOINT = "/api/v1/rental-business/units";
 
-const REG_DEFAULTS: Registration = {
-  registration_no: "", first_registered_on: "", operator_name: "", operator_reg_no: "",
-  foreigner_reg_no: "", nationality: "", visa_status: "", visa_period: "",
-  address: "", phone: "", mobile: "", issuing_authority: "", note: "",
-};
+function regDefaults(accountId: number, operatorName: string): RegistrationDraft {
+  return {
+    account_id: accountId,
+    registration_no: "", first_registered_on: "", operator_name: operatorName, operator_reg_no: "",
+    foreigner_reg_no: "", nationality: "", visa_status: "", visa_period: "",
+    address: "", phone: "", mobile: "", issuing_authority: "", note: "",
+  };
+}
 
-export function RentalBusinessRegistration() {
+export function AccountRentalBusiness({ accountId, accountName }: { accountId: number; accountName?: string | null }) {
+  const { t } = useTranslation();
+  const { toast } = useToast();
+  const qc = useQueryClient();
+  const [adding, setAdding] = useState(false);
+
+  const regsKey = ["rental-business-registrations", accountId];
+  const { data: regsData, isLoading } = useQuery<{ data: RentalBusinessRegistrationRow[] }>({
+    queryKey: regsKey,
+    queryFn: () => apiJson(`${REGS_ENDPOINT}?account_id=${accountId}`),
+  });
+  const registrations = regsData?.data ?? [];
+
+  // 주인이 정해지지 않은 등록증(회사 설정에서 옮겨 온 자료)은 이 계정으로 가져올 수 있다.
+  const { data: orphanData } = useQuery<{ data: RentalBusinessRegistrationRow[] }>({
+    queryKey: ["rental-business-registrations", "unassigned"],
+    queryFn: () => apiJson(`${REGS_ENDPOINT}?unassigned=1`),
+  });
+  const orphans = orphanData?.data ?? [];
+
+  const invalidate = () => {
+    qc.invalidateQueries({ queryKey: ["rental-business-registrations"] });
+    qc.invalidateQueries({ queryKey: ["rental-business-units"] });
+  };
+
+  const claim = useMutation({
+    mutationFn: (id: number) => apiFetch(`${REGS_ENDPOINT}/${id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ account_id: accountId }),
+    }),
+    onSuccess: () => {
+      invalidate();
+      toast({ title: t("settings_rental_biz.claimed") });
+    },
+  });
+
+  const remove = useMutation({
+    mutationFn: (id: number) => apiFetch(`${REGS_ENDPOINT}/${id}`, { method: "DELETE" }),
+    onSuccess: invalidate,
+  });
+
+  return (
+    <div className="space-y-6 max-w-5xl">
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <h3 className="text-base font-semibold">{t("settings_rental_biz.cert_title")}</h3>
+          <p className="text-sm text-muted-foreground mt-0.5">{t("settings_rental_biz.cert_subtitle")}</p>
+        </div>
+        <Button size="sm" onClick={() => setAdding(true)}>
+          <Plus className="h-3.5 w-3.5 mr-1" />
+          {t("settings_rental_biz.add_registration")}
+        </Button>
+      </div>
+
+      {orphans.length > 0 && (
+        <div className="rounded-lg border border-amber-300 bg-amber-50 p-3 space-y-2">
+          <p className="text-sm font-medium text-amber-900">{t("settings_rental_biz.unassigned_title")}</p>
+          <p className="text-xs text-amber-800">{t("settings_rental_biz.unassigned_help")}</p>
+          {orphans.map((o) => (
+            <div key={o.id} className="flex items-center justify-between gap-3 text-sm">
+              <span>
+                {o.registration_no || t("settings_rental_biz.no_reg_no")}
+                <span className="text-muted-foreground"> · {o.operator_name || "—"}</span>
+                <span className="text-muted-foreground"> · {t("settings_rental_biz.unit_count", { count: o.unit_count ?? 0 })}</span>
+              </span>
+              <Button size="sm" variant="outline" disabled={claim.isPending} onClick={() => claim.mutate(o.id)}>
+                {t("settings_rental_biz.claim")}
+              </Button>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {adding && (
+        <div className="rounded-lg border bg-gray-50 p-4">
+          <RegistrationForm
+            accountId={accountId}
+            accountName={accountName ?? ""}
+            onDone={() => { setAdding(false); invalidate(); }}
+            onCancel={() => setAdding(false)}
+          />
+        </div>
+      )}
+
+      {isLoading ? (
+        <p className="text-sm text-muted-foreground">{t("common.loading")}</p>
+      ) : registrations.length === 0 && !adding ? (
+        <p className="text-sm text-muted-foreground">{t("settings_rental_biz.no_registrations")}</p>
+      ) : (
+        registrations.map((reg) => (
+          <RegistrationCard
+            key={reg.id}
+            registration={reg}
+            accountId={accountId}
+            accountName={accountName ?? ""}
+            onChanged={invalidate}
+            onDelete={() => {
+              if (confirm(t("settings_rental_biz.confirm_delete_registration"))) remove.mutate(reg.id);
+            }}
+          />
+        ))
+      )}
+
+      <p className="text-[11px] text-muted-foreground leading-relaxed">
+        {t("settings_rental_biz.footnote")}
+      </p>
+    </div>
+  );
+}
+
+function RegistrationCard({ registration, accountId, accountName, onChanged, onDelete }: {
+  registration: RentalBusinessRegistrationRow;
+  accountId: number;
+  accountName: string;
+  onChanged: () => void;
+  onDelete: () => void;
+}) {
+  const { t } = useTranslation();
+  const [editing, setEditing] = useState(false);
+
+  return (
+    <div className="rounded-lg border bg-white">
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b px-4 py-3">
+        <div>
+          <p className="font-medium">
+            {registration.registration_no || t("settings_rental_biz.no_reg_no")}
+          </p>
+          <p className="text-xs text-muted-foreground mt-0.5">
+            {[
+              registration.operator_name,
+              registration.issuing_authority,
+              registration.first_registered_on ? formatDate(registration.first_registered_on) : null,
+            ].filter(Boolean).join(" · ") || "—"}
+          </p>
+        </div>
+        <div className="flex items-center gap-1">
+          <Button size="sm" variant="ghost" onClick={() => setEditing((v) => !v)}>
+            {editing ? t("common.cancel") : t("common.edit")}
+          </Button>
+          <Button size="sm" variant="ghost" onClick={onDelete} aria-label={t("common.delete")}>
+            <Trash2 className="h-3.5 w-3.5 text-red-500" />
+          </Button>
+        </div>
+      </div>
+
+      {editing && (
+        <div className="border-b bg-gray-50 p-4">
+          <RegistrationForm
+            accountId={accountId}
+            accountName={accountName}
+            registration={registration}
+            onDone={() => { setEditing(false); onChanged(); }}
+            onCancel={() => setEditing(false)}
+          />
+        </div>
+      )}
+
+      <div className="p-4">
+        <RegistrationUnits registrationId={registration.id} />
+      </div>
+    </div>
+  );
+}
+
+function RegistrationForm({ registration, accountId, accountName, onDone, onCancel }: {
+  registration?: RentalBusinessRegistrationRow;
+  accountId: number;
+  accountName: string;
+  onDone: () => void;
+  onCancel: () => void;
+}) {
+  const { t } = useTranslation();
+  const { toast } = useToast();
+  const [saving, setSaving] = useState(false);
+  const { register, handleSubmit, reset } = useForm<RegistrationDraft>({
+    defaultValues: regDefaults(accountId, accountName),
+  });
+
+  useEffect(() => {
+    if (registration) {
+      const { id, unit_count, ...rest } = registration;
+      void id; void unit_count;
+      reset({ ...regDefaults(accountId, accountName), ...rest });
+    }
+  }, [registration, accountId, accountName, reset]);
+
+  async function submit(values: RegistrationDraft) {
+    setSaving(true);
+    try {
+      const res = await apiFetch(registration ? `${REGS_ENDPOINT}/${registration.id}` : REGS_ENDPOINT, {
+        method: registration ? "PUT" : "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...values, account_id: accountId }),
+      });
+      if (!res.ok) {
+        const body = await res.json().catch(() => null);
+        throw new Error(body?.error ?? `HTTP ${res.status}`);
+      }
+      toast({ title: t("settings_rental_biz.saved") });
+      onDone();
+    } catch (err) {
+      toast({
+        title: t("settings_rental_biz.save_failed"),
+        description: err instanceof Error ? err.message : undefined,
+        variant: "destructive",
+      });
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <form onSubmit={handleSubmit(submit)} className="space-y-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="space-y-1.5">
+          <Label>{t("settings_rental_biz.registration_no")}</Label>
+          <Input {...register("registration_no")} placeholder="2026-여수시-임대사업자-11" />
+        </div>
+        <div className="space-y-1.5">
+          <Label>{t("settings_rental_biz.first_registered_on")}</Label>
+          <Input {...register("first_registered_on")} type="date" />
+        </div>
+        <div className="space-y-1.5">
+          <Label>{t("settings_rental_biz.operator_name")}</Label>
+          <Input {...register("operator_name")} placeholder={t("settings_rental_biz.operator_name_ph")} />
+        </div>
+        <div className="space-y-1.5">
+          <Label>{t("settings_rental_biz.operator_reg_no")}</Label>
+          <Input {...register("operator_reg_no")} placeholder="000000-0000000" />
+        </div>
+        <div className="space-y-1.5 sm:col-span-2">
+          <Label>{t("settings_rental_biz.address")}</Label>
+          <Input {...register("address")} placeholder={t("settings_rental_biz.address_ph")} />
+        </div>
+        <div className="space-y-1.5">
+          <Label>{t("settings_rental_biz.phone")}</Label>
+          <Input {...register("phone")} />
+        </div>
+        <div className="space-y-1.5">
+          <Label>{t("settings_rental_biz.mobile")}</Label>
+          <Input {...register("mobile")} placeholder="010-0000-0000" />
+        </div>
+        <div className="space-y-1.5">
+          <Label>{t("settings_rental_biz.issuing_authority")}</Label>
+          <Input {...register("issuing_authority")} placeholder={t("settings_rental_biz.issuing_authority_ph")} />
+        </div>
+        <div className="space-y-1.5">
+          <Label>{t("settings_rental_biz.nationality")}</Label>
+          <Input {...register("nationality")} placeholder={t("settings_rental_biz.foreign_only")} />
+        </div>
+        <div className="space-y-1.5">
+          <Label>{t("settings_rental_biz.foreigner_reg_no")}</Label>
+          <Input {...register("foreigner_reg_no")} placeholder={t("settings_rental_biz.foreign_only")} />
+        </div>
+        <div className="space-y-1.5">
+          <Label>{t("settings_rental_biz.visa_status")}</Label>
+          <Input {...register("visa_status")} placeholder={t("settings_rental_biz.foreign_only")} />
+        </div>
+        <div className="space-y-1.5">
+          <Label>{t("settings_rental_biz.visa_period")}</Label>
+          <Input {...register("visa_period")} placeholder={t("settings_rental_biz.foreign_only")} />
+        </div>
+        <div className="space-y-1.5 sm:col-span-2">
+          <Label>{t("common.note")}</Label>
+          <Input {...register("note")} />
+        </div>
+      </div>
+      <div className="flex justify-end gap-2">
+        <Button type="button" size="sm" variant="ghost" onClick={onCancel}>{t("common.cancel")}</Button>
+        <Button type="submit" size="sm" disabled={saving}>
+          <Save className="h-4 w-4 mr-2" />
+          {saving ? t("common.saving") : t("common.save")}
+        </Button>
+      </div>
+    </form>
+  );
+}
+
+function RegistrationUnits({ registrationId }: { registrationId: number }) {
   const { t } = useTranslation();
   const { toast } = useToast();
   const qc = useQueryClient();
@@ -80,22 +371,9 @@ export function RentalBusinessRegistration() {
   const [importOpen, setImportOpen] = useState(false);
   const [adding, setAdding] = useState(false);
 
-  const { register, handleSubmit, reset, formState: { isSubmitting } } = useForm<Registration>({
-    defaultValues: REG_DEFAULTS,
-  });
-
-  const { data: regData } = useQuery<{ data: Registration }>({
-    queryKey: ["rental-business"],
-    queryFn: () => apiJson(REG_ENDPOINT),
-  });
-
-  useEffect(() => {
-    if (regData?.data) reset({ ...REG_DEFAULTS, ...regData.data });
-  }, [regData, reset]);
-
   const { data: unitsData, isLoading } = useQuery<{ data: RegisteredUnit[]; meta?: { total: number; unlinked: number } }>({
-    queryKey: ["rental-business-units"],
-    queryFn: () => apiJson(UNITS_ENDPOINT),
+    queryKey: ["rental-business-units", registrationId],
+    queryFn: () => apiJson(`${UNITS_ENDPOINT}?registration_id=${registrationId}`),
   });
 
   const units = unitsData?.data ?? [];
@@ -113,23 +391,12 @@ export function RentalBusinessRegistration() {
 
   const unlinkedCount = unitsData?.meta?.unlinked ?? units.filter((u) => !u.space_id).length;
 
-  const saveReg = async (values: Registration) => {
-    const res = await apiFetch(REG_ENDPOINT, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(values),
-    });
-    if (!res.ok) {
-      const body = await res.json().catch(() => null);
-      toast({ title: t("settings_rental_biz.save_failed"), description: body?.error ?? `HTTP ${res.status}`, variant: "destructive" });
-      return;
-    }
-    qc.invalidateQueries({ queryKey: ["rental-business"] });
-    toast({ title: t("settings_rental_biz.saved") });
-  };
-
   const autoLink = useMutation({
-    mutationFn: () => apiJson<{ data: { linked: number; remaining: number } }>(`${UNITS_ENDPOINT}/auto-link`, { method: "POST" }),
+    mutationFn: () => apiJson<{ data: { linked: number; remaining: number } }>(`${UNITS_ENDPOINT}/auto-link`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ registration_id: registrationId }),
+    }),
     onSuccess: (body) => {
       invalidateUnits();
       toast({
@@ -147,84 +414,15 @@ export function RentalBusinessRegistration() {
   });
 
   return (
-    <div className="space-y-6">
-      {/* ── 등록증 머릿말 ─────────────────────────────────────────────── */}
-      <form onSubmit={handleSubmit(saveReg)} className="space-y-4">
-        <div>
-          <h3 className="text-base font-semibold">{t("settings_rental_biz.cert_title")}</h3>
-          <p className="text-sm text-muted-foreground mt-0.5">{t("settings_rental_biz.cert_subtitle")}</p>
-        </div>
-
-        <div className="grid grid-cols-2 gap-4 max-w-3xl">
-          <div className="space-y-1.5">
-            <Label>{t("settings_rental_biz.registration_no")}</Label>
-            <Input {...register("registration_no")} placeholder="2026-여수시-임대사업자-11" />
-          </div>
-          <div className="space-y-1.5">
-            <Label>{t("settings_rental_biz.first_registered_on")}</Label>
-            <Input {...register("first_registered_on")} type="date" />
-          </div>
-          <div className="space-y-1.5">
-            <Label>{t("settings_rental_biz.operator_name")}</Label>
-            <Input {...register("operator_name")} placeholder={t("settings_rental_biz.operator_name_ph")} />
-          </div>
-          <div className="space-y-1.5">
-            <Label>{t("settings_rental_biz.operator_reg_no")}</Label>
-            <Input {...register("operator_reg_no")} placeholder="000000-0000000" />
-          </div>
-          <div className="space-y-1.5 col-span-2">
-            <Label>{t("settings_rental_biz.address")}</Label>
-            <Input {...register("address")} placeholder={t("settings_rental_biz.address_ph")} />
-          </div>
-          <div className="space-y-1.5">
-            <Label>{t("settings_rental_biz.phone")}</Label>
-            <Input {...register("phone")} />
-          </div>
-          <div className="space-y-1.5">
-            <Label>{t("settings_rental_biz.mobile")}</Label>
-            <Input {...register("mobile")} placeholder="010-0000-0000" />
-          </div>
-          <div className="space-y-1.5">
-            <Label>{t("settings_rental_biz.issuing_authority")}</Label>
-            <Input {...register("issuing_authority")} placeholder={t("settings_rental_biz.issuing_authority_ph")} />
-          </div>
-          <div className="space-y-1.5">
-            <Label>{t("settings_rental_biz.nationality")}</Label>
-            <Input {...register("nationality")} placeholder={t("settings_rental_biz.foreign_only")} />
-          </div>
-          <div className="space-y-1.5">
-            <Label>{t("settings_rental_biz.foreigner_reg_no")}</Label>
-            <Input {...register("foreigner_reg_no")} placeholder={t("settings_rental_biz.foreign_only")} />
-          </div>
-          <div className="space-y-1.5">
-            <Label>{t("settings_rental_biz.visa_status")}</Label>
-            <Input {...register("visa_status")} placeholder={t("settings_rental_biz.foreign_only")} />
-          </div>
-          <div className="space-y-1.5">
-            <Label>{t("settings_rental_biz.visa_period")}</Label>
-            <Input {...register("visa_period")} placeholder={t("settings_rental_biz.foreign_only")} />
-          </div>
-          <div className="space-y-1.5 col-span-2">
-            <Label>{t("common.note")}</Label>
-            <Input {...register("note")} />
-          </div>
-        </div>
-
-        <div className="flex justify-end max-w-3xl">
-          <Button type="submit" disabled={isSubmitting}>
-            <Save className="h-4 w-4 mr-2" />
-            {isSubmitting ? t("common.saving") : t("common.save")}
-          </Button>
-        </div>
-      </form>
-
+    <div className="space-y-3">
       <Separator />
-
-      {/* ── 등재된 민간임대주택 목록 ───────────────────────────────────── */}
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h3 className="text-base font-semibold">{t("settings_rental_biz.units_title")}</h3>
-          <p className="text-sm text-muted-foreground mt-0.5">{t("settings_rental_biz.units_subtitle")}</p>
+          <h4 className="text-sm font-semibold">
+            {t("settings_rental_biz.units_title")}
+            <span className="text-muted-foreground font-normal"> ({units.length})</span>
+          </h4>
+          <p className="text-xs text-muted-foreground mt-0.5">{t("settings_rental_biz.units_subtitle")}</p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <div className="relative">
@@ -233,7 +431,7 @@ export function RentalBusinessRegistration() {
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder={t("common.search")}
-              className="h-9 w-48 pl-8"
+              className="h-9 w-40 pl-8"
             />
           </div>
           <Button size="sm" variant={unlinkedOnly ? "default" : "outline"} onClick={() => setUnlinkedOnly((v) => !v)}>
@@ -256,7 +454,11 @@ export function RentalBusinessRegistration() {
 
       {adding && (
         <div className="rounded-lg border bg-gray-50 p-3">
-          <UnitForm onDone={() => { setAdding(false); invalidateUnits(); }} onCancel={() => setAdding(false)} />
+          <UnitForm
+            registrationId={registrationId}
+            onDone={() => { setAdding(false); invalidateUnits(); }}
+            onCancel={() => setAdding(false)}
+          />
         </div>
       )}
 
@@ -278,22 +480,31 @@ export function RentalBusinessRegistration() {
             ) : rows.length === 0 ? (
               <tr><td colSpan={10} className="text-center py-8 text-muted-foreground">{t("settings_rental_biz.no_units")}</td></tr>
             ) : rows.map((u) => (
-              <UnitRow key={u.id} row={u} onChanged={invalidateUnits} onDelete={() => removeUnit.mutate(u.id)} />
+              <UnitRow
+                key={u.id}
+                row={u}
+                registrationId={registrationId}
+                onChanged={invalidateUnits}
+                onDelete={() => removeUnit.mutate(u.id)}
+              />
             ))}
           </tbody>
         </ExportableTable>
       </div>
 
-      <p className="text-[11px] text-muted-foreground leading-relaxed">
-        {t("settings_rental_biz.footnote")}
-      </p>
-
-      <ImportDialog open={importOpen} onOpenChange={setImportOpen} onImported={invalidateUnits} />
+      <ImportDialog
+        registrationId={registrationId}
+        open={importOpen}
+        onOpenChange={setImportOpen}
+        onImported={invalidateUnits}
+      />
     </div>
   );
 }
 
-function UnitRow({ row, onChanged, onDelete }: { row: RegisteredUnit; onChanged: () => void; onDelete: () => void }) {
+function UnitRow({ row, registrationId, onChanged, onDelete }: {
+  row: RegisteredUnit; registrationId: number; onChanged: () => void; onDelete: () => void;
+}) {
   const { t } = useTranslation();
   const [editing, setEditing] = useState(false);
 
@@ -301,7 +512,12 @@ function UnitRow({ row, onChanged, onDelete }: { row: RegisteredUnit; onChanged:
     return (
       <tr>
         <td colSpan={10} className="p-3 bg-gray-50">
-          <UnitForm row={row} onDone={() => { setEditing(false); onChanged(); }} onCancel={() => setEditing(false)} />
+          <UnitForm
+            row={row}
+            registrationId={registrationId}
+            onDone={() => { setEditing(false); onChanged(); }}
+            onCancel={() => setEditing(false)}
+          />
         </td>
       </tr>
     );
@@ -337,9 +553,11 @@ function UnitRow({ row, onChanged, onDelete }: { row: RegisteredUnit; onChanged:
   );
 }
 
-type UnitDraft = Omit<RegisteredUnit, "id" | "space_name" | "space_type" | "property_name">;
+type UnitDraft = Omit<RegisteredUnit, "id" | "registration_id" | "space_name" | "space_type" | "property_name">;
 
-function UnitForm({ row, onDone, onCancel }: { row?: RegisteredUnit; onDone: () => void; onCancel: () => void }) {
+function UnitForm({ row, registrationId, onDone, onCancel }: {
+  row?: RegisteredUnit; registrationId: number; onDone: () => void; onCancel: () => void;
+}) {
   const { t } = useTranslation();
   const { toast } = useToast();
   const [saving, setSaving] = useState(false);
@@ -362,7 +580,7 @@ function UnitForm({ row, onDone, onCancel }: { row?: RegisteredUnit; onDone: () 
   async function submit(values: UnitDraft) {
     setSaving(true);
     try {
-      const payload = { ...values, space_id: spaceId };
+      const payload = { ...values, space_id: spaceId, registration_id: registrationId };
       const res = await apiFetch(row ? `${UNITS_ENDPOINT}/${row.id}` : UNITS_ENDPOINT, {
         method: row ? "PUT" : "POST",
         headers: { "Content-Type": "application/json" },
@@ -504,8 +722,8 @@ function normaliseDate(raw: string | undefined): string | null {
   return `${m[1]}-${m[2]!.padStart(2, "0")}-${m[3]!.padStart(2, "0")}`;
 }
 
-function ImportDialog({ open, onOpenChange, onImported }: {
-  open: boolean; onOpenChange: (v: boolean) => void; onImported: () => void;
+function ImportDialog({ registrationId, open, onOpenChange, onImported }: {
+  registrationId: number; open: boolean; onOpenChange: (v: boolean) => void; onImported: () => void;
 }) {
   const { t } = useTranslation();
   const { toast } = useToast();
@@ -523,7 +741,7 @@ function ImportDialog({ open, onOpenChange, onImported }: {
       const res = await apiFetch(`${UNITS_ENDPOINT}/import`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ rows: preview, replace }),
+        body: JSON.stringify({ registration_id: registrationId, rows: preview, replace }),
       });
       const body = await res.json().catch(() => null);
       if (!res.ok) throw new Error(body?.error ?? `HTTP ${res.status}`);

@@ -4,7 +4,6 @@ import { Building } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CompanyInfo } from "@/pages/settings/sections/CompanyInfo";
 import { OrgDocuments } from "@/pages/settings/sections/OrgDocuments";
-import { RentalBusinessRegistration } from "@/pages/settings/sections/RentalBusinessRegistration";
 import { useAuth } from "@/contexts/AuthContext";
 
 // Company paperwork holds bank and registration details, so the tab is only
@@ -32,7 +31,6 @@ export default function OrganisationPage() {
         <Tabs defaultValue="info">
           <TabsList>
             <TabsTrigger value="info">{t("settings_org.tab_info")}</TabsTrigger>
-            <TabsTrigger value="rental-business">{t("settings_org.tab_rental_business")}</TabsTrigger>
             {canSeeDocuments && (
               <TabsTrigger value="documents">{t("settings_org.tab_documents")}</TabsTrigger>
             )}
@@ -41,9 +39,6 @@ export default function OrganisationPage() {
             <div className="max-w-2xl">
               <CompanyInfo />
             </div>
-          </TabsContent>
-          <TabsContent value="rental-business" className="mt-4">
-            <RentalBusinessRegistration />
           </TabsContent>
           {canSeeDocuments && (
             <TabsContent value="documents" className="mt-4">

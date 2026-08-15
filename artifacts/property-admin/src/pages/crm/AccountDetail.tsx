@@ -38,9 +38,13 @@ import { KoreanAddressSearch, type KoreanAddress } from "@/components/KoreanAddr
 import { formatDate } from "@/lib/date";
 import { formatPostalAddress, orderFallbackFromLang, type AddressLang } from "@workspace/address";
 import { DocumentPreviewDialog, useDocumentPreview } from "@/components/DocumentPreviewDialog";
+import { AccountRentalBusiness } from "@/components/AccountRentalBusiness";
 
 import { ExportableTable } from "@/components/ui/ExportCsvButton";
 const ACCOUNT_TYPES_WITH_FINANCE = ["SpaceOwner", "Agent", "ServiceHost", "Partner", "HomestayHost"];
+// 임대사업자 등록증은 임대인·소유주에게만 붙는 문서다 — 임차인·게스트 계정에는
+// 탭 자체를 내지 않는다(계약서의 임대사업자등록번호도 임대인 계정에서만 고른다).
+const ACCOUNT_TYPES_WITH_RENTAL_BUSINESS = ["SpaceOwner"];
 
 const CURRENCIES = SUPPORTED_CURRENCIES.map((c) => c.code);
 
@@ -301,6 +305,7 @@ export default function AccountDetail() {
   const entityKind = watch("entity_kind");
   const isIndividual = entityKind === "Individual";
   const showFinance = ACCOUNT_TYPES_WITH_FINANCE.includes(accountType);
+  const showRentalBusiness = ACCOUNT_TYPES_WITH_RENTAL_BUSINESS.includes(accountType);
   const primaryContactId = watch("primary_contact_id");
   const secondaryContactId = watch("secondary_contact_id");
   const logoUrl = watch("logo_url");
@@ -884,6 +889,9 @@ export default function AccountDetail() {
               <TabsTrigger value="documents">
                 {t('account.tab_files')}{accountDocs?.length ? ` (${accountDocs.length})` : ""}
               </TabsTrigger>
+              {showRentalBusiness && (
+                <TabsTrigger value="rental-business">{t('account.tab_rental_business')}</TabsTrigger>
+              )}
               <TabsTrigger value="portal">{t('account.tab_portal')}</TabsTrigger>
             </TabsList>
 
@@ -1327,6 +1335,13 @@ export default function AccountDetail() {
               </div>
               </div>
             </TabsContent>
+
+            {/* ── 임대사업자 등록증 ───────────────────────────────────── */}
+            {showRentalBusiness && (
+              <TabsContent value="rental-business">
+                {id && <AccountRentalBusiness accountId={Number(id)} accountName={(account as any)?.name ?? null} />}
+              </TabsContent>
+            )}
 
             {/* ── Portal access (포털 사용) ───────────────────────────── */}
             <TabsContent value="portal">

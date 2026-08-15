@@ -6,7 +6,7 @@ import {
   syncChannelRelatedCost,
   channelContactFromAccount,
 } from "../lib/acquisitionChannel";
-import { db, contractsTable, accountsTable, contactsTable, spacesTable, propertiesTable, contractProductsTable, accommodationCatalogTable, bookingsTable, recurringSchedulesTable, bookingServicesTable, invoicesTable, invoiceLineItemsTable, contractLineItemsTable, contractRelatedCostsTable } from "@workspace/db";
+import { db, contractsTable, accountsTable, contactsTable, spacesTable, propertiesTable, contractProductsTable, accommodationCatalogTable, bookingsTable, recurringSchedulesTable, bookingServicesTable, invoicesTable, invoiceLineItemsTable, contractLineItemsTable, contractRelatedCostsTable, rentalBusinessRegistrationsTable } from "@workspace/db";
 import { eq, ilike, and, or, like, desc, isNull, inArray, gte, lte, sql } from "drizzle-orm";
 import multer from "multer";
 import { logAction } from "../utils/auditLog";
@@ -530,6 +530,20 @@ function acquisitionChannelFields(data: Record<string, unknown>) {
 }
 
 /**
+ * 이 계약서에 실을 임대사업자 등록증(rental_business_registrations.id).
+ *
+ * 기본값은 "선택 안 함"(null)이다 — 등록임대주택이 아닌 물건도 계약하므로, 고르지
+ * 않았거나 숫자가 아닌 값이 오면 조용히 비운다. 어느 등록증인지는 계약 상세에서
+ * 임대인 계정에 등록된 등록증 중에서만 고르게 한다.
+ */
+function registrationIdField(data: Record<string, unknown>): number | null {
+  const raw = data["rental_business_registration_id"];
+  if (raw === null || raw === undefined || raw === "" || raw === "none") return null;
+  const id = Number(raw);
+  return Number.isFinite(id) && id > 0 ? id : null;
+}
+
+/**
  * 민간임대주택 표준임대차계약서(별지 제24호서식) 법정 기재사항을 요청 본문에서 뽑는다.
  * 서식이 정해 둔 값만 통과시키고(오타로 체크박스가 사라지지 않게), 나머지는 null.
  */
@@ -592,6 +606,7 @@ router.post("/v1/contracts", async (req, res): Promise<void> => {
     // 서식 기본값은 자사 일반 임대차계약서 — 고르지 않고 만든 계약도 곧바로
     // 그 서식으로 발급된다. 표준서식은 계약 상세에서 직접 바꾼다.
     lease_form: data.lease_form ?? "general",
+    rental_business_registration_id: registrationIdField(data),
     doc_attachments: normalizeAttachmentsInput(data.doc_attachments, data.lease_form ?? null),
     ...mltLeaseFields(data),
     down_payment: data.down_payment ?? null,
@@ -990,6 +1005,16 @@ export async function buildContractDocInput(
   const tenantPhone: string | null = tenantParty?.phone ?? null;
   const landlordEmail: string | null = landlordParty?.email ?? null;
   const landlordAddress: string | null = landlordParty?.address ?? null;
+  // 임대사업자 등록번호는 계약에서 고른 등록증(계정관리 → 임대인·소유주 → 임대사업자)
+  // 에서만 온다. 고르지 않았으면(기본값) 계약서의 그 칸은 빈 채로 발급된다 —
+  // 등록임대주택이 아닌 물건에 남의 등록번호가 실리는 일이 없어야 한다.
+  let rentalBusinessNo: string | null = null;
+  if (row.rental_business_registration_id) {
+    const [reg] = await db.select({ no: rentalBusinessRegistrationsTable.registration_no })
+      .from(rentalBusinessRegistrationsTable)
+      .where(eq(rentalBusinessRegistrationsTable.id, row.rental_business_registration_id));
+    rentalBusinessNo = reg?.no?.trim() || null;
+  }
   let billingFrequency: string | null = null;
   if (row.product_id) {
     const [p] = await db.select({ f: accommodationCatalogTable.billing_frequency }).from(accommodationCatalogTable).where(eq(accommodationCatalogTable.id, row.product_id));
@@ -1053,9 +1078,9 @@ export async function buildContractDocInput(
         // 계약서에 찍혀 나간다 — 비어 있으면 비어 있는 채로 발급한다.
         email: landlordEmail,
         business_no: landlordParty?.business_no || stored.biz_no || stored.abn || null,
-        // 법인등록번호는 계약서 당사자 표에 싣지 않는다(사업자등록번호로 충분하다).
-        // 임대인 계정에 적힌 법인등록번호가 먼저고, 없으면 자사 회사 정보로 떨어진다.
+        // 법인등록번호는 임대인 계정에 적힌 값이 먼저고, 없으면 자사 회사 정보로 떨어진다.
         corporate_no: landlordParty?.corporate_no || stored.corp_no || null,
+        rental_business_no: rentalBusinessNo,
       },
       tenant: {
         name: (c as any).tenant_name ?? null,
@@ -1138,7 +1163,9 @@ export async function buildContractDocInput(
       phone: storedCompany.phone ?? null,
       id_no: storedCompany.biz_no ?? storedCompany.abn ?? null,
     },
-    landlord_rental_biz_no: row.mlt_landlord_rental_biz_no ?? null,
+    // 서식의 임대사업자 등록번호 칸도 계약에서 고른 등록증을 먼저 쓴다. 손으로 적어 둔
+    // 스냅숏(mlt_landlord_rental_biz_no)은 등록증을 고르지 않았을 때의 대비책이다.
+    landlord_rental_biz_no: rentalBusinessNo ?? row.mlt_landlord_rental_biz_no ?? null,
     tenant: {
       name: (c as any).tenant_name ?? null,
       address: tenantAddress,
@@ -1534,6 +1561,7 @@ router.put("/v1/contracts/:id", async (req, res): Promise<void> => {
         advance_amount: data.advance_amount ?? null,
         contract_category: data.contract_category ?? null,
         lease_form: data.lease_form ?? null,
+        rental_business_registration_id: registrationIdField(data),
         doc_attachments: normalizeAttachmentsInput(data.doc_attachments, data.lease_form ?? null),
         ...mltLeaseFields(data),
         down_payment: data.down_payment ?? null,

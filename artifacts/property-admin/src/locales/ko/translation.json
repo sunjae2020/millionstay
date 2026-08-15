@@ -963,7 +963,8 @@
     "autofill_hint_person": "연결된 연락처에서 정보를 가져옵니다. 적용 전에 항목별로 확인할 수 있습니다.",
     "resident_no_edit_hint": "번호는 기본 정보 섹션에서 수정합니다.",
     "label_resident_no": "주민등록번호",
-    "hint_resident_no": "임대차 계약서 임차인 칸에 인쇄됩니다. 화면에는 뒷자리를 가려 표시합니다."
+    "hint_resident_no": "임대차 계약서 임차인 칸에 인쇄됩니다. 화면에는 뒷자리를 가려 표시합니다.",
+    "tab_rental_business": "임대사업자"
   },
   "lead": {
     "new": "새 리드",
@@ -1490,7 +1491,12 @@
     "toast_expired": "만료 처리했습니다",
     "toast_deleted": "계약을 삭제했습니다",
     "toast_action_failed": "처리하지 못했습니다",
-    "channel_fee_reset": "기준표 제안값 {{amount}} 으로"
+    "channel_fee_reset": "기준표 제안값 {{amount}} 으로",
+    "label_rental_business": "임대사업자등록번호",
+    "rental_business_none": "선택 안 함",
+    "hint_rental_business": "고른 등록번호가 계약서 임대인(갑) 칸에 실립니다.",
+    "hint_rental_business_empty": "이 임대인 계정에 등록된 등록증이 없습니다. 계정관리 → 임대사업자 탭에서 먼저 등록하세요.",
+    "hint_rental_business_no_landlord": "임대인 계정을 먼저 고르세요."
   },
   "invoice": {
     "new": "새 청구서",
@@ -5688,12 +5694,11 @@
   "settings_org": {
     "page_subtitle": "회사 프로필 및 연락처 정보",
     "tab_info": "회사 정보",
-    "tab_documents": "회사 서류",
-    "tab_rental_business": "임대사업자 등록증"
+    "tab_documents": "회사 서류"
   },
   "settings_rental_biz": {
     "cert_title": "임대사업자 등록증",
-    "cert_subtitle": "민간임대주택에 관한 특별법 시행규칙 별지 제3호서식 등록증에 적힌 내용입니다.",
+    "cert_subtitle": "민간임대주택에 관한 특별법 시행규칙 별지 제3호서식 등록증에 적힌 내용입니다. 이 계정이 가진 등록증을 모두 둘 수 있습니다.",
     "registration_no": "등록번호",
     "first_registered_on": "최초등록일",
     "operator_name": "임대사업자 성명(법인명)",
@@ -5745,7 +5750,16 @@
     "import_result": "{{imported}}건 등재, {{linked}}건 세대 연결",
     "import_failed": "등재하지 못했습니다",
     "space_card_title": "임대사업자 등록",
-    "space_card_link": "임대사업자 등록증 열기"
+    "space_card_link": "임대인 계정의 임대사업자 등록증 열기",
+    "add_registration": "등록증 추가",
+    "no_registrations": "등록된 임대사업자 등록증이 없습니다",
+    "no_reg_no": "등록번호 미입력",
+    "unit_count": "{{count}}세대",
+    "unassigned_title": "주인이 지정되지 않은 등록증",
+    "unassigned_help": "회사 설정에서 옮겨 온 등록증입니다. 이 계정의 등록증이면 가져오세요.",
+    "claim": "이 계정으로 가져오기",
+    "claimed": "등록증을 이 계정으로 옮겼습니다",
+    "confirm_delete_registration": "이 등록증과 등재된 세대 목록을 함께 삭제할까요?"
   },
   "settings_org_docs": {
     "description": "사업자등록증, 통장 사본 등 회사의 주요 서류를 보관합니다. 파일은 비공개로 저장되며 짧게 유효한 링크로만 열립니다. 이 탭은 관리자 권한에게만 보입니다.",

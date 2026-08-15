@@ -49,6 +49,7 @@ export * from "./contract_line_items";
 export * from "./contract_related_costs";
 export * from "./rental_fee_schedules";
 export * from "./rental_business_units";
+export * from "./rental_business_registrations";
 export * from "./blog_posts";
 export * from "./blog_categories";
 export * from "./page_contents";

@@ -7,8 +7,9 @@ import { z } from "zod/v4";
  * "민간임대주택의 소재지" 표 — 등록증에 열거된 세대 한 줄이 이 테이블 한 행이다.
  *
  * 등록증의 머릿말(최초등록일·등록번호·임대사업자 성명/법인등록번호·주소·전화)은
- * 회사 한 건짜리 정보라 integration_settings KV(key `rental_business_registration`)에
- * 두고, 여러 줄인 세대 목록만 이 테이블로 뺐다.
+ * rental_business_registrations 한 행이고, 여러 줄인 세대 목록만 이 테이블에 담는다.
+ * `registration_id` 가 어느 등록증에 실린 세대인지를 가리킨다(KV 시절 자료는 이관
+ * 마이그레이션에서 채워졌고, 이후에는 항상 등록증을 통해 등재된다).
  *
  * `space_id` 는 등록증의 호수를 우리 spaces 원장의 실제 세대와 이어 붙인 고리다.
  * 등록증은 관청 문서라 우리 원장에 없는 호수가 있을 수 있으므로 nullable —
@@ -29,6 +30,7 @@ export const rentalBusinessUnitsTable = pgTable("rental_business_units", {
   registered_on: text("registered_on"), // 주택등록일 YYYY-MM-DD
   lease_started_on: text("lease_started_on"), // 임대개시일 YYYY-MM-DD
   registration_history: text("registration_history"), // 등록이력: 최초 | 변경 …
+  registration_id: integer("registration_id"),
   space_id: integer("space_id"),
   note: text("note").notNull().default(""),
   sort_order: integer("sort_order").notNull().default(0),
@@ -37,6 +39,7 @@ export const rentalBusinessUnitsTable = pgTable("rental_business_units", {
   updated_at: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),
 }, (table) => [
   index("rental_business_units_space_id_idx").on(table.space_id),
+  index("rental_business_units_registration_id_idx").on(table.registration_id),
 ]);
 
 export const insertRentalBusinessUnitSchema = createInsertSchema(rentalBusinessUnitsTable).omit({

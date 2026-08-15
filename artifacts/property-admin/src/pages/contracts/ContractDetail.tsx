@@ -130,6 +130,7 @@ interface FormData {
   advance_amount: string;
   contract_category: string;
   lease_form: string;
+  rental_business_registration_id: number | null;
   rent_payment_info_id: number | null;
   deposit_payment_info_id: number | null;
   special_terms: string;
@@ -343,6 +344,9 @@ export default function ContractDetail() {
       lease_mode: "long", rate_period: "monthly", rate_amount: "",
       bond_amount: "", advance_amount: "",
       contract_category: "", lease_form: "general", doc_attachments: [],
+      // 임대사업자 등록번호는 기본이 "선택 안 함"이다 — 등록임대주택이 아닌 물건도
+      // 계약하므로, 고르지 않으면 계약서의 그 칸은 비운 채로 발급된다.
+      rental_business_registration_id: null,
       rent_payment_info_id: null, deposit_payment_info_id: null, special_terms: "",
       acquisition_channel: "", channel_account_id: null,
       channel_contact_name: "", channel_contact_phone: "", channel_contact_email: "",
@@ -380,6 +384,7 @@ export default function ContractDetail() {
         contract_category: (contract as any).contract_category ?? "",
         // 서식 기본값은 자사 일반 임대차계약서. 표준서식은 직접 고른다.
         lease_form: (contract as any).lease_form || "general",
+        rental_business_registration_id: (contract as any).rental_business_registration_id ?? null,
         rent_payment_info_id: (contract as any).rent_payment_info_id ?? null,
         deposit_payment_info_id: (contract as any).deposit_payment_info_id ?? null,
         special_terms: (contract as any).special_terms ?? "",
@@ -677,6 +682,7 @@ export default function ContractDetail() {
     down_payment: !isShort && data.down_payment ? Number(data.down_payment) : null,
     interim_payment: !isShort && data.interim_payment ? Number(data.interim_payment) : null,
     interim_payment_date: !isShort ? (data.interim_payment_date || null) : null,
+    rental_business_registration_id: data.rental_business_registration_id ?? null,
     mlt_landlord_rental_biz_no: data.mlt_landlord_rental_biz_no || null,
     mlt_housing_type: data.mlt_housing_type || null,
     mlt_rental_type: data.mlt_rental_type || null,
@@ -734,6 +740,27 @@ export default function ContractDetail() {
     if (rentAccountId == null) setValue("rent_payment_info_id", fallback.id);
     if (depositAccountId == null) setValue("deposit_payment_info_id", fallback.id);
   }, [leaseForm, paymentAccounts, rentAccountId, depositAccountId, setValue]);
+
+  // 임대사업자 등록증 — 임대인 계정(계정관리 → 임대인·소유주 → 임대사업자)에 등록된
+  // 등록증 중에서만 고른다. 등록임대주택이 아닌 물건도 계약하므로 기본은 "선택 안 함"
+  // 이고, 임대인을 바꿔 그 계정의 등록증이 아니게 되면 골라 둔 값을 비운다 —
+  // 남의 등록번호가 계약서에 실리는 일이 없어야 한다.
+  const landlordAccountId = watch("landlord_account_id");
+  const rentalBizRegistrationId = watch("rental_business_registration_id");
+  const { data: rentalBizRegs } = useQuery<{ data: Array<{ id: number; registration_no: string; operator_name: string }> }>({
+    queryKey: ["rental-business-registrations", landlordAccountId],
+    queryFn: () => apiJson(`/api/v1/rental-business/registrations?account_id=${landlordAccountId}`),
+    enabled: !!landlordAccountId,
+  });
+  const rentalBizOptions = rentalBizRegs?.data ?? [];
+  useEffect(() => {
+    if (rentalBizRegistrationId == null) return;
+    if (!landlordAccountId) { setValue("rental_business_registration_id", null); return; }
+    if (!rentalBizRegs) return;
+    if (!rentalBizOptions.some((r) => r.id === rentalBizRegistrationId)) {
+      setValue("rental_business_registration_id", null);
+    }
+  }, [landlordAccountId, rentalBizRegs, rentalBizOptions, rentalBizRegistrationId, setValue]);
 
   // 계약 경로 카드 — 5개 필드를 하나의 값처럼 다룬다.
   const channelValue: ChannelValue = {
@@ -992,6 +1019,33 @@ export default function ContractDetail() {
                     </Select>
                   )} />
                   <p className="text-xs text-muted-foreground mt-1">{t('contract.hint_lease_form')}</p>
+                </div>
+                <div>
+                  <Label>{t('contract.label_rental_business')}</Label>
+                  <Controller name="rental_business_registration_id" control={control} render={({ field }) => (
+                    <Select
+                      value={field.value == null ? "none" : String(field.value)}
+                      onValueChange={(v) => field.onChange(v === "none" ? null : Number(v))}
+                    >
+                      <SelectTrigger><SelectValue placeholder={t('contract.rental_business_none')} /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="none">{t('contract.rental_business_none')}</SelectItem>
+                        {rentalBizOptions.map((r) => (
+                          <SelectItem key={r.id} value={String(r.id)}>
+                            {r.registration_no || `#${r.id}`}
+                            {r.operator_name ? ` · ${r.operator_name}` : ""}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )} />
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {!landlordAccountId
+                      ? t('contract.hint_rental_business_no_landlord')
+                      : rentalBizOptions.length === 0
+                        ? t('contract.hint_rental_business_empty')
+                        : t('contract.hint_rental_business')}
+                  </p>
                 </div>
               </div>
 

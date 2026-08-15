@@ -963,7 +963,8 @@
     "autofill_hint_person": "Pull details from the linked contact. You approve every field before it is applied.",
     "resident_no_edit_hint": "Edit the number in the General section.",
     "label_resident_no": "Resident registration number",
-    "hint_resident_no": "Printed in the tenant block of the lease agreement. Shown masked on screen."
+    "hint_resident_no": "Printed in the tenant block of the lease agreement. Shown masked on screen.",
+    "tab_rental_business": "Rental business"
   },
   "lead": {
     "new": "New Lead",
@@ -1490,7 +1491,12 @@
     "toast_expired": "Marked as expired",
     "toast_deleted": "Contract deleted",
     "toast_action_failed": "That did not go through",
-    "channel_fee_reset": "Use the suggested {{amount}}"
+    "channel_fee_reset": "Use the suggested {{amount}}",
+    "label_rental_business": "Rental business registration no.",
+    "rental_business_none": "Not selected",
+    "hint_rental_business": "The number you pick is printed in the landlord (갑) block of the agreement.",
+    "hint_rental_business_empty": "This landlord account has no registration on file. Add one under Accounts → Rental business.",
+    "hint_rental_business_no_landlord": "Pick a landlord account first."
   },
   "invoice": {
     "new": "New Invoice",
@@ -5688,12 +5694,11 @@
   "settings_org": {
     "page_subtitle": "Company profile and contact details",
     "tab_info": "Company info",
-    "tab_documents": "Company documents",
-    "tab_rental_business": "Rental business"
+    "tab_documents": "Company documents"
   },
   "settings_rental_biz": {
     "cert_title": "Rental business registration certificate",
-    "cert_subtitle": "Details printed on the certificate issued under the Special Act on Private Rental Housing (Form 3).",
+    "cert_subtitle": "As written on the registration certificate (Form 3, Special Act on Private Rental Housing). An account may hold more than one.",
     "registration_no": "Registration no.",
     "first_registered_on": "First registered on",
     "operator_name": "Rental business operator",
@@ -5745,7 +5750,16 @@
     "import_result": "{{imported}} imported, {{linked}} linked to spaces",
     "import_failed": "Import failed",
     "space_card_title": "Rental business registration",
-    "space_card_link": "Open the registration certificate"
+    "space_card_link": "Open the landlord's rental business registration",
+    "add_registration": "Add registration",
+    "no_registrations": "No rental business registration on file",
+    "no_reg_no": "No registration number",
+    "unit_count": "{{count}} units",
+    "unassigned_title": "Unassigned registration",
+    "unassigned_help": "Moved over from company settings. Claim it if it belongs to this account.",
+    "claim": "Claim for this account",
+    "claimed": "Registration moved to this account",
+    "confirm_delete_registration": "Delete this registration and the units listed on it?"
   },
   "settings_org_docs": {
     "description": "Key company paperwork — business registration certificate, bank passbook copy and the like. Files are stored privately and shared through short-lived links; only Admin roles can see this tab.",
