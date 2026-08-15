@@ -45,6 +45,8 @@ const RegistrationBody = z.object({
   mobile: z.string().nullish(),
   /** 등록증 발급 관청 (예: 여수시장) */
   issuing_authority: z.string().nullish(),
+  /** 증명일(발급일) YYYY-MM-DD — 등록증 아래쪽 "…증명합니다" 날짜. 최초등록일과 다르다. */
+  issued_on: z.string().nullish(),
   note: z.string().optional(),
 }).strip();
 

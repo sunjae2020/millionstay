@@ -45,6 +45,7 @@ export interface RentalBusinessRegistrationRow {
   phone: string | null;
   mobile: string | null;
   issuing_authority: string | null;
+  issued_on: string | null;
   note: string;
   unit_count?: number;
 }
@@ -78,7 +79,7 @@ function regDefaults(accountId: number, operatorName: string): RegistrationDraft
     account_id: accountId,
     registration_no: "", first_registered_on: "", operator_name: operatorName, operator_reg_no: "",
     foreigner_reg_no: "", nationality: "", visa_status: "", visa_period: "",
-    address: "", phone: "", mobile: "", issuing_authority: "", note: "",
+    address: "", phone: "", mobile: "", issuing_authority: "", issued_on: "", note: "",
   };
 }
 
@@ -214,7 +215,12 @@ function RegistrationCard({ registration, accountId, accountName, onChanged, onD
             {[
               registration.operator_name,
               registration.issuing_authority,
-              registration.first_registered_on ? formatDate(registration.first_registered_on) : null,
+              registration.first_registered_on
+                ? t("settings_rental_biz.first_registered_short", { date: formatDate(registration.first_registered_on) })
+                : null,
+              registration.issued_on
+                ? t("settings_rental_biz.issued_short", { date: formatDate(registration.issued_on) })
+                : null,
             ].filter(Boolean).join(" · ") || "—"}
           </p>
         </div>
@@ -328,6 +334,10 @@ function RegistrationForm({ registration, accountId, accountName, onDone, onCanc
         <div className="space-y-1.5">
           <Label>{t("settings_rental_biz.issuing_authority")}</Label>
           <Input {...register("issuing_authority")} placeholder={t("settings_rental_biz.issuing_authority_ph")} />
+        </div>
+        <div className="space-y-1.5">
+          <Label>{t("settings_rental_biz.issued_on")}</Label>
+          <Input {...register("issued_on")} type="date" />
         </div>
         <div className="space-y-1.5">
           <Label>{t("settings_rental_biz.nationality")}</Label>
@@ -466,7 +476,7 @@ function RegistrationUnits({ registrationId }: { registrationId: number }) {
         <ExportableTable fileName="rental-business-units" className="w-full text-sm">
           <thead className="bg-gray-50 border-b">
             <tr>
-              {["unit_no", "acquisition_type", "housing_kind", "housing_type", "area", "registered_on", "lease_started_on", "history", "space"].map((h) => (
+              {["building_address", "unit_no", "acquisition_type", "housing_kind", "housing_type", "area", "registered_on", "lease_started_on", "history", "space"].map((h) => (
                 <th key={h} className="text-left px-3 py-2.5 font-medium text-muted-foreground whitespace-nowrap">
                   {t(`settings_rental_biz.col_${h}`)}
                 </th>
@@ -476,9 +486,9 @@ function RegistrationUnits({ registrationId }: { registrationId: number }) {
           </thead>
           <tbody>
             {isLoading ? (
-              <tr><td colSpan={10} className="text-center py-8 text-muted-foreground">{t("common.loading")}</td></tr>
+              <tr><td colSpan={11} className="text-center py-8 text-muted-foreground">{t("common.loading")}</td></tr>
             ) : rows.length === 0 ? (
-              <tr><td colSpan={10} className="text-center py-8 text-muted-foreground">{t("settings_rental_biz.no_units")}</td></tr>
+              <tr><td colSpan={11} className="text-center py-8 text-muted-foreground">{t("settings_rental_biz.no_units")}</td></tr>
             ) : rows.map((u) => (
               <UnitRow
                 key={u.id}
@@ -489,6 +499,15 @@ function RegistrationUnits({ registrationId }: { registrationId: number }) {
               />
             ))}
           </tbody>
+          {rows.length > 0 && (
+            <tfoot className="border-t bg-gray-50 font-medium">
+              <tr>
+                <td className="px-3 py-2">{t("settings_rental_biz.total_row")}</td>
+                <td className="px-3 py-2 whitespace-nowrap">{rows.length}</td>
+                <td className="px-3 py-2" colSpan={9} />
+              </tr>
+            </tfoot>
+          )}
         </ExportableTable>
       </div>
 
@@ -511,7 +530,7 @@ function UnitRow({ row, registrationId, onChanged, onDelete }: {
   if (editing) {
     return (
       <tr>
-        <td colSpan={10} className="p-3 bg-gray-50">
+        <td colSpan={11} className="p-3 bg-gray-50">
           <UnitForm
             row={row}
             registrationId={registrationId}
@@ -525,6 +544,7 @@ function UnitRow({ row, registrationId, onChanged, onDelete }: {
 
   return (
     <tr className="border-b last:border-0 hover:bg-gray-50/60">
+      <td className="px-3 py-2 min-w-[14rem]">{row.building_address || "—"}</td>
       <td className="px-3 py-2 font-medium whitespace-nowrap">{row.unit_no}</td>
       <td className="px-3 py-2 whitespace-nowrap">{row.acquisition_type ?? "—"}</td>
       <td className="px-3 py-2">{row.housing_kind ?? "—"}</td>
@@ -654,6 +674,8 @@ function UnitForm({ row, registrationId, onDone, onCancel }: {
           <datalist id="rb-histories">
             <option value="최초" />
             <option value="변경" />
+            <option value="양수" />
+            <option value="양도" />
             <option value="말소" />
           </datalist>
         </div>
@@ -681,35 +703,76 @@ function UnitForm({ row, registrationId, onDone, onCancel }: {
 }
 
 /**
- * 등록증 표 붙여넣기. 관청 문서를 그대로 긁어 오면 열 순서가
- * 호수 / 주택구분 / 주택종류 / 주택유형 / 전용면적 / 주택등록일 / 임대개시일 / 등록이력
- * 이라 그 순서대로 읽는다. 탭·쉼표·2칸 이상 공백 모두 열 구분자로 본다.
+ * 등록증 표 붙여넣기.
+ *
+ * 관청 문서의 열 순서는
+ * 건물 주소 / 호·실번호 또는 층 / 주택구분 / 주택종류 / 주택유형 / 전용면적 /
+ * 주택등록일 / 임대개시일 / 등록이력
+ * 인데, 실제로 긁어 오면 건물 주소가 두 줄로 접혀 있거나 임대개시일이 비어 칸이
+ * 밀리는 일이 잦다. 그래서 자리를 세지 않고 칸의 생김새로 알아본다 — 먼저 호수
+ * 칸을 찾아 그 앞을 건물 주소로 보고, 뒤는 날짜·매입/건설·㎡·등록이력 같은 표시로
+ * 갈래를 나눈다. 건물 주소가 아예 없는 줄은 다이얼로그에 적어 둔 주소를 쓴다.
  */
+const UNIT_NO_RE = /^\d{1,5}\s*(호|호실)?$/;
+const FLOOR_RE = /^(지하\s*)?\d{1,3}\s*층$/;
+const HISTORY_RE = /^(최초|변경|양수|양도|말소|자진말소)$/;
+const ACQUISITION_RE = /^(매입|건설)$/;
+
 function parsePastedRows(text: string, address: string): UnitDraft[] {
   const out: UnitDraft[] = [];
   for (const line of text.split(/\r?\n/)) {
     const trimmed = line.trim();
     if (!trimmed) continue;
-    const cells = trimmed.split(/\t|,|\s{2,}/).map((c) => c.trim()).filter(Boolean);
+    // 탭·2칸 이상 공백을 먼저 본다. 그것으로 갈리지 않을 때만 쉼표를 쓴다 —
+    // 등록증 주소에는 "(연등동, 메트하임 여수)" 처럼 쉼표가 들어 있기 때문이다.
+    let cells = trimmed.split(/\t|\s{2,}/).map((c) => c.trim()).filter(Boolean);
+    if (cells.length === 1) cells = trimmed.split(",").map((c) => c.trim()).filter(Boolean);
     if (!cells.length) continue;
-    // 머리글 줄(호수 / 주택구분 …)은 건너뛴다.
-    if (/^(호수|호\/실|호실|번호|unit)/i.test(cells[0]!)) continue;
-    // 첫 칸에 숫자가 없으면 세대 줄이 아니다 — 등록증 안내문·쪽번호를 걸러낸다.
-    if (!/\d/.test(cells[0]!)) continue;
-    const [unit_no, acquisition_type, housing_kind, housing_type, area, registered_on, lease_started_on, history] = cells;
-    out.push({
-      unit_no: unit_no!,
-      building_address: address,
-      acquisition_type: acquisition_type ?? null,
-      housing_kind: housing_kind ?? null,
-      housing_type: housing_type ?? null,
-      exclusive_area_label: area ?? null,
-      registered_on: normaliseDate(registered_on),
-      lease_started_on: normaliseDate(lease_started_on),
-      registration_history: history ?? null,
+    // 머리글 줄(건물 주소 / 호수 …)과 합계·쪽번호 줄은 건너뛴다.
+    if (/^(건물|호수|호\/실|호실|번호|소재지|합계|unit)/i.test(cells[0]!)) continue;
+
+    const unitIdx = cells.findIndex((c) => UNIT_NO_RE.test(c) || FLOOR_RE.test(c));
+    // 호·실번호 칸이 비어 있고 주소 칸 안에 "412호"가 적혀 있는 등록증도 있다.
+    const inlineUnit = unitIdx < 0 ? cells[0]!.match(/(\d{1,5}\s*호)/) : null;
+    if (unitIdx < 0 && !inlineUnit) continue;
+
+    const head = (unitIdx < 0 ? cells[0]! : cells.slice(0, unitIdx).join(" ")).trim();
+    const rest = unitIdx < 0 ? cells.slice(1) : cells.slice(unitIdx + 1);
+
+    const draft: UnitDraft = {
+      unit_no: (unitIdx < 0 ? inlineUnit![1]!.replace(/\s+/g, "") : cells[unitIdx]!),
+      building_address: head || address,
+      acquisition_type: null,
+      housing_kind: null,
+      housing_type: null,
+      exclusive_area_label: null,
+      registered_on: null,
+      lease_started_on: null,
+      registration_history: null,
       space_id: null,
       note: "",
-    });
+    };
+
+    for (const cell of rest) {
+      if (ACQUISITION_RE.test(cell)) { draft.acquisition_type = cell; continue; }
+      if (HISTORY_RE.test(cell)) { draft.registration_history = cell; continue; }
+      if (/㎡|m2|m²/i.test(cell)) {
+        draft.exclusive_area_label = draft.exclusive_area_label ? `${draft.exclusive_area_label} ${cell}` : cell;
+        continue;
+      }
+      const date = normaliseDate(cell);
+      if (date) {
+        // 앞의 날짜가 주택등록일, 뒤가 임대개시일이다. 임대개시일이 빈 줄이 많아
+        // 자리로 세지 않고 나온 순서대로 채운다.
+        if (!draft.registered_on) draft.registered_on = date;
+        else if (!draft.lease_started_on) draft.lease_started_on = date;
+        continue;
+      }
+      if (/임대주택/.test(cell)) { draft.housing_kind = cell; continue; }
+      if (!draft.housing_type) draft.housing_type = cell;
+    }
+
+    out.push(draft);
   }
   return out;
 }
@@ -777,6 +840,7 @@ function ImportDialog({ registrationId, open, onOpenChange, onImported }: {
           <div className="space-y-1.5">
             <Label>{t("settings_rental_biz.import_address")}</Label>
             <Input value={address} onChange={(e) => setAddress(e.target.value)} placeholder="전라남도 여수시 좌수영로 101 (연등동, 메트하임 여수)" />
+            <p className="text-xs text-muted-foreground">{t("settings_rental_biz.import_address_help")}</p>
           </div>
           <textarea
             value={text}
@@ -784,7 +848,7 @@ function ImportDialog({ registrationId, open, onOpenChange, onImported }: {
             rows={10}
             spellCheck={false}
             className="w-full rounded-md border p-2 font-mono text-xs"
-            placeholder={"1001호\t매입\t장기일반민간임대주택(10년)\t아파트(도시형생활주택)\t40㎡이하\t2026-04-27\t\t최초"}
+            placeholder={"전라남도 여수시 좌수영로 101 (연등동, 메트하임 여수)\t1001호\t매입\t장기일반민간임대주택(10년)\t아파트(도시형생활주택)\t40㎡이하\t2026-04-27\t\t최초"}
           />
           <label className="flex items-center gap-2 text-sm">
             <input type="checkbox" checked={replace} onChange={(e) => setReplace(e.target.checked)} />

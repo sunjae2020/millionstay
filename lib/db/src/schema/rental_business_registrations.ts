@@ -30,6 +30,10 @@ export const rentalBusinessRegistrationsTable = pgTable("rental_business_registr
   phone: text("phone"),
   mobile: text("mobile"),
   issuing_authority: text("issuing_authority"), // 발급 관청 (예: 여수시장)
+  // 등록증 아래쪽 "위와 같이 등록되었음을 증명합니다 — 2025년 07월 23일"의 증명일.
+  // 최초등록일과 다르다(최초등록일은 사업자가 처음 등록한 날, 이 날짜는 이 등록증
+  // 한 벌을 관청이 떼어 준 날이라 재발급마다 바뀐다).
+  issued_on: text("issued_on"), // 증명일(발급일) YYYY-MM-DD
   note: text("note").notNull().default(""),
   deleted_at: timestamp("deleted_at", { withTimezone: true }),
   created_at: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
