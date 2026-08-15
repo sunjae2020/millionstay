@@ -268,14 +268,12 @@ function renderParty(mark: string, p: LeaseParty, isLandlord: boolean): string {
       </tr>
       ${isLandlord ? `<tr>
         <th style="${HEAD}">${escapeHtml(idLabel)}</th>
-        <td style="${CELL}" colspan="3">${escapeHtml(p.business_no ?? "")}</td>
-      </tr>
-      <tr>
-        <!-- 표는 table-layout:fixed 라 라벨 칸(18%)이 "임대사업자등록번호" 열 글자보다
-             좁다. 이 칸만 좌우 여백을 줄여 라벨이 두 줄로 접히지 않게 하고, 값은
-             칸을 끝까지 써서 등록번호가 통째로 한 줄에 들어가게 한다. -->
+        <td style="${CELL}">${escapeHtml(p.business_no ?? "")}</td>
+        <!-- 머리줄이 colspan=4 라 네 칸은 실제로 같은 폭(약 209px)으로 잘린다 —
+             위 행들의 width 는 참고값일 뿐이다. "임대사업자등록번호" 아홉 글자는
+             그 폭에 한 줄로 들어가지만, 여백을 줄여 여유를 둔다. -->
         <th style="${HEAD}padding-left:4px;padding-right:4px;">임대사업자등록번호</th>
-        <td style="${CELL}" colspan="3">${dash(p.rental_business_no)}</td>
+        <td style="${CELL}">${dash(p.rental_business_no)}</td>
       </tr>` : ""}
     </table>`;
 }
