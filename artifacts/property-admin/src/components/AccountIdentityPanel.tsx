@@ -39,6 +39,7 @@ const FIELD_LABELS: Array<[string, string]> = [
   ["address_postcode", "account.label_postcode"],
   ["address_country", "account.label_country"],
   ["biz_registration_no", "account.label_biz_no"],
+  ["corp_registration_no", "account.label_corp_no"],
   ["resident_no", "account.label_resident_no"],
   ["ceo_name", "account.label_ceo"],
   ["description", "account.label_notes"],
@@ -48,7 +49,7 @@ const FIELD_LABELS: Array<[string, string]> = [
  * 주체 구분에 따라 존재하지 않는 칸은 검토 팝업에도 올리지 않는다 — 개인 계정에
  * 회사 웹사이트를, 회사 계정에 주민등록번호를 채워 넣을 일은 없다.
  */
-const COMPANY_ONLY_FIELDS = new Set(["website_url", "phone2", "biz_registration_no", "ceo_name"]);
+const COMPANY_ONLY_FIELDS = new Set(["website_url", "phone2", "biz_registration_no", "corp_registration_no", "ceo_name"]);
 const INDIVIDUAL_ONLY_FIELDS = new Set(["resident_no"]);
 
 /** "900101-1234567" → "900101-1******". 뒷자리는 성별 한 자리만 남긴다. */

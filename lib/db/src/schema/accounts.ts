@@ -39,6 +39,9 @@ export const accountsTable = pgTable("accounts", {
   // Korean company registration. `biz_verify_status` is the NTS 사업자등록 상태
   // (Valid | Closed | Suspended | NotFound) recorded at `biz_verified_at`.
   biz_registration_no: text("biz_registration_no"),
+  // 법인등록번호 — 사업자등록번호와 별개의 13자리 등기 번호(135811-0244079).
+  // 법인 임대인의 계약서 당사자 표에 사업자등록번호와 나란히 찍힌다.
+  corp_registration_no: text("corp_registration_no"),
   biz_verify_status: text("biz_verify_status"),
   biz_verified_at: timestamp("biz_verified_at", { withTimezone: true }),
   ceo_name: text("ceo_name"),

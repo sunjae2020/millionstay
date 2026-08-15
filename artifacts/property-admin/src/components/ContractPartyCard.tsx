@@ -28,7 +28,7 @@ import { formatPostalAddress, orderFallbackFromLang, type AddressLang } from "@w
 const EDITABLE_FIELDS = [
   "name", "account_email", "phone1", "phone2",
   "address_line1", "address_suburb", "address_state", "address_postcode", "address_country",
-  "biz_registration_no", "ceo_name", "resident_no",
+  "biz_registration_no", "corp_registration_no", "ceo_name", "resident_no",
 ] as const;
 type EditableField = (typeof EDITABLE_FIELDS)[number];
 
@@ -222,6 +222,7 @@ export function ContractPartyCard({
             {variant === "landlord" ? (
               <div className="grid grid-cols-2 gap-3">
                 {field("biz_registration_no", t("account.label_biz_no"), "000-00-00000")}
+                {field("corp_registration_no", t("account.label_corp_no"), "000000-0000000")}
                 {field("ceo_name", t("account.label_ceo"))}
               </div>
             ) : (

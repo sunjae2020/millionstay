@@ -976,6 +976,7 @@ export async function buildContractDocInput(
       phone: pickText(a.phone1, a.phone2, contact?.mobile_number, contact?.office_number),
       email: pickText(a.account_email, contact?.email),
       business_no: pickText(a.biz_registration_no),
+      corporate_no: pickText(a.corp_registration_no),
       // 주민등록번호는 사람에게 붙는 값이라 원본은 연락처에 있다.
       resident_no: pickText(a.resident_no, contact?.resident_no),
     };
@@ -1053,7 +1054,8 @@ export async function buildContractDocInput(
         email: landlordEmail,
         business_no: landlordParty?.business_no || stored.biz_no || stored.abn || null,
         // 법인등록번호는 계약서 당사자 표에 싣지 않는다(사업자등록번호로 충분하다).
-        corporate_no: null,
+        // 임대인 계정에 적힌 법인등록번호가 먼저고, 없으면 자사 회사 정보로 떨어진다.
+        corporate_no: landlordParty?.corporate_no || stored.corp_no || null,
       },
       tenant: {
         name: (c as any).tenant_name ?? null,

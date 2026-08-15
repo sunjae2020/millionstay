@@ -767,6 +767,8 @@
     "label_phone_1": "电话 1",
     "label_phone_2": "电话 2",
     "label_biz_no": "营业执照号",
+    "label_corp_no": "法人登记号",
+    "hint_corp_no": "印在租赁合同出租人栏中，与营业执照号并列显示。",
     "label_ceo": "法定代表人",
     "label_logo_url": "Logo 网址",
     "label_department": "部门",

@@ -130,7 +130,7 @@ function clearOtherKindFields<T extends { entity_kind?: string | null }>(data: T
     return {
       ...data,
       website_url: null, phone2: null, ceo_name: null,
-      biz_registration_no: null, biz_verify_status: null, biz_verified_at: null,
+      biz_registration_no: null, corp_registration_no: null, biz_verify_status: null, biz_verified_at: null,
     };
   }
   if (data.entity_kind === "Company") return { ...data, resident_no: null };

@@ -765,6 +765,8 @@
     "label_phone_1": "โทรศัพท์ 1",
     "label_phone_2": "โทรศัพท์ 2",
     "label_biz_no": "เลขทะเบียนธุรกิจ",
+    "label_corp_no": "เลขทะเบียนนิติบุคคล",
+    "hint_corp_no": "พิมพ์ในช่องผู้ให้เช่าของสัญญาเช่า ถัดจากเลขทะเบียนธุรกิจ",
     "label_ceo": "ผู้แทน",
     "label_logo_url": "URL โลโก้",
     "label_department": "แผนก",

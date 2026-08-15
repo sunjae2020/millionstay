@@ -783,6 +783,8 @@
     "label_phone_1": "Phone 1",
     "label_phone_2": "Phone 2",
     "label_biz_no": "Business Registration No.",
+    "label_corp_no": "Corporate Registration No.",
+    "hint_corp_no": "Printed next to the business registration number in the landlord block of the lease agreement.",
     "label_ceo": "Representative",
     "label_logo_url": "Logo URL",
     "label_department": "Department",

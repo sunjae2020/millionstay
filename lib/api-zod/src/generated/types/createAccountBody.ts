@@ -59,6 +59,7 @@ export interface CreateAccountBody {
   logo_url?: string | null;
   /** @nullable */
   biz_registration_no?: string | null;
+  corp_registration_no?: string | null;
   /** @nullable */
   biz_verify_status?: string | null;
   /** @nullable */

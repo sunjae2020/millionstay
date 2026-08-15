@@ -4173,6 +4173,8 @@ components:
           type: ["string", "null"]
         biz_registration_no:
           type: ["string", "null"]
+        corp_registration_no:
+          type: ["string", "null"]
         biz_verify_status:
           type: ["string", "null"]
         biz_verified_at:
@@ -4256,6 +4258,8 @@ components:
           type: ["string", "null"]
         biz_registration_no:
           type: ["string", "null"]
+        corp_registration_no:
+          type: ["string", "null"]
         biz_verify_status:
           type: ["string", "null"]
         biz_verified_at:
@@ -4336,6 +4340,8 @@ components:
         logo_url:
           type: ["string", "null"]
         biz_registration_no:
+          type: ["string", "null"]
+        corp_registration_no:
           type: ["string", "null"]
         biz_verify_status:
           type: ["string", "null"]

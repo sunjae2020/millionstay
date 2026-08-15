@@ -759,6 +759,8 @@
     "label_phone_1": "Điện thoại 1",
     "label_phone_2": "Điện thoại 2",
     "label_biz_no": "Mã số đăng ký kinh doanh",
+    "label_corp_no": "Mã số đăng ký pháp nhân",
+    "hint_corp_no": "Được in ở ô bên cho thuê của hợp đồng thuê, cạnh mã số đăng ký kinh doanh.",
     "label_ceo": "Người đại diện",
     "label_logo_url": "URL logo",
     "label_department": "Phòng ban",

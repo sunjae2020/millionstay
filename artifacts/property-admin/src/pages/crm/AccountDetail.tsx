@@ -103,6 +103,7 @@ interface AccountForm {
   description: string;
   logo_url: string;
   biz_registration_no: string;
+  corp_registration_no: string;
   ceo_name: string;
   resident_no: string;
   manual_input: boolean;
@@ -290,7 +291,7 @@ export default function AccountDetail() {
       secondary_address_line1: "", secondary_address_suburb: "", secondary_address_state: "",
       secondary_address_postcode: "", secondary_address_country: "",
       payment_info_id: null, default_commission_id: null, default_currency: brandCurrency,
-      parent_account_id: null, description: "", logo_url: "", biz_registration_no: "", ceo_name: "",
+      parent_account_id: null, description: "", logo_url: "", biz_registration_no: "", corp_registration_no: "", ceo_name: "",
       resident_no: "",
       manual_input: false, status: "Active",
     },
@@ -337,6 +338,7 @@ export default function AccountDetail() {
         description: account.description ?? "",
         logo_url: (account as any).logo_url ?? "",
         biz_registration_no: (account as any).biz_registration_no ?? "",
+        corp_registration_no: (account as any).corp_registration_no ?? "",
         ceo_name: (account as any).ceo_name ?? "",
         resident_no: (account as any).resident_no ?? "",
         manual_input: account.manual_input ?? false,
@@ -401,6 +403,7 @@ export default function AccountDetail() {
       description: values.description || null,
       logo_url: values.logo_url || null,
       biz_registration_no: individual ? null : (values.biz_registration_no || null),
+      corp_registration_no: individual ? null : (values.corp_registration_no || null),
       ceo_name: individual ? null : (values.ceo_name || null),
       resident_no: individual ? (values.resident_no || null) : null,
       // Verification only means anything alongside the number it was run on —
@@ -652,6 +655,11 @@ export default function AccountDetail() {
               <div className="grid gap-1.5">
                 <Label>{t('account.label_ceo')}</Label>
                 <Input {...register("ceo_name")} />
+              </div>
+              <div className="grid gap-1.5">
+                <Label>{t('account.label_corp_no')}</Label>
+                <Input {...register("corp_registration_no")} placeholder="000000-0000000" />
+                <p className="text-xs text-muted-foreground">{t('account.hint_corp_no')}</p>
               </div>
             </div>
           )}

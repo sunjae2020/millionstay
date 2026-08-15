@@ -766,6 +766,8 @@
     "label_phone_1": "電話 1",
     "label_phone_2": "電話 2",
     "label_biz_no": "事業者登録番号",
+    "label_corp_no": "法人登録番号",
+    "hint_corp_no": "賃貸借契約書の賃貸人欄に事業者登録番号と並べて印字されます。",
     "label_ceo": "代表者",
     "label_logo_url": "ロゴ URL",
     "label_department": "部署",
