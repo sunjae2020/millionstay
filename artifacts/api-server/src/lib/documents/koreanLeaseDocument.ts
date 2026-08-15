@@ -40,7 +40,7 @@ export interface LeaseParty {
   email?: string | null;
   /** 사업자등록번호 (landlord) — omitted when blank. */
   business_no?: string | null;
-  /** 법인등록번호 (landlord) — omitted when blank. */
+  /** 법인등록번호 (landlord) — 임대인(갑) 표에서 E-mail 자리에 인쇄된다. */
   corporate_no?: string | null;
   /** 주민등록번호 (tenant) — omitted when blank. Never derived automatically. */
   resident_no?: string | null;
@@ -255,13 +255,9 @@ function renderParty(mark: string, p: LeaseParty, isLandlord: boolean): string {
       <tr>
         <th style="${HEAD}">${escapeHtml(idLabel)}</th>
         <td style="${CELL}">${escapeHtml(idValue ?? "")}</td>
-        <th style="${HEAD}">E-mail</th>
-        <td style="${CELL}">${escapeHtml(p.email ?? "")}</td>
+        <th style="${HEAD}">${isLandlord ? "법인등록번호" : "E-mail"}</th>
+        <td style="${CELL}">${escapeHtml((isLandlord ? p.corporate_no : p.email) ?? "")}</td>
       </tr>
-      ${isLandlord && p.corporate_no ? `<tr>
-        <th style="${HEAD}">법인등록번호</th>
-        <td style="${CELL}" colspan="3">${escapeHtml(p.corporate_no)}</td>
-      </tr>` : ""}
     </table>`;
 }
 

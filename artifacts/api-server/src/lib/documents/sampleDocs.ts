@@ -16,7 +16,7 @@ import { buildKoreanLeaseHtml, leaseDate, type KoreanLeaseDocInput } from "./kor
 import { formatDocMoney } from "./theme.js";
 import { buildApplicationHtml, placementToDoc } from "./applicationPdf.js";
 import { buildMoveOutSettlementHtml, type MoveOutDocInput } from "./moveOutSettlementDocument.js";
-import { resolveCompanyInfo } from "./companyInfo.js";
+import { readStoredCompanyInfo, resolveCompanyInfo } from "./companyInfo.js";
 import { DEFAULT_CURRENCY } from "../currency.js";
 import { normalizeLang, type DocLang } from "./i18n.js";
 
@@ -261,7 +261,7 @@ export async function renderSampleDocumentHtml(key: string, bodyHtml: string, lo
         phone: company.phone,
         email: company.email,
         business_no: company.abn,
-        corporate_no: null,
+        corporate_no: (await readStoredCompanyInfo()).corp_no ?? null,
       },
       tenant: {
         name: LEASE.party, address: LEASE.tenantAddr,
