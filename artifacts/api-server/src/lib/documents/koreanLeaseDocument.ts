@@ -239,6 +239,9 @@ function renderTermsTable(d: KoreanLeaseDocInput, lang: DocLang): string {
 function renderParty(mark: string, p: LeaseParty, isLandlord: boolean): string {
   const idLabel = isLandlord ? "사업자등록번호" : "주민등록번호";
   const idValue = isLandlord ? p.business_no : p.resident_no;
+  // 이메일·임대사업자등록번호는 비어 있으면 빈칸이 아니라 "-" 로 낸다 — 적을 것이
+  // 없는 것과 적기를 빠뜨린 것을 서명하는 사람이 구분할 수 있어야 한다.
+  const dash = (v: string | null | undefined) => escapeHtml(v?.trim() ? v : "-");
   return `<table style="${TABLE}margin-bottom:10px;">
       <tr>
         <th style="${HEAD}text-align:left;padding:7px 10px;font-size:12.5px;letter-spacing:0.04em;" colspan="4">${escapeHtml(mark)}</th>
@@ -258,16 +261,21 @@ function renderParty(mark: string, p: LeaseParty, isLandlord: boolean): string {
         <td style="${CELL}width:34%;">${escapeHtml(p.phone ?? "")}</td>
       </tr>
       <tr>
-        <th style="${HEAD}">${escapeHtml(idLabel)}</th>
-        <td style="${CELL}">${escapeHtml(idValue ?? "")}</td>
-        <th style="${HEAD}">${isLandlord ? "법인등록번호" : "E-mail"}</th>
-        <td style="${CELL}">${escapeHtml((isLandlord ? p.corporate_no : p.email) ?? "")}</td>
+        <th style="${HEAD}">${isLandlord ? "이메일" : escapeHtml(idLabel)}</th>
+        <td style="${CELL}">${isLandlord ? dash(p.email) : escapeHtml(idValue ?? "")}</td>
+        <th style="${HEAD}">${isLandlord ? "법인등록번호" : "이메일"}</th>
+        <td style="${CELL}">${isLandlord ? escapeHtml(p.corporate_no ?? "") : dash(p.email)}</td>
       </tr>
       ${isLandlord ? `<tr>
-        <th style="${HEAD}">E-mail</th>
-        <td style="${CELL}">${escapeHtml(p.email ?? "")}</td>
-        <th style="${HEAD}">임대사업자<br />등록번호</th>
-        <td style="${CELL}">${escapeHtml(p.rental_business_no ?? "")}</td>
+        <th style="${HEAD}">${escapeHtml(idLabel)}</th>
+        <td style="${CELL}" colspan="3">${escapeHtml(p.business_no ?? "")}</td>
+      </tr>
+      <tr>
+        <!-- 표는 table-layout:fixed 라 라벨 칸(18%)이 "임대사업자등록번호" 열 글자보다
+             좁다. 이 칸만 좌우 여백을 줄여 라벨이 두 줄로 접히지 않게 하고, 값은
+             칸을 끝까지 써서 등록번호가 통째로 한 줄에 들어가게 한다. -->
+        <th style="${HEAD}padding-left:4px;padding-right:4px;">임대사업자등록번호</th>
+        <td style="${CELL}" colspan="3">${dash(p.rental_business_no)}</td>
       </tr>` : ""}
     </table>`;
 }
