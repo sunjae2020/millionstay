@@ -1,36 +1,41 @@
 /**
  * 발행 문서 파일명 — 단일 규칙, 단일 구현.
  *
- *     [고객ID]-[대상][-발행사]-[서류종류]-[발행일 YYYYMMDD][순번]
+ *     [임차인이름]-[서류이름]_[발행일 YYYYMMDD][-v사본번호]
  *
- *     MH2607C001-김용식-계약서-20260803A.pdf
- *     MH2607B012-홍길동_재원산업-계약서-20260803A.pdf
+ *     이아람-민간임대주택 표준임대차계약서 (등록임대사업자)_20260816.pdf
+ *     이아람-민간임대주택 표준임대차계약서 (등록임대사업자)_20260816-v2.pdf
+ *     홍길동_재원산업-청구서_20260816.pdf
  *
- * 서류종류는 **한글**이다 — 폴더를 훑는 사람이 읽는 값이라 코드보다 이름이 낫다.
- * 3자리 코드(`DOC_CODES`)는 내부 키로 남아 `document_file_names.doc_code`와 옛
- * 파일명 해석에 쓰인다. 구문은 필드 간 `-`, 필드 내부 `_`, 공백 없음.
- * 전체 규칙은 docs/DOCUMENT_NAMING_RULE.md 를 보라.
+ * 이름은 문서를 받는 **거래 상대(임차인·고객)**다. 회사가 아니라 상대를 앞에
+ * 두는 이유는 폴더를 이름순으로 정렬했을 때 한 사람의 서류가 붙어 나오기
+ * 때문이다. 이름이 없는 문서(공실 견적, 건물 등기부, 서식 샘플)는 계정명·
+ * 건물명 등 대상명으로 대체하고, 그것도 없으면 `미지정`을 쓴다.
  *
- * 고객ID는 거래 상대(계정·연락처)에게 한 번 부여되는 번호다(partyCode.ts).
- * 상대를 특정할 수 없는 문서(공실 견적, 서식 샘플)는 이 필드가 빠진다.
+ * 서류이름은 **한글 정식 명칭**이다 — 폴더를 훑는 사람도, 받는 쪽(세입자·
+ * 집주인·파트너)도 그대로 이해한다. 공백과 괄호는 허용하고 `-`/`_`만 금지한다
+ * (둘 다 필드 구분자라서). 3자리 코드(`DOC_CODES`)는 내부 키로만 남아
+ * `document_file_names.doc_code`와 옛 파일명 해석에 쓰인다.
  *
- * 순번은 **사람 + 날짜** 기준으로 증가한다. 같은 사람에게 같은 날 계약서와
- * 청구서를 발행하면 `…계약서-20260803A`, `…청구서-20260803B`가 되어 문서 종류와
- * 무관하게 파일명이 겹치지 않는다. A…Z 다음은 A1…Z1 … A9…Z9로, 사람·일자당 260건.
- *
- * 이름이 없는 문서(회사 서류, 건물 등기부, 공실 견적 등)는 계정명·건물명 등
- * 대상명으로 대체하고, 그것도 없으면 `미지정`을 쓴다.
+ * 사본번호는 **이름 + 서류종류 + 날짜** 기준이다. 첫 발행본에는 표기가 없고
+ * 같은 날 같은 서류를 다시 뽑을 때부터 `-v2`, `-v3`이 붙는다. 같은 날 계약서와
+ * 청구서를 한 장씩 내면 서류종류가 다르므로 둘 다 표기가 없다.
  *
  * 파일명은 문서마다 **한 번만** 정해진다. PDF는 미리보기·다운로드·이메일마다
- * 다시 렌더되므로 매번 새 순번을 뽑으면 같은 청구서가 A였다가 B가 되어 버린다.
+ * 다시 렌더되므로 매번 새 번호를 뽑으면 같은 청구서가 v2였다가 v3이 되어 버린다.
  * 최초 발행 시 `document_file_names`에 기록하고 이후에는 읽어 쓴다.
  *
+ * 2026-08-16 이전에 발행된 이름(`MH2607C001-김용식-계약서-20260803A`,
+ * `CTR-김용식_20260803A`)은 그대로 남는다 — 소급 개명은 하지 않고 파서만 계속
+ * 읽는다. 고객ID(`party_codes`)는 파일명에서 빠졌지만 보관 폴더명으로는 계속
+ * 쓴다(`resolveDocFolder`).
+ *
+ * 전체 규칙은 docs/DOCUMENT_NAMING_RULE.md 를 보라.
+ *
  * 테넌트 스위치 (기본 전부 off — 켜는 인스턴스만 이름이 길어진다):
- *   PARTY_CODE_PREFIX=MH       고객ID 접두사 (미설정 시 MS).
- *   DOC_NAME_INCLUDE_ORG=1     거래처 상호를 담당자 이름과 **함께** 남긴다.
- *   DOC_NAME_INCLUDE_ISSUER=1  발행사 상호를 **상시** 붙인다. 고객ID 접두사가 이미
- *                              발행사를 가리키므로 보통은 끈다(중복).
- *   DOC_NAME_ISSUER_LABEL=…    발행사 표기를 짧게 덮어쓴다(미설정 시 조직 상호).
+ *   PARTY_CODE_PREFIX=MH       고객ID 접두사 (미설정 시 MS). 폴더명에만 쓰인다.
+ *   DOC_NAME_INCLUDE_ORG=1     거래처 상호를 담당자 이름과 **함께** 남긴다
+ *                              (`홍길동_재원산업`). 개인 임차인은 이름 하나로 접힌다.
  */
 import { db, documentFileNamesTable, accountsTable, contactsTable } from "@workspace/db";
 import { and, eq, sql } from "drizzle-orm";
@@ -81,6 +86,10 @@ export type DocKind = keyof typeof DOC_CODES;
  * 파일명은 사람이 읽는다. 폴더에서 `CTR`을 해독하는 것보다 `계약서`를 보는 편이
  * 빠르고, 받는 쪽(세입자·집주인·파트너)도 그대로 이해한다. 코드는 내부 키로만
  * 남는다 — 새 문서를 추가할 때 `DOC_CODES`와 여기 **둘 다** 등록한다.
+ *
+ * 여기 값은 종류별 **기본** 이름이다. 같은 종류 안에서 서식이 갈리는 문서
+ * (임대차 계약서 3종)는 `DOC_NAME_VARIANTS`에서 정식 명칭을 찾아 쓴다 —
+ * 파일명만 보고 어떤 서식으로 발행됐는지 알아야 하기 때문이다.
  */
 export const DOC_NAMES_KO: Record<DocKind, string> = {
   contract: "계약서",
@@ -89,7 +98,7 @@ export const DOC_NAMES_KO: Record<DocKind, string> = {
   receipt: "영수증",
   quote: "견적서",
   inspection: "세대점검표",
-  settlement: "정산서",
+  settlement: "퇴거 세대 확인서",
   application: "신청서",
   work_order: "작업지시서",
   brief: "서비스브리프",
@@ -98,33 +107,50 @@ export const DOC_NAMES_KO: Record<DocKind, string> = {
   other: "기타서류",
 };
 
-/** 파일명에 찍히는 서류 이름. */
-export function docTypeName(kind: DocKind): string {
-  return DOC_NAMES_KO[kind] ?? DOC_CODES[kind];
+/**
+ * 종류 안에서 서식이 갈리는 문서의 정식 명칭. 키는 라우트가 넘기는 `variant`
+ * 값과 같다 — 파일명과 사본번호 카운터가 같은 값을 보게 하려는 것이다.
+ *
+ * 법정 서식은 **고시된 이름 그대로** 적는다. 줄여 쓰면 어느 서식으로 발행했는지
+ * 파일명만 보고 가릴 수 없다.
+ */
+export const DOC_NAME_VARIANTS: Partial<Record<DocKind, Record<string, string>>> = {
+  contract: {
+    /** 국토부 별지 제24호서식 — 등록임대사업자 의무 서식. */
+    mlt_standard: "민간임대주택 표준임대차계약서 (등록임대사업자)",
+    /** 법무부·국토부 공동 주택임대차표준계약서. */
+    housing_standard: "주택임대차표준계약서",
+    /** 자체 서식. */
+    general: "임대차 계약서",
+  },
+};
+
+/**
+ * 파일명에 찍히는 서류 이름. `variant`가 정식 명칭을 가진 서식이면 그 이름을,
+ * 아니면 종류의 기본 이름을 쓴다.
+ */
+export function docTypeName(kind: DocKind, variant?: string | null): string {
+  const v = String(variant ?? "").trim();
+  const named = v ? DOC_NAME_VARIANTS[kind]?.[v] : undefined;
+  return named ?? DOC_NAMES_KO[kind] ?? DOC_CODES[kind];
 }
 
 /** 이름을 못 찾았을 때 파일명에 들어가는 값. */
 export const UNNAMED_PARTY = "미지정";
 
 const MAX_NAME_CHARS = 40;
-const LETTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-/** A…Z, A1…Z1, … A9…Z9 = 260. */
-const MAX_SEQ = LETTERS.length * 10;
+/** 서류이름은 법정 서식명이 길어서 이름 필드보다 여유를 준다. */
+const MAX_DOC_NAME_CHARS = 60;
 
 /**
- * 0 → A, 25 → Z, 26 → A1, 51 → Z1, … 259 → Z9.
+ * 0-based 사본번호 → 파일명 꼬리. 0 → `` (첫 발행본은 표기 없음), 1 → `-v2`,
+ * 2 → `-v3` …
  *
- * 260건을 넘기면 규칙이 표현할 수 있는 범위를 벗어나므로 `Z9-261`처럼 숫자를
- * 덧붙인다. 하루에 한 사람 앞으로 260건을 발행하는 일은 실무상 없지만, 파일명이
- * 조용히 중복되는 것보다는 낫다.
+ * 첫 사본에 `-v1`을 붙이지 않는 이유는 대부분의 문서가 하루 한 번만 발행되기
+ * 때문이다. 재발행이 예외인데 예외 아닌 쪽에 표시를 다는 것은 거꾸로다.
  */
-export function sequenceLabel(seq: number): string {
-  if (seq < MAX_SEQ) {
-    const letter = LETTERS[seq % LETTERS.length];
-    const digit = Math.floor(seq / LETTERS.length);
-    return digit === 0 ? letter : `${letter}${digit}`;
-  }
-  return `Z9-${seq + 1}`;
+export function versionLabel(seq: number): string {
+  return seq <= 0 ? "" : `-v${seq + 1}`;
 }
 
 /**
@@ -163,6 +189,21 @@ export function sanitizeNamePath(raw: string | null | undefined): string {
     .join("_");
 }
 
+/**
+ * 서류이름을 파일명에 넣을 수 있게 다듬는다.
+ *
+ * 이름 필드와 달리 **공백과 괄호는 살린다** — `민간임대주택 표준임대차계약서
+ * (등록임대사업자)`처럼 법정 서식명을 그대로 적는 것이 규칙의 요지다. 금지되는
+ * 것은 필드 구분자(`-`, `_`)와 파일 시스템이 싫어하는 문자뿐이다.
+ */
+export function sanitizeDocName(raw: string | null | undefined): string {
+  const cleaned = String(raw ?? "")
+    .replace(/[\\/:*?"<>|#%_\u0000-\u001f-]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+  return cleaned.slice(0, MAX_DOC_NAME_CHARS) || DOC_NAMES_KO.other;
+}
+
 /** 첫 번째로 비어 있지 않은 값. */
 function firstFilled(values: Array<string | null | undefined>): string | null {
   const hit = values.find((v) => String(v ?? "").trim().length > 0);
@@ -179,13 +220,9 @@ export function docNameIncludesOrg(): boolean {
   return envOn("DOC_NAME_INCLUDE_ORG");
 }
 
-/** 발행사 상호를 모든 문서명에 상시 붙이는 인스턴스인가 (Metheim=예). */
-export function docNameIncludesIssuer(): boolean {
-  return envOn("DOC_NAME_INCLUDE_ISSUER");
-}
-
 /**
- * 발행사(우리 회사) 상호. 문서마다 조직 설정을 읽으면 PDF 한 장에 DB 왕복이
+ * 발행사(우리 회사) 상호. 발행 문서명에서는 빠졌고(받는 쪽 이름만 쓴다) 리포트
+ * 대상 필드에만 남아 있다. 문서마다 조직 설정을 읽으면 PDF 한 장에 DB 왕복이
  * 늘어나므로 짧게 캐시한다 — 상호는 몇 달에 한 번 바뀌는 값이다.
  */
 let issuerCache: { at: number; label: string } | null = null;
@@ -254,9 +291,18 @@ export function composePartyLabel(person?: string | null, company?: string | nul
   return p || c || UNNAMED_PARTY;
 }
 
-/** 순번을 세는 기준 키 — 대소문자·공백 차이로 같은 사람이 갈리지 않게 한다. */
-function partyKeyOf(name: string): string {
-  return name.toLowerCase().normalize("NFC").slice(0, 128);
+/**
+ * 사본번호를 세는 기준 키 — **이름 + 서류종류**.
+ *
+ * 대소문자·공백 차이로 같은 사람이 갈리지 않게 정규화한다. 서류이름을 키에
+ * 넣는 이유는 사본번호가 종류별로 매겨지기 때문이다: 같은 날 계약서 한 장과
+ * 청구서 한 장을 내면 둘 다 첫 발행본이라 표기가 없어야 한다.
+ *
+ * (`document_file_names.party_key`는 이 키를 담는다 — 유니크 인덱스가
+ * `(party_key, issue_date, seq)`라서 키를 좁히는 것만으로 카운터가 갈라진다.)
+ */
+function versionKeyOf(partyName: string, docName: string): string {
+  return `${partyName}|${docName}`.toLowerCase().normalize("NFC").slice(0, 128);
 }
 
 /** 문서 발행일을 세는 타임존. 테넌트별로 다르면 DOC_TZ로 덮어쓴다. */
@@ -289,6 +335,9 @@ export interface DocFileNameArgs {
   /**
    * 같은 레코드에서 나오는 다른 문서를 구분한다 — 인보이스의 영수증, 계약서의
    * 서명본 등. 코드가 이미 다르면 비워둔다.
+   *
+   * `DOC_NAME_VARIANTS`에 등록된 값(계약 서식 `mlt_standard`, 점검 단계
+   * `move_in` 등)이면 파일명의 서류이름도 그 정식 명칭으로 바뀐다.
    */
   variant?: string;
   /**
@@ -307,21 +356,21 @@ export interface DocFileNameArgs {
    */
   accountId?: number | null;
   /**
-   * 고객ID를 붙일 상대. 계정이면 `{ type: "account", id }`, 사람이면
-   * `{ type: "contact", id }`. 생략하면 `accountId`를 계정으로 본다. 상대를
-   * 특정할 수 없는 문서(공실 견적·샘플)는 비워 두면 ID 필드 없이 나간다.
+   * 서류이름을 직접 지정한다. 종류·서식 어휘로 표현되지 않는 일회성 문서에만
+   * 쓰고, 반복 발행되는 문서는 `DOC_NAMES_KO`/`DOC_NAME_VARIANTS`에 등록한다 —
+   * 이름이 코드 밖에서 정해지면 폴더 안에서 표기가 갈린다.
    */
-  partyRef?: { type: PartyEntity; id: number } | null;
+  docName?: string | null;
   /** 문서 자체의 발생일. 없으면 발행 시점(테넌트 타임존)의 날짜. */
   issueDate?: string | Date | null;
 }
 
 /**
- * 문서의 파일명(확장자 제외)을 돌려준다. 처음이면 순번을 할당하고, 이미 발행된
- * 문서면 그때 정한 이름을 그대로 돌려준다.
+ * 문서의 파일명(확장자 제외)을 돌려준다. 처음이면 사본번호를 할당하고, 이미
+ * 발행된 문서면 그때 정한 이름을 그대로 돌려준다.
  *
- * DB를 못 쓰는 상황에서도 문서 발행 자체는 막지 않는다 — 순번 없이 규칙에 맞는
- * 이름을 만들어 돌려준다.
+ * DB를 못 쓰는 상황에서도 문서 발행 자체는 막지 않는다 — 사본번호 없이 규칙에
+ * 맞는 이름을 만들어 돌려준다(첫 발행본과 같은 모양이다).
  */
 export async function resolveDocFileName(args: DocFileNameArgs): Promise<string> {
   const code = DOC_CODES[args.kind];
@@ -333,18 +382,12 @@ export async function resolveDocFileName(args: DocFileNameArgs): Promise<string>
   const person = firstFilled([acct?.person, ...args.party]);
   const company = firstFilled([acct?.company, ...(args.org ?? [])]);
   const partyName = composePartyLabel(person, company);
-  const issuer = docNameIncludesIssuer() ? await resolveIssuerLabel() : "";
-  // 고객ID — 상대가 특정되는 문서에만 붙는다. 채번이 실패해도 발행은 막지 않는다.
-  const ref = args.partyRef ?? (args.accountId ? { type: "account" as const, id: args.accountId } : null);
-  const partyCode = ref ? await resolvePartyCode({ entityType: ref.type, entityId: ref.id }) : null;
-  const targetLabel = [partyCode, partyName, issuer !== partyName ? issuer : ""]
-    .filter((f) => String(f ?? "").length > 0)
-    .join("-");
-  const docName = docTypeName(args.kind);
-  const partyKey = partyKeyOf(partyName);
-  const issueDate = toIssueDate(args.issueDate);
   const variant = (args.variant ?? "").slice(0, 32);
+  const docName = sanitizeDocName(args.docName ?? docTypeName(args.kind, variant));
+  const versionKey = versionKeyOf(partyName, docName);
+  const issueDate = toIssueDate(args.issueDate);
   const compact = issueDate.replace(/-/g, "");
+  const stem = `${partyName}-${docName}_${compact}`;
 
   try {
     const [existing] = await db
@@ -359,24 +402,24 @@ export async function resolveDocFileName(args: DocFileNameArgs): Promise<string>
       .limit(1);
     if (existing) return existing.file_name;
 
-    // 다음 빈 순번. 유니크 인덱스가 최종 심판이라 경합해서 지면 다시 뽑는다.
+    // 다음 빈 사본번호. 유니크 인덱스가 최종 심판이라 경합해서 지면 다시 뽑는다.
     for (let attempt = 0; attempt < 8; attempt++) {
       const [{ next } = { next: 0 }] = await db
         .select({ next: sql<number>`coalesce(max(${documentFileNamesTable.seq}), -1) + 1` })
         .from(documentFileNamesTable)
         .where(and(
-          eq(documentFileNamesTable.party_key, partyKey),
+          eq(documentFileNamesTable.party_key, versionKey),
           eq(documentFileNamesTable.issue_date, issueDate),
         ));
       const seq = Number(next) + attempt;
-      const fileName = `${targetLabel}-${docName}-${compact}${sequenceLabel(seq)}`;
+      const fileName = `${stem}${versionLabel(seq)}`;
       try {
         await db.insert(documentFileNamesTable).values({
           doc_code: code,
           entity_type: args.entityType,
           entity_id: args.entityId,
           variant,
-          party_key: partyKey,
+          party_key: versionKey,
           party_name: partyName,
           issue_date: issueDate,
           seq,
@@ -397,14 +440,14 @@ export async function resolveDocFileName(args: DocFileNameArgs): Promise<string>
           .limit(1);
         if (raced) return raced.file_name;
         if (attempt === 7) throw err;
-        // 순번만 겹친 경우 — 루프가 다음 값으로 재시도한다.
+        // 사본번호만 겹친 경우 — 루프가 다음 값으로 재시도한다.
       }
     }
   } catch (err) {
-    console.error("[docFileName] allocation failed — falling back to an unsequenced name:", err);
+    console.error("[docFileName] allocation failed — falling back to an unversioned name:", err);
   }
 
-  return `${targetLabel}-${docName}-${compact}`;
+  return stem;
 }
 
 /**
@@ -506,16 +549,28 @@ export async function buildReportFileName(args: ReportFileNameArgs): Promise<str
 
 /** 필드 하나 — 내부는 `_`로 이어질 수 있고 `-`는 못 들어간다. */
 const FIELD = String.raw`[^\s\-]+`;
+/** 이름 필드 — `-`도 `_`도 없다 (`_`는 담당자·상호 연결자라 이름 안에선 허용). */
+const NAME_FIELD = String.raw`[^\-_]+(?:_[^\-_]+)*`;
+/** 서류이름 — 공백·괄호는 되고 구분자 `-`, `_`는 안 된다. */
+const DOC_NAME_FIELD = String.raw`[^\-_]+`;
 
 /**
- * 발행 문서명.
+ * 발행 문서명 (2026-08-16 규칙).
  *
- *     [고객ID-][대상][-발행사]-[서류종류]-[YYYYMMDD][순번]
+ *     [임차인이름]-[서류이름]_[YYYYMMDD][-v사본번호]
  *
- * 필드 수가 2~4개로 흔들리는 이유: 고객ID와 발행사는 인스턴스·문서에 따라
- * 빠진다. 순번은 A…Z / A1…Z9 / 초과분 `Z9-<n>`.
+ * 첫 발행본에는 사본번호가 없다. 두 필드 사이는 `-`, 날짜 앞은 `_`라서
+ * 서류이름에 공백이 들어가도 되돌려 읽을 수 있다.
  */
 export const DOC_FILE_NAME_RE = new RegExp(
+  String.raw`^${NAME_FIELD}-${DOC_NAME_FIELD}_\d{8}(?:-v\d{1,3})?$`,
+);
+
+/**
+ * 2026-08-16 직전에 쓰던 이름. `[고객ID-][대상][-발행사]-[서류종류]-<YYYYMMDD><순번>`.
+ * 순번은 A…Z / A1…Z9 / 초과분 `Z9-<n>`.
+ */
+export const LEGACY_DOC_FILE_NAME_RE = new RegExp(
   String.raw`^(?:${FIELD}-){1,3}${FIELD}-\d{8}(?:[A-Z]\d?|Z9-\d+)?$`,
 );
 
@@ -523,7 +578,7 @@ export const DOC_FILE_NAME_RE = new RegExp(
  * 2026-08 이전에 발행된 이름. `<코드3>-<대상>[-<발행사>]_<YYYYMMDD><순번>`.
  * 파일은 그대로 남아 있으므로 파서는 옛 형식도 계속 읽어야 한다.
  */
-export const LEGACY_DOC_FILE_NAME_RE = new RegExp(
+export const LEGACY_CODE_FILE_NAME_RE = new RegExp(
   String.raw`^[A-Z]{3}-${FIELD}(?:-${FIELD})?_\d{8}(?:[A-Z]\d?|Z9-\d+)?$`,
 );
 
@@ -538,6 +593,7 @@ export function isValidDocFileName(name: string): boolean {
   return (
     DOC_FILE_NAME_RE.test(base) ||
     LEGACY_DOC_FILE_NAME_RE.test(base) ||
+    LEGACY_CODE_FILE_NAME_RE.test(base) ||
     REPORT_FILE_NAME_RE.test(base)
   );
 }
@@ -546,37 +602,69 @@ export interface ParsedDocFileName {
   /** 3자리 내부 코드. 서류종류 한글 이름에서 되찾는다. */
   code: string | null;
   kind: DocKind | null;
-  /** 파일명에 찍힌 서류 이름 (`계약서`). */
+  /** 파일명에 찍힌 서류 이름 (`민간임대주택 표준임대차계약서 (등록임대사업자)`). */
   docName: string;
-  /** 고객ID (`MH2607C001`). 붙어 있을 때만. */
+  /** 고객ID (`MH2607C001`). 옛 형식에만 붙어 있다. */
   partyCode: string | null;
-  /** 대상 필드 그대로 (`홍길동_재원산업`). */
+  /** 이름 필드 그대로 (`홍길동_재원산업`). */
   target: string;
-  /** 대상 필드의 첫 조각 — 사람 이름으로 보는 값. */
+  /** 이름 필드의 첫 조각 — 사람 이름으로 보는 값. */
   party: string;
-  /** 발행사 상호(붙어 있을 때만). */
+  /** 발행사 상호(옛 형식에 붙어 있을 때만). */
   issuer: string | null;
-  /** `2026-08-03`. */
+  /** `2026-08-16`. */
   issueDate: string;
-  /** `A` / `B1` … 없으면 null. */
+  /** 사본번호 `v2` / `v3`. 첫 발행본은 null. 옛 형식은 `A` / `B1`. */
   sequence: string | null;
-  /** 옛 형식(3자리 코드)으로 읽었는가. */
+  /** 옛 형식으로 읽었는가. */
   legacy: boolean;
 }
 
-const KIND_BY_NAME: Record<string, DocKind> = Object.fromEntries(
-  (Object.keys(DOC_NAMES_KO) as DocKind[]).map((k) => [DOC_NAMES_KO[k], k]),
-);
+/**
+ * 서류이름 → 종류. 서식별 정식 명칭(`민간임대주택 표준임대차계약서 …`)도
+ * 되짚을 수 있어야 업로드된 서명본이 어느 종류인지 이름만으로 갈린다.
+ */
+const KIND_BY_NAME: Record<string, DocKind> = {
+  ...Object.fromEntries(
+    (Object.keys(DOC_NAMES_KO) as DocKind[]).map((k) => [DOC_NAMES_KO[k], k]),
+  ),
+  ...Object.fromEntries(
+    (Object.keys(DOC_NAME_VARIANTS) as DocKind[]).flatMap((k) =>
+      Object.values(DOC_NAME_VARIANTS[k] ?? {}).map((label) => [label, k]),
+    ),
+  ),
+};
 
 /**
- * 우리가 발행했다가 서명받아 다시 올라온 파일을 되읽는다. 이름만으로 종류·대상·
+ * 우리가 발행했다가 서명받아 다시 올라온 파일을 되읽는다. 이름만으로 종류·상대·
  * 발행일을 알 수 있는 것이 이 규칙의 존재 이유다. 옛 형식도 읽는다.
  */
 export function parseDocFileName(name: string): ParsedDocFileName | null {
   const base = String(name ?? "").replace(/\.[a-z0-9]{2,5}$/i, "");
-  if (LEGACY_DOC_FILE_NAME_RE.test(base)) return parseLegacyName(base);
+  if (LEGACY_CODE_FILE_NAME_RE.test(base)) return parseLegacyCodeName(base);
+  if (LEGACY_DOC_FILE_NAME_RE.test(base)) return parseLegacyPartyCodeName(base);
   if (!DOC_FILE_NAME_RE.test(base)) return null;
 
+  const m = base.match(/^([^\-_]+(?:_[^\-_]+)*)-([^\-_]+)_(\d{4})(\d{2})(\d{2})(?:-v(\d{1,3}))?$/);
+  if (!m) return null;
+  const target = m[1] ?? "";
+  const docName = m[2] ?? "";
+  return {
+    code: KIND_BY_NAME[docName] ? DOC_CODES[KIND_BY_NAME[docName]!] : null,
+    kind: KIND_BY_NAME[docName] ?? null,
+    docName,
+    partyCode: null,
+    target,
+    party: target.split("_")[0] ?? target,
+    issuer: null,
+    issueDate: `${m[3]}-${m[4]}-${m[5]}`,
+    sequence: m[6] ? `v${m[6]}` : null,
+    legacy: false,
+  };
+}
+
+/** 직전 형식 — `MH2607C001-김용식-계약서-20260803A`. */
+function parseLegacyPartyCodeName(base: string): ParsedDocFileName | null {
   const fields = base.split("-");
   // 순번이 `Z9-261`로 넘칠 때만 꼬리가 두 조각이다.
   const tail = /^\d{8}/.test(fields[fields.length - 1] ?? "")
@@ -599,12 +687,12 @@ export function parseDocFileName(name: string): ParsedDocFileName | null {
     issuer: fields.length ? (fields[fields.length - 1] ?? null) : null,
     issueDate: `${m[1]}-${m[2]}-${m[3]}`,
     sequence: m[4] || null,
-    legacy: false,
+    legacy: true,
   };
 }
 
-/** 옛 형식 — `CTR-김용식_20260803A`. */
-function parseLegacyName(base: string): ParsedDocFileName | null {
+/** 가장 오래된 형식 — `CTR-김용식_20260803A`. */
+function parseLegacyCodeName(base: string): ParsedDocFileName | null {
   const code = base.slice(0, 3);
   const rest = base.slice(4);
   const cut = rest.lastIndexOf("_");

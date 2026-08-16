@@ -14,6 +14,7 @@ import { db, documentsTable } from "@workspace/db";
 import { and, eq } from "drizzle-orm";
 import { isCloudinaryConfigured, uploadPrivateToCloudinary, generateSignedUrl } from "../../utils/cloudinary";
 import { calcRetentionDate } from "../retention";
+import { versionLabel } from "./docFileName";
 
 export interface FreezeArgs {
   entityType: string; // "invoice" | "contract" | "quote"
@@ -22,8 +23,8 @@ export interface FreezeArgs {
   docType: string;
   ref: string;
   /**
-   * 파일명 규칙(filename.ts)으로 이미 정해진 이름. 스냅샷은 여기에 버전만
-   * 덧붙인다 — 주면 `CTR-김용식_20260803A-v2.pdf`, 안 주면 종전처럼 ref 기준.
+   * 파일명 규칙(docFileName.ts)으로 이미 정해진 이름. 스냅샷은 여기에 사본번호만
+   * 덧붙인다 — 주면 `이아람-계약서_20260816-v2.pdf`, 안 주면 종전처럼 ref 기준.
    */
   baseName?: string | null;
   pdf: Buffer;
@@ -56,7 +57,10 @@ export async function freezeDocument(args: FreezeArgs): Promise<FrozenSnapshot |
 
   const up = await uploadPrivateToCloudinary(args.pdf, { format: "pdf" });
   const base = (args.baseName ?? args.ref).replace(/\.[A-Za-z0-9]{1,5}$/, "");
-  const file_name = `${base}-v${version}.pdf`;
+  // 파일명 규칙과 같은 표기를 쓴다: 첫 스냅샷은 사본번호 없음, 2판부터 `-v2`.
+  // 이름에 이미 사본번호가 붙어 있으면(같은 날 재발행) 그 자리를 스냅샷 버전이
+  // 대신한다 — `-v2-v3` 같은 꼬리가 생기지 않게.
+  const file_name = `${base.replace(/-v\d{1,3}$/, "")}${versionLabel(version - 1)}.pdf`;
   const [row] = await db.insert(documentsTable).values({
     entity_type: args.entityType,
     entity_id: args.entityId,

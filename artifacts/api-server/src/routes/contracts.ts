@@ -1395,15 +1395,26 @@ export async function renderContractPdf(
   return mergePdfs(parts);
 }
 
-/** 계약서 파일명 — 세입자명 기준, 발행일은 계약 작성일. */
+/**
+ * 계약서 파일명 — 세입자명 기준, 발행일은 계약 작성일.
+ *
+ * 서식을 `variant`로 넘겨 파일명에 정식 서식명이 찍히게 한다. 같은 계약을 자체
+ * 서식과 법정 서식으로 각각 뽑는 일이 있어서, 이름만으로 어느 서식인지 갈리지
+ * 않으면 서명받아 되돌아온 파일을 짝지을 수 없다.
+ */
 async function contractFilename(
   id: number,
-  built: { doc: { tenant_name?: string | null; created_at: string | Date | null }; tenantAccountId?: number | null },
+  built: {
+    doc: { tenant_name?: string | null; created_at: string | Date | null };
+    tenantAccountId?: number | null;
+    leaseForm?: ContractLeaseForm | null;
+  },
 ): Promise<string> {
   return resolveDocFileName({
     kind: "contract",
     entityType: "contract",
     entityId: id,
+    variant: built.leaseForm ?? "general",
     // 상호를 함께 남기는 인스턴스는 계정에서 담당자 이름과 법인 상호를 직접 읽는다.
     accountId: built.tenantAccountId ?? null,
     party: [built.doc.tenant_name],
