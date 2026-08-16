@@ -1496,7 +1496,10 @@
     "rental_business_none": "Not selected",
     "hint_rental_business": "The number you pick is printed in the landlord (갑) block of the agreement.",
     "hint_rental_business_empty": "This landlord account has no registration on file. Add one under Accounts → Rental business.",
-    "hint_rental_business_no_landlord": "Pick a landlord account first."
+    "hint_rental_business_no_landlord": "Pick a landlord account first.",
+    "mlt_refill": "Reload from registration",
+    "mlt_refilled": "Refilled from the rental business registration.",
+    "hint_mlt_from_registration": "Carried over from rental business registration {{no}}. Editing these for this contract does not change the registration."
   },
   "invoice": {
     "new": "New Invoice",
@@ -5764,7 +5767,9 @@
     "unassigned_help": "Moved over from company settings. Claim it if it belongs to this account.",
     "claim": "Claim for this account",
     "claimed": "Registration moved to this account",
-    "confirm_delete_registration": "Delete this registration and the units listed on it?"
+    "confirm_delete_registration": "Delete this registration and the units listed on it?",
+    "mlt_section": "Registered private rental housing particulars",
+    "mlt_hint": "These print on the MOLIT standard lease agreement (Form 24). Fill them in here and they carry over automatically whenever this landlord signs a contract on that form."
   },
   "settings_org_docs": {
     "description": "Key company paperwork — business registration certificate, bank passbook copy and the like. Files are stored privately and shared through short-lived links; only Admin roles can see this tab.",

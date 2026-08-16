@@ -1458,7 +1458,10 @@
     "rental_business_none": "Không chọn",
     "hint_rental_business": "Số đã chọn sẽ được in vào ô bên cho thuê (giáp) của hợp đồng.",
     "hint_rental_business_empty": "Tài khoản bên cho thuê này chưa có giấy đăng ký. Hãy thêm tại Quản lý tài khoản → Kinh doanh cho thuê.",
-    "hint_rental_business_no_landlord": "Hãy chọn tài khoản bên cho thuê trước."
+    "hint_rental_business_no_landlord": "Hãy chọn tài khoản bên cho thuê trước.",
+    "mlt_refill": "Lấy lại từ giấy đăng ký",
+    "mlt_refilled": "Đã điền lại theo giấy đăng ký kinh doanh cho thuê.",
+    "hint_mlt_from_registration": "Lấy từ giấy đăng ký kinh doanh cho thuê {{no}}. Sửa cho hợp đồng này không làm thay đổi giấy đăng ký."
   },
   "invoice": {
     "new": "Tạo hóa đơn mới",
@@ -5663,7 +5666,9 @@
     "unassigned_help": "Được chuyển từ cài đặt công ty. Nếu thuộc tài khoản này, hãy nhận về.",
     "claim": "Nhận về tài khoản này",
     "claimed": "Đã chuyển giấy đăng ký về tài khoản này",
-    "confirm_delete_registration": "Xóa giấy đăng ký này cùng danh sách căn hộ đã ghi trên đó?"
+    "confirm_delete_registration": "Xóa giấy đăng ký này cùng danh sách căn hộ đã ghi trên đó?",
+    "mlt_section": "Các nội dung pháp định của nhà ở cho thuê tư nhân",
+    "mlt_hint": "Những mục này được in trên hợp đồng thuê nhà tiêu chuẩn của Bộ Đất đai (Mẫu số 24). Điền ở đây thì khi bên cho thuê này ký hợp đồng theo mẫu đó, hệ thống sẽ tự động điền vào."
   },
   "settings_org_docs": {
     "description": "Hồ sơ quan trọng của công ty — giấy chứng nhận đăng ký kinh doanh, bản sao sổ ngân hàng và tương tự. Tệp được lưu riêng tư và chỉ mở qua liên kết có hiệu lực ngắn; chỉ vai trò quản trị mới thấy tab này.",

@@ -48,7 +48,45 @@ const RegistrationBody = z.object({
   /** 증명일(발급일) YYYY-MM-DD — 등록증 아래쪽 "…증명합니다" 날짜. 최초등록일과 다르다. */
   issued_on: z.string().nullish(),
   note: z.string().optional(),
+
+  /**
+   * 민간임대주택 법정 기재사항 — 표준임대차계약서(별지 제24호서식) 첫 장의 값들.
+   * 등록증에 적어 두면 계약에서 임대인(갑)과 그 서식을 고를 때 계약의 같은 칸
+   * (contracts.mlt_*)으로 복사된다. 임대사업자 등록번호는 registration_no 가
+   * 그 값이라 여기에 따로 받지 않는다.
+   */
+  mlt_housing_type: z.enum(["apartment", "row_house", "multiplex", "multi_family", "other"]).nullish(),
+  mlt_rental_type: z.enum(["public_support", "long_term", "short_term"]).nullish(),
+  mlt_rental_term_years: z.coerce.number().int().nullish(),
+  mlt_rental_type_other: z.string().nullish(),
+  mlt_supply_kind: z.enum(["built", "purchased"]).nullish(),
+  mlt_mandatory_start_date: z.string().nullish(),
+  mlt_over_100_units: z.boolean().nullish(),
+  mlt_ancillary_facilities: z.string().nullish(),
+  mlt_senior_lien: z.boolean().nullish(),
+  mlt_senior_lien_kind: z.string().nullish(),
+  mlt_senior_lien_amount: z.coerce.number().nullish(),
+  mlt_senior_lien_date: z.string().nullish(),
+  mlt_tax_arrears: z.boolean().nullish(),
+  mlt_guarantee_status: z.enum(["joined", "partial", "not_joined"]).nullish(),
+  mlt_guarantee_amount: z.coerce.number().nullish(),
+  mlt_guarantee_none_reason: z.enum(["zero", "priority", "public_landlord", "tenant_guarantee"]).nullish(),
+  mlt_late_fee_rate: z.coerce.number().nullish(),
 }).strip();
+
+/**
+ * Drizzle 의 numeric 컬럼은 문자열로 오간다 — 폼에서 숫자로 올라온 금액·이율을
+ * 쓰기 직전에 문자열로 바꾼다. 빈 값은 null 그대로 둔다("" 은 numeric 에 못 넣는다).
+ */
+function coerceRegistrationNumerics<T extends Record<string, unknown>>(data: T): T {
+  const out: Record<string, unknown> = { ...data };
+  for (const key of ["mlt_senior_lien_amount", "mlt_guarantee_amount", "mlt_late_fee_rate"]) {
+    if (!(key in out)) continue;
+    const v = out[key];
+    out[key] = v === null || v === undefined || v === "" ? null : String(v);
+  }
+  return out as T;
+}
 
 /** 등록증 목록 + 각 등록증에 실린 세대 수. */
 async function listRegistrations(where: ReturnType<typeof and>) {
@@ -97,7 +135,7 @@ router.post("/v1/rental-business/registrations", async (req, res): Promise<void>
   const parsed = RegistrationBody.safeParse(req.body);
   if (!parsed.success) { res.status(400).json({ error: parsed.error.message }); return; }
   const [row] = await db.insert(rentalBusinessRegistrationsTable)
-    .values(parsed.data as never).returning();
+    .values(coerceRegistrationNumerics(parsed.data) as never).returning();
   await logAction({
     entityType: "rental_business_registration", entityId: row!.id, action: "CREATE", newValue: parsed.data,
   }).catch(() => {});
@@ -110,7 +148,7 @@ router.put("/v1/rental-business/registrations/:id", async (req, res): Promise<vo
   const parsed = RegistrationBody.partial().safeParse(req.body);
   if (!parsed.success) { res.status(400).json({ error: parsed.error.message }); return; }
   const [row] = await db.update(rentalBusinessRegistrationsTable)
-    .set(parsed.data as never)
+    .set(coerceRegistrationNumerics(parsed.data) as never)
     .where(eq(rentalBusinessRegistrationsTable.id, id))
     .returning();
   if (!row) { res.status(404).json({ error: "Not found" }); return; }

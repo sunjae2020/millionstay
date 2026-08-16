@@ -1,19 +1,26 @@
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useForm } from "react-hook-form";
+import { Controller, useForm, useWatch, type Control } from "react-hook-form";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "wouter";
 import { ClipboardPaste, Link2, Plus, Save, Search, Trash2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { DateInput } from "@/components/ui/date-input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { LookupSelect } from "@/components/LookupSelect";
 import { ExportableTable } from "@/components/ui/ExportCsvButton";
 import { useToast } from "@/hooks/use-toast";
 import { apiFetch, apiJson } from "@/lib/apiFetch";
 import { formatDate } from "@/lib/date";
+import {
+  MLT_GUARANTEE_NONE_REASONS, MLT_GUARANTEE_STATUSES, MLT_HOUSING_TYPES, MLT_RENTAL_TYPES,
+  MLT_SHARED_FIELDS, MLT_SUPPLY_KINDS, MLT_TERM_YEARS, fromTriState, mltFieldsFromRegistration,
+  type MltSharedField,
+} from "@/lib/mlt";
 
 /**
  * 계정관리 → 임대인·소유주 → 임대사업자 등록증.
@@ -48,9 +55,35 @@ export interface RentalBusinessRegistrationRow {
   issued_on: string | null;
   note: string;
   unit_count?: number;
+
+  // 민간임대주택 법정 기재사항 — 표준임대차계약서(별지 제24호서식)로 계약할 때
+  // 그대로 물려받는 기본값. 서버에서 오는 값은 불리언·숫자·null 이 섞여 있다.
+  mlt_housing_type?: string | null;
+  mlt_rental_type?: string | null;
+  mlt_rental_term_years?: number | string | null;
+  mlt_rental_type_other?: string | null;
+  mlt_supply_kind?: string | null;
+  mlt_mandatory_start_date?: string | null;
+  mlt_over_100_units?: boolean | null;
+  mlt_ancillary_facilities?: string | null;
+  mlt_senior_lien?: boolean | null;
+  mlt_senior_lien_kind?: string | null;
+  mlt_senior_lien_amount?: number | string | null;
+  mlt_senior_lien_date?: string | null;
+  mlt_tax_arrears?: boolean | null;
+  mlt_guarantee_status?: string | null;
+  mlt_guarantee_amount?: number | string | null;
+  mlt_guarantee_none_reason?: string | null;
+  mlt_late_fee_rate?: number | string | null;
 }
 
-type RegistrationDraft = Omit<RentalBusinessRegistrationRow, "id" | "unit_count">;
+/**
+ * 폼은 법정 기재사항을 전부 문자열로 다룬다 — 세 값 선택은 ""(미지정)/"yes"/"no",
+ * 금액·햇수는 입력값 그대로. 저장할 때 boolean·number·null 로 되돌린다.
+ */
+type RegistrationDraft =
+  Omit<RentalBusinessRegistrationRow, "id" | "unit_count" | MltSharedField>
+  & Record<MltSharedField, string>;
 
 interface RegisteredUnit {
   id: number;
@@ -80,6 +113,35 @@ function regDefaults(accountId: number, operatorName: string): RegistrationDraft
     registration_no: "", first_registered_on: "", operator_name: operatorName, operator_reg_no: "",
     foreigner_reg_no: "", nationality: "", visa_status: "", visa_period: "",
     address: "", phone: "", mobile: "", issuing_authority: "", issued_on: "", note: "",
+    ...blankMltFields(),
+  };
+}
+
+const blankMltFields = (): Record<MltSharedField, string> =>
+  Object.fromEntries(MLT_SHARED_FIELDS.map((k) => [k, ""])) as Record<MltSharedField, string>;
+
+/** 폼의 문자열 값을 서버가 받는 모양(boolean·number·null)으로 되돌린다. */
+function mltPayloadFromDraft(values: RegistrationDraft) {
+  const str = (v: string) => (v.trim() ? v.trim() : null);
+  const num = (v: string) => (v.trim() && Number.isFinite(Number(v)) ? Number(v) : null);
+  return {
+    mlt_housing_type: str(values.mlt_housing_type),
+    mlt_rental_type: str(values.mlt_rental_type),
+    mlt_rental_term_years: num(values.mlt_rental_term_years),
+    mlt_rental_type_other: str(values.mlt_rental_type_other),
+    mlt_supply_kind: str(values.mlt_supply_kind),
+    mlt_mandatory_start_date: str(values.mlt_mandatory_start_date),
+    mlt_over_100_units: fromTriState(values.mlt_over_100_units),
+    mlt_ancillary_facilities: str(values.mlt_ancillary_facilities),
+    mlt_senior_lien: fromTriState(values.mlt_senior_lien),
+    mlt_senior_lien_kind: str(values.mlt_senior_lien_kind),
+    mlt_senior_lien_amount: num(values.mlt_senior_lien_amount),
+    mlt_senior_lien_date: str(values.mlt_senior_lien_date),
+    mlt_tax_arrears: fromTriState(values.mlt_tax_arrears),
+    mlt_guarantee_status: str(values.mlt_guarantee_status),
+    mlt_guarantee_amount: num(values.mlt_guarantee_amount),
+    mlt_guarantee_none_reason: str(values.mlt_guarantee_none_reason),
+    mlt_late_fee_rate: num(values.mlt_late_fee_rate),
   };
 }
 
@@ -263,7 +325,7 @@ function RegistrationForm({ registration, accountId, accountName, onDone, onCanc
   const { t } = useTranslation();
   const { toast } = useToast();
   const [saving, setSaving] = useState(false);
-  const { register, handleSubmit, reset } = useForm<RegistrationDraft>({
+  const { register, handleSubmit, reset, control } = useForm<RegistrationDraft>({
     defaultValues: regDefaults(accountId, accountName),
   });
 
@@ -271,7 +333,12 @@ function RegistrationForm({ registration, accountId, accountName, onDone, onCanc
     if (registration) {
       const { id, unit_count, ...rest } = registration;
       void id; void unit_count;
-      reset({ ...regDefaults(accountId, accountName), ...rest });
+      reset({
+        ...regDefaults(accountId, accountName),
+        ...rest,
+        // 법정 기재사항은 서버 모양(불리언·숫자)이라 폼 문자열로 바꿔 넣는다.
+        ...mltFieldsFromRegistration(registration),
+      });
     }
   }, [registration, accountId, accountName, reset]);
 
@@ -281,7 +348,7 @@ function RegistrationForm({ registration, accountId, accountName, onDone, onCanc
       const res = await apiFetch(registration ? `${REGS_ENDPOINT}/${registration.id}` : REGS_ENDPOINT, {
         method: registration ? "PUT" : "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...values, account_id: accountId }),
+        body: JSON.stringify({ ...values, ...mltPayloadFromDraft(values), account_id: accountId }),
       });
       if (!res.ok) {
         const body = await res.json().catch(() => null);
@@ -360,6 +427,9 @@ function RegistrationForm({ registration, accountId, accountName, onDone, onCanc
           <Input {...register("note")} />
         </div>
       </div>
+
+      <MltRegistrationFields register={register} control={control} />
+
       <div className="flex justify-end gap-2">
         <Button type="button" size="sm" variant="ghost" onClick={onCancel}>{t("common.cancel")}</Button>
         <Button type="submit" size="sm" disabled={saving}>
@@ -368,6 +438,109 @@ function RegistrationForm({ registration, accountId, accountName, onDone, onCanc
         </Button>
       </div>
     </form>
+  );
+}
+
+/**
+ * 민간임대주택 법정 기재사항 — 표준임대차계약서(별지 제24호서식) 첫 장에 찍히는 값들.
+ *
+ * 계약 상세의 같은 이름 칸과 선택지·라벨을 공유한다(`contract.mlt_*` 번역 키를
+ * 그대로 쓴다). 여기 적어 둔 값은 계약에서 이 임대인·이 서식을 고를 때 계약으로
+ * 복사되는 **기본값**이고, 계약마다 다른 값은 계약에서 고쳐 쓴다.
+ *
+ * 임대사업자 등록번호 칸은 없다 — 위 등록번호가 곧 그 값이라 계약으로 그게 실린다.
+ */
+function MltRegistrationFields({ register, control }: {
+  register: ReturnType<typeof useForm<RegistrationDraft>>["register"];
+  control: Control<RegistrationDraft>;
+}) {
+  const { t } = useTranslation();
+  const rentalType = useWatch({ control, name: "mlt_rental_type" });
+  const seniorLien = useWatch({ control, name: "mlt_senior_lien" });
+  const guaranteeStatus = useWatch({ control, name: "mlt_guarantee_status" });
+
+  /** 선택 상자 하나 — 값이 비면 "미지정" 자리표시자가 보인다. */
+  const selectField = (name: MltSharedField, label: string, options: readonly string[], optionLabel: (v: string) => string, disabled = false) => (
+    <div className="space-y-1.5">
+      <Label>{label}</Label>
+      <Controller name={name} control={control} render={({ field }) => (
+        <Select value={field.value || undefined} onValueChange={field.onChange} disabled={disabled}>
+          <SelectTrigger><SelectValue placeholder={t("contract.ph_mlt_unset")} /></SelectTrigger>
+          <SelectContent>
+            {options.map((v) => <SelectItem key={v} value={v}>{optionLabel(v)}</SelectItem>)}
+          </SelectContent>
+        </Select>
+      )} />
+    </div>
+  );
+
+  return (
+    <div className="rounded-lg border bg-muted/30 p-4">
+      <h4 className="text-sm font-semibold text-primary">{t("settings_rental_biz.mlt_section")}</h4>
+      <p className="text-xs text-muted-foreground mt-1 mb-4">{t("settings_rental_biz.mlt_hint")}</p>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        {selectField("mlt_housing_type", t("contract.label_mlt_housing_type"), MLT_HOUSING_TYPES, (v) => t(`contract.mlt_housing_${v}`))}
+        {selectField("mlt_rental_type", t("contract.label_mlt_rental_type"), MLT_RENTAL_TYPES, (v) => t(`contract.mlt_rental_${v}`))}
+        {selectField(
+          "mlt_rental_term_years",
+          t("contract.label_mlt_term_years"),
+          (MLT_TERM_YEARS[rentalType ?? ""] ?? []).map(String),
+          (v) => t("contract.mlt_years", { years: Number(v) }),
+          !rentalType,
+        )}
+        <div className="space-y-1.5">
+          <Label>{t("contract.label_mlt_type_other")}</Label>
+          <Input {...register("mlt_rental_type_other")} placeholder={t("contract.ph_mlt_type_other")} />
+        </div>
+        {selectField("mlt_supply_kind", t("contract.label_mlt_supply_kind"), MLT_SUPPLY_KINDS, (v) => t(`contract.mlt_supply_${v}`))}
+        <div className="space-y-1.5">
+          <Label>{t("contract.label_mlt_mandatory_start")}</Label>
+          <Controller name="mlt_mandatory_start_date" control={control} render={({ field }) => (
+            <DateInput value={field.value ?? ""} onChange={field.onChange} />
+          )} />
+        </div>
+        {selectField("mlt_over_100_units", t("contract.label_mlt_over_100"), ["yes", "no"], (v) => t(v === "yes" ? "contract.mlt_yes" : "contract.mlt_no"))}
+        <div className="space-y-1.5">
+          <Label>{t("contract.label_mlt_late_fee_rate")}</Label>
+          <Input {...register("mlt_late_fee_rate")} type="number" step="0.01" min="0" />
+        </div>
+        <div className="space-y-1.5 sm:col-span-2">
+          <Label>{t("contract.label_mlt_facilities")}</Label>
+          <Input {...register("mlt_ancillary_facilities")} placeholder={t("contract.ph_mlt_facilities")} />
+        </div>
+
+        {selectField("mlt_senior_lien", t("contract.label_mlt_senior_lien"), ["no", "yes"], (v) => t(v === "yes" ? "contract.mlt_lien_exists" : "contract.mlt_lien_none"))}
+        {selectField("mlt_tax_arrears", t("contract.label_mlt_tax_arrears"), ["no", "yes"], (v) => t(v === "yes" ? "contract.mlt_lien_exists" : "contract.mlt_lien_none"))}
+        {seniorLien === "yes" && (
+          <>
+            <div className="space-y-1.5">
+              <Label>{t("contract.label_mlt_lien_kind")}</Label>
+              <Input {...register("mlt_senior_lien_kind")} placeholder={t("contract.ph_mlt_lien_kind")} />
+            </div>
+            <div className="space-y-1.5">
+              <Label>{t("contract.label_mlt_lien_amount")}</Label>
+              <Input {...register("mlt_senior_lien_amount")} type="number" step="0.01" min="0" />
+            </div>
+            <div className="space-y-1.5">
+              <Label>{t("contract.label_mlt_lien_date")}</Label>
+              <Controller name="mlt_senior_lien_date" control={control} render={({ field }) => (
+                <DateInput value={field.value ?? ""} onChange={field.onChange} />
+              )} />
+            </div>
+          </>
+        )}
+
+        {selectField("mlt_guarantee_status", t("contract.label_mlt_guarantee"), MLT_GUARANTEE_STATUSES, (v) => t(`contract.mlt_guarantee_${v}`))}
+        {(guaranteeStatus === "joined" || guaranteeStatus === "partial") && (
+          <div className="space-y-1.5">
+            <Label>{t("contract.label_mlt_guarantee_amount")}</Label>
+            <Input {...register("mlt_guarantee_amount")} type="number" step="0.01" min="0" />
+          </div>
+        )}
+        {guaranteeStatus === "not_joined" &&
+          selectField("mlt_guarantee_none_reason", t("contract.label_mlt_guarantee_reason"), MLT_GUARANTEE_NONE_REASONS, (v) => t(`contract.mlt_reason_${v}`))}
+      </div>
+    </div>
   );
 }
 

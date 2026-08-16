@@ -1,4 +1,4 @@
-import { pgTable, serial, integer, text, timestamp, index } from "drizzle-orm/pg-core";
+import { pgTable, serial, integer, text, numeric, boolean, timestamp, index } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 
@@ -35,6 +35,35 @@ export const rentalBusinessRegistrationsTable = pgTable("rental_business_registr
   // 한 벌을 관청이 떼어 준 날이라 재발급마다 바뀐다).
   issued_on: text("issued_on"), // 증명일(발급일) YYYY-MM-DD
   note: text("note").notNull().default(""),
+
+  // ── 민간임대주택 법정 기재사항 ─────────────────────────────────────────
+  // 표준임대차계약서(별지 제24호서식) 첫 장의 법정 기재사항은 계약마다 새로
+  // 적을 값이 아니라 **등록증 한 벌에 딸린 성질**이다 — 같은 등록증에 실린
+  // 세대는 종류·의무기간·공급방식·보증가입이 대체로 같이 간다. 그래서 여기에
+  // 기본값으로 두고, 계약에서 임대인(갑)과 서식을 고르면 계약의 같은 이름
+  // 칸(contracts.mlt_*)으로 복사한다. 복사 뒤 계약 쪽에서 고친 값이 최종이고
+  // 등록증으로 되돌아오지 않는다 — 여기는 어디까지나 출발점이다.
+  //
+  // 임대사업자 등록번호는 여기에 다시 두지 않는다. 위 registration_no 가 곧
+  // 그 값이라, 두 벌로 두면 어느 쪽이 맞는지 알 수 없어진다.
+  mlt_housing_type: text("mlt_housing_type"), // apartment | row_house | multiplex | multi_family | other
+  mlt_rental_type: text("mlt_rental_type"), // public_support | long_term | short_term
+  mlt_rental_term_years: integer("mlt_rental_term_years"), // 임대의무기간 10·8·6·4
+  mlt_rental_type_other: text("mlt_rental_type_other"), // 그 밖의 유형
+  mlt_supply_kind: text("mlt_supply_kind"), // built(건설) | purchased(매입)
+  mlt_mandatory_start_date: text("mlt_mandatory_start_date"), // 임대의무기간 개시일 YYYY-MM-DD
+  mlt_over_100_units: boolean("mlt_over_100_units"), // 100세대 이상 단지
+  mlt_ancillary_facilities: text("mlt_ancillary_facilities"), // 부대시설·복리시설의 종류
+  mlt_senior_lien: boolean("mlt_senior_lien"), // 선순위 담보권 등 권리관계
+  mlt_senior_lien_kind: text("mlt_senior_lien_kind"),
+  mlt_senior_lien_amount: numeric("mlt_senior_lien_amount", { precision: 14, scale: 2 }),
+  mlt_senior_lien_date: text("mlt_senior_lien_date"),
+  mlt_tax_arrears: boolean("mlt_tax_arrears"), // 국세·지방세 체납사실
+  mlt_guarantee_status: text("mlt_guarantee_status"), // joined | partial | not_joined
+  mlt_guarantee_amount: numeric("mlt_guarantee_amount", { precision: 14, scale: 2 }),
+  mlt_guarantee_none_reason: text("mlt_guarantee_none_reason"), // zero | priority | public_landlord | tenant_guarantee
+  mlt_late_fee_rate: numeric("mlt_late_fee_rate", { precision: 5, scale: 2 }), // 연체이율 연 %
+
   deleted_at: timestamp("deleted_at", { withTimezone: true }),
   created_at: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updated_at: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),

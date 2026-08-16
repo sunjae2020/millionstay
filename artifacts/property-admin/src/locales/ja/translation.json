@@ -1471,7 +1471,10 @@
     "rental_business_none": "選択しない",
     "hint_rental_business": "選んだ登録番号が契約書の貸主（甲）欄に記載されます。",
     "hint_rental_business_empty": "この貸主アカウントに登録証がありません。アカウント管理 → 賃貸事業者タブで先に登録してください。",
-    "hint_rental_business_no_landlord": "先に貸主アカウントを選んでください。"
+    "hint_rental_business_no_landlord": "先に貸主アカウントを選んでください。",
+    "mlt_refill": "登録証から再取得",
+    "mlt_refilled": "登録証の値で再入力しました。",
+    "hint_mlt_from_registration": "賃貸事業者登録証 {{no}} から取得した値です。この契約に合わせて修正しても登録証は変わりません。"
   },
   "invoice": {
     "new": "新規請求書",
@@ -5710,7 +5713,9 @@
     "unassigned_help": "会社設定から移された登録証です。このアカウントのものであれば取り込んでください。",
     "claim": "このアカウントに取り込む",
     "claimed": "登録証をこのアカウントに移しました",
-    "confirm_delete_registration": "この登録証と登載された住戸一覧をまとめて削除しますか？"
+    "confirm_delete_registration": "この登録証と登載された住戸一覧をまとめて削除しますか？",
+    "mlt_section": "民間賃貸住宅の法定記載事項",
+    "mlt_hint": "国土交通部の標準賃貸借契約書（別紙第24号様式）に印刷される項目です。ここに入力しておくと、この賃貸人がその様式で契約する際に自動で反映されます。"
   },
   "settings_org_docs": {
     "description": "事業者登録証、通帳のコピーなど、会社の主要書類を保管します。ファイルは非公開で保存され、短時間だけ有効なリンクで表示されます。このタブは管理者権限のみ表示されます。",

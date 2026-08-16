@@ -1473,7 +1473,10 @@
     "rental_business_none": "不选择",
     "hint_rental_business": "所选登记号将印在合同的出租人（甲）栏中。",
     "hint_rental_business_empty": "该出租人账户没有登记证。请先在账户管理 → 租赁事业者页签中登记。",
-    "hint_rental_business_no_landlord": "请先选择出租人账户。"
+    "hint_rental_business_no_landlord": "请先选择出租人账户。",
+    "mlt_refill": "从登记证重新获取",
+    "mlt_refilled": "已按登记证的内容重新填写。",
+    "hint_mlt_from_registration": "取自租赁经营者登记证 {{no}}。为本合同修改这些内容不会改变登记证。"
   },
   "invoice": {
     "new": "新建发票",
@@ -5714,7 +5717,9 @@
     "unassigned_help": "从公司设置迁移而来的登记证。若属于本账户，请认领。",
     "claim": "认领到本账户",
     "claimed": "登记证已移至本账户",
-    "confirm_delete_registration": "要一并删除该登记证及其登载的房源列表吗？"
+    "confirm_delete_registration": "要一并删除该登记证及其登载的房源列表吗？",
+    "mlt_section": "民间租赁住宅法定记载事项",
+    "mlt_hint": "这些内容会打印在国土交通部标准租赁合同（附件第24号格式）上。在此填写后，该出租人使用该格式签约时会自动带入。"
   },
   "settings_org_docs": {
     "description": "公司主要文件，如营业执照、银行存折复印件等。文件以私密方式保存，仅通过短时有效链接查看；此标签页仅管理员角色可见。",

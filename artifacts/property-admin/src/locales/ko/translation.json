@@ -1496,7 +1496,10 @@
     "rental_business_none": "선택 안 함",
     "hint_rental_business": "고른 등록번호가 계약서 임대인(갑) 칸에 실립니다.",
     "hint_rental_business_empty": "이 임대인 계정에 등록된 등록증이 없습니다. 계정관리 → 임대사업자 탭에서 먼저 등록하세요.",
-    "hint_rental_business_no_landlord": "임대인 계정을 먼저 고르세요."
+    "hint_rental_business_no_landlord": "임대인 계정을 먼저 고르세요.",
+    "mlt_refill": "등록증에서 다시 가져오기",
+    "mlt_refilled": "등록증의 값으로 다시 채웠습니다.",
+    "hint_mlt_from_registration": "임대사업자 등록증 {{no}}에서 가져온 값입니다. 이 계약에 맞게 고쳐도 등록증은 바뀌지 않습니다."
   },
   "invoice": {
     "new": "새 청구서",
@@ -5764,7 +5767,9 @@
     "unassigned_help": "회사 설정에서 옮겨 온 등록증입니다. 이 계정의 등록증이면 가져오세요.",
     "claim": "이 계정으로 가져오기",
     "claimed": "등록증을 이 계정으로 옮겼습니다",
-    "confirm_delete_registration": "이 등록증과 등재된 세대 목록을 함께 삭제할까요?"
+    "confirm_delete_registration": "이 등록증과 등재된 세대 목록을 함께 삭제할까요?",
+    "mlt_section": "민간임대주택 법정 기재사항",
+    "mlt_hint": "국토부 표준임대차계약서(별지 제24호서식)에 인쇄되는 항목입니다. 여기 적어 두면 이 임대인으로 그 서식의 계약서를 쓸 때 자동으로 채워집니다."
   },
   "settings_org_docs": {
     "description": "사업자등록증, 통장 사본 등 회사의 주요 서류를 보관합니다. 파일은 비공개로 저장되며 짧게 유효한 링크로만 열립니다. 이 탭은 관리자 권한에게만 보입니다.",

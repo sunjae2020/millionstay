@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useParams, useLocation } from "wouter";
 import { formatDate } from "@/lib/date";
 import { useTranslation } from "react-i18next";
@@ -6,6 +6,11 @@ import { Layout } from "@/components/Layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { DateInput } from "@/components/ui/date-input";
+import {
+  MLT_GUARANTEE_NONE_REASONS, MLT_GUARANTEE_STATUSES, MLT_HOUSING_TYPES, MLT_RENTAL_TYPES,
+  MLT_SHARED_FIELDS, MLT_SUPPLY_KINDS, MLT_TERM_YEARS, fromTriState, mltFieldsFromRegistration,
+  toTriState,
+} from "@/lib/mlt";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
@@ -65,25 +70,9 @@ function parseAttachments(raw: unknown): string[] {
   }
 }
 
-/**
- * 민간임대주택 표준임대차계약서(별지 제24호서식)가 요구하는 법정 기재사항의 선택지.
- * 값은 api-server mltStandardLeaseForm.ts 의 타입과 1:1 — 바꾸면 서식 체크박스가 어긋난다.
- */
-const MLT_HOUSING_TYPES = ["apartment", "row_house", "multiplex", "multi_family", "other"] as const;
-const MLT_RENTAL_TYPES = ["public_support", "long_term", "short_term"] as const;
-/** 의무기간 선택지는 종류에 따라 다르다 — 단기만 6·4년. */
-const MLT_TERM_YEARS: Record<string, number[]> = {
-  public_support: [10, 8],
-  long_term: [10, 8],
-  short_term: [6, 4],
-};
-const MLT_SUPPLY_KINDS = ["built", "purchased"] as const;
-const MLT_GUARANTEE_STATUSES = ["joined", "partial", "not_joined"] as const;
-const MLT_GUARANTEE_NONE_REASONS = ["zero", "priority", "public_landlord", "tenant_guarantee"] as const;
-/** 서식의 "예 / 아니오" 칸 — 모르는 값은 어느 쪽도 찍지 않으므로 빈 값을 남겨 둔다. */
-const MLT_YES_NO = ["", "yes", "no"] as const;
-const toTriState = (v: unknown): string => (v === true ? "yes" : v === false ? "no" : "");
-const fromTriState = (v: string): boolean | null => (v === "yes" ? true : v === "no" ? false : null);
+// 민간임대주택 법정 기재사항의 선택지·라벨은 임대사업자 등록증(계정관리)과 나눠 쓴다 —
+// @/lib/mlt 한 벌만 고친다. 값은 api-server mltStandardLeaseForm.ts 의 타입과 1:1이라
+// 여기서 임의로 바꾸면 서식 체크박스가 어긋난다.
 
 /**
  * 임대 유형 — 계약이 어떤 결제 모델을 쓰는지. 상세 화면은 이 값에 따라 결제 조건
@@ -747,7 +736,8 @@ export default function ContractDetail() {
   // 남의 등록번호가 계약서에 실리는 일이 없어야 한다.
   const landlordAccountId = watch("landlord_account_id");
   const rentalBizRegistrationId = watch("rental_business_registration_id");
-  const { data: rentalBizRegs } = useQuery<{ data: Array<{ id: number; registration_no: string; operator_name: string }> }>({
+  type RentalBizReg = { id: number; registration_no: string; operator_name: string } & Record<string, unknown>;
+  const { data: rentalBizRegs } = useQuery<{ data: RentalBizReg[] }>({
     queryKey: ["rental-business-registrations", landlordAccountId],
     queryFn: () => apiJson(`/api/v1/rental-business/registrations?account_id=${landlordAccountId}`),
     enabled: !!landlordAccountId,
@@ -761,6 +751,54 @@ export default function ContractDetail() {
       setValue("rental_business_registration_id", null);
     }
   }, [landlordAccountId, rentalBizRegs, rentalBizOptions, rentalBizRegistrationId, setValue]);
+
+  // 등록증에 적어 둔 법정 기재사항을 계약으로 가져온다.
+  //
+  // 임대인(갑)과 계약서 서식을 함께 골랐을 때만 움직인다 — 임대인이 등록증을 한 벌만
+  // 가졌으면 그 등록증을 자동으로 고르고, 고른 등록증이 바뀌는 순간 그 등록증의 값을
+  // 계약의 같은 칸으로 옮겨 담는다. 옮긴 뒤 계약에서 고친 값이 최종이다.
+  //
+  // `appliedRegRef` 가 없으면 저장된 계약을 열 때마다 등록증 값이 다시 덮어써서
+  // 손으로 고쳐 둔 값이 사라진다 — 불러온 계약의 등록증은 "이미 반영됨"으로 표시해 둔다.
+  const appliedRegRef = useRef<number | null | undefined>(undefined);
+  useEffect(() => {
+    appliedRegRef.current = isNew ? null : contract ? ((contract as any).rental_business_registration_id ?? null) : undefined;
+  }, [isNew, contract]);
+
+  /** 등록증 한 벌의 값을 계약 폼에 얹는다. 등록번호는 그 등록증의 번호가 곧 값이다. */
+  const applyRegistration = useCallback((reg: RentalBizReg) => {
+    setValue("mlt_landlord_rental_biz_no", reg.registration_no ?? "", { shouldDirty: true });
+    const fields = mltFieldsFromRegistration(reg);
+    for (const key of MLT_SHARED_FIELDS) {
+      setValue(key, fields[key], { shouldDirty: true });
+    }
+  }, [setValue]);
+
+  useEffect(() => {
+    if (leaseForm !== "mlt_standard") return;
+    if (!landlordAccountId || !rentalBizRegs) return;
+    // 아직 계약을 불러오는 중이면 반영 여부를 알 수 없다 — 덮어쓰기 전에 기다린다.
+    if (appliedRegRef.current === undefined) return;
+
+    // 등록증이 한 벌뿐인 임대인은 고를 것이 없다 — 골라 준다.
+    if (rentalBizRegistrationId == null && rentalBizOptions.length === 1) {
+      setValue("rental_business_registration_id", rentalBizOptions[0]!.id, { shouldDirty: true });
+      return;
+    }
+    if (rentalBizRegistrationId == null || rentalBizRegistrationId === appliedRegRef.current) return;
+    const reg = rentalBizOptions.find((r) => r.id === rentalBizRegistrationId);
+    if (!reg) return;
+    appliedRegRef.current = rentalBizRegistrationId;
+    applyRegistration(reg);
+  }, [leaseForm, landlordAccountId, rentalBizRegs, rentalBizOptions, rentalBizRegistrationId, setValue, applyRegistration]);
+
+  /** "등록증에서 다시 가져오기" — 손으로 고친 값을 등록증 기준으로 되돌린다. */
+  const selectedRentalBizReg = rentalBizOptions.find((r) => r.id === rentalBizRegistrationId) ?? null;
+  const reapplyRegistration = () => {
+    if (!selectedRentalBizReg) return;
+    applyRegistration(selectedRentalBizReg);
+    toast({ title: t("contract.mlt_refilled") });
+  };
 
   // 계약 경로 카드 — 5개 필드를 하나의 값처럼 다룬다.
   const channelValue: ChannelValue = {
@@ -1157,8 +1195,22 @@ export default function ContractDetail() {
             {/* 민간임대주택 표준임대차계약서(별지 제24호서식) 법정 기재사항 — 그 서식으로 발급할 때만. */}
             {leaseForm === "mlt_standard" && (
             <div className="border rounded-lg bg-white p-4 sm:p-6">
-              <h2 className="text-sm font-semibold uppercase text-primary tracking-wide mb-1">{t('contract.section_mlt')}</h2>
-              <p className="text-xs text-muted-foreground mb-4">{t('contract.hint_mlt')}</p>
+              <div className="flex items-start justify-between gap-3 mb-4">
+                <div>
+                  <h2 className="text-sm font-semibold uppercase text-primary tracking-wide mb-1">{t('contract.section_mlt')}</h2>
+                  {/* 등록증에서 값을 가져왔다는 사실과, 여기서 고친 값이 최종이라는 것을 알려 준다. */}
+                  <p className="text-xs text-muted-foreground">
+                    {selectedRentalBizReg
+                      ? t('contract.hint_mlt_from_registration', { no: selectedRentalBizReg.registration_no })
+                      : t('contract.hint_mlt')}
+                  </p>
+                </div>
+                {selectedRentalBizReg && (
+                  <Button type="button" variant="outline" size="sm" className="shrink-0" onClick={reapplyRegistration}>
+                    {t('contract.mlt_refill')}
+                  </Button>
+                )}
+              </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <Label>{t('contract.label_mlt_rental_biz_no')}</Label>
