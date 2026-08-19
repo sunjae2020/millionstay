@@ -12,10 +12,12 @@ import { useToast } from "@/hooks/use-toast";
 import { apiFetch } from "@/lib/apiFetch";
 import { RichTextEditor } from "@/components/ui/rich-text-editor";
 import { DocumentPreviewDialog, useDocumentPreview } from "@/components/DocumentPreviewDialog";
+import { DEFAULT_DOC_LANG, DOC_LOCALES, orderLocales } from "@/lib/docLang";
 
 const API = "/api/v1/document-templates";
-// Guest-facing documents (invoice/quote/agreements) ship six locales.
-const LOCALES = ["en", "ko", "ja", "zh", "th", "vi"];
+// Guest-facing documents (invoice/quote/agreements) ship six locales, ordered
+// with the tenant's default document language first (Metheim = 한국어).
+const LOCALES = DOC_LOCALES;
 
 interface Translation { locale: string; subject?: string | null; body_html?: string | null }
 interface TemplateDetail {
@@ -57,7 +59,7 @@ export default function DocumentTemplateEdit() {
   const tpl = data?.data;
   const isEmail = tpl?.kind === "email";
 
-  const [locale, setLocale] = useState("en");
+  const [locale, setLocale] = useState<string>(DEFAULT_DOC_LANG);
   const [drafts, setDrafts] = useState<Record<string, { subject: string; body_html: string }>>({});
   const [mode, setMode] = useState<"visual" | "html" | "preview">("visual");
   const { previewConfig, openPreview, closePreview } = useDocumentPreview();
@@ -68,7 +70,7 @@ export default function DocumentTemplateEdit() {
     const seed: Record<string, { subject: string; body_html: string }> = {};
     for (const tr of tpl.translations) seed[tr.locale] = { subject: tr.subject ?? "", body_html: tr.body_html ?? "" };
     setDrafts(seed);
-    if (tpl.translations.length && !tpl.translations.find((x) => x.locale === "en")) setLocale(tpl.translations[0].locale);
+    if (tpl.translations.length && !tpl.translations.find((x) => x.locale === DEFAULT_DOC_LANG)) setLocale(orderLocales(tpl.translations.map((x) => x.locale))[0]);
   }, [tpl]);
 
   const cur = drafts[locale] ?? { subject: "", body_html: "" };
@@ -127,7 +129,7 @@ export default function DocumentTemplateEdit() {
   if (isLoading) return <Layout><p className="p-6 text-sm text-muted-foreground">{t("common.loading")}</p></Layout>;
   if (!tpl) return <Layout><p className="p-6 text-sm text-muted-foreground">{t("documentTemplate.not_found")}</p></Layout>;
 
-  const localeTabs = Array.from(new Set([...tpl.translations.map((x) => x.locale), locale]));
+  const localeTabs = orderLocales(Array.from(new Set([...tpl.translations.map((x) => x.locale), locale])));
 
   return (
     <Layout>

@@ -438,6 +438,18 @@ async function buildMoveOutDocInput(id: number): Promise<MoveOutDocInput | null>
 
   const asOf = detail.finalized_at ?? detail.proposed_at ?? detail.created_at;
 
+  // 정산구분: settled before the lease end date = 중도퇴거(early), otherwise 만기퇴거.
+  // Unknown end date leaves both boxes unmarked on the form.
+  const contractEnd = contract?.end ?? booking?.check_out_date ?? null;
+  let settlementType: "early" | "expiry" | null = null;
+  if (contractEnd && asOf) {
+    const endDay = new Date(`${String(contractEnd).slice(0, 10)}T00:00:00Z`).getTime();
+    const asOfDay = new Date(`${new Date(asOf).toISOString().slice(0, 10)}T00:00:00Z`).getTime();
+    if (Number.isFinite(endDay) && Number.isFinite(asOfDay)) {
+      settlementType = asOfDay < endDay ? "early" : "expiry";
+    }
+  }
+
   return {
     settlement_ref: detail.settlement_ref,
     status: detail.status,
@@ -451,6 +463,8 @@ async function buildMoveOutDocInput(id: number): Promise<MoveOutDocInput | null>
     deposit_held: Number(detail.deposit_held ?? 0),
     total_deducted: Number(detail.total_deducted ?? 0),
     refund_amount: Number(detail.refund_amount ?? 0),
+    settlement_type: settlementType,
+    // A negative amount is a refund line (환급(+)); positive is a deduction (차감(−)).
     deductions: detail.deductions.map((d) => ({ description: d.description, amount: Number(d.amount ?? 0), remark: null })),
   };
 }

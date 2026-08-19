@@ -30,10 +30,18 @@ function detectBrowserLanguage(): string {
   return "en";
 }
 
+// White-label instances run in one working language: a Korean tenant's console,
+// documents and templates all open in 한국어 regardless of the browser locale.
+// `VITE_DEFAULT_DOC_LANG` (mirrors the server's DEFAULT_DOC_LANG) wins over
+// browser detection; an explicit user choice still wins over both. Unset
+// (MillionStay) keeps the previous browser-detect behaviour.
+const tenantLanguage = (import.meta.env.VITE_DEFAULT_DOC_LANG ?? "").toLowerCase().slice(0, 2);
 const savedLanguage = localStorage.getItem("ms_admin_language");
 const initialLanguage = savedLanguage && SUPPORTED.has(savedLanguage)
   ? savedLanguage
-  : detectBrowserLanguage();
+  : SUPPORTED.has(tenantLanguage)
+    ? tenantLanguage
+    : detectBrowserLanguage();
 
 i18n
   .use(initReactI18next)

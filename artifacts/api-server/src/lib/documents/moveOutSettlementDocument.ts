@@ -1,34 +1,51 @@
 /**
- * Document Hub — Move-out Confirmation ("퇴거 세대 확인서") document builder
+ * Document Hub — Move-out Settlement Confirmation ("퇴거 세대 정산 확인서")
  *
- * A formal move-out household confirmation / deposit-settlement statement, built
- * from a `deposit_settlements` row (+ its deduction items) and the booking's
- * household details (unit, tenant, contract period, deposit, rent). Reproduces
- * the Korean move-out settlement statement layout: a household-info block, an
- * itemised deduction table (순번 / 항목 / 금액 / 비고), the A/B/C totals and a
- * dated issuer block that carries the company seal (도장) when one is configured.
+ * A formal move-out settlement statement, built from a `deposit_settlements`
+ * row (+ its deduction/refund items) and the household details (unit, tenant,
+ * contract period, deposit, rent). Reproduces the Korean move-out settlement
+ * form:
  *
- * Like the other document builders it renders inside the shared branded shell
+ *   1. 기본 임대차 정보 — 세대호수 / 임차인명 / 계약기간 / 임대료(월) /
+ *      임대보증금 / 정산구분(중도퇴거·만기퇴거)
+ *   2. 정산 내역 — 순번 / 항목 / 구분(차감(−)·환급(+)) / 금액 / 비고, followed
+ *      by the A(정산 합계) · B(임대 보증금) · C(최종 반환 차액 = B + A) rows
+ *   3. 보증금 반환 및 퇴거 절차 안내사항 — grouped guidance blocks
+ *   그리고 날짜 + 임대인 서명란 with the company seal (도장) overlaid.
+ *
+ * A line's 구분 comes from the sign of its amount: a POSITIVE amount is a
+ * deduction (차감, rendered −) and a NEGATIVE amount is a refund to the tenant
+ * (환급, rendered +). That keeps `deposit_deduction_items.amount` as the single
+ * signed source of truth — no schema change, and `recomputeTotals()` already
+ * nets both directions.
+ *
+ * Like the other builders it renders inside the shared branded shell
  * (`theme.ts`) so the logo header / footer stay consistent, and its static
- * labels are translated via `i18n.ts`. Editable standard copy (the residence-
- * transfer notice) is injected as `noteHtml` from the `pdf.move_out_confirmation`
- * template, falling back to the localized default.
+ * labels are translated via `i18n.ts`. The section-3 guidance is editable
+ * standard copy injected as `noteHtml` from the `pdf.move_out_confirmation`
+ * template, falling back to the localized default block.
  */
 import {
   renderDocumentShell,
   escapeHtml,
   getCompanyInfo,
   formatDocMoney,
+  DOC_TOKENS,
   type CompanyInfo,
 } from "./theme";
 import { t, formatDocDate, type DocLang } from "./i18n";
 
 export interface MoveOutDeductionLine {
   description: string;
-  /** Positive amount deducted from the deposit; rendered as a negative figure. */
+  /** Signed: positive = deducted from the deposit (차감), negative = refunded (환급). */
   amount: string | number;
   remark?: string | null;
+  /** Explicit override; otherwise derived from the sign of `amount`. */
+  kind?: "deduct" | "refund" | null;
 }
+
+/** 정산구분 — an early termination vs a settlement at the end of the term. */
+export type MoveOutSettlementType = "early" | "expiry";
 
 export interface MoveOutDocInput {
   settlement_ref: string;
@@ -38,83 +55,151 @@ export interface MoveOutDocInput {
   currency: string | null;
 
   unit: string | null;            // 세대호수 (space name)
-  tenant_name: string | null;     // 임차인
+  tenant_name: string | null;     // 임차인명
   contract_start: string | null;  // 계약기간 시작
   contract_end: string | null;    // 계약기간 종료
-  monthly_rent: string | number | null; // 임대료
+  monthly_rent: string | number | null; // 임대료(월)
 
-  deposit_held: string | number;   // 보증금 (B)
-  total_deducted: string | number; // 합계 (A) — rendered negative
-  refund_amount: string | number;  // 차액 (C = B − A)
+  deposit_held: string | number;   // 임대 보증금 (B)
+  total_deducted: string | number; // 차감 − 환급 합계 (rendered as A = −total_deducted)
+  refund_amount: string | number;  // 최종 반환 차액 (C)
 
   deductions: MoveOutDeductionLine[];
+
+  /** 정산구분. Null leaves both options unmarked. */
+  settlement_type?: MoveOutSettlementType | null;
+  /** Overrides the phone number quoted in the default guidance block. */
+  contact_phone?: string | null;
+  /** Door PIN the unit must be reset to before handover; omitted when unset. */
+  door_password?: string | null;
 }
 
 function money(amount: string | number | null, currency: string | null): string {
   return formatDocMoney(amount, currency);
 }
 
-/** A deducted amount, shown as a negative figure in red like the reference doc. */
-function negMoney(amount: string | number | null, currency: string | null): string {
-  const n = Number(amount ?? 0);
-  if (!Number.isFinite(n) || n === 0) return money(0, currency);
-  return `−${money(Math.abs(n), currency)}`;
+/** Signed figure: deductions in red with −, refunds in blue with +. */
+function signedMoney(amount: number, currency: string | null): string {
+  const abs = money(Math.abs(amount), currency);
+  if (amount > 0) return `<span class="mo-neg">−${abs}</span>`;
+  if (amount < 0) return `<span class="mo-pos">+${abs}</span>`;
+  return abs;
 }
 
-/** Household info rows (세대호수 / 임차인 / 계약기간 / 보증금 / 임대료). */
+function lineKind(li: MoveOutDeductionLine): "deduct" | "refund" {
+  if (li.kind) return li.kind;
+  return Number(li.amount ?? 0) < 0 ? "refund" : "deduct";
+}
+
+/** 1. 기본 임대차 정보 — a 4-column label/value grid. */
 function renderInfoTable(d: MoveOutDocInput, lang: DocLang): string {
   const period = (d.contract_start || d.contract_end)
     ? `${formatDocDate(d.contract_start, lang)} ~ ${formatDocDate(d.contract_end, lang)}`
     : "—";
-  const rows: Array<[string, string]> = [
-    [t(lang, "moveout.unit"), escapeHtml(d.unit || "—")],
-    [t(lang, "tenant"), escapeHtml(d.tenant_name || "—")],
-    [t(lang, "moveout.contractPeriod"), period],
-    [t(lang, "bond"), money(d.deposit_held, d.currency)],
-    [t(lang, "rent"), money(d.monthly_rent, d.currency)],
+  const mark = (type: MoveOutSettlementType) =>
+    d.settlement_type === type ? "✓" : "";
+  const settleType = `${escapeHtml(t(lang, "moveout.typeEarly"))}(${mark("early")})&nbsp;/&nbsp;${escapeHtml(
+    t(lang, "moveout.typeExpiry"),
+  )}(${mark("expiry")})`;
+  const rows: Array<[string, string, string, string]> = [
+    [t(lang, "moveout.unit"), escapeHtml(d.unit || "—"), t(lang, "moveout.tenantName"), escapeHtml(d.tenant_name || "")],
+    [t(lang, "moveout.contractPeriod"), period, t(lang, "moveout.monthlyRent"), d.monthly_rent == null ? "" : money(d.monthly_rent, d.currency)],
+    [t(lang, "moveout.deposit"), money(d.deposit_held, d.currency), t(lang, "moveout.settleType"), settleType],
   ];
   return `<table class="mo-info">${rows
-    .map(([k, v]) => `<tr><th>${k}</th><td>${v}</td></tr>`)
+    .map(([k1, v1, k2, v2]) => `<tr><th>${k1}</th><td>${v1}</td><th>${k2}</th><td>${v2}</td></tr>`)
     .join("")}</table>`;
 }
 
-/** Itemised deduction table (순번 / 항목 / 금액 / 비고). */
-function renderDeductionsTable(d: MoveOutDocInput, lang: DocLang): string {
-  const rows = d.deductions.length
-    ? d.deductions
-        .map(
-          (li, i) => `<tr>
-            <td class="mo-c">${i + 1}</td>
-            <td>${escapeHtml(li.description)}</td>
-            <td class="mo-r mo-neg">${negMoney(li.amount, d.currency)}</td>
-            <td>${escapeHtml(li.remark || "")}</td>
-          </tr>`,
-        )
-        .join("")
-    : `<tr><td class="mo-c" colspan="4" style="color:#999;">—</td></tr>`;
+/**
+ * 2. 정산 내역 — the itemised lines plus the A/B/C summary rows, in one table
+ * so the form reads exactly like the paper original.
+ */
+function renderSettlementTable(d: MoveOutDocInput, lang: DocLang): string {
+  const cur = d.currency;
+  const lines = d.deductions.map((li, i) => {
+    const amount = Number(li.amount ?? 0);
+    const kind = lineKind(li);
+    const kindLabel = kind === "refund" ? t(lang, "moveout.refund") : t(lang, "moveout.deduct");
+    const signed = kind === "refund" ? -Math.abs(amount) : Math.abs(amount);
+    return `<tr>
+        <td class="mo-c">${i + 1}</td>
+        <td>${escapeHtml(li.description)}</td>
+        <td class="mo-c ${kind === "refund" ? "mo-pos" : "mo-neg"}">${kindLabel}</td>
+        <td class="mo-r">${signedMoney(signed, cur)}</td>
+        <td>${escapeHtml(li.remark || "")}</td>
+      </tr>`;
+  });
+  const body = lines.length
+    ? lines.join("")
+    : `<tr><td class="mo-c" colspan="5" style="color:#999;">—</td></tr>`;
+
+  // A = the net settlement: a positive net deduction prints as −(red), a net
+  // refund (negative total_deducted) prints as +(blue) — same rule as the lines.
+  const totalA = Number(d.total_deducted ?? 0);
+  const depositB = Number(d.deposit_held ?? 0);
+  const finalC = Number(d.refund_amount ?? 0);
+
+  const sumRow = (key: string, label: string, value: string, remark: string, cls = "") =>
+    `<tr class="mo-sum ${cls}">
+       <td class="mo-c mo-key">${key}</td>
+       <td colspan="2">${label}</td>
+       <td class="mo-r">${value}</td>
+       <td class="mo-sum-remark">${escapeHtml(remark)}</td>
+     </tr>`;
+
   return `<table class="mo-lines">
       <thead>
         <tr>
-          <th class="mo-c" style="width:12%;">${t(lang, "moveout.no")}</th>
-          <th style="width:36%;">${t(lang, "moveout.item")}</th>
-          <th class="mo-r" style="width:26%;">${t(lang, "amount")}</th>
-          <th style="width:26%;">${t(lang, "moveout.remark")}</th>
+          <th class="mo-c" style="width:9%;">${t(lang, "moveout.no")}</th>
+          <th style="width:26%;">${t(lang, "moveout.item")}</th>
+          <th class="mo-c" style="width:13%;">${t(lang, "moveout.kind")}</th>
+          <th class="mo-r" style="width:20%;">${t(lang, "moveout.amountCol")}</th>
+          <th style="width:32%;">${t(lang, "moveout.remarkGuide")}</th>
         </tr>
       </thead>
-      <tbody>${rows}</tbody>
+      <tbody>
+        ${body}
+        ${sumRow("A", t(lang, "moveout.rowA"), signedMoney(totalA, cur), t(lang, "moveout.rowA.remark"))}
+        ${sumRow("B", t(lang, "moveout.rowB"), money(depositB, cur), t(lang, "moveout.rowB.remark"))}
+        ${sumRow("C", t(lang, "moveout.rowC"), money(finalC, cur), t(lang, "moveout.rowC.remark"), "mo-final")}
+      </tbody>
     </table>`;
 }
 
-/** A/B/C totals grid: 합계 A / 보증금 B / 차액 C (B−A). */
-function renderTotals(d: MoveOutDocInput, lang: DocLang): string {
-  return `<table class="mo-totals">
-      <tr><th>${t(lang, "moveout.totalA")}</th><td class="mo-r mo-neg">${negMoney(d.total_deducted, d.currency)}</td></tr>
-      <tr><th>${t(lang, "moveout.depositB")}</th><td class="mo-r">${money(d.deposit_held, d.currency)}</td></tr>
-      <tr class="mo-diff"><th>${t(lang, "moveout.diffC")}</th><td class="mo-r">${money(d.refund_amount, d.currency)}</td></tr>
-    </table>`;
+/** 3. 보증금 반환 및 퇴거 절차 안내사항 — default guidance when no template body. */
+function renderDefaultGuide(d: MoveOutDocInput, company: CompanyInfo, lang: DocLang): string {
+  const phone = (d.contact_phone || company.phone || "").trim();
+  const pin = (d.door_password || "").trim();
+  const groups: Array<{ title: string; lead?: string; bullets: string[] }> = [
+    {
+      title: t(lang, "moveout.guide.refund.title"),
+      lead: t(lang, "moveout.guide.refund.lead", { amount: money(d.refund_amount, d.currency) }),
+      bullets: [
+        t(lang, "moveout.guide.refund.docs"),
+        phone
+          ? t(lang, "moveout.guide.refund.how", { phone })
+          : t(lang, "moveout.guide.refund.howNoPhone"),
+      ],
+    },
+    { title: t(lang, "moveout.guide.transfer.title"), bullets: [t(lang, "moveout.guide.transfer.b1"), t(lang, "moveout.guide.transfer.b2")] },
+    { title: t(lang, "moveout.guide.utility.title"), bullets: [t(lang, "moveout.guide.utility.b1"), t(lang, "moveout.guide.utility.b2")] },
+    {
+      title: t(lang, "moveout.guide.restore.title"),
+      bullets: [pin ? t(lang, "moveout.guide.restore.b1Pin", { pin }) : t(lang, "moveout.guide.restore.b1")],
+    },
+  ];
+  return groups
+    .map(
+      (g) => `<div class="mo-guide-group">
+        <div class="mo-guide-title">■ ${escapeHtml(g.title)} :${g.lead ? ` <span class="mo-guide-lead">${escapeHtml(g.lead)}</span>` : ""}</div>
+        ${g.bullets.map((b) => `<div class="mo-guide-item">· ${escapeHtml(b)}</div>`).join("")}
+      </div>`,
+    )
+    .join("");
 }
 
-/** Dated issuer block with the company name and seal (도장) overlaid. */
+/** Dated issuer block: 발행일 + 임대인 : 회사명 (인) with the seal (도장) overlaid. */
 function renderIssuerBlock(d: MoveOutDocInput, company: CompanyInfo, lang: DocLang): string {
   const dateLine = formatDocDate(d.as_of_date, lang);
   const seal = company.stampUrl?.trim()
@@ -123,37 +208,50 @@ function renderIssuerBlock(d: MoveOutDocInput, company: CompanyInfo, lang: DocLa
   return `<div class="mo-issuer">
       <div class="mo-date">${dateLine}</div>
       <div class="mo-signer">
+        <span class="mo-signer-label">${t(lang, "moveout.issuer")} :</span>
         <span class="mo-signer-name">${escapeHtml(company.legalName)}</span>
+        <span class="mo-signer-seal">${t(lang, "moveout.sealMark")}</span>
         ${seal}
       </div>
     </div>`;
 }
 
-/** Scoped CSS for the move-out statement tables (injected into the doc body). */
+/** Scoped CSS for the move-out statement (injected into the doc body). */
 const MOVE_OUT_STYLE = `<style>
-  .mo-title { text-align:center; margin:0 0 20px; }
+  .mo-title { text-align:center; margin:0 0 6px; }
   .mo-title h1 { font-size:22px; font-weight:800; letter-spacing:0.02em; margin:0; }
-  .mo-title .mo-asof { font-size:13px; color:#666; margin-top:4px; }
-  table.mo-info, table.mo-lines, table.mo-totals { width:100%; border-collapse:collapse; margin:0 0 18px; font-size:13.5px; }
+  .mo-asof { text-align:right; font-size:12.5px; color:${DOC_TOKENS.inkMuted}; font-style:italic; margin:0 0 18px; }
+  .mo-sec { margin:0 0 18px; }
+  .mo-sec-title { font-size:13px; font-weight:800; color:${DOC_TOKENS.brand}; margin:0 0 6px; }
+  table.mo-info, table.mo-lines { width:100%; border-collapse:collapse; font-size:12.5px; }
   table.mo-info th, table.mo-info td,
-  table.mo-lines th, table.mo-lines td,
-  table.mo-totals th, table.mo-totals td { border:1px solid #d9d9d9; padding:9px 12px; }
-  table.mo-info th { width:26%; background:#f5f5f7; text-align:left; font-weight:600; color:#333; }
-  table.mo-lines th { background:#f5f5f7; font-weight:700; color:#333; text-align:left; }
-  table.mo-totals th { background:#f5f5f7; width:60%; text-align:left; font-weight:700; }
+  table.mo-lines th, table.mo-lines td { border:1px solid #bfbfbf; padding:6px 9px; }
+  table.mo-info th { width:17%; background:#f2f2f4; text-align:center; font-weight:700; color:#222; }
+  table.mo-info td { width:33%; text-align:center; }
+  table.mo-lines thead th { background:${DOC_TOKENS.brand}; color:#fff; font-weight:700; text-align:center; }
   .mo-c { text-align:center; }
   .mo-r { text-align:right; font-variant-numeric:tabular-nums; }
-  .mo-neg { color:#c0392b; }
-  table.mo-totals tr.mo-diff th, table.mo-totals tr.mo-diff td { font-weight:800; font-size:15px; background:#fbfbfc; }
-  .mo-note { font-size:12.5px; color:#444; margin:16px 0 8px; line-height:1.6; }
-  .mo-issuer { text-align:center; margin-top:34px; }
-  .mo-date { font-size:14px; color:#222; margin-bottom:14px; }
+  .mo-neg { color:#c0392b; font-weight:700; }
+  .mo-pos { color:#1f6fb2; font-weight:700; }
+  tr.mo-sum td { background:#fafafb; font-weight:700; }
+  tr.mo-sum td.mo-key { background:#f2f2f4; font-weight:800; text-align:center; }
+  tr.mo-sum td.mo-sum-remark { font-weight:400; font-size:11.5px; color:#333; }
+  tr.mo-final td { background:#fff6e6; font-size:13px; font-weight:800; }
+  tr.mo-final td.mo-sum-remark { font-weight:400; }
+  .mo-guide-group { margin:0 0 10px; }
+  .mo-guide-title { font-size:12px; font-weight:800; color:${DOC_TOKENS.brand}; margin:0 0 3px; }
+  .mo-guide-lead { font-weight:800; }
+  .mo-guide-item { font-size:11.5px; color:#333; line-height:1.75; padding-left:12px; }
+  .mo-issuer { text-align:center; margin-top:28px; }
+  .mo-date { font-size:14px; color:#222; margin-bottom:12px; }
   .mo-signer { position:relative; display:inline-block; padding:4px 8px; }
+  .mo-signer-label { font-size:16px; font-weight:800; letter-spacing:0.3em; margin-right:4px; }
   .mo-signer-name { font-size:17px; font-weight:800; letter-spacing:0.03em; }
-  .mo-seal { position:absolute; right:-58px; top:50%; transform:translateY(-50%); width:64px; height:64px; object-fit:contain; }
+  .mo-signer-seal { font-size:14px; margin-left:8px; color:#555; }
+  .mo-seal { position:absolute; right:-10px; top:50%; transform:translateY(-50%); width:58px; height:58px; object-fit:contain; opacity:0.9; }
 </style>`;
 
-/** Build the inner body HTML for a move-out confirmation (no shell). */
+/** Build the inner body HTML for a move-out settlement confirmation (no shell). */
 export function buildMoveOutSettlementBody(
   d: MoveOutDocInput,
   company: CompanyInfo,
@@ -161,31 +259,33 @@ export function buildMoveOutSettlementBody(
   noteHtml = "",
 ): string {
   const asOf = formatDocDate(d.as_of_date, lang);
-  const note = noteHtml.trim() || escapeHtml(t(lang, "moveout.transferNote"));
+  const guide = noteHtml.trim() || renderDefaultGuide(d, company, lang);
   return `${MOVE_OUT_STYLE}
     <div class="mo-title">
       <h1>${t(lang, "moveout.heading")}</h1>
-      <div class="mo-asof">${t(lang, "moveout.asOf", { date: asOf })} · <span class="ref-chip">${escapeHtml(d.settlement_ref)}</span></div>
     </div>
+    <div class="mo-asof">${t(lang, "moveout.asOfLabel")}: ${asOf} · <span class="ref-chip">${escapeHtml(d.settlement_ref)}</span></div>
 
-    <div class="section">
-      <h3>${t(lang, "moveout.household")}</h3>
+    <div class="mo-sec">
+      <div class="mo-sec-title">1. ${t(lang, "moveout.sec1")}</div>
       ${renderInfoTable(d, lang)}
     </div>
 
-    <div class="section">
-      <h3>${t(lang, "moveout.settlement")}</h3>
-      ${renderDeductionsTable(d, lang)}
-      ${renderTotals(d, lang)}
+    <div class="mo-sec">
+      <div class="mo-sec-title">2. ${t(lang, "moveout.sec2")}</div>
+      ${renderSettlementTable(d, lang)}
     </div>
 
-    <div class="mo-note">${note}</div>
+    <div class="mo-sec">
+      <div class="mo-sec-title">3. ${t(lang, "moveout.sec3")}</div>
+      ${guide}
+    </div>
 
     ${renderIssuerBlock(d, company, lang)}
   `;
 }
 
-/** Build the full standalone HTML document for a move-out confirmation. */
+/** Build the full standalone HTML document for a move-out settlement confirmation. */
 export function buildMoveOutSettlementHtml(
   d: MoveOutDocInput,
   company?: CompanyInfo,
