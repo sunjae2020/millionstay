@@ -333,8 +333,8 @@ const LABELS: Dict = {
     vi: "Nếu đã đăng ký cư trú tại địa chỉ này, hãy hoàn tất khai báo chuyển đi sau khi xác nhận hoàn cọc.",
   },
   "moveout.guide.transfer.b2": {
-    en: "Failing to do so may restrict the next tenant's move-in registration and cause related disadvantages.",
-    ko: "미전출 시 향후 입주자의 전입신고 제한 및 관련 불이익이 발생할 수 있습니다.",
+    en: "Failing to do so may restrict the following tenant's move-in registration and cause related disadvantages.",
+    ko: "미전출 시 후속 입주자의 전입신고 제한 및 관련 불이익이 발생할 수 있습니다.",
     zh: "未办理迁出可能导致后续入住者迁入受限及相关不利影响。",
     ja: "未転出の場合、今後の入居者の転入届が制限されるなどの不利益が生じる可能性があります。",
     th: "หากไม่ดำเนินการ อาจทำให้ผู้เช่ารายถัดไปแจ้งย้ายเข้าไม่ได้และเกิดผลเสียตามมา",
@@ -360,7 +360,7 @@ const LABELS: Dict = {
   "moveout.guide.restore.title": { en: "Restoration & key return", ko: "시설물 원상복구 및 열쇠 반납", zh: "设施恢复原状及钥匙归还", ja: "設備の原状回復および鍵の返却", th: "การคืนสภาพและคืนกุญแจ", vi: "Khôi phục hiện trạng & trả chìa khóa" },
   "moveout.guide.restore.b1Pin": {
     en: "Reset the entrance door PIN to {pin}, and return all card keys and equipment remotes to the management office.",
-    ko: "세대 출입문 비밀번호 {pin}로 변경 및 카드키, 시설물 리모컨 등은 관리사무소에 전량 반납하셔야 합니다.",
+    ko: "세대 출입문 비밀번호 {pin}로 변경 및 카드키, 시설물 리모컨 등을 관리사무소에 전량 반납하셔야 합니다.",
     zh: "请将入户门密码改回 {pin}，并将门禁卡、设施遥控器等全部交回管理办公室。",
     ja: "玄関の暗証番号を {pin} に変更のうえ、カードキー・設備リモコン等はすべて管理事務所へご返却ください。",
     th: "ตั้งรหัสประตูกลับเป็น {pin} และคืนคีย์การ์ด รีโมตอุปกรณ์ทั้งหมดให้สำนักงานนิติบุคคล",
@@ -368,7 +368,7 @@ const LABELS: Dict = {
   },
   "moveout.guide.restore.b1": {
     en: "Reset any changed entrance door PIN, and return all card keys and equipment remotes to the management office.",
-    ko: "세대 출입문 비밀번호 원복 및 카드키, 시설물 리모컨 등은 관리사무소에 전량 반납하셔야 합니다.",
+    ko: "세대 출입문 비밀번호 원복 및 카드키, 시설물 리모컨 등을 관리사무소에 전량 반납하셔야 합니다.",
     zh: "如更改过入户门密码请复原，门禁卡、钥匙及设施遥控器须交回管理办公室。",
     ja: "玄関の暗証番号を変更された場合は復元し、カードキー・設備リモコン等は管理事務所へ必ずご返却ください。",
     th: "หากเปลี่ยนรหัสประตูให้ตั้งคืนค่า และคืนคีย์การ์ด กุญแจ รีโมตให้สำนักงานนิติบุคคล",

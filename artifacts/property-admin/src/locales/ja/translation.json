@@ -5406,7 +5406,10 @@
     "finalized_gl": "確定済み — 総勘定元帳仕訳を記帳済み (借方 預り敷金 / 貸方 現金 + 収益)。",
     "placeholder_description": "損傷の説明 (例: 床の傷の修理)",
     "download_pdf": "退去世帯確認書 PDF",
-    "pdf_failed": "退去世帯確認書のPDF生成に失敗しました。"
+    "pdf_failed": "退去世帯確認書のPDF生成に失敗しました。",
+    "kind_deduct": "差引(-)",
+    "kind_refund": "還付(+)",
+    "placeholder_remark": "備考・処理案内（確認書に印字）"
   },
   "integrations": {
     "subtitle": "すべての外部サービス連携を管理します",
@@ -5866,7 +5869,10 @@
     "unhide_item": "項目を戻す",
     "unit_no": "部屋番号",
     "unit_type": "タイプ",
-    "upload_failed": "写真のアップロードに失敗しました"
+    "upload_failed": "写真のアップロードに失敗しました",
+    "door_password": "玄関の暗証番号",
+    "settlement_doc": "精算確認書",
+    "settlement_failed": "精算確認書を開けませんでした"
   },
   "inspection_template": {
     "active_count": "{{total}}件中 {{active}}件を使用",

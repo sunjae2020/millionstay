@@ -5410,7 +5410,10 @@
     "finalized_gl": "已定稿 — 已过总账分录（借 已收押金 / 贷 现金 + 收入）。",
     "placeholder_description": "损坏说明（例如：地板划痕修复）",
     "download_pdf": "退租确认书 PDF",
-    "pdf_failed": "生成退租确认书 PDF 失败。"
+    "pdf_failed": "生成退租确认书 PDF 失败。",
+    "kind_deduct": "扣除(-)",
+    "kind_refund": "退还(+)",
+    "placeholder_remark": "备注及处理说明（打印在确认书上）"
   },
   "integrations": {
     "subtitle": "管理所有外部服务连接",
@@ -5870,7 +5873,10 @@
     "unhide_item": "恢复该项目",
     "unit_no": "房号",
     "unit_type": "户型",
-    "upload_failed": "照片上传失败"
+    "upload_failed": "照片上传失败",
+    "door_password": "入户门密码",
+    "settlement_doc": "结算确认书",
+    "settlement_failed": "无法打开结算确认书"
   },
   "inspection_template": {
     "active_count": "共 {{total}} 项，启用 {{active}} 项",

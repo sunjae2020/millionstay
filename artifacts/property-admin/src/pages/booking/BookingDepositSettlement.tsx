@@ -13,7 +13,9 @@ import { formatMoney } from "@/lib/currency";
 // finalize (posts the GL entry releasing the liability). See
 // docs/proposals/CONDITION_REPORTS_SETTLEMENT.md.
 
-type Deduction = { id: number; description: string; amount: string; condition_item_id: number | null };
+// A line is signed: positive deducts from the deposit (차감(−)), negative refunds
+// the tenant (환급(+)). `remark` is the 비고 column on the 퇴거 세대 정산 확인서.
+type Deduction = { id: number; description: string; amount: string; remark: string | null; condition_item_id: number | null };
 type Settlement = {
   id: number; settlement_ref: string; status: string;
   deposit_held: string; total_deducted: string; refund_amount: string; currency: string;
@@ -69,7 +71,7 @@ function SettlementCard({ s, onChanged }: { s: Settlement; onChanged: () => void
   const [showAdd, setShowAdd] = useState(false);
   const { previewConfig, openPreview, closePreview } = useDocumentPreview();
 
-  async function addDeduction(p: { description: string; amount: number }) {
+  async function addDeduction(p: { description: string; amount: number; kind: "deduct" | "refund"; remark: string }) {
     await apiJson(`/api/v1/deposit-settlements/${s.id}/deductions`, { method: "POST", body: JSON.stringify(p) });
     setShowAdd(false); onChanged();
   }
@@ -113,15 +115,22 @@ function SettlementCard({ s, onChanged }: { s: Settlement; onChanged: () => void
         </div>
 
         <div className="space-y-1.5">
-          {s.deductions.map((d) => (
-            <div key={d.id} className="flex items-center justify-between text-sm border rounded-lg px-3 py-2">
-              <span>{d.description}{d.condition_item_id ? <span className="ml-2 text-[11px] text-muted-foreground">↳ {t("deposit_settlement.evidence", { id: d.condition_item_id })}</span> : null}</span>
-              <span className="flex items-center gap-2">
-                <span className="font-medium text-red-600">−{money(d.amount, s.currency)}</span>
-                {editable && <button onClick={() => removeDeduction(d.id)} className="text-muted-foreground hover:text-red-600"><Trash2 className="w-3.5 h-3.5" /></button>}
-              </span>
-            </div>
-          ))}
+          {s.deductions.map((d) => {
+            const refund = Number(d.amount) < 0;
+            return (
+              <div key={d.id} className="flex items-start justify-between text-sm border rounded-lg px-3 py-2 gap-3">
+                <span className="min-w-0">
+                  {d.description}
+                  {d.condition_item_id ? <span className="ml-2 text-[11px] text-muted-foreground">↳ {t("deposit_settlement.evidence", { id: d.condition_item_id })}</span> : null}
+                  {d.remark ? <span className="block text-[11px] text-muted-foreground truncate">{d.remark}</span> : null}
+                </span>
+                <span className="flex items-center gap-2 shrink-0">
+                  <span className={`font-medium ${refund ? "text-blue-600" : "text-red-600"}`}>{refund ? "+" : "−"}{money(Math.abs(Number(d.amount)), s.currency)}</span>
+                  {editable && <button onClick={() => removeDeduction(d.id)} className="text-muted-foreground hover:text-red-600"><Trash2 className="w-3.5 h-3.5" /></button>}
+                </span>
+              </div>
+            );
+          })}
           {!s.deductions.length && <p className="text-sm text-muted-foreground">{t("deposit_settlement.no_deductions")}</p>}
         </div>
 
@@ -139,19 +148,27 @@ function SettlementCard({ s, onChanged }: { s: Settlement; onChanged: () => void
   );
 }
 
-function AddDeductionForm({ onAdd, onCancel }: { onAdd: (p: { description: string; amount: number }) => void; onCancel: () => void }) {
+function AddDeductionForm({ onAdd, onCancel }: { onAdd: (p: { description: string; amount: number; kind: "deduct" | "refund"; remark: string }) => void; onCancel: () => void }) {
   const { t } = useTranslation();
   const [description, setDescription] = useState("");
   const [amount, setAmount] = useState("");
-  const valid = description.trim() && Number(amount) > 0;
+  const [remark, setRemark] = useState("");
+  const [kind, setKind] = useState<"deduct" | "refund">("deduct");
+  const valid = description.trim() && Number(amount) >= 0 && amount !== "";
   return (
     <div className="border rounded-lg p-3 space-y-2 bg-gray-50">
       <div className="flex gap-2 flex-wrap">
         <input value={description} onChange={(e) => setDescription(e.target.value)} placeholder={t("deposit_settlement.placeholder_description")} className="border rounded px-2 py-1.5 text-sm flex-1 min-w-[200px]" />
+        {/* 구분: 차감(−) deducts from the deposit, 환급(+) gives it back. */}
+        <select value={kind} onChange={(e) => setKind(e.target.value as "deduct" | "refund")} className="border rounded px-2 py-1.5 text-sm">
+          <option value="deduct">{t("deposit_settlement.kind_deduct")}</option>
+          <option value="refund">{t("deposit_settlement.kind_refund")}</option>
+        </select>
         <input value={amount} onChange={(e) => setAmount(e.target.value)} type="number" min="0" step="0.01" placeholder={t("common.amount")} className="border rounded px-2 py-1.5 text-sm w-32" />
       </div>
+      <input value={remark} onChange={(e) => setRemark(e.target.value)} placeholder={t("deposit_settlement.placeholder_remark")} className="border rounded px-2 py-1.5 text-sm w-full" />
       <div className="flex gap-2">
-        <Button size="sm" disabled={!valid} onClick={() => onAdd({ description: description.trim(), amount: Number(amount) })}>{t("common.add")}</Button>
+        <Button size="sm" disabled={!valid} onClick={() => onAdd({ description: description.trim(), amount: Number(amount), kind, remark: remark.trim() })}>{t("common.add")}</Button>
         <Button size="sm" variant="ghost" onClick={onCancel}>{t("common.cancel")}</Button>
       </div>
     </div>

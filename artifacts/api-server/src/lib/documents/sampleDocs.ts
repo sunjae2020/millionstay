@@ -102,7 +102,7 @@ const sampleMoveOut: MoveOutDocInput = {
   unit: "Unit 402", tenant_name: "Minjae Kim",
   contract_start: "2024-07-22", contract_end: "2026-07-21",
   monthly_rent: 1450, deposit_held: 1200, total_deducted: 235, refund_amount: 965,
-  settlement_type: "early", door_password: "1234",
+  settlement_type: "early", door_password: "1234*",
   // A negative amount is a refund line (환급(+)) — the form nets both directions.
   deductions: [
     { description: "Outstanding rent", amount: 150, remark: "Part of final month" },

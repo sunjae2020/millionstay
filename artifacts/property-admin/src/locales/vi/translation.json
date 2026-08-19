@@ -5367,7 +5367,10 @@
     "finalized_gl": "Đã hoàn tất — bút toán sổ cái đã được hạch toán (Nợ Tiền đặt cọc giữ / Có Tiền mặt + Doanh thu).",
     "placeholder_description": "Mô tả hư hỏng (ví dụ: sửa vết trầy sàn)",
     "download_pdf": "PDF xác nhận trả nhà",
-    "pdf_failed": "Không thể tạo PDF xác nhận trả nhà."
+    "pdf_failed": "Không thể tạo PDF xác nhận trả nhà.",
+    "kind_deduct": "Khấu trừ(-)",
+    "kind_refund": "Hoàn(+)",
+    "placeholder_remark": "Ghi chú & xử lý (in trên xác nhận)"
   },
   "integrations": {
     "subtitle": "Quản lý tất cả kết nối dịch vụ bên ngoài",
@@ -5818,7 +5821,10 @@
     "unhide_item": "Khôi phục dòng này",
     "unit_no": "Số căn hộ",
     "unit_type": "Loại căn hộ",
-    "upload_failed": "Tải ảnh lên không thành công"
+    "upload_failed": "Tải ảnh lên không thành công",
+    "door_password": "Mật khẩu cửa ra vào",
+    "settlement_doc": "Xác nhận quyết toán",
+    "settlement_failed": "Không mở được xác nhận quyết toán"
   },
   "inspection_template": {
     "active_count": "{{active}}/{{total}} dòng đang hoạt động",

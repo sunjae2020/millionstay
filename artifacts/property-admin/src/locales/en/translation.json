@@ -5460,7 +5460,10 @@
     "finalized_gl": "Finalized — GL entry posted (Dr Deposits Held / Cr Cash + Revenue).",
     "placeholder_description": "Damage description (e.g. floor scratch repair)",
     "download_pdf": "Move-out confirmation PDF",
-    "pdf_failed": "Failed to generate the move-out confirmation PDF."
+    "pdf_failed": "Failed to generate the move-out confirmation PDF.",
+    "kind_deduct": "Deduction (−)",
+    "kind_refund": "Refund (+)",
+    "placeholder_remark": "Remark / handling note (printed on the statement)"
   },
   "integrations": {
     "subtitle": "Manage all external service connections",
@@ -5920,7 +5923,10 @@
     "unhide_item": "Restore this row",
     "unit_no": "Unit no.",
     "unit_type": "Unit type",
-    "upload_failed": "Photo upload failed"
+    "upload_failed": "Photo upload failed",
+    "door_password": "Entrance door PIN",
+    "settlement_doc": "Settlement statement",
+    "settlement_failed": "Could not open the settlement statement"
   },
   "inspection_template": {
     "active_count": "{{active}} of {{total}} rows active",

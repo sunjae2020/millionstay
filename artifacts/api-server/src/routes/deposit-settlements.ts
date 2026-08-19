@@ -215,11 +215,21 @@ adminRouter.post("/v1/contracts/:contractId/deposit-settlements", async (req, re
     if (!contract) { res.status(404).json({ success: false, error: { code: "NOT_FOUND", message: "Contract not found" } }); return; }
 
     const depositHeld = Number(contract.bond_amount ?? 0);
+    // Pair the statement with the lease's 퇴거 점검표 (one per contract): the two
+    // are issued as a set, and the checklist carries the handover details the
+    // form quotes (현관 비밀번호 etc.).
+    const [inspection] = await db
+      .select({ id: conditionReportsTable.id })
+      .from(conditionReportsTable)
+      .where(eq(conditionReportsTable.contract_id, contractId))
+      .orderBy(desc(conditionReportsTable.created_at))
+      .limit(1);
     const settlement_ref = await generateSettlementRef();
     const [row] = await db.insert(depositSettlementsTable).values({
       settlement_ref,
       booking_id: contract.booking_id ?? null,
       contract_id: contractId,
+      move_out_report_id: inspection?.id ?? null,
       status: "draft",
       deposit_held: String(round2(depositHeld)),
       refund_amount: String(round2(depositHeld)),
@@ -248,6 +258,7 @@ adminRouter.post("/v1/contracts/:contractId/deposit-settlements", async (req, re
         deposit_settlement_id: row!.id,
         description: `${inv.description ?? inv.invoice_ref}${inv.due_date ? ` (${inv.due_date})` : ""}`,
         amount: String(round2(Number(inv.amount ?? 0))),
+        remark: inv.invoice_ref,
       });
     }
     const totals = await recomputeTotals(row!.id);
@@ -276,17 +287,53 @@ adminRouter.post("/v1/deposit-settlements/:id/deductions", async (req, res): Pro
     const [s] = await db.select().from(depositSettlementsTable).where(eq(depositSettlementsTable.id, id)).limit(1);
     if (!s) { res.status(404).json({ success: false, error: { code: "NOT_FOUND", message: "Settlement not found" } }); return; }
     if (!["draft", "proposed"].includes(s.status)) { res.status(409).json({ success: false, error: { code: "LOCKED", message: "Settlement is finalized" } }); return; }
-    const amount = Number(req.body?.amount);
-    if (!Number.isFinite(amount) || amount < 0) { res.status(400).json({ success: false, error: { code: "BAD_AMOUNT", message: "amount must be a non-negative number" } }); return; }
+    // A line is signed: positive deducts from the deposit (차감(−)), negative
+    // refunds the tenant (환급(+), e.g. 장기수선충당금). `kind` is the friendly
+    // form the admin UI posts; a raw signed `amount` works too.
+    const rawAmount = Number(req.body?.amount);
+    if (!Number.isFinite(rawAmount)) { res.status(400).json({ success: false, error: { code: "BAD_AMOUNT", message: "amount must be a number" } }); return; }
+    const kind = req.body?.kind === "refund" ? "refund" : req.body?.kind === "deduct" ? "deduct" : null;
+    const amount = kind ? (kind === "refund" ? -Math.abs(rawAmount) : Math.abs(rawAmount)) : rawAmount;
     await db.insert(depositDeductionItemsTable).values({
       deposit_settlement_id: id,
       condition_item_id: Number.isFinite(Number(req.body?.condition_item_id)) && req.body?.condition_item_id ? Number(req.body.condition_item_id) : null,
       description: typeof req.body?.description === "string" && req.body.description.trim() ? req.body.description.trim() : "Deduction",
       amount: String(round2(amount)),
+      remark: typeof req.body?.remark === "string" && req.body.remark.trim() ? req.body.remark.trim() : null,
       photo_ids: Array.isArray(req.body?.photo_ids) ? req.body.photo_ids : [],
     });
     await recomputeTotals(id);
     res.status(201).json({ success: true, data: await loadSettlementDetail(id) });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: { code: "SERVER_ERROR", message: err.message } });
+  }
+});
+
+// Edit a settlement line (draft/proposed only) — description, signed amount or
+// the 비고 text, without dropping the condition-evidence link the row carries.
+adminRouter.patch("/v1/deposit-settlements/:id/deductions/:did", async (req, res): Promise<void> => {
+  try {
+    const id = Number(req.params.id);
+    const did = Number(req.params.did);
+    const [s] = await db.select().from(depositSettlementsTable).where(eq(depositSettlementsTable.id, id)).limit(1);
+    if (!s) { res.status(404).json({ success: false, error: { code: "NOT_FOUND", message: "Settlement not found" } }); return; }
+    if (!["draft", "proposed"].includes(s.status)) { res.status(409).json({ success: false, error: { code: "LOCKED", message: "Settlement is finalized" } }); return; }
+
+    const patch: Record<string, unknown> = {};
+    if (typeof req.body?.description === "string" && req.body.description.trim()) patch.description = req.body.description.trim();
+    if (req.body?.remark !== undefined) patch.remark = typeof req.body.remark === "string" && req.body.remark.trim() ? req.body.remark.trim() : null;
+    if (req.body?.amount !== undefined) {
+      const raw = Number(req.body.amount);
+      if (!Number.isFinite(raw)) { res.status(400).json({ success: false, error: { code: "BAD_AMOUNT", message: "amount must be a number" } }); return; }
+      const kind = req.body?.kind === "refund" ? "refund" : req.body?.kind === "deduct" ? "deduct" : null;
+      patch.amount = String(round2(kind ? (kind === "refund" ? -Math.abs(raw) : Math.abs(raw)) : raw));
+    }
+    if (!Object.keys(patch).length) { res.status(400).json({ success: false, error: { code: "NO_FIELDS", message: "Nothing to update" } }); return; }
+
+    await db.update(depositDeductionItemsTable).set(patch)
+      .where(and(eq(depositDeductionItemsTable.id, did), eq(depositDeductionItemsTable.deposit_settlement_id, id)));
+    await recomputeTotals(id);
+    res.json({ success: true, data: await loadSettlementDetail(id) });
   } catch (err: any) {
     res.status(500).json({ success: false, error: { code: "SERVER_ERROR", message: err.message } });
   }
@@ -438,6 +485,20 @@ async function buildMoveOutDocInput(id: number): Promise<MoveOutDocInput | null>
 
   const asOf = detail.finalized_at ?? detail.proposed_at ?? detail.created_at;
 
+  // 현관 비밀번호: recorded on the linked 퇴거 점검표 (condition_reports.meta.
+  // door_password) — the checklist is where the handover details are captured,
+  // so the settlement form quotes it instead of duplicating the field.
+  let doorPassword: string | null = null;
+  if (detail.move_out_report_id) {
+    const [rep] = await db
+      .select({ meta: conditionReportsTable.meta })
+      .from(conditionReportsTable)
+      .where(eq(conditionReportsTable.id, detail.move_out_report_id))
+      .limit(1);
+    const pin = (rep?.meta as Record<string, unknown> | null)?.door_password;
+    if (typeof pin === "string" && pin.trim()) doorPassword = pin.trim();
+  }
+
   // 정산구분: settled before the lease end date = 중도퇴거(early), otherwise 만기퇴거.
   // Unknown end date leaves both boxes unmarked on the form.
   const contractEnd = contract?.end ?? booking?.check_out_date ?? null;
@@ -464,8 +525,9 @@ async function buildMoveOutDocInput(id: number): Promise<MoveOutDocInput | null>
     total_deducted: Number(detail.total_deducted ?? 0),
     refund_amount: Number(detail.refund_amount ?? 0),
     settlement_type: settlementType,
+    door_password: doorPassword,
     // A negative amount is a refund line (환급(+)); positive is a deduction (차감(−)).
-    deductions: detail.deductions.map((d) => ({ description: d.description, amount: Number(d.amount ?? 0), remark: null })),
+    deductions: detail.deductions.map((d) => ({ description: d.description, amount: Number(d.amount ?? 0), remark: d.remark ?? null })),
   };
 }
 

@@ -52,7 +52,13 @@ export const depositDeductionItemsTable = pgTable("deposit_deduction_items", {
   deposit_settlement_id: integer("deposit_settlement_id").notNull(),
   condition_item_id: integer("condition_item_id"), // condition_report_items.id — evidence
   description: text("description").notNull(),
+  // Signed: positive = deducted from the deposit (차감(−)), negative = refunded
+  // to the tenant (환급(+)). The move-out settlement form derives each line's
+  // 구분 column from this sign, and recomputeTotals() nets both directions.
   amount: numeric("amount", { precision: 10, scale: 2 }).notNull().default("0"),
+  // "비고 및 처리 안내" — free-text handling note printed next to the line on the
+  // 퇴거 세대 정산 확인서.
+  remark: text("remark"),
   photo_ids: jsonb("photo_ids").notNull().default([]), // condition_report_photos.id[]
   created_at: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });

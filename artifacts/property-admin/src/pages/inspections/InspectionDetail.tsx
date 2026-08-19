@@ -15,7 +15,7 @@ import { useTranslation } from "react-i18next";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   ArrowLeft, Camera, Check, ChevronDown, ChevronRight, Copy, FileText, Link2,
-  Eye, EyeOff, Loader2, Mail, Minus, Plus, Trash2, TriangleAlert, X,
+  Eye, EyeOff, Loader2, Mail, Minus, Plus, Trash2, TriangleAlert, Wallet, X,
 } from "lucide-react";
 import { Layout } from "@/components/Layout";
 import { DocumentPreviewDialog, useDocumentPreview } from "@/components/DocumentPreviewDialog";
@@ -220,6 +220,38 @@ export default function InspectionDetail() {
     }
   }
 
+  // 퇴거 세대 정산 확인서 — issued as a SET with this checklist. Opens the lease's
+  // settlement statement, drafting one on first use (the draft snapshots the
+  // 보증금 and turns every month already settled out of it into a line). Both
+  // documents render through the shared preview modal, never a bare download.
+  const settlementDoc = useMutation({
+    mutationFn: async () => {
+      if (!report?.contract_id) throw new Error("no contract");
+      const list = await apiJson<{ data: Array<{ id: number; settlement_ref: string }> }>(
+        `/api/v1/contracts/${report.contract_id}/deposit-settlements`,
+      );
+      const existing = list.data?.[0];
+      if (existing) return existing;
+      const created = await apiJson<{ data: { id: number; settlement_ref: string } }>(
+        `/api/v1/contracts/${report.contract_id}/deposit-settlements`,
+        { method: "POST", body: "{}" },
+      );
+      return created.data;
+    },
+    onSuccess: (s) => {
+      openPreview({
+        title: s.settlement_ref,
+        filename: `${s.settlement_ref}.pdf`,
+        source: { kind: "api", path: `/api/v1/deposit-settlements/${s.id}/document.pdf?lang=${encodeURIComponent(lang)}` },
+      });
+    },
+    onError: (err) => toast({
+      title: t("inspection.settlement_failed"),
+      description: err instanceof Error ? err.message : undefined,
+      variant: "destructive",
+    }),
+  });
+
   // Preview the checklist PDF (print / download). Delivery to the tenant goes
   // through the signing link below, not a document email.
   function previewPdf() {
@@ -297,6 +329,12 @@ export default function InspectionDetail() {
           </div>
           <div className="flex flex-col gap-2 shrink-0">
             <Button size="sm" variant="outline" onClick={previewPdf}><FileText className="w-3.5 h-3.5 mr-1" />PDF</Button>
+            {report.contract_id && (
+              <Button size="sm" variant="outline" onClick={() => settlementDoc.mutate()} disabled={settlementDoc.isPending}>
+                {settlementDoc.isPending ? <Loader2 className="w-3.5 h-3.5 mr-1 animate-spin" /> : <Wallet className="w-3.5 h-3.5 mr-1" />}
+                {t("inspection.settlement_doc")}
+              </Button>
+            )}
           </div>
         </div>
 
@@ -332,6 +370,8 @@ export default function InspectionDetail() {
             {metaField("tenant_phone", t("inspection.tenant_phone"), "010-")}
             {metaField("move_in_date", t("inspection.move_in_date"), "YYYY-MM-DD")}
             {metaField("move_out_date", t("inspection.move_out_date"), "YYYY-MM-DD")}
+            {/* Quoted on the 퇴거 세대 정산 확인서 ("비밀번호 …로 변경 후 반납"). */}
+            {metaField("door_password", t("inspection.door_password"), "1234*")}
           </div>
         </div>
 

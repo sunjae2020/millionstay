@@ -5460,7 +5460,10 @@
     "finalized_gl": "확정됨 — 총계정원장 분개 전기 완료 (차변 예치 보증금 / 대변 현금 + 수익).",
     "placeholder_description": "손상 설명 (예: 바닥 긁힘 수리)",
     "download_pdf": "퇴거 세대 확인서 PDF",
-    "pdf_failed": "퇴거 세대 확인서 PDF 생성에 실패했습니다."
+    "pdf_failed": "퇴거 세대 확인서 PDF 생성에 실패했습니다.",
+    "kind_deduct": "차감(-)",
+    "kind_refund": "환급(+)",
+    "placeholder_remark": "비고 및 처리 안내 (확인서에 인쇄)"
   },
   "integrations": {
     "subtitle": "모든 외부 서비스 연동을 관리합니다",
@@ -5920,7 +5923,10 @@
     "unhide_item": "항목 되살리기",
     "unit_no": "호수",
     "unit_type": "타입",
-    "upload_failed": "사진 업로드에 실패했습니다"
+    "upload_failed": "사진 업로드에 실패했습니다",
+    "door_password": "세대 출입문 비밀번호",
+    "settlement_doc": "정산 확인서",
+    "settlement_failed": "정산 확인서를 열지 못했습니다"
   },
   "inspection_template": {
     "active_count": "{{total}}개 중 {{active}}개 사용",
