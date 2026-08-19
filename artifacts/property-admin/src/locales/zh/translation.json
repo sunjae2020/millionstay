@@ -3953,7 +3953,9 @@
     "biz_no_label": "营业执照号",
     "privacy_officer_label": "个人信息保护负责人",
     "privacy_officer_placeholder": "姓名（邮箱）",
-    "corp_no_label": "法人登记号"
+    "corp_no_label": "法人登记号",
+    "leasing_contact_phone_label": "租赁办公室负责人联系电话",
+    "leasing_contact_phone_helper": "退租结算确认书上显示的负责人号码。留空时使用公司代表电话。"
   },
   "settings_dbsync": {
     "page_title": "数据库同步",

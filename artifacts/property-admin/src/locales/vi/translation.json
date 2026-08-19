@@ -3919,7 +3919,9 @@
     "biz_no_label": "Số đăng ký kinh doanh",
     "privacy_officer_label": "Cán bộ phụ trách bảo mật",
     "privacy_officer_placeholder": "Tên (email)",
-    "corp_no_label": "Số đăng ký pháp nhân"
+    "corp_no_label": "Số đăng ký pháp nhân",
+    "leasing_contact_phone_label": "Liên hệ văn phòng cho thuê",
+    "leasing_contact_phone_helper": "Số của người phụ trách được ghi trên xác nhận quyết toán trả phòng. Để trống sẽ dùng số điện thoại công ty."
   },
   "settings_dbsync": {
     "page_title": "Đồng bộ DB",
