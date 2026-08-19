@@ -244,14 +244,19 @@ function renderIssuerBlock(d: MoveOutDocInput, company: CompanyInfo, lang: DocLa
 
 /** Scoped CSS for the move-out statement (injected into the doc body). */
 const MOVE_OUT_STYLE = `<style>
-  .mo-title { text-align:center; margin:0 0 6px; }
-  .mo-title h1 { font-size:22px; font-weight:800; letter-spacing:0.02em; margin:0; }
-  .mo-asof { text-align:right; font-size:12.5px; color:${DOC_TOKENS.inkMuted}; font-style:italic; margin:0 0 18px; }
-  .mo-sec { margin:0 0 18px; }
-  .mo-sec-title { font-size:13px; font-weight:800; color:${DOC_TOKENS.brand}; margin:0 0 6px; }
-  table.mo-info, table.mo-lines { width:100%; border-collapse:collapse; font-size:12.5px; }
-  table.mo-info th, table.mo-info td,
-  table.mo-lines th, table.mo-lines td { border:1px solid #bfbfbf; padding:6px 9px; }
+  /* Sized to land the whole statement on ONE A4 page: the settlement table and
+     the section-3 guidance carry the smallest type, since they are the two
+     blocks that grow with the data. */
+  .mo-title { text-align:center; margin:0 0 4px; }
+  .mo-title h1 { font-size:21px; font-weight:800; letter-spacing:0.02em; margin:0; }
+  .mo-asof { text-align:right; font-size:11.5px; color:${DOC_TOKENS.inkMuted}; font-style:italic; margin:0 0 12px; }
+  .mo-sec { margin:0 0 12px; }
+  .mo-sec-title { font-size:12px; font-weight:800; color:${DOC_TOKENS.brand}; margin:0 0 5px; }
+  table.mo-info, table.mo-lines { width:100%; border-collapse:collapse; }
+  table.mo-info { font-size:11.5px; }
+  table.mo-lines { font-size:11px; }
+  table.mo-info th, table.mo-info td { border:1px solid #bfbfbf; padding:5px 8px; }
+  table.mo-lines th, table.mo-lines td { border:1px solid #bfbfbf; padding:4px 7px; }
   table.mo-info th { width:17%; background:#f2f2f4; text-align:center; font-weight:700; color:#222; }
   table.mo-info td { width:33%; text-align:center; }
   table.mo-lines thead th { background:${DOC_TOKENS.brand}; color:#fff; font-weight:700; text-align:center; }
@@ -261,20 +266,36 @@ const MOVE_OUT_STYLE = `<style>
   .mo-pos { color:#1f6fb2; font-weight:700; }
   tr.mo-sum td { background:#fafafb; font-weight:700; }
   tr.mo-sum td.mo-key { background:#f2f2f4; font-weight:800; text-align:center; }
-  tr.mo-sum td.mo-sum-remark { font-weight:400; font-size:11.5px; color:#333; }
-  tr.mo-final td { background:#fff6e6; font-size:13px; font-weight:800; }
-  tr.mo-final td.mo-sum-remark { font-weight:400; }
-  .mo-guide-group { margin:0 0 10px; }
-  .mo-guide-title { font-size:12px; font-weight:800; color:${DOC_TOKENS.brand}; margin:0 0 3px; }
+  tr.mo-sum td.mo-sum-remark { font-weight:400; font-size:10px; color:#333; }
+  tr.mo-final td { background:#fff6e6; font-size:12px; font-weight:800; }
+  tr.mo-final td.mo-sum-remark { font-weight:400; font-size:10px; }
+  .mo-guide-group { margin:0 0 6px; }
+  .mo-guide-title { font-size:10.5px; font-weight:800; color:${DOC_TOKENS.brand}; margin:0 0 2px; }
   .mo-guide-lead { font-weight:800; }
-  .mo-guide-item { font-size:11.5px; color:#333; line-height:1.75; padding-left:12px; }
-  .mo-issuer { text-align:center; margin-top:28px; }
-  .mo-date { font-size:14px; color:#222; margin-bottom:12px; }
-  .mo-signer { position:relative; display:inline-block; padding:4px 8px; }
-  .mo-signer-label { font-size:16px; font-weight:800; letter-spacing:0.3em; margin-right:4px; }
-  .mo-signer-name { font-size:17px; font-weight:800; letter-spacing:0.03em; }
-  .mo-signer-seal { font-size:14px; margin-left:8px; color:#555; }
-  .mo-seal { position:absolute; right:-10px; top:50%; transform:translateY(-50%); width:58px; height:58px; object-fit:contain; opacity:0.9; }
+  .mo-guide-item { font-size:9.5px; color:#333; line-height:1.5; padding-left:11px; }
+  .mo-issuer { text-align:center; margin-top:18px; }
+  .mo-date { font-size:13px; color:#222; margin-bottom:10px; }
+  .mo-signer { position:relative; display:inline-block; padding:2px 8px; }
+  .mo-signer-label { font-size:15px; font-weight:800; letter-spacing:0.3em; margin-right:4px; }
+  .mo-signer-name { font-size:16px; font-weight:800; letter-spacing:0.03em; }
+  .mo-signer-seal { font-size:13px; margin-left:8px; color:#555; }
+  .mo-seal { position:absolute; right:-10px; top:50%; transform:translateY(-50%); width:54px; height:54px; object-fit:contain; opacity:0.9; }
+  /* One page, always: never let a block split across a page break. */
+  .mo-sec, .mo-issuer, .mo-guide-group { page-break-inside:avoid; break-inside:avoid; }
+
+  /* Long settlements (10+ lines) shrink one more step rather than spilling onto
+     a second sheet — the form is meant to be handed over as a single page. */
+  .mo-dense table.mo-lines { font-size:9.5px; }
+  .mo-dense table.mo-lines th, .mo-dense table.mo-lines td { padding:2.5px 6px; }
+  .mo-dense tr.mo-final td { font-size:10.5px; }
+  .mo-dense tr.mo-sum td.mo-sum-remark, .mo-dense tr.mo-final td.mo-sum-remark { font-size:9px; }
+  .mo-dense table.mo-info { font-size:10.5px; }
+  .mo-dense table.mo-info th, .mo-dense table.mo-info td { padding:3.5px 7px; }
+  .mo-dense .mo-guide-item { font-size:8.5px; line-height:1.4; }
+  .mo-dense .mo-guide-title { font-size:9.5px; }
+  .mo-dense .mo-guide-group { margin-bottom:4px; }
+  .mo-dense .mo-sec { margin-bottom:9px; }
+  .mo-dense .mo-issuer { margin-top:12px; }
 </style>`;
 
 /** Build the inner body HTML for a move-out settlement confirmation (no shell). */
@@ -286,7 +307,11 @@ export function buildMoveOutSettlementBody(
 ): string {
   const asOf = formatDocDate(d.as_of_date, lang);
   const guide = noteHtml.trim() || renderDefaultGuide(d, company, lang);
+  // Past ~9 settlement lines the page runs out of room; shrink a step instead of
+  // breaking the statement across two sheets.
+  const dense = d.deductions.length > 9;
   return `${MOVE_OUT_STYLE}
+    <div class="mo-doc${dense ? " mo-dense" : ""}">
     <div class="mo-title">
       <h1>${t(lang, "moveout.heading")}</h1>
     </div>
@@ -308,6 +333,7 @@ export function buildMoveOutSettlementBody(
     </div>
 
     ${renderIssuerBlock(d, company, lang)}
+    </div>
   `;
 }
 
