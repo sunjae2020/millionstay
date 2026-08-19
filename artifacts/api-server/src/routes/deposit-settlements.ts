@@ -502,6 +502,7 @@ async function buildMoveOutDocInput(id: number): Promise<MoveOutDocInput | null>
   // latest contract on the booking.
   const contractCols = {
     start: contractsTable.start_date, end: contractsTable.end_date,
+    monthly_rent: contractsTable.monthly_rent,
     space_id: contractsTable.space_id, tenant_account_id: contractsTable.tenant_account_id,
   };
   const [contract] = detail.contract_id
@@ -564,7 +565,9 @@ async function buildMoveOutDocInput(id: number): Promise<MoveOutDocInput | null>
     tenant_name: tenantName,
     contract_start: contract?.start ?? booking?.check_in_date ?? null,
     contract_end: contract?.end ?? booking?.check_out_date ?? null,
-    monthly_rent: spaceRent ?? null,
+    // 임대료(월)는 계약서가 정본 — 세대(spaces)의 기준 임대료는 계약에 값이
+    // 없을 때만 쓴다.
+    monthly_rent: contract?.monthly_rent ?? spaceRent ?? null,
     deposit_held: Number(detail.deposit_held ?? 0),
     total_deducted: Number(detail.total_deducted ?? 0),
     // C = B + A, 부호 있는 값. 차감이 보증금을 넘으면 마이너스로 찍혀 임차인이 더
