@@ -167,27 +167,30 @@ function renderSettlementTable(d: MoveOutDocInput, lang: DocLang): string {
     </table>`;
 }
 
-/** 3. 보증금 반환 및 퇴거 절차 안내사항 — default guidance when no template body. */
-function renderDefaultGuide(d: MoveOutDocInput, company: CompanyInfo, lang: DocLang): string {
-  const phone = (d.contact_phone || company.phone || "").trim();
-  const pin = (d.door_password || "").trim();
+/**
+ * 3. 보증금 반환 및 퇴거 절차 안내사항.
+ *
+ * `values` supplies the data-dependent bits. Passing the `{{var}}` placeholders
+ * instead of real values yields the editable TEMPLATE body seeded into
+ * `pdf.move_out_confirmation` — so the Studio copy and the built-in fallback are
+ * generated from the very same i18n strings and can never drift apart.
+ */
+function renderGuide(
+  lang: DocLang,
+  values: { amount: string; phone: string; pin: string },
+): string {
   const groups: Array<{ title: string; lead?: string; bullets: string[] }> = [
     {
       title: t(lang, "moveout.guide.refund.title"),
-      lead: t(lang, "moveout.guide.refund.lead", { amount: money(d.refund_amount, d.currency) }),
+      lead: t(lang, "moveout.guide.refund.lead", { amount: values.amount }),
       bullets: [
         t(lang, "moveout.guide.refund.docs"),
-        phone
-          ? t(lang, "moveout.guide.refund.how", { phone })
-          : t(lang, "moveout.guide.refund.howNoPhone"),
+        t(lang, "moveout.guide.refund.how", { phone: values.phone }),
       ],
     },
     { title: t(lang, "moveout.guide.transfer.title"), bullets: [t(lang, "moveout.guide.transfer.b1"), t(lang, "moveout.guide.transfer.b2")] },
     { title: t(lang, "moveout.guide.utility.title"), bullets: [t(lang, "moveout.guide.utility.b1"), t(lang, "moveout.guide.utility.b2")] },
-    {
-      title: t(lang, "moveout.guide.restore.title"),
-      bullets: [pin ? t(lang, "moveout.guide.restore.b1Pin", { pin }) : t(lang, "moveout.guide.restore.b1")],
-    },
+    { title: t(lang, "moveout.guide.restore.title"), bullets: [t(lang, "moveout.guide.restore.b1Pin", { pin: values.pin })] },
   ];
   return groups
     .map(
@@ -197,6 +200,29 @@ function renderDefaultGuide(d: MoveOutDocInput, company: CompanyInfo, lang: DocL
       </div>`,
     )
     .join("");
+}
+
+/** Built-in guidance used when the template carries no body. */
+function renderDefaultGuide(d: MoveOutDocInput, company: CompanyInfo, lang: DocLang): string {
+  return renderGuide(lang, {
+    amount: money(d.refund_amount, d.currency),
+    phone: (d.contact_phone || company.phone || "").trim(),
+    pin: (d.door_password || "").trim() || "____",
+  });
+}
+
+/**
+ * The seedable template body for `pdf.move_out_confirmation` — same copy with
+ * `{{refund_amount}}` / `{{contact_phone}}` / `{{door_password}}` left as
+ * variables for the route to fill. Used by `scripts/print-move-out-guide.mjs`
+ * to regenerate the seeded copy; not called at request time.
+ */
+export function buildMoveOutGuideTemplate(lang: DocLang): string {
+  return renderGuide(lang, {
+    amount: "{{refund_amount}}",
+    phone: "{{contact_phone}}",
+    pin: "{{door_password}}",
+  });
 }
 
 /** Dated issuer block: 발행일 + 임대인 : 회사명 (인) with the seal (도장) overlaid. */

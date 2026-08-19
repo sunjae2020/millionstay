@@ -172,13 +172,87 @@ const QUOTE_NOTE = {
 };
 
 // Move-out confirmation residence-transfer notice (printed under the settlement table).
+// 3번 안내사항 본문 — `scripts/print-move-out-guide.mjs` 산출물.
+// 문구 수정은 lib/documents/i18n.ts 의 moveout.guide.* 에서 하고 스크립트를 다시 돌린다.
 const MOVE_OUT_NOTE = {
-  ko: "<p>* 전입신고하셨다면 보증금 반환 확인 후 필히 전출신고 하셔야 합니다.</p>",
-  en: "<p>* If you registered your residence at this address, be sure to file a move-out (residence transfer) report after confirming the deposit refund.</p>",
-  ja: "<p>* 転入届を提出された場合は、保証金の返還を確認後、必ず転出届を提出してください。</p>",
-  zh: "<p>* 如已办理迁入登记，请在确认押金退还后务必办理迁出登记。</p>",
-  th: "<p>* หากท่านได้แจ้งย้ายเข้าตามที่อยู่นี้ กรุณาแจ้งย้ายออกหลังจากยืนยันการคืนเงินประกันแล้ว</p>",
-  vi: "<p>* Nếu bạn đã đăng ký cư trú tại địa chỉ này, hãy chắc chắn khai báo chuyển đi sau khi xác nhận việc hoàn trả tiền cọc.</p>",
+  en: `<div class="mo-guide-group">
+        <div class="mo-guide-title">■ Submitting your refund account : <span class="mo-guide-lead">The balance C ({{refund_amount}}) above is returned to a bank account held in the tenant&#39;s own name.</span></div>
+        <div class="mo-guide-item">· Documents required: 1 copy of the bankbook / account details in the tenant&#39;s name.</div><div class="mo-guide-item">· How to submit: hand it in at the management office, or send it to {{contact_phone}}.</div>
+      </div><div class="mo-guide-group">
+        <div class="mo-guide-title">■ Move-out report &amp; resident registration :</div>
+        <div class="mo-guide-item">· If you registered your residence at this address, file the move-out report once the deposit refund is confirmed.</div><div class="mo-guide-item">· Failing to do so may restrict the following tenant&#39;s move-in registration and cause related disadvantages.</div>
+      </div><div class="mo-guide-group">
+        <div class="mo-guide-title">■ Utility settlement notes :</div>
+        <div class="mo-guide-item">· Gas: apply for disconnection directly with the city gas provider and pay the charges up to the move-out date.</div><div class="mo-guide-item">· Management fees: any additional amount arising after settlement may be billed separately.</div>
+      </div><div class="mo-guide-group">
+        <div class="mo-guide-title">■ Restoration &amp; key return :</div>
+        <div class="mo-guide-item">· Reset the entrance door PIN to {{door_password}}, and return all card keys and equipment remotes to the management office.</div>
+      </div>`,
+  ko: `<div class="mo-guide-group">
+        <div class="mo-guide-title">■ 보증금 반환 계좌 제출 안내 : <span class="mo-guide-lead">상기 차액 C({{refund_amount}})는 계약자 명의 통장으로 반환됩니다.</span></div>
+        <div class="mo-guide-item">· 제출 서류: 계약자 명의 통장 사본 1부</div><div class="mo-guide-item">· 제출 방법: 관리사무소 방문 제출 또는 {{contact_phone}} 문자전송</div>
+      </div><div class="mo-guide-group">
+        <div class="mo-guide-title">■ 전출신고 및 주민등록 이전 의무 :</div>
+        <div class="mo-guide-item">· 기존에 전입신고를 하신 세대는 보증금 반환 확인 후 주소지 &#39;전출신고&#39;를 완료하셔야 합니다.</div><div class="mo-guide-item">· 미전출 시 후속 입주자의 전입신고 제한 및 관련 불이익이 발생할 수 있습니다.</div>
+      </div><div class="mo-guide-group">
+        <div class="mo-guide-title">■ 공과금 정산 관련 주의사항 :</div>
+        <div class="mo-guide-item">· 가스비: 도시가스사에 직접 해지 신청(계량기 검침) 후 퇴거일까지의 요금을 직접 납부하셔야 합니다.</div><div class="mo-guide-item">· 관리비: 정산일 이후 추가 발생분이 있는 경우 별도 청구될 수 있습니다.</div>
+      </div><div class="mo-guide-group">
+        <div class="mo-guide-title">■ 시설물 원상복구 및 열쇠 반납 :</div>
+        <div class="mo-guide-item">· 세대 출입문 비밀번호 {{door_password}}로 변경 및 카드키, 시설물 리모컨 등을 관리사무소에 전량 반납하셔야 합니다.</div>
+      </div>`,
+  ja: `<div class="mo-guide-group">
+        <div class="mo-guide-title">■ 保証金返還口座のご提出案内 : <span class="mo-guide-lead">上記差額 C（{{refund_amount}}）は契約者名義の口座へ返還されます。</span></div>
+        <div class="mo-guide-item">· 提出書類：契約者名義の通帳の写し 1 部</div><div class="mo-guide-item">· 提出方法：管理事務所へのご持参、または {{contact_phone}} へのSMS送信</div>
+      </div><div class="mo-guide-group">
+        <div class="mo-guide-title">■ 転出届および住民登録移転の義務 :</div>
+        <div class="mo-guide-item">· 転入届を提出された世帯は、保証金の返還確認後に住所地の「転出届」を完了してください。</div><div class="mo-guide-item">· 未転出の場合、今後の入居者の転入届が制限されるなどの不利益が生じる可能性があります。</div>
+      </div><div class="mo-guide-group">
+        <div class="mo-guide-title">■ 公共料金精算に関する注意事項 :</div>
+        <div class="mo-guide-item">· ガス料金：都市ガス会社へ直接解約を申請（検針）し、退去日までの料金をご負担ください。</div><div class="mo-guide-item">· 管理費：精算日以降に追加発生分がある場合、別途請求されることがあります。</div>
+      </div><div class="mo-guide-group">
+        <div class="mo-guide-title">■ 設備の原状回復および鍵の返却 :</div>
+        <div class="mo-guide-item">· 玄関の暗証番号を {{door_password}} に変更のうえ、カードキー・設備リモコン等はすべて管理事務所へご返却ください。</div>
+      </div>`,
+  zh: `<div class="mo-guide-group">
+        <div class="mo-guide-title">■ 退还账户提交须知 : <span class="mo-guide-lead">上述差额 C（{{refund_amount}}）将退还至承租人本人名下账户。</span></div>
+        <div class="mo-guide-item">· 所需材料：承租人名下存折复印件 1 份</div><div class="mo-guide-item">· 提交方式：到管理办公室递交，或发送至 {{contact_phone}}。</div>
+      </div><div class="mo-guide-group">
+        <div class="mo-guide-title">■ 迁出登记及户籍迁移义务 :</div>
+        <div class="mo-guide-item">· 如已办理迁入登记，请在确认押金退还后完成“迁出登记”。</div><div class="mo-guide-item">· 未办理迁出可能导致后续入住者迁入受限及相关不利影响。</div>
+      </div><div class="mo-guide-group">
+        <div class="mo-guide-title">■ 公共费用结算注意事项 :</div>
+        <div class="mo-guide-item">· 燃气费：请自行向燃气公司申请解约（抄表），并支付至退租日的费用。</div><div class="mo-guide-item">· 管理费：结算日之后如有额外产生费用，可另行收取。</div>
+      </div><div class="mo-guide-group">
+        <div class="mo-guide-title">■ 设施恢复原状及钥匙归还 :</div>
+        <div class="mo-guide-item">· 请将入户门密码改回 {{door_password}}，并将门禁卡、设施遥控器等全部交回管理办公室。</div>
+      </div>`,
+  th: `<div class="mo-guide-group">
+        <div class="mo-guide-title">■ การส่งบัญชีรับเงินคืน : <span class="mo-guide-lead">ยอดส่วนต่าง C ({{refund_amount}}) ข้างต้นจะคืนเข้าบัญชีที่เป็นชื่อผู้เช่าเท่านั้น</span></div>
+        <div class="mo-guide-item">· เอกสารที่ต้องส่ง: สำเนาสมุดบัญชีในชื่อผู้เช่า 1 ฉบับ</div><div class="mo-guide-item">· วิธีส่ง: ยื่นที่สำนักงานนิติบุคคล หรือส่งมาที่ {{contact_phone}}</div>
+      </div><div class="mo-guide-group">
+        <div class="mo-guide-title">■ การแจ้งย้ายออกและย้ายทะเบียนบ้าน :</div>
+        <div class="mo-guide-item">· หากเคยแจ้งย้ายเข้าตามที่อยู่นี้ กรุณาแจ้งย้ายออกหลังยืนยันการคืนเงินประกัน</div><div class="mo-guide-item">· หากไม่ดำเนินการ อาจทำให้ผู้เช่ารายถัดไปแจ้งย้ายเข้าไม่ได้และเกิดผลเสียตามมา</div>
+      </div><div class="mo-guide-group">
+        <div class="mo-guide-title">■ ข้อควรทราบเรื่องค่าสาธารณูปโภค :</div>
+        <div class="mo-guide-item">· ค่าแก๊ส: ติดต่อบริษัทแก๊สเพื่อยกเลิก (จดมิเตอร์) และชำระค่าใช้จ่ายถึงวันย้ายออกด้วยตนเอง</div><div class="mo-guide-item">· ค่าส่วนกลาง: หากมีค่าใช้จ่ายเพิ่มหลังวันชำระบัญชี อาจเรียกเก็บเพิ่มเติม</div>
+      </div><div class="mo-guide-group">
+        <div class="mo-guide-title">■ การคืนสภาพและคืนกุญแจ :</div>
+        <div class="mo-guide-item">· ตั้งรหัสประตูกลับเป็น {{door_password}} และคืนคีย์การ์ด รีโมตอุปกรณ์ทั้งหมดให้สำนักงานนิติบุคคล</div>
+      </div>`,
+  vi: `<div class="mo-guide-group">
+        <div class="mo-guide-title">■ Nộp tài khoản nhận hoàn tiền : <span class="mo-guide-lead">Khoản chênh lệch C ({{refund_amount}}) nêu trên sẽ được hoàn vào tài khoản đứng tên người thuê.</span></div>
+        <div class="mo-guide-item">· Hồ sơ cần nộp: 1 bản sao sổ/thông tin tài khoản đứng tên người thuê.</div><div class="mo-guide-item">· Cách nộp: nộp tại văn phòng quản lý hoặc gửi tới {{contact_phone}}.</div>
+      </div><div class="mo-guide-group">
+        <div class="mo-guide-title">■ Nghĩa vụ khai báo chuyển đi :</div>
+        <div class="mo-guide-item">· Nếu đã đăng ký cư trú tại địa chỉ này, hãy hoàn tất khai báo chuyển đi sau khi xác nhận hoàn cọc.</div><div class="mo-guide-item">· Nếu không thực hiện, người thuê kế tiếp có thể không đăng ký cư trú được và phát sinh bất lợi liên quan.</div>
+      </div><div class="mo-guide-group">
+        <div class="mo-guide-title">■ Lưu ý quyết toán tiện ích :</div>
+        <div class="mo-guide-item">· Phí gas: tự liên hệ công ty gas để ngưng dịch vụ (chốt đồng hồ) và thanh toán đến ngày trả phòng.</div><div class="mo-guide-item">· Phí quản lý: nếu phát sinh thêm sau ngày quyết toán, có thể được thu riêng.</div>
+      </div><div class="mo-guide-group">
+        <div class="mo-guide-title">■ Khôi phục hiện trạng &amp; trả chìa khóa :</div>
+        <div class="mo-guide-item">· Đổi mật khẩu cửa về {{door_password}} và trả toàn bộ thẻ từ, điều khiển thiết bị cho văn phòng quản lý.</div>
+      </div>`,
 };
 
 // ── Cover-email note sentences (plain text; injected into the branded cover) ───
@@ -236,8 +310,8 @@ const TEMPLATES = [
     vars: { ref: { type: "string" }, valid_until: { type: "date" } }, bodies: QUOTE_NOTE },
   { kind: "pdf", key: "pdf.tenancy_agreement", name: "숙박·임대차 이용약관 — PDF 본문", category: CATEGORY,
     vars: {}, bodies: TERMS },
-  { kind: "pdf", key: "pdf.move_out_confirmation", name: "퇴거 세대 확인서 — PDF 문서", category: CATEGORY,
-    vars: { ref: { type: "string" } }, bodies: MOVE_OUT_NOTE },
+  { kind: "pdf", key: "pdf.move_out_confirmation", name: "퇴거 세대 정산 확인서 — PDF 문서", category: CATEGORY,
+    vars: { ref: { type: "string" }, refund_amount: { type: "string" }, deposit_amount: { type: "string" }, contact_phone: { type: "string" }, door_password: { type: "string" }, unit: { type: "string" }, tenant_name: { type: "string" } }, bodies: MOVE_OUT_NOTE },
 ];
 
 // Homestay-only templates the primary seed ships. Metheim has no homestay module,

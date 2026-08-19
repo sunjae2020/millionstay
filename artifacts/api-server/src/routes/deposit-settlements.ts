@@ -22,6 +22,7 @@ import { postEntry, ACCOUNTS } from "../lib/billing/gl";
 import { htmlToPdf, PdfUnavailableError } from "../lib/documents/pdf";
 import { resolveDocFileName, setDocFileName } from "../lib/documents/docFileName";
 import { resolveCompanyInfo } from "../lib/documents/companyInfo";
+import { formatDocMoney } from "../lib/documents/theme";
 import { normalizeLang, t } from "../lib/documents/i18n";
 import { resolveTemplateBody } from "../lib/documents/templateEngine";
 import { buildMoveOutSettlementHtml, type MoveOutDocInput } from "../lib/documents/moveOutSettlementDocument";
@@ -543,8 +544,20 @@ adminRouter.get("/v1/deposit-settlements/:id/document.pdf", async (req, res): Pr
 
     const asHtml = req.query.format === "html";
     const lang = normalizeLang(req.query.lang as string);
-    const note = await resolveTemplateBody("pdf", "pdf.move_out_confirmation", lang, { ref: docInput.settlement_ref });
-    const html = buildMoveOutSettlementHtml(docInput, await resolveCompanyInfo(lang), !asHtml, lang, note);
+    // The section-3 guidance is editable standard copy (Settings → 문서 템플릿).
+    // Its variables are filled from this settlement so the template stays generic:
+    // 차액 C, the office contact and the door PIN captured on the 퇴거 점검표.
+    const company = await resolveCompanyInfo(lang);
+    const note = await resolveTemplateBody("pdf", "pdf.move_out_confirmation", lang, {
+      ref: docInput.settlement_ref,
+      refund_amount: formatDocMoney(docInput.refund_amount, docInput.currency),
+      deposit_amount: formatDocMoney(docInput.deposit_held, docInput.currency),
+      contact_phone: (docInput.contact_phone || company.phone || "").trim(),
+      door_password: (docInput.door_password || "").trim() || "____",
+      unit: docInput.unit ?? "",
+      tenant_name: docInput.tenant_name ?? "",
+    });
+    const html = buildMoveOutSettlementHtml(docInput, company, !asHtml, lang, note);
 
     if (asHtml) { res.type("html").send(html); return; }
     const pdf = await htmlToPdf(html);
