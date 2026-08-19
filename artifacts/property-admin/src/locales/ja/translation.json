@@ -3950,7 +3950,9 @@
     "biz_no_label": "事業者登録番号",
     "privacy_officer_label": "個人情報保護責任者",
     "privacy_officer_placeholder": "氏名（メール）",
-    "corp_no_label": "法人登録番号"
+    "corp_no_label": "法人登録番号",
+    "leasing_contact_phone_label": "賃貸事務所 担当者連絡先",
+    "leasing_contact_phone_helper": "退去精算確認書に記載される担当者の番号です。空欄の場合は会社の代表番号が使われます。"
   },
   "settings_dbsync": {
     "page_title": "DB 同期",

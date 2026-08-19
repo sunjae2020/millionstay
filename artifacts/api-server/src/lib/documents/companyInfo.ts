@@ -61,6 +61,13 @@ export interface StoredCompanyInfo {
   biz_no?: string;
   /** 법인등록번호 — printed in the landlord block of a Korean lease agreement. */
   corp_no?: string;
+  /**
+   * 임대사무실 담당자 연락처 — the on-site leasing contact a tenant texts (bank
+   * details, key handover photos). Deliberately separate from `phone`, the
+   * company's main number that every document footer carries: the move-out
+   * statement asks people to message a person, not the switchboard.
+   */
+  leasing_contact_phone?: string;
   privacy_officer?: string;
 }
 
@@ -95,6 +102,15 @@ function composeAddress(s: StoredCompanyInfo, lang: DocLang): string {
  */
 export async function resolveIssuerCountry(): Promise<string> {
   return (await readStoredCompanyInfo()).country?.trim() ?? "";
+}
+
+/**
+ * 임대사무실 담당자 연락처 (Settings → Organisation). Falls back to the company's
+ * main phone so a document never prints an empty contact.
+ */
+export async function resolveLeasingContactPhone(): Promise<string> {
+  const s = await readStoredCompanyInfo();
+  return s.leasing_contact_phone?.trim() || s.phone?.trim() || getCompanyInfo().phone || "";
 }
 
 export async function resolveCompanyInfo(lang?: DocLang): Promise<CompanyInfo> {

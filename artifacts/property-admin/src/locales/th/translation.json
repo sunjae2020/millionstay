@@ -3946,7 +3946,9 @@
     "biz_no_label": "เลขทะเบียนธุรกิจ",
     "privacy_officer_label": "ผู้รับผิดชอบข้อมูลส่วนบุคคล",
     "privacy_officer_placeholder": "ชื่อ (อีเมล)",
-    "corp_no_label": "เลขทะเบียนนิติบุคคล"
+    "corp_no_label": "เลขทะเบียนนิติบุคคล",
+    "leasing_contact_phone_label": "เบอร์ติดต่อเจ้าหน้าที่สำนักงานเช่า",
+    "leasing_contact_phone_helper": "เบอร์ของเจ้าหน้าที่ที่แสดงในหนังสือยืนยันการชำระบัญชีย้ายออก หากเว้นว่างจะใช้เบอร์หลักของบริษัท"
   },
   "settings_dbsync": {
     "page_title": "ซิงค์ฐานข้อมูล",

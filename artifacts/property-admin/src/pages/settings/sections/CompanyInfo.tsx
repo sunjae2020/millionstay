@@ -32,6 +32,8 @@ interface CompanyForm {
   biz_no: string;
   /** 법인등록번호 — printed in the landlord block of a Korean lease agreement. */
   corp_no: string;
+  /** 임대사무실 담당자 연락처 — quoted on the move-out settlement statement. */
+  leasing_contact_phone: string;
   privacy_officer: string;
 }
 
@@ -54,6 +56,7 @@ const DEFAULTS: CompanyForm = {
   ceo: "",
   biz_no: "",
   corp_no: "",
+  leasing_contact_phone: "",
   privacy_officer: "",
 };
 
@@ -161,6 +164,11 @@ export function CompanyInfo() {
         <div className="space-y-1.5">
           <Label>{t("common.phone")}</Label>
           <Input {...register("phone")} placeholder="+61 3 XXXX XXXX" />
+        </div>
+        <div className="space-y-1.5">
+          <Label>{t("settings_company.leasing_contact_phone_label")}</Label>
+          <Input {...register("leasing_contact_phone")} placeholder="010-0000-0000" />
+          <p className="text-xs text-muted-foreground">{t("settings_company.leasing_contact_phone_helper")}</p>
         </div>
         <div className="space-y-1.5">
           <Label>{t("common.email")}</Label>

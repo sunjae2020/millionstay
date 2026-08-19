@@ -38,6 +38,8 @@ const CompanyInfoBody = z.object({
   biz_no: z.string().optional(),
   // 법인등록번호 — landlord block of a Korean lease agreement.
   corp_no: z.string().optional(),
+  // 임대사무실 담당자 연락처 — quoted on the move-out settlement statement.
+  leasing_contact_phone: z.string().optional(),
   privacy_officer: z.string().optional(),
 }).strip();
 

@@ -22,7 +22,7 @@ import { logAction } from "../utils/auditLog";
 import { postEntry, ACCOUNTS } from "../lib/billing/gl";
 import { htmlToPdf, PdfUnavailableError } from "../lib/documents/pdf";
 import { resolveDocFileName, setDocFileName } from "../lib/documents/docFileName";
-import { resolveCompanyInfo } from "../lib/documents/companyInfo";
+import { resolveCompanyInfo, resolveLeasingContactPhone } from "../lib/documents/companyInfo";
 import { formatDocMoney } from "../lib/documents/theme";
 import { normalizeLang, t } from "../lib/documents/i18n";
 import { resolveTemplateBody } from "../lib/documents/templateEngine";
@@ -695,6 +695,10 @@ adminRouter.get("/v1/deposit-settlements/:id/document.pdf", async (req, res): Pr
     // Its variables are filled from this settlement so the template stays generic:
     // 차액 C, the office contact and the door PIN captured on the 퇴거 점검표.
     const company = await resolveCompanyInfo(lang);
+    // 연락처는 임대사무실 담당자(Settings → Organisation) — 회사 대표번호는
+    // 그 값이 비었을 때만 쓴다. 통장 사본·열쇠 확인 사진을 받는 것은 사람이지
+    // 대표번호가 아니다.
+    docInput.contact_phone = docInput.contact_phone || (await resolveLeasingContactPhone());
     const note = await resolveTemplateBody("pdf", "pdf.move_out_confirmation", lang, {
       ref: docInput.settlement_ref,
       refund_amount: formatDocMoney(docInput.refund_amount, docInput.currency),

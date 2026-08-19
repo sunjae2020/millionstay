@@ -3953,6 +3953,8 @@
     "company_name_legal_label": "Company Name (Legal)",
     "trading_name_label": "Trading Name",
     "abn_label": "ABN",
+    "leasing_contact_phone_label": "Leasing office contact",
+    "leasing_contact_phone_helper": "The person a tenant texts — quoted on the move-out settlement statement. Falls back to the company phone when empty.",
     "website_label": "Website",
     "logo_url_label": "Logo URL",
     "logo_url_helper": "Shown in the header of every document (invoice, receipt, quote, contract) and email.",
