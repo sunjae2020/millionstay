@@ -162,7 +162,15 @@ function renderSettlementTable(d: MoveOutDocInput, lang: DocLang): string {
         ${body}
         ${sumRow("A", t(lang, "moveout.rowA"), signedMoney(totalA, cur), t(lang, "moveout.rowA.remark"))}
         ${sumRow("B", t(lang, "moveout.rowB"), money(depositB, cur), t(lang, "moveout.rowB.remark"))}
-        ${sumRow("C", t(lang, "moveout.rowC"), money(finalC, cur), t(lang, "moveout.rowC.remark"), "mo-final")}
+        ${sumRow(
+          "C",
+          t(lang, "moveout.rowC"),
+          // C가 마이너스면 임차인이 더 내야 하는 금액이다 — 붉은 −로 찍어 환급과
+          // 혼동되지 않게 한다(회수는 별도 청구서로).
+          finalC < 0 ? `<span class="mo-neg">−${money(Math.abs(finalC), cur)}</span>` : money(finalC, cur),
+          t(lang, "moveout.rowC.remark"),
+          "mo-final",
+        )}
       </tbody>
     </table>`;
 }

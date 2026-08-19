@@ -29,6 +29,18 @@ export const depositSettlementsTable = pgTable("deposit_settlements", {
   total_deducted: numeric("total_deducted", { precision: 10, scale: 2 }).notNull().default("0"),
   refund_amount: numeric("refund_amount", { precision: 10, scale: 2 }).notNull().default("0"),
   currency: text("currency").notNull().default("AUD"),
+  // 보증금(B)을 어디서 읽었는지 — 확인서·회계 대사에서 "실납부"와 "계약상 금액"을
+  // 구분한다. invoice/placement 만 2100 에 실재하므로 finalize 의 GL 상계는 그때만
+  // 일어난다.
+  //   invoice   납부된 보증금 인보이스 라인(line_type='deposit', status='Paid')
+  //   placement 납부된 홈스테이 upfront 결제
+  //   contract  contracts.bond_amount (계약상 금액, GL 미전기)
+  //   booking   bookings.deposit_amount (계약상 금액, GL 미전기)
+  //   manual    운영자 직접 입력
+  deposit_source: text("deposit_source"),
+  // C(최종 반환 차액)가 마이너스일 때 — 차감이 보증금을 넘어 임차인에게서 회수해야
+  // 하는 금액을 청구한 인보이스. 확인서가 정본이고 인보이스는 미수금 회수 도구다.
+  invoice_id: integer("invoice_id"),
 
   notes: text("notes"),
   created_by: integer("created_by"),

@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiJson } from "@/lib/apiFetch";
 import { Button } from "@/components/ui/button";
-import { Plus, Wallet, Lock, Trash2, Send, FileText } from "lucide-react";
+import { Plus, Wallet, Lock, Trash2, Send, FileText, Receipt, TriangleAlert } from "lucide-react";
 import { DocumentPreviewDialog, useDocumentPreview } from "@/components/DocumentPreviewDialog";
 import { useBrand } from "@/contexts/ThemeContext";
 import { formatMoney } from "@/lib/currency";
@@ -19,6 +19,13 @@ type Deduction = { id: number; description: string; amount: string; remark: stri
 type Settlement = {
   id: number; settlement_ref: string; status: string;
   deposit_held: string; total_deducted: string; refund_amount: string; currency: string;
+  /** C = B − A, 부호 있는 값. 마이너스면 임차인이 더 내야 한다. */
+  net_amount: number;
+  /** 차감이 보증금을 넘은 금액 — 인보이스로 회수할 대상. */
+  shortfall: number;
+  /** 보증금(B)을 어디서 읽었는지: invoice/placement 만 GL(2100) 뒷받침. */
+  deposit_source: string | null;
+  invoice_id: number | null;
   notes: string | null; deductions: Deduction[];
 };
 
@@ -30,21 +37,26 @@ const STATUS_STYLE: Record<string, string> = {
 };
 
 
-export function BookingDepositSettlement({ bookingId }: { bookingId: string }) {
+/**
+ * The same panel serves both spines: a booking (short-term/homestay) and a
+ * contract (Korean monthly lease). Only the collection URL differs.
+ */
+export function DepositSettlementPanel({ scope, id }: { scope: "booking" | "contract"; id: string | number }) {
   const { t } = useTranslation();
   const qc = useQueryClient();
-  const key = ["deposit-settlements", bookingId];
+  const base = scope === "booking" ? `/api/v1/bookings/${id}` : `/api/v1/contracts/${id}`;
+  const key = ["deposit-settlements", scope, String(id)];
   const { data: settlements } = useQuery<Settlement[]>({
     queryKey: key,
     queryFn: async () => {
-      const list = await apiJson<{ data: { id: number }[] }>(`/api/v1/bookings/${bookingId}/deposit-settlements`);
+      const list = await apiJson<{ data: { id: number }[] }>(`${base}/deposit-settlements`);
       return Promise.all((list.data ?? []).map((s) => apiJson<{ data: Settlement }>(`/api/v1/deposit-settlements/${s.id}`).then((j) => j.data)));
     },
   });
   const invalidate = () => qc.invalidateQueries({ queryKey: key });
 
   async function create() {
-    await apiJson(`/api/v1/bookings/${bookingId}/deposit-settlements`, { method: "POST", body: "{}" });
+    await apiJson(`${base}/deposit-settlements`, { method: "POST", body: "{}" });
     invalidate();
   }
 
@@ -63,6 +75,10 @@ export function BookingDepositSettlement({ bookingId }: { bookingId: string }) {
   );
 }
 
+export function BookingDepositSettlement({ bookingId }: { bookingId: string }) {
+  return <DepositSettlementPanel scope="booking" id={bookingId} />;
+}
+
 function SettlementCard({ s, onChanged }: { s: Settlement; onChanged: () => void }) {
   const { t } = useTranslation();
   const { currencyPosition } = useBrand();
@@ -78,6 +94,13 @@ function SettlementCard({ s, onChanged }: { s: Settlement; onChanged: () => void
   async function removeDeduction(did: number) {
     await apiJson(`/api/v1/deposit-settlements/${s.id}/deductions/${did}`, { method: "DELETE" });
     onChanged();
+  }
+  // C가 마이너스일 때만 — 보증금으로 못 메운 부족분을 인보이스로 회수한다.
+  async function issueInvoice() {
+    const r = await apiJson<{ data: { invoice: { id: number } } }>(`/api/v1/deposit-settlements/${s.id}/invoice`, { method: "POST", body: "{}" });
+    onChanged();
+    const invoiceId = r?.data?.invoice?.id;
+    if (invoiceId) window.location.assign(`/finance/invoices/${invoiceId}`);
   }
   async function propose() { await apiJson(`/api/v1/deposit-settlements/${s.id}/propose`, { method: "POST", body: "{}" }); onChanged(); }
   async function finalize() { await apiJson(`/api/v1/deposit-settlements/${s.id}/finalize`, { method: "POST", body: "{}" }); onChanged(); }
@@ -102,6 +125,9 @@ function SettlementCard({ s, onChanged }: { s: Settlement; onChanged: () => void
         </div>
         <div className="flex gap-2">
           <Button size="sm" variant="outline" onClick={previewPdf}><FileText className="w-3.5 h-3.5 mr-1" /> {t("deposit_settlement.download_pdf")}</Button>
+          {s.shortfall > 0 && !s.invoice_id && (
+            <Button size="sm" variant="outline" onClick={issueInvoice}><Receipt className="w-3.5 h-3.5 mr-1" /> {t("deposit_settlement.issue_invoice")}</Button>
+          )}
           {s.status === "draft" && <Button size="sm" variant="outline" onClick={propose}><Send className="w-3.5 h-3.5 mr-1" /> {t("deposit_settlement.propose")}</Button>}
           {s.status !== "finalized" && <Button size="sm" onClick={finalize}><Lock className="w-3.5 h-3.5 mr-1" /> {t("deposit_settlement.finalize_post")}</Button>}
         </div>
@@ -111,8 +137,28 @@ function SettlementCard({ s, onChanged }: { s: Settlement; onChanged: () => void
         <div className="grid grid-cols-3 gap-3 text-sm">
           <div className="rounded-lg border p-3"><p className="text-xs text-muted-foreground">{t("deposit_settlement.deposit_held")}</p><p className="font-semibold">{money(s.deposit_held, s.currency)}</p></div>
           <div className="rounded-lg border p-3"><p className="text-xs text-muted-foreground">{t("deposit_settlement.deductions")}</p><p className="font-semibold text-red-600">−{money(s.total_deducted, s.currency)}</p></div>
-          <div className="rounded-lg border p-3 bg-green-50/40"><p className="text-xs text-muted-foreground">{t("deposit_settlement.refund")}</p><p className="font-semibold text-green-700">{money(s.refund_amount, s.currency)}</p></div>
+          <div className={`rounded-lg border p-3 ${s.net_amount < 0 ? "bg-red-50/50" : "bg-green-50/40"}`}>
+            <p className="text-xs text-muted-foreground">{s.net_amount < 0 ? t("deposit_settlement.payable") : t("deposit_settlement.refund")}</p>
+            <p className={`font-semibold ${s.net_amount < 0 ? "text-red-700" : "text-green-700"}`}>{money(Math.abs(s.net_amount), s.currency)}</p>
+          </div>
         </div>
+
+        {s.deposit_source && (
+          <p className="text-[11px] text-muted-foreground">
+            {t("deposit_settlement.source_label")}: {t(`deposit_settlement.source_${s.deposit_source}`, s.deposit_source)}
+            {s.deposit_source !== "invoice" && s.deposit_source !== "placement" && ` · ${t("deposit_settlement.source_not_gl")}`}
+          </p>
+        )}
+
+        {s.shortfall > 0 && (
+          <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-800 flex items-start gap-1.5">
+            <TriangleAlert className="w-3.5 h-3.5 mt-0.5 shrink-0" />
+            <span>
+              {t("deposit_settlement.shortfall_notice", { amount: money(s.shortfall, s.currency) })}
+              {s.invoice_id ? ` · ${t("deposit_settlement.invoice_linked", { id: s.invoice_id })}` : ""}
+            </span>
+          </div>
+        )}
 
         <div className="space-y-1.5">
           {s.deductions.map((d) => {

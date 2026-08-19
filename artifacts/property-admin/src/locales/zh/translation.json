@@ -5413,7 +5413,18 @@
     "pdf_failed": "生成退租确认书 PDF 失败。",
     "kind_deduct": "扣除(-)",
     "kind_refund": "退还(+)",
-    "placeholder_remark": "备注及处理说明（打印在确认书上）"
+    "placeholder_remark": "备注及处理说明（打印在确认书上）",
+    "issue_invoice": "开具追收账单",
+    "payable": "租客应补缴金额",
+    "source_label": "押金来源",
+    "source_invoice": "已付款的押金账单",
+    "source_placement": "已付款的安置款",
+    "source_contract": "合同（押金金额）",
+    "source_booking": "预订",
+    "source_manual": "手动录入",
+    "source_not_gl": "未入代收押金(2100)科目",
+    "shortfall_notice": "扣减额超出押金 {{amount}} — 请开具账单追收。",
+    "invoice_linked": "已开具账单 #{{id}}"
   },
   "integrations": {
     "subtitle": "管理所有外部服务连接",

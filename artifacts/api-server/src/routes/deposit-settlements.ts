@@ -1,6 +1,6 @@
 import { Router, type IRouter } from "express";
 import { DEFAULT_CURRENCY } from "../lib/currency";
-import { eq, and, desc, sql, isNull } from "drizzle-orm";
+import { eq, and, desc, sql, isNull, ilike } from "drizzle-orm";
 import {
   db,
   bookingsTable,
@@ -15,6 +15,7 @@ import {
   spacesTable,
   accountsTable,
 } from "@workspace/db";
+import { getRateToAud } from "../lib/rateSnapshot";
 import { requireAuth } from "../middlewares/requireAuth";
 import { requireGuestAuth } from "../middlewares/requireGuestAuth";
 import { logAction } from "../utils/auditLog";
@@ -47,7 +48,9 @@ async function generateSettlementRef(): Promise<string> {
 //    GL-backed amount; else falls back to the contract bond / placement deposit,
 //    because in practice deposits are recorded on contracts.bond_amount /
 //    homestay_placements.deposit and are NOT yet invoiced as deposit lines.
-async function resolveDeposit(bookingId: number): Promise<{ total: number; glBacked: number }> {
+export type DepositSource = "invoice" | "placement" | "contract" | "booking" | "manual";
+
+async function resolveDeposit(bookingId: number): Promise<{ total: number; glBacked: number; source: DepositSource }> {
   const lines = await db
     .select({ total: invoiceLineItemsTable.total_amount })
     .from(invoiceLineItemsTable)
@@ -83,7 +86,7 @@ async function resolveDeposit(bookingId: number): Promise<{ total: number; glBac
   }
 
   const glBacked = round2(invoiceDeposit + placementBacked);
-  if (glBacked > 0) return { total: glBacked, glBacked };
+  if (glBacked > 0) return { total: glBacked, glBacked, source: invoiceDeposit > 0 ? "invoice" : "placement" };
 
   // Fallback: contract bond (latest non-zero for this booking).
   const contracts = await db
@@ -92,7 +95,7 @@ async function resolveDeposit(bookingId: number): Promise<{ total: number; glBac
     .where(eq(contractsTable.booking_id, bookingId))
     .orderBy(desc(contractsTable.id));
   const bond = contracts.map((c) => Number(c.bond ?? 0)).find((n) => n > 0) ?? 0;
-  if (bond > 0) return { total: round2(bond), glBacked: 0 };
+  if (bond > 0) return { total: round2(bond), glBacked: 0, source: "contract" };
 
   // Fallback: homestay placement deposit.
   const placements = await db
@@ -101,7 +104,33 @@ async function resolveDeposit(bookingId: number): Promise<{ total: number; glBac
     .where(eq(homestayPlacementsTable.booking_id, bookingId))
     .orderBy(desc(homestayPlacementsTable.id));
   const dep = placements.map((p) => Number(p.deposit ?? 0)).find((n) => n > 0) ?? 0;
-  return { total: round2(dep), glBacked: 0 };
+  return { total: round2(dep), glBacked: 0, source: "placement" };
+}
+
+// Resolve the deposit a LEASE (contract spine) is holding. Same rule as the
+// booking side: an actually-paid deposit beats the contractual figure, so a
+// settlement never refunds money that was never received and finalize only
+// releases what is really sitting in Deposits Held (2100).
+async function resolveContractDeposit(contractId: number): Promise<{ total: number; glBacked: number; source: DepositSource }> {
+  const lines = await db
+    .select({ total: invoiceLineItemsTable.total_amount })
+    .from(invoiceLineItemsTable)
+    .innerJoin(invoicesTable, eq(invoiceLineItemsTable.invoice_id, invoicesTable.id))
+    .where(and(
+      eq(invoicesTable.contract_id, contractId),
+      eq(invoicesTable.status, "Paid"),
+      isNull(invoicesTable.deleted_at),
+      eq(invoiceLineItemsTable.line_type, "deposit"),
+    ));
+  const paid = round2(lines.reduce((sum, r) => sum + Number(r.total ?? 0), 0));
+  if (paid > 0) return { total: paid, glBacked: paid, source: "invoice" };
+
+  const [contract] = await db
+    .select({ bond: contractsTable.bond_amount })
+    .from(contractsTable)
+    .where(eq(contractsTable.id, contractId))
+    .limit(1);
+  return { total: round2(Number(contract?.bond ?? 0)), glBacked: 0, source: "contract" };
 }
 
 function round2(n: number): number { return Math.round((n + Number.EPSILON) * 100) / 100; }
@@ -114,7 +143,11 @@ async function loadSettlementDetail(id: number) {
     .from(depositDeductionItemsTable)
     .where(eq(depositDeductionItemsTable.deposit_settlement_id, id))
     .orderBy(depositDeductionItemsTable.id);
-  return { ...s, deductions };
+  // C(최종 반환 차액) = B − A, 부호 있는 값. `refund_amount` 는 clamp 된 현금
+  // 환급액(음수가 되면 GL 상계가 뒤집히므로)이고, 확인서가 찍는 값은 net_amount,
+  // 차감이 보증금을 넘은 부족분은 shortfall — 인보이스로 회수할 금액이다.
+  const net = round2(Number(s.deposit_held ?? 0) - Number(s.total_deducted ?? 0));
+  return { ...s, deductions, net_amount: net, shortfall: net < 0 ? Math.abs(net) : 0 };
 }
 
 // Recompute total_deducted / refund_amount from the current deduction rows.
@@ -159,7 +192,7 @@ adminRouter.post("/v1/bookings/:bookingId/deposit-settlements", async (req, res)
     const [booking] = await db.select().from(bookingsTable).where(eq(bookingsTable.id, bookingId)).limit(1);
     if (!booking) { res.status(404).json({ success: false, error: { code: "NOT_FOUND", message: "Booking not found" } }); return; }
 
-    const { total: depositHeld } = await resolveDeposit(bookingId);
+    const { total: depositHeld, source: depositSource } = await resolveDeposit(bookingId);
     const [moveOut] = await db
       .select({ id: conditionReportsTable.id })
       .from(conditionReportsTable)
@@ -178,6 +211,7 @@ adminRouter.post("/v1/bookings/:bookingId/deposit-settlements", async (req, res)
         deposit_held: String(round2(depositHeld)),
         refund_amount: String(round2(depositHeld)),
         currency: (booking as any).currency ?? DEFAULT_CURRENCY,
+        deposit_source: depositSource,
         notes: typeof req.body?.notes === "string" ? req.body.notes : null,
         created_by: (req as any).user?.id ?? null,
         audit_trail: [{ event: "created", at: new Date().toISOString(), actor: (req as any).user?.id ?? null, deposit_held: depositHeld }],
@@ -215,7 +249,7 @@ adminRouter.post("/v1/contracts/:contractId/deposit-settlements", async (req, re
     const [contract] = await db.select().from(contractsTable).where(eq(contractsTable.id, contractId)).limit(1);
     if (!contract) { res.status(404).json({ success: false, error: { code: "NOT_FOUND", message: "Contract not found" } }); return; }
 
-    const depositHeld = Number(contract.bond_amount ?? 0);
+    const { total: depositHeld, source: depositSource } = await resolveContractDeposit(contractId);
     // Pair the statement with the lease's 퇴거 점검표 (one per contract): the two
     // are issued as a set, and the checklist carries the handover details the
     // form quotes (현관 비밀번호 etc.).
@@ -235,9 +269,10 @@ adminRouter.post("/v1/contracts/:contractId/deposit-settlements", async (req, re
       deposit_held: String(round2(depositHeld)),
       refund_amount: String(round2(depositHeld)),
       currency: contract.currency ?? DEFAULT_CURRENCY,
+      deposit_source: depositSource,
       notes: typeof req.body?.notes === "string" ? req.body.notes : null,
       created_by: (req as any).user?.id ?? null,
-      audit_trail: [{ event: "created", at: new Date().toISOString(), actor: (req as any).user?.id ?? null, deposit_held: depositHeld, source: "contract" }],
+      audit_trail: [{ event: "created", at: new Date().toISOString(), actor: (req as any).user?.id ?? null, deposit_held: depositHeld, deposit_source: depositSource, source: "contract" }],
     }).returning();
 
     // Rent months already settled out of the deposit become deduction lines.
@@ -388,9 +423,14 @@ adminRouter.post("/v1/deposit-settlements/:id/finalize", async (req, res): Promi
     // refund is handled operationally). When a deposit WAS invoiced (line_type=
     // 'deposit'), deposit_held == glBacked and the release balances:
     // Dr Deposits Held = Cr Cash (refund) + Cr Revenue (forfeited).
-    // Contract-based (lease) settlements have no booking spine and no 2100
-    // liability behind them, so there is nothing to release.
-    const { glBacked } = s.booking_id ? await resolveDeposit(s.booking_id) : { glBacked: 0 };
+    // A lease settlement is GL-backed only when the deposit was actually invoiced
+    // and paid as a line_type='deposit' line; a bare contracts.bond_amount never
+    // reached 2100, so there is nothing to release.
+    const { glBacked } = s.booking_id
+      ? await resolveDeposit(s.booking_id)
+      : s.contract_id
+        ? await resolveContractDeposit(s.contract_id)
+        : { glBacked: 0 };
     let glPosted = false;
     if (glBacked > 0) {
       const entry = await postEntry({
@@ -403,7 +443,10 @@ adminRouter.post("/v1/deposit-settlements/:id/finalize", async (req, res): Promi
         lines: [
           { account_code: ACCOUNTS.DEPOSIT_HELD.code, account_name: ACCOUNTS.DEPOSIT_HELD.name, debit: totals.deposit_held, credit: 0 },
           { account_code: ACCOUNTS.CASH.code, account_name: ACCOUNTS.CASH.name, debit: 0, credit: totals.refund_amount },
-          { account_code: ACCOUNTS.REVENUE.code, account_name: ACCOUNTS.REVENUE.name, debit: 0, credit: totals.total_deducted },
+          // 차감이 보증금을 넘으면 초과분은 보증금에서 나올 수 없다 — 초과분은 회수
+          // 인보이스(Dr AR / Cr Revenue)가 잡으므로 여기서는 보유액을 넘지 않는
+          // 몰취분만 수익으로 돌린다. 그래야 차·대변이 맞는다.
+          { account_code: ACCOUNTS.REVENUE.code, account_name: ACCOUNTS.REVENUE.name, debit: 0, credit: round2(totals.deposit_held - totals.refund_amount) },
         ],
       });
       glPosted = !!entry;
@@ -524,13 +567,114 @@ async function buildMoveOutDocInput(id: number): Promise<MoveOutDocInput | null>
     monthly_rent: spaceRent ?? null,
     deposit_held: Number(detail.deposit_held ?? 0),
     total_deducted: Number(detail.total_deducted ?? 0),
-    refund_amount: Number(detail.refund_amount ?? 0),
+    // C = B + A, 부호 있는 값. 차감이 보증금을 넘으면 마이너스로 찍혀 임차인이 더
+    // 내야 할 금액이 확인서에 그대로 드러난다(회수는 인보이스로).
+    refund_amount: Number(detail.net_amount ?? detail.refund_amount ?? 0),
     settlement_type: settlementType,
     door_password: doorPassword,
     // A negative amount is a refund line (환급(+)); positive is a deduction (차감(−)).
     deductions: detail.deductions.map((d) => ({ description: d.description, amount: Number(d.amount ?? 0), remark: d.remark ?? null })),
   };
 }
+
+/* ── C < 0 → 회수 인보이스 ───────────────────────────────────────────────────
+   확인서는 청구서가 아니다: 보증금은 매출이 아니라 부채(2100)이고, 확인서 한 장에
+   차감(−)과 환급(+)이 섞인다. 그래서 실제로 돈을 받아야 하는 순간 — 차감이 보증금을
+   넘어 임차인에게 청구할 잔액이 생길 때 — 만 인보이스를 뽑는다. 인보이스는 일반 청구
+   흐름(Draft → Paid → Dr Cash / Cr Revenue)을 그대로 타고, finalize 의 수익 인식은
+   보유 보증금 한도로 잘려 있으므로 이중계상은 없다. */
+async function nextRecoveryInvoiceRef(): Promise<string> {
+  const year = new Date().getFullYear();
+  const rows = await db.select({ id: invoicesTable.id }).from(invoicesTable)
+    .where(ilike(invoicesTable.invoice_ref, `MS-INV-${year}-%`));
+  return `MS-INV-${year}-${String(rows.length + 1).padStart(5, "0")}`;
+}
+
+adminRouter.post("/v1/deposit-settlements/:id/invoice", async (req, res): Promise<void> => {
+  try {
+    const id = Number(req.params.id);
+    const detail = await loadSettlementDetail(id);
+    if (!detail) { res.status(404).json({ success: false, error: { code: "NOT_FOUND", message: "Settlement not found" } }); return; }
+    if (detail.invoice_id) {
+      res.status(409).json({ success: false, error: { code: "ALREADY_INVOICED", message: "This settlement already has a recovery invoice" } });
+      return;
+    }
+    const shortfall = round2(Number(detail.shortfall ?? 0));
+    if (shortfall <= 0) {
+      res.status(400).json({ success: false, error: { code: "NO_SHORTFALL", message: "The deposit covers the deductions — nothing to invoice" } });
+      return;
+    }
+
+    let accountId: number | null = null;
+    if (detail.contract_id) {
+      const [c] = await db.select({ account_id: contractsTable.tenant_account_id })
+        .from(contractsTable).where(eq(contractsTable.id, detail.contract_id)).limit(1);
+      accountId = c?.account_id ?? null;
+    }
+    if (!accountId && detail.booking_id) {
+      const [b] = await db.select({ account_id: bookingsTable.account_id })
+        .from(bookingsTable).where(eq(bookingsTable.id, detail.booking_id)).limit(1);
+      accountId = b?.account_id ?? null;
+    }
+
+    const invoice_ref = await nextRecoveryInvoiceRef();
+    const dueDate = typeof req.body?.due_date === "string" && req.body.due_date.trim()
+      ? req.body.due_date.trim()
+      : new Date(Date.now() + 14 * 86400_000).toISOString().slice(0, 10);
+    const [invoice] = await db.insert(invoicesTable).values({
+      invoice_ref,
+      booking_id: detail.booking_id ?? null,
+      contract_id: detail.contract_id ?? null,
+      account_id: accountId,
+      amount: String(shortfall),
+      currency: detail.currency,
+      exchange_rate_to_aud: await getRateToAud(detail.currency),
+      status: "Draft",
+      due_date: dueDate,
+      description: `퇴거 정산 차액 (${detail.settlement_ref})`,
+      notes: `보증금 ${detail.deposit_held} − 차감 ${detail.total_deducted} = 부족분 ${shortfall}`,
+    }).returning();
+
+    // 확인서의 차감 라인을 청구 내역으로 옮기되, 보증금으로 이미 상계된 만큼은 한 줄로
+    // 빼서 합계가 부족분과 정확히 맞게 한다.
+    const positives = detail.deductions.filter((d) => Number(d.amount ?? 0) > 0);
+    const lineRows = positives.map((d, idx) => ({
+      invoice_id: invoice!.id,
+      label: d.description,
+      description: d.remark ?? null,
+      quantity: "1",
+      unit_amount: String(round2(Number(d.amount ?? 0))),
+      total_amount: String(round2(Number(d.amount ?? 0))),
+      line_type: "revenue",
+      sort_order: idx,
+    }));
+    const offset = round2(positives.reduce((sum, d) => sum + Number(d.amount ?? 0), 0) - shortfall);
+    if (offset > 0) {
+      lineRows.push({
+        invoice_id: invoice!.id,
+        label: `보증금 상계 (${detail.settlement_ref})`,
+        description: null,
+        quantity: "1",
+        unit_amount: String(-offset),
+        total_amount: String(-offset),
+        line_type: "revenue",
+        sort_order: lineRows.length,
+      });
+    }
+    if (lineRows.length) await db.insert(invoiceLineItemsTable).values(lineRows);
+
+    const audit = Array.isArray(detail.audit_trail) ? detail.audit_trail : [];
+    await db.update(depositSettlementsTable).set({
+      invoice_id: invoice!.id,
+      audit_trail: [...audit, { event: "invoiced", at: new Date().toISOString(), actor: (req as any).user?.id ?? null, invoice_id: invoice!.id, invoice_ref, amount: shortfall }],
+    }).where(eq(depositSettlementsTable.id, id));
+
+    void logAction({ entityType: ENTITY, entityId: id, action: "CREATE", actorId: (req as any).user?.id ?? null, newValue: { invoice_id: invoice!.id, invoice_ref, amount: shortfall } });
+    res.status(201).json({ success: true, data: { settlement: await loadSettlementDetail(id), invoice } });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: { code: "SERVER_ERROR", message: err.message } });
+  }
+});
 
 // Render the move-out confirmation ("퇴거 세대 확인서") as a branded document.
 //   GET /v1/deposit-settlements/:id/document.pdf               → application/pdf

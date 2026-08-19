@@ -38,6 +38,7 @@ import ContractInspections from "@/components/ContractInspections";
 import SettlementBoard from "@/components/SettlementBoard";
 import ContractDocuments from "@/components/ContractDocuments";
 import { DocumentPreviewDialog, useDocumentPreview } from "@/components/DocumentPreviewDialog";
+import { DepositSettlementPanel } from "@/pages/booking/BookingDepositSettlement";
 import { DocumentEmailDialog, type DocumentEmailTarget } from "@/components/DocumentEmailDialog";
 import {
   ContractIssueWizard,
@@ -548,22 +549,6 @@ export default function ContractDetail() {
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["contract-invoices", id] }),
     onError: (err: any) => toast({ title: t('contract.rent_pay_failed'), description: String(err?.message ?? err), variant: "destructive" }),
-  });
-
-  // Draft the move-out deposit settlement from this lease: 보증금 = bond_amount and
-  // every month settled out of the deposit becomes a deduction line.
-  const draftSettlementMutation = useMutation({
-    mutationFn: async () => {
-      const r = await apiFetch(`/api/v1/contracts/${id}/deposit-settlements`, { method: "POST", headers: { "Content-Type": "application/json" }, body: "{}" });
-      const body = await r.json().catch(() => ({}));
-      if (!r.ok) throw new Error(body?.error?.message ?? "Failed to draft settlement");
-      return body.data;
-    },
-    onSuccess: (data: any) => toast({
-      title: t('contract.settlement_created'),
-      description: `${data?.settlement_ref ?? ""} · ${t('contract.settlement_refund')}: ${Number(data?.refund_amount ?? 0).toLocaleString()}`,
-    }),
-    onError: (err: any) => toast({ title: t('contract.settlement_failed'), description: String(err?.message ?? err), variant: "destructive" }),
   });
 
   // Receipt for a paid invoice — opens the shared preview (print / download / email).
@@ -1634,12 +1619,6 @@ export default function ContractDetail() {
                   <p className="text-xs text-muted-foreground mt-0.5">{t('contract.rent_ledger_desc')}</p>
                 </div>
                 <div className="flex items-center gap-1">
-                  {Number(contract?.bond_amount ?? 0) > 0 && (
-                    <Button size="sm" variant="outline" disabled={draftSettlementMutation.isPending}
-                      onClick={() => draftSettlementMutation.mutate()}>
-                      <Receipt className="w-3.5 h-3.5 mr-1" />{t('contract.btn_draft_settlement')}
-                    </Button>
-                  )}
                   {(ledgerYears.length ? ledgerYears : [ledgerYear]).map((y) => (
                     <Button key={y} size="sm" variant={y === ledgerYear ? "default" : "outline"} onClick={() => setLedgerYear(y)}>
                       {y}
@@ -1736,6 +1715,10 @@ export default function ContractDetail() {
                   )}
                 </ExportableTable>
               </div>
+
+              {/* 퇴거 세대 정산 확인서 — 보증금(B)·차감(A)·최종 반환 차액(C).
+                  확인서가 정본이고, C가 마이너스일 때만 회수 인보이스를 붙인다. */}
+              <DepositSettlementPanel scope="contract" id={id} />
             </div>
           )}
 

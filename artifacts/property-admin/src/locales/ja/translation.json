@@ -5409,7 +5409,18 @@
     "pdf_failed": "退去世帯確認書のPDF生成に失敗しました。",
     "kind_deduct": "差引(-)",
     "kind_refund": "還付(+)",
-    "placeholder_remark": "備考・処理案内（確認書に印字）"
+    "placeholder_remark": "備考・処理案内（確認書に印字）",
+    "issue_invoice": "回収請求書を発行",
+    "payable": "入居者の追加支払額",
+    "source_label": "敷金の出所",
+    "source_invoice": "入金済みの敷金請求書",
+    "source_placement": "入金済みの配置決済",
+    "source_contract": "契約書（敷金額）",
+    "source_booking": "予約",
+    "source_manual": "手入力",
+    "source_not_gl": "預り敷金(2100)へ未計上",
+    "shortfall_notice": "控除額が敷金を {{amount}} 超えています — 請求書で回収してください。",
+    "invoice_linked": "請求書 #{{id}} を発行済み"
   },
   "integrations": {
     "subtitle": "すべての外部サービス連携を管理します",
