@@ -1,3 +1,9 @@
+---
+status: live
+domain: 문서발행
+last_verified: 2026-08-19
+---
+
 # Condition Reports & Deposit Settlement (Phase 2 — 입·퇴실 증빙/합의)
 
 **Status:** Draft / in progress
@@ -164,3 +170,44 @@ acknowledges, finalize posts the refund invoice reversing Deposits Held.
   booking-level bond — resolve when 2B starts.
 - **RBAC:** publish/finalize should be gated once Phase 1 RBAC exists; interim,
   gate behind existing admin auth.
+
+
+---
+
+## 부록. 보증금 출처 표기 + 회수 인보이스 (2026-08-19)
+
+정산 확인서 본체(비고 열·환급 라인·점검표 세트 발행)는 이미 적용돼 있고, 여기서는
+**돈의 출처와 회수**를 보강한다.
+
+### 보증금(B)은 실납부가 계약상 금액을 이긴다
+
+| 스파인 | 1순위 | 2순위 |
+| --- | --- | --- |
+| 예약 | 납부된 보증금 인보이스 라인(`line_type='deposit'` + `Paid`) / 홈스테이 upfront | `contracts.bond_amount` → `bookings.deposit_amount` |
+| 계약 | 납부된 보증금 인보이스 라인(`invoices.contract_id` 기준) | `contracts.bond_amount` |
+
+읽은 출처는 `deposit_settlements.deposit_source`에 남는다. `invoice`·`placement`만
+2100에 실재하므로 finalize의 GL 상계도 그때만 일어난다(계약상 금액은 GL 미전기 —
+환급은 운영 처리). 이 구분이 없으면 **받은 적 없는 보증금을 환급 처리**할 수 있다.
+
+### C가 마이너스일 때
+
+`C = B − A`가 마이너스면 보증금으로 못 메운 금액을 임차인에게 청구해야 한다.
+`POST /v1/deposit-settlements/:id/invoice`가 부족분만큼 인보이스를 만들고
+(`deposit_settlements.invoice_id`로 연결), 입금 확인은 기존 인보이스 Paid 흐름을
+그대로 탄다. 확인서 PDF의 C 행도 마이너스면 붉은 −로 찍힌다.
+
+**이중계상 방지:** finalize의 수익 leg를 `deposit_held − refund_amount`(보유 보증금
+한도)로 자른다. 종전에는 `total_deducted` 전액을 수익으로 돌려, 차감이 보증금을 넘는
+순간 차·대변이 맞지 않았다(초과분의 수익은 회수 인보이스가 잡는다).
+
+### 화면
+
+계약 상세 → 임대료 원장 탭 하단에 예약과 같은 정산 패널(`DepositSettlementPanel
+scope="contract"`)이 붙는다. 보증금 출처, 부족분 경고, **회수 청구서 발행** 버튼을
+함께 노출한다.
+
+### 마이그레이션
+
+`lib/db/drizzle/0062_deposit_settlement_source_invoice.sql` (additive-only):
+`deposit_settlements.deposit_source`, `deposit_settlements.invoice_id`.

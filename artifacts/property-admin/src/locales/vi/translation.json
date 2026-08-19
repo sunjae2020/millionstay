@@ -5370,7 +5370,18 @@
     "pdf_failed": "Không thể tạo PDF xác nhận trả nhà.",
     "kind_deduct": "Khấu trừ(-)",
     "kind_refund": "Hoàn(+)",
-    "placeholder_remark": "Ghi chú & xử lý (in trên xác nhận)"
+    "placeholder_remark": "Ghi chú & xử lý (in trên xác nhận)",
+    "issue_invoice": "Phát hành hóa đơn thu hồi",
+    "payable": "Người thuê phải trả thêm",
+    "source_label": "Nguồn tiền đặt cọc",
+    "source_invoice": "Hóa đơn đặt cọc đã thanh toán",
+    "source_placement": "Khoản thanh toán bố trí đã thanh toán",
+    "source_contract": "Hợp đồng thuê (số tiền cọc)",
+    "source_booking": "Đặt phòng",
+    "source_manual": "Nhập thủ công",
+    "source_not_gl": "chưa hạch toán vào Tiền cọc giữ hộ (2100)",
+    "shortfall_notice": "Khoản khấu trừ vượt tiền cọc {{amount}} — hãy thu hồi bằng hóa đơn.",
+    "invoice_linked": "đã phát hành hóa đơn #{{id}}"
   },
   "integrations": {
     "subtitle": "Quản lý tất cả kết nối dịch vụ bên ngoài",

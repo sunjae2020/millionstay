@@ -5463,7 +5463,18 @@
     "pdf_failed": "퇴거 세대 확인서 PDF 생성에 실패했습니다.",
     "kind_deduct": "차감(-)",
     "kind_refund": "환급(+)",
-    "placeholder_remark": "비고 및 처리 안내 (확인서에 인쇄)"
+    "placeholder_remark": "비고 및 처리 안내 (확인서에 인쇄)",
+    "issue_invoice": "회수 청구서 발행",
+    "payable": "임차인 추가 납부액",
+    "source_label": "보증금 출처",
+    "source_invoice": "납부 완료된 보증금 청구서",
+    "source_placement": "납부 완료된 배정 결제",
+    "source_contract": "계약서(보증금액)",
+    "source_booking": "예약",
+    "source_manual": "직접 입력",
+    "source_not_gl": "보증금 부채(2100) 미전기",
+    "shortfall_notice": "차감액이 보증금을 {{amount}} 초과합니다 — 청구서로 회수하세요.",
+    "invoice_linked": "청구서 #{{id}} 발행됨"
   },
   "integrations": {
     "subtitle": "모든 외부 서비스 연동을 관리합니다",

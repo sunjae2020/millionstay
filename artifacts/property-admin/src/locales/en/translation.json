@@ -5463,7 +5463,18 @@
     "pdf_failed": "Failed to generate the move-out confirmation PDF.",
     "kind_deduct": "Deduction (−)",
     "kind_refund": "Refund (+)",
-    "placeholder_remark": "Remark / handling note (printed on the statement)"
+    "placeholder_remark": "Remark / handling note (printed on the statement)",
+    "issue_invoice": "Issue recovery invoice",
+    "payable": "Payable by tenant",
+    "source_label": "Deposit source",
+    "source_invoice": "Paid deposit invoice",
+    "source_placement": "Paid placement payment",
+    "source_contract": "Lease (bond amount)",
+    "source_booking": "Booking",
+    "source_manual": "Entered manually",
+    "source_not_gl": "not posted to Deposits Held (2100)",
+    "shortfall_notice": "Deductions exceed the deposit by {{amount}} — recover it with an invoice.",
+    "invoice_linked": "invoice #{{id}} issued"
   },
   "integrations": {
     "subtitle": "Manage all external service connections",
