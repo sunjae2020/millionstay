@@ -197,7 +197,14 @@ function renderGuide(
       ],
     },
     { title: t(lang, "moveout.guide.transfer.title"), bullets: [t(lang, "moveout.guide.transfer.b1"), t(lang, "moveout.guide.transfer.b2")] },
-    { title: t(lang, "moveout.guide.utility.title"), bullets: [t(lang, "moveout.guide.utility.b1"), t(lang, "moveout.guide.utility.b2")] },
+    {
+      title: t(lang, "moveout.guide.utility.title"),
+      bullets: [
+        t(lang, "moveout.guide.utility.internet"),
+        t(lang, "moveout.guide.utility.b1"),
+        t(lang, "moveout.guide.utility.b2"),
+      ],
+    },
     { title: t(lang, "moveout.guide.restore.title"), bullets: [t(lang, "moveout.guide.restore.b1Pin", { pin: values.pin })] },
   ];
   return groups
