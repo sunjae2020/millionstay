@@ -1807,7 +1807,10 @@
     "photos_session_hint": "한 번에 올린 사진이 한 회차로 저장됩니다.",
     "photos_upload_as_session": "{{n}}차로 업로드",
     "photo_session_no": "{{n}}차",
-    "photos_empty_kind": "{{kind}} 사진이 아직 없습니다."
+    "photos_empty_kind": "{{kind}} 사진이 아직 없습니다.",
+    "btn_sign_request": "서명 요청",
+    "btn_sign_pending": "서명 링크",
+    "btn_sign_signed": "서명 완료"
   },
   "csticket": {
     "search_placeholder": "티켓 검색...",
