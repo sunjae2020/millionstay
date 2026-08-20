@@ -1743,7 +1743,14 @@
     "billing_count": "作業件数",
     "billing_billed_total": "請求費用",
     "billing_no_rows": "条件に合う作業指示がありません。",
-    "billing_preview": "プレビュー"
+    "billing_preview": "プレビュー",
+    "billing_bill_to_hint": "空欄の場合は住戸の所有者に請求します。",
+    "billing_due_date": "支払期限",
+    "billing_already_invoiced": "{{n}}件は請求済み",
+    "billing_issue_invoice": "請求書を発行",
+    "billing_invoice_created": "請求書 {{ref}} を発行しました",
+    "billing_invoice_skipped": "請求済みの {{n}}件を除きました。",
+    "billing_invoice_failed": "請求書を発行できませんでした"
   },
   "csticket": {
     "search_placeholder": "チケットを検索...",

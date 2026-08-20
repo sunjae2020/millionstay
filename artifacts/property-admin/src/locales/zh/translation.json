@@ -1745,7 +1745,14 @@
     "billing_count": "作业件数",
     "billing_billed_total": "请款金额",
     "billing_no_rows": "没有符合条件的工作指令。",
-    "billing_preview": "预览"
+    "billing_preview": "预览",
+    "billing_bill_to_hint": "留空则向该房号的业主请款。",
+    "billing_due_date": "到期日",
+    "billing_already_invoiced": "{{n}} 项已请款",
+    "billing_issue_invoice": "生成请款单",
+    "billing_invoice_created": "已生成请款单 {{ref}}",
+    "billing_invoice_skipped": "已跳过 {{n}} 项已请款的条目。",
+    "billing_invoice_failed": "无法生成请款单"
   },
   "csticket": {
     "search_placeholder": "搜索工单...",

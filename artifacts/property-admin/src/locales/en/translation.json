@@ -1770,7 +1770,14 @@
     "billing_count": "Items",
     "billing_billed_total": "Billed",
     "billing_no_rows": "No work orders match these filters.",
-    "billing_preview": "Preview"
+    "billing_preview": "Preview",
+    "billing_bill_to_hint": "Leave empty to bill the unit owner.",
+    "billing_due_date": "Due date",
+    "billing_already_invoiced": "{{n}} already invoiced",
+    "billing_issue_invoice": "Create invoice",
+    "billing_invoice_created": "Invoice {{ref}} created",
+    "billing_invoice_skipped": "{{n}} already-invoiced item(s) skipped.",
+    "billing_invoice_failed": "Could not create the invoice"
   },
   "csticket": {
     "search_placeholder": "Search tickets...",

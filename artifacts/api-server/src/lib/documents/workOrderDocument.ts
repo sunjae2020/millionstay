@@ -238,6 +238,8 @@ export function buildWorkOrderHtml(opts: {
 
 export interface RepairBillingRow {
   seq: number;
+  /** 이 줄을 만든 작업지시(work_orders.id) — 청구서 줄이 되짚는 대상. */
+  work_order_id: number;
   order_ref: string;
   work_date?: string | Date | null;
   unit_no?: string | null;

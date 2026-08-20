@@ -1741,7 +1741,14 @@
     "billing_count": "จำนวนรายการ",
     "billing_billed_total": "ยอดเรียกเก็บ",
     "billing_no_rows": "ไม่พบใบสั่งงานที่ตรงกับเงื่อนไข",
-    "billing_preview": "ดูตัวอย่าง"
+    "billing_preview": "ดูตัวอย่าง",
+    "billing_bill_to_hint": "เว้นว่างไว้เพื่อเรียกเก็บจากเจ้าของห้อง",
+    "billing_due_date": "วันครบกำหนด",
+    "billing_already_invoiced": "{{n}} รายการเรียกเก็บแล้ว",
+    "billing_issue_invoice": "สร้างใบแจ้งหนี้",
+    "billing_invoice_created": "สร้างใบแจ้งหนี้ {{ref}} แล้ว",
+    "billing_invoice_skipped": "ข้าม {{n}} รายการที่เรียกเก็บไปแล้ว",
+    "billing_invoice_failed": "ไม่สามารถสร้างใบแจ้งหนี้ได้"
   },
   "csticket": {
     "search_placeholder": "ค้นหาตั๋ว...",
