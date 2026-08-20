@@ -10,7 +10,8 @@ import { Layout } from "@/components/Layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Pencil } from "lucide-react";
+import { Plus, Pencil, FileSpreadsheet } from "lucide-react";
+import { RepairBillingDialog } from "@/components/RepairBillingDialog";
 import { DataTable, ACTIONS_KEY, type ColumnDef } from "@/components/ui/data-table";
 import { ALL, SearchBox, DateRangeFilter, FacetSelect, ResetFiltersButton, useListFacets, useYearLabel } from "@/components/list-filters";
 import { useQueryClient } from "@tanstack/react-query";
@@ -42,6 +43,7 @@ export default function WorkOrderList() {
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
   const [showDeleted, setShowDeleted] = useState(false);
+  const [billingOpen, setBillingOpen] = useState(false);
   const qc = useQueryClient();
 
   // ?space_id=N — arriving from a space's 하자보수 tab, scoped to that unit.
@@ -148,10 +150,16 @@ export default function WorkOrderList() {
             <h1 className="text-2xl font-bold tracking-tight">{t("nav.work_order")}</h1>
             <p className="text-sm text-muted-foreground">{workOrdersRaw.length} {t("common.total")}</p>
           </div>
-          <Button onClick={() => navigate("/maintenance/work-orders/new")}>
-            <Plus className="h-4 w-4 mr-1" />
-            {t("workorder.new")}
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={() => setBillingOpen(true)}>
+              <FileSpreadsheet className="h-4 w-4 mr-1" />
+              {t("workorder.billing_statement", "Billing statement")}
+            </Button>
+            <Button onClick={() => navigate("/maintenance/work-orders/new")}>
+              <Plus className="h-4 w-4 mr-1" />
+              {t("workorder.new")}
+            </Button>
+          </div>
         </div>
 
         <DataTable
@@ -210,6 +218,7 @@ export default function WorkOrderList() {
           }
         />
       </div>
+      <RepairBillingDialog open={billingOpen} onOpenChange={setBillingOpen} />
     </Layout>
   );
 }

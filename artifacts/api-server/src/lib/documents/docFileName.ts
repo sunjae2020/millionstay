@@ -505,6 +505,8 @@ export const REPORT_TYPES = {
   arrears: "미납현황",
   /** 작업지시·유지보수 실적 */
   maintenance: "유지보수현황",
+  /** 임대청소·하자 청구 명세 (기간 안의 작업지시를 묶어 회사에 청구) */
+  repair_billing: "하자청구명세",
   /** 파트너 정산 */
   partner_payout: "파트너정산",
   /** 마케팅 캠페인 성과 */
