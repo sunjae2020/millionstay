@@ -1743,7 +1743,14 @@
     "photos_upload_n": "Upload {{count}}",
     "photos_empty": "No photos yet.",
     "photos_upload_failed": "Upload failed",
-    "photos_delete_confirm": "Delete this photo?"
+    "photos_delete_confirm": "Delete this photo?",
+    "category_repair": "Repair",
+    "category_move_in_cleaning": "Move-in cleaning",
+    "category_move_out_cleaning": "Move-out cleaning",
+    "category_day_tour": "Day tour",
+    "category_fishing": "Fishing",
+    "category_group_common": "Frequently used",
+    "category_group_other": "Other"
   },
   "csticket": {
     "search_placeholder": "Search tickets...",

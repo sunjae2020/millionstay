@@ -1716,7 +1716,14 @@
     "photos_upload_n": "{{count}}枚アップロード",
     "photos_empty": "写真がまだありません。",
     "photos_upload_failed": "アップロードに失敗しました",
-    "photos_delete_confirm": "この写真を削除しますか？"
+    "photos_delete_confirm": "この写真を削除しますか？",
+    "category_repair": "不具合修繕",
+    "category_move_in_cleaning": "入居清掃",
+    "category_move_out_cleaning": "退去清掃",
+    "category_day_tour": "デイツアー",
+    "category_fishing": "釣り",
+    "category_group_common": "よく使う項目",
+    "category_group_other": "その他"
   },
   "csticket": {
     "search_placeholder": "チケットを検索...",

@@ -1630,7 +1630,7 @@
     "search_placeholder": "작업 지시서 검색...",
     "all_statuses": "모든 상태",
     "all_priorities": "모든 우선순위",
-    "all_categories": "모든 카테고리",
+    "all_categories": "전체 카테고리",
     "no_workorders": "작업 지시서가 없습니다",
     "col_ref": "번호",
     "col_title": "제목",
@@ -1743,7 +1743,14 @@
     "photos_upload_n": "{{count}}장 업로드",
     "photos_empty": "등록된 사진이 없습니다.",
     "photos_upload_failed": "업로드에 실패했습니다",
-    "photos_delete_confirm": "이 사진을 삭제할까요?"
+    "photos_delete_confirm": "이 사진을 삭제할까요?",
+    "category_repair": "하자보수",
+    "category_move_in_cleaning": "입주청소",
+    "category_move_out_cleaning": "퇴거청소",
+    "category_day_tour": "데이투어",
+    "category_fishing": "낚시",
+    "category_group_common": "자주 쓰는 항목",
+    "category_group_other": "그 밖의 항목"
   },
   "csticket": {
     "search_placeholder": "티켓 검색...",

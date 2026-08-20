@@ -323,7 +323,16 @@
     "photo_delete_failed": "删除失败",
     "photo_upload_failed": "上传失败",
     "notes_placeholder": "描述您完成的工作…",
-    "notes_save_failed": "备注保存失败"
+    "notes_save_failed": "备注保存失败",
+    "cat_repair": "缺陷维修",
+    "cat_move_in_cleaning": "入住保洁",
+    "cat_move_out_cleaning": "退租保洁",
+    "cat_hvac": "暖通空调",
+    "cat_painting": "涂装",
+    "cat_carpentry": "木工",
+    "cat_pest_control": "消杀",
+    "cat_landscaping": "园艺",
+    "cat_security": "安保"
   },
   "documents": {
     "title": "文档",

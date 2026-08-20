@@ -1701,7 +1701,14 @@
     "photos_upload_n": "Tải lên {{count}} ảnh",
     "photos_empty": "Chưa có ảnh nào.",
     "photos_upload_failed": "Tải lên thất bại",
-    "photos_delete_confirm": "Xóa ảnh này?"
+    "photos_delete_confirm": "Xóa ảnh này?",
+    "category_repair": "Sửa lỗi kỹ thuật",
+    "category_move_in_cleaning": "Dọn dẹp nhận nhà",
+    "category_move_out_cleaning": "Dọn dẹp trả nhà",
+    "category_day_tour": "Tour trong ngày",
+    "category_fishing": "Câu cá",
+    "category_group_common": "Mục thường dùng",
+    "category_group_other": "Khác"
   },
   "csticket": {
     "search_placeholder": "Tìm kiếm phiếu hỗ trợ...",

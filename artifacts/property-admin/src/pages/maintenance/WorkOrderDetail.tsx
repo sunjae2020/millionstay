@@ -25,7 +25,8 @@ import { Input } from "@/components/ui/input";
 import { DateInput } from "@/components/ui/date-input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { COMMON_WORK_ORDER_CATEGORIES, OTHER_WORK_ORDER_CATEGORIES, canonicalWorkOrderCategory } from "@/lib/workOrderCategories";
 import { ArrowLeft, Trash2, Save, Send, ShieldAlert, CheckCircle2, Clock, CalendarClock, Mail } from "lucide-react";
 import { useState } from "react";
 import { apiJson } from "@/lib/apiFetch";
@@ -122,7 +123,7 @@ export default function WorkOrderDetail() {
         title: wo.title ?? "",
         description: wo.description ?? "",
         priority: wo.priority ?? "Normal",
-        category: wo.category ?? "",
+        category: canonicalWorkOrderCategory(wo.category) ?? "",
         assigned_contact_id: wo.assigned_contact_id ?? null,
         reported_at: wo.reported_at ?? "",
         scheduled_at: wo.scheduled_at ?? "",
@@ -367,16 +368,19 @@ export default function WorkOrderDetail() {
                     <SelectTrigger><SelectValue placeholder={t('workorder.category_placeholder')} /></SelectTrigger>
                     <SelectContent>
                       <SelectItem value="_none">— {t('common.none')} —</SelectItem>
-                      <SelectItem value="Plumbing">{t('workorder.category_plumbing')}</SelectItem>
-                      <SelectItem value="Electrical">{t('workorder.category_electrical')}</SelectItem>
-                      <SelectItem value="HVAC">{t('workorder.category_hvac')}</SelectItem>
-                      <SelectItem value="Cleaning">{t('workorder.category_cleaning')}</SelectItem>
-                      <SelectItem value="Painting">{t('workorder.category_painting')}</SelectItem>
-                      <SelectItem value="Carpentry">{t('workorder.category_carpentry')}</SelectItem>
-                      <SelectItem value="Pest Control">{t('workorder.category_pest_control')}</SelectItem>
-                      <SelectItem value="Landscaping">{t('workorder.category_landscaping')}</SelectItem>
-                      <SelectItem value="Security">{t('workorder.category_security')}</SelectItem>
-                      <SelectItem value="General">{t('workorder.category_general')}</SelectItem>
+                      {/* 자주 쓰는 항목이 위, 드물게 쓰는 항목은 아래 그룹으로. 분류표는 @workspace/api-zod 정본. */}
+                      <SelectGroup>
+                        <SelectLabel>{t('workorder.category_group_common')}</SelectLabel>
+                        {COMMON_WORK_ORDER_CATEGORIES.map(c => (
+                          <SelectItem key={c.value} value={c.value}>{t(c.labelKey as any)}</SelectItem>
+                        ))}
+                      </SelectGroup>
+                      <SelectGroup>
+                        <SelectLabel>{t('workorder.category_group_other')}</SelectLabel>
+                        {OTHER_WORK_ORDER_CATEGORIES.map(c => (
+                          <SelectItem key={c.value} value={c.value}>{t(c.labelKey as any)}</SelectItem>
+                        ))}
+                      </SelectGroup>
                     </SelectContent>
                   </Select>
                 )} />

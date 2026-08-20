@@ -14,6 +14,7 @@ import { Plus, Pencil } from "lucide-react";
 import { DataTable, ACTIONS_KEY, type ColumnDef } from "@/components/ui/data-table";
 import { ALL, SearchBox, DateRangeFilter, FacetSelect, ResetFiltersButton, useListFacets, useYearLabel } from "@/components/list-filters";
 import { useQueryClient } from "@tanstack/react-query";
+import { useWorkOrderCategoryLabel } from "@/lib/workOrderCategories";
 
 const statusColors: Record<string, string> = {
   Open: "bg-blue-100 text-blue-700",
@@ -59,6 +60,7 @@ export default function WorkOrderList() {
   };
   const { data: facets } = useListFacets("work-orders", showDeleted);
   const yearLabel = useYearLabel();
+  const categoryLabel = useWorkOrderCategoryLabel();
   const hasFilters = !!q || status !== ALL || priority !== ALL || category !== ALL || year !== ALL || !!dateFrom || !!dateTo;
   const resetFilters = () => {
     setQ(""); setStatus(ALL); setPriority(ALL); setCategory(ALL); setYear(ALL); setDateFrom(""); setDateTo("");
@@ -94,7 +96,7 @@ export default function WorkOrderList() {
       {
         key: "category",
         header: "workorder.col_category",
-        cell: (wo) => <span className="text-muted-foreground">{wo.category ?? "—"}</span>,
+        cell: (wo) => <span className="text-muted-foreground">{categoryLabel(wo.category)}</span>,
       },
       {
         key: "assigned_contact_name",
@@ -135,7 +137,7 @@ export default function WorkOrderList() {
         ),
       },
     ],
-    [t],
+    [t, categoryLabel],
   );
 
   return (
@@ -196,7 +198,7 @@ export default function WorkOrderList() {
               </Select>
               <FacetSelect
                 value={category} onChange={setCategory} options={facets?.categories ?? []}
-                allLabel={t("common.all_types")} className="w-40"
+                allLabel={t("workorder.all_categories")} labelOf={categoryLabel} className="w-40"
               />
               <FacetSelect
                 value={year} onChange={setYear} options={facets?.years ?? []}

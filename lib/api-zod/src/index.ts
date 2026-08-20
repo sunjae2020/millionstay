@@ -85,3 +85,6 @@ export {
   UpdateTaskParams,
   UpdateWorkOrderBody,
 } from "./generated/api";
+
+// 손으로 관리하는 분류표(Orval 생성물이 아니다).
+export * from "./workOrderCategories";

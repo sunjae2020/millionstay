@@ -323,7 +323,16 @@
     "photo_delete_failed": "削除に失敗しました",
     "photo_upload_failed": "アップロードに失敗しました",
     "notes_placeholder": "実施した作業内容を記入してください…",
-    "notes_save_failed": "メモの保存に失敗しました"
+    "notes_save_failed": "メモの保存に失敗しました",
+    "cat_repair": "不具合修繕",
+    "cat_move_in_cleaning": "入居清掃",
+    "cat_move_out_cleaning": "退去清掃",
+    "cat_hvac": "空調",
+    "cat_painting": "塗装",
+    "cat_carpentry": "木工",
+    "cat_pest_control": "防疫",
+    "cat_landscaping": "造園",
+    "cat_security": "警備"
   },
   "documents": {
     "title": "書類",

@@ -323,7 +323,16 @@
     "photo_delete_failed": "ลบไม่สำเร็จ",
     "photo_upload_failed": "อัปโหลดไม่สำเร็จ",
     "notes_placeholder": "อธิบายงานที่คุณดำเนินการ…",
-    "notes_save_failed": "บันทึกโน้ตไม่สำเร็จ"
+    "notes_save_failed": "บันทึกโน้ตไม่สำเร็จ",
+    "cat_repair": "ซ่อมแซมข้อบกพร่อง",
+    "cat_move_in_cleaning": "ทำความสะอาดก่อนเข้าอยู่",
+    "cat_move_out_cleaning": "ทำความสะอาดเมื่อย้ายออก",
+    "cat_hvac": "ระบบปรับอากาศ",
+    "cat_painting": "งานทาสี",
+    "cat_carpentry": "งานไม้",
+    "cat_pest_control": "กำจัดแมลง",
+    "cat_landscaping": "จัดสวน",
+    "cat_security": "รักษาความปลอดภัย"
   },
   "documents": {
     "title": "เอกสาร",
