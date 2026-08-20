@@ -537,6 +537,7 @@ const LABELS: Dict = {
   "wo.cat.move_out_cleaning": { en: "Move-out cleaning", ko: "퇴거청소", zh: "退租保洁", ja: "退去清掃", th: "ทำความสะอาดเมื่อย้ายออก", vi: "Dọn dẹp trả nhà" },
   "wo.cat.move_in_cleaning":  { en: "Move-in cleaning", ko: "입주청소", zh: "入住保洁", ja: "入居清掃", th: "ทำความสะอาดก่อนเข้าอยู่", vi: "Dọn dẹp nhận nhà" },
   "wo.cat.cleaning":          { en: "Cleaning", ko: "청소", zh: "清洁", ja: "清掃", th: "ทำความสะอาด", vi: "Vệ sinh" },
+  "wo.cat.wallpaper":         { en: "Wallpaper", ko: "벽지", zh: "墙纸", ja: "壁紙", th: "วอลเปเปอร์", vi: "Giấy dán tường" },
   "wo.cat.plumbing":          { en: "Plumbing", ko: "배관", zh: "管道", ja: "配管", th: "งานประปา", vi: "Ống nước" },
   "wo.cat.electrical":        { en: "Electrical", ko: "전기", zh: "电气", ja: "電気", th: "งานไฟฟ้า", vi: "Điện" },
   "wo.cat.hvac":              { en: "HVAC", ko: "냉난방공조", zh: "暖通空调", ja: "空調", th: "ระบบปรับอากาศ", vi: "Điều hòa/Thông gió" },
