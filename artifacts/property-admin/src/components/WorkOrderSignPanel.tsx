@@ -41,7 +41,18 @@ interface SigningRow {
   created_at: string;
 }
 
-export function WorkOrderSignPanel({ workOrderId }: { workOrderId: number }) {
+/** 상세 화면 헤더 버튼이 이 앵커로 스크롤한다. */
+export const WORK_ORDER_SIGN_ANCHOR = "wo-sign";
+
+export type WorkOrderSignStatus = "none" | "pending" | "signed";
+
+export function WorkOrderSignPanel({
+  workOrderId, onStatusChange,
+}: {
+  workOrderId: number;
+  /** 헤더 버튼이 라벨을 바꿀 수 있게 상태를 올려 준다(요청은 여기서 한 번만 한다). */
+  onStatusChange?: (status: WorkOrderSignStatus) => void;
+}) {
   const { t } = useTranslation();
   const { previewConfig, openPreview, closePreview } = useDocumentPreview();
 
@@ -57,7 +68,13 @@ export function WorkOrderSignPanel({ workOrderId }: { workOrderId: number }) {
     try {
       const res = await apiFetch(`/api/v1/work-orders/${workOrderId}/sign-link`);
       const body = await res.json();
-      if (body?.success) setRows(body.data ?? []);
+      const next: SigningRow[] = body?.success ? (body.data ?? []) : [];
+      setRows(next);
+      onStatusChange?.(
+        next.some((r) => r.status === "signed") ? "signed"
+        : next.some((r) => r.status === "pending") ? "pending"
+        : "none",
+      );
     } finally {
       setLoading(false);
     }
@@ -106,7 +123,7 @@ export function WorkOrderSignPanel({ workOrderId }: { workOrderId: number }) {
   }
 
   return (
-    <div className="border rounded-lg bg-white p-4 sm:p-6">
+    <div id={WORK_ORDER_SIGN_ANCHOR} className="border rounded-lg bg-white p-4 sm:p-6 scroll-mt-4">
       <h2 className="text-sm font-semibold uppercase text-primary tracking-wide mb-4 flex items-center gap-1.5">
         <FileSignature className="h-4 w-4" /> {t("workorder.section_sign", "Confirmation signature")}
       </h2>

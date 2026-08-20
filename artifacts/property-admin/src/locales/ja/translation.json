@@ -1780,7 +1780,10 @@
     "photos_session_hint": "一度にアップロードした写真が 1 回分として保存されます。",
     "photos_upload_as_session": "{{n}}回目としてアップロード",
     "photo_session_no": "{{n}}回目",
-    "photos_empty_kind": "{{kind}}の写真はまだありません。"
+    "photos_empty_kind": "{{kind}}の写真はまだありません。",
+    "btn_sign_request": "署名を依頼",
+    "btn_sign_pending": "署名リンク",
+    "btn_sign_signed": "署名済み"
   },
   "csticket": {
     "search_placeholder": "チケットを検索...",

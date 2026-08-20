@@ -1807,7 +1807,10 @@
     "photos_session_hint": "Each upload is saved as its own session.",
     "photos_upload_as_session": "Upload as session {{n}}",
     "photo_session_no": "Session {{n}}",
-    "photos_empty_kind": "No {{kind}} photos yet."
+    "photos_empty_kind": "No {{kind}} photos yet.",
+    "btn_sign_request": "Request signature",
+    "btn_sign_pending": "Signing link",
+    "btn_sign_signed": "Signed"
   },
   "csticket": {
     "search_placeholder": "Search tickets...",

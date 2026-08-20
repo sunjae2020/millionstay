@@ -1782,7 +1782,10 @@
     "photos_session_hint": "一次上传的照片会保存为一个批次。",
     "photos_upload_as_session": "作为第 {{n}} 次上传",
     "photo_session_no": "第 {{n}} 次",
-    "photos_empty_kind": "暂无{{kind}}照片。"
+    "photos_empty_kind": "暂无{{kind}}照片。",
+    "btn_sign_request": "请求签名",
+    "btn_sign_pending": "签名链接",
+    "btn_sign_signed": "已签名"
   },
   "csticket": {
     "search_placeholder": "搜索工单...",

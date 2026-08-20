@@ -1765,7 +1765,10 @@
     "photos_session_hint": "Mỗi lần tải lên được lưu thành một đợt riêng.",
     "photos_upload_as_session": "Tải lên thành lần {{n}}",
     "photo_session_no": "Lần {{n}}",
-    "photos_empty_kind": "Chưa có ảnh {{kind}}."
+    "photos_empty_kind": "Chưa có ảnh {{kind}}.",
+    "btn_sign_request": "Yêu cầu ký",
+    "btn_sign_pending": "Liên kết ký",
+    "btn_sign_signed": "Đã ký"
   },
   "csticket": {
     "search_placeholder": "Tìm kiếm phiếu hỗ trợ...",

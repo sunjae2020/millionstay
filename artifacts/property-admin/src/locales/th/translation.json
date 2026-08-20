@@ -1778,7 +1778,10 @@
     "photos_session_hint": "รูปที่อัปโหลดพร้อมกันจะถูกบันทึกเป็นหนึ่งครั้ง",
     "photos_upload_as_session": "อัปโหลดเป็นครั้งที่ {{n}}",
     "photo_session_no": "ครั้งที่ {{n}}",
-    "photos_empty_kind": "ยังไม่มีรูป{{kind}}"
+    "photos_empty_kind": "ยังไม่มีรูป{{kind}}",
+    "btn_sign_request": "ขอลายเซ็น",
+    "btn_sign_pending": "ลิงก์ลงนาม",
+    "btn_sign_signed": "ลงนามแล้ว"
   },
   "csticket": {
     "search_placeholder": "ค้นหาตั๋ว...",

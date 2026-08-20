@@ -27,12 +27,12 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { COMMON_WORK_ORDER_CATEGORIES, OTHER_WORK_ORDER_CATEGORIES, canonicalWorkOrderCategory } from "@/lib/workOrderCategories";
-import { ArrowLeft, Trash2, Save, Send, ShieldAlert, CheckCircle2, Clock, CalendarClock, Mail, FileText } from "lucide-react";
+import { ArrowLeft, Trash2, Save, Send, ShieldAlert, CheckCircle2, Clock, CalendarClock, Mail, FileText, FileSignature } from "lucide-react";
 import { DocumentPreviewDialog, useDocumentPreview } from "@/components/DocumentPreviewDialog";
 import { useState } from "react";
 import { apiJson } from "@/lib/apiFetch";
 import { WorkOrderPhotos, uploadStagedPhotos, type StagedPhoto } from "@/components/WorkOrderPhotos";
-import { WorkOrderSignPanel } from "@/components/WorkOrderSignPanel";
+import { WorkOrderSignPanel, WORK_ORDER_SIGN_ANCHOR, type WorkOrderSignStatus } from "@/components/WorkOrderSignPanel";
 
 /** ISO instant → the "YYYY-MM-DDTHH:mm" a datetime-local input expects (local tz). */
 function toLocalInput(value: string | null | undefined): string {
@@ -88,6 +88,8 @@ export default function WorkOrderDetail() {
   const { currency, currencyPosition } = useBrand();
   const { previewConfig, openPreview, closePreview } = useDocumentPreview();
   const isNew = !id || id === "new";
+  // 확인 서명은 폼 맨 아래에 있어서, 헤더에서 바로 갈 수 있는 입구를 둔다.
+  const [signStatus, setSignStatus] = useState<WorkOrderSignStatus>("none");
 
   const { data: wo, refetch } = useGetWorkOrder(Number(id), {
     query: { enabled: !isNew, queryKey: getGetWorkOrderQueryKey(Number(id)) },
@@ -267,6 +269,20 @@ export default function WorkOrderDetail() {
                 }
               >
                 <FileText className="h-4 w-4 mr-1" /> {t('workorder.btn_document', 'Work order PDF')}
+              </Button>
+            )}
+            {!isNew && (
+              <Button
+                variant="outline"
+                className={signStatus === "signed" ? "text-green-700 border-green-300" : undefined}
+                onClick={() => document.getElementById(WORK_ORDER_SIGN_ANCHOR)?.scrollIntoView({ behavior: "smooth", block: "start" })}
+              >
+                <FileSignature className="h-4 w-4 mr-1" />
+                {signStatus === "signed"
+                  ? t('workorder.btn_sign_signed', 'Signed')
+                  : signStatus === "pending"
+                    ? t('workorder.btn_sign_pending', 'Signing link')
+                    : t('workorder.btn_sign_request', 'Request signature')}
               </Button>
             )}
             {!isNew && (
@@ -590,14 +606,15 @@ export default function WorkOrderDetail() {
             onStagedChange={setStagedPhotos}
           />
 
+          {/* 확인 서명 — 저장된 작업지시서에만. 신규는 링크를 걸 대상이 없다.
+              증빙(사진) 바로 다음에 둔다: 사진을 보고 확인 서명을 요청하는 순서다. */}
+          {!isNew && <WorkOrderSignPanel workOrderId={Number(id)} onStatusChange={setSignStatus} />}
+
           {/* Notes */}
           <div className="border rounded-lg bg-white p-4 sm:p-6">
             <h2 className="text-sm font-semibold uppercase text-primary tracking-wide mb-4">{t('common.notes')}</h2>
             <Textarea rows={3} placeholder={t('workorder.ph_notes')} {...register("notes")} />
           </div>
-
-          {/* 확인 서명 — 저장된 작업지시서에만. 신규는 링크를 걸 대상이 없다. */}
-          {!isNew && <WorkOrderSignPanel workOrderId={Number(id)} />}
         </form>
       </div>
       <DocumentPreviewDialog config={previewConfig} onClose={closePreview} />
