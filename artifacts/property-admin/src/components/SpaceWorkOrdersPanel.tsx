@@ -1,4 +1,5 @@
 import { useTranslation } from "react-i18next";
+import { useWorkOrderCategoryLabel } from "@/lib/workOrderCategories";
 import { useQuery } from "@tanstack/react-query";
 import { apiJson } from "@/lib/apiFetch";
 import { Button } from "@/components/ui/button";
@@ -23,6 +24,7 @@ const STATUS_CHIP: Record<string, string> = {
 
 export function SpaceWorkOrdersPanel({ spaceId }: { spaceId: string | number }) {
   const { t } = useTranslation();
+  const categoryLabel = useWorkOrderCategoryLabel();
   const { data, isLoading } = useQuery<any[]>({
     queryKey: ["space-work-orders", String(spaceId)],
     queryFn: () => apiJson(`/api/v1/work-orders?space_id=${spaceId}`),
@@ -82,7 +84,7 @@ export function SpaceWorkOrdersPanel({ spaceId }: { spaceId: string | number }) 
                     </a>
                   </td>
                   <td className="px-3 py-2">{w.title}</td>
-                  <td className="px-3 py-2 text-muted-foreground">{w.category ?? "—"}</td>
+                  <td className="px-3 py-2 text-muted-foreground">{categoryLabel(w.category)}</td>
                   <td className="px-3 py-2">{w.service_host_name ?? "—"}</td>
                   <td className="px-3 py-2">
                     <span className={`text-xs px-2 py-0.5 rounded-full ${STATUS_CHIP[w.status] ?? "bg-gray-100 text-gray-600"}`}>{w.status}</span>

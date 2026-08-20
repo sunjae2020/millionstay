@@ -4,7 +4,7 @@ import multer from "multer";
 import { db, workOrdersTable, workOrderPhotosTable, propertiesTable, spacesTable, contactsTable, serviceHostsTable, invoicesTable, accountsTable, usersTable } from "@workspace/db";
 import { formatPersonName } from "../lib/nameFormat";
 import { sendAppointmentConfirmationEmail } from "../lib/email";
-import { eq, ilike, and, isNull, inArray, desc } from "drizzle-orm";
+import { eq, ilike, and, isNull, inArray, desc, sql } from "drizzle-orm";
 import { dispatchWorkOrder } from "../lib/dispatch/workOrderDispatch";
 import { logAction } from "../utils/auditLog";
 import { keywordCondition, spaceIdsByName, propertyIdsByName, dateRangeConditions, yearConditions, distinctYears, distinctValues } from "../lib/listSearch";
@@ -12,6 +12,9 @@ import { deletedFilter, makeBulkDelete, makeBulkRestore } from "../lib/softDelet
 import { uploadToCloudinary, isCloudinaryConfigured, cldFolder } from "../utils/cloudinary";
 import { getRateToAud } from "../lib/rateSnapshot";
 import {
+  canonicalWorkOrderCategory,
+  workOrderCategoryAliases,
+  sortWorkOrderCategories,
   CreateWorkOrderBody,
   UpdateWorkOrderBody,
   CompleteWorkOrderBody,
@@ -76,6 +79,8 @@ async function enrichWorkOrders(rows: (typeof workOrdersTable.$inferSelect)[]) {
 
   return rows.map(r => ({
     ...r,
+    // 백필 전 옛 표기(`Cleaning`/`청소`)가 남아 있어도 화면은 표준값 하나로 본다.
+    category: canonicalWorkOrderCategory(r.category),
     property_name: r.property_id ? (propertyMap[r.property_id] ?? null) : null,
     space_name: r.space_id ? (spaceMap[r.space_id] ?? null) : null,
     assigned_contact_name: r.assigned_contact_id ? (contactMap[r.assigned_contact_id] ?? null) : null,
@@ -139,7 +144,12 @@ router.get("/v1/work-orders", async (req, res): Promise<void> => {
   }
   if (status) conditions.push(eq(workOrdersTable.status, status));
   if (priority) conditions.push(eq(workOrdersTable.priority, priority));
-  if (category) conditions.push(eq(workOrdersTable.category, category));
+  // 카테고리는 과거 자유 입력이라 같은 뜻이 여러 표기로 남아 있다
+  // (`Cleaning`/`cleaning`/`청소`). 표준값 하나로 고르면 그 표기 전부를 잡는다.
+  if (category) {
+    const aliases = workOrderCategoryAliases(category);
+    conditions.push(sql`lower(trim(${workOrdersTable.category})) in (${sql.join(aliases.map(a => sql`${a}`), sql`, `)})`);
+  }
   if (space_id) conditions.push(eq(workOrdersTable.space_id, Number(space_id)));
   if (property_id) conditions.push(eq(workOrdersTable.property_id, Number(property_id)));
   // 기간은 예정일 기준(미정 건은 접수일로 대체하지 않는다 — 일정 조회가 목적).
@@ -159,7 +169,9 @@ router.get("/v1/work-orders/facets", async (req, res): Promise<void> => {
     distinctYears(workOrdersTable, workOrdersTable.scheduled_at, base),
     distinctValues(workOrdersTable, workOrdersTable.category, base),
   ]);
-  res.json({ years, categories });
+  // 표기가 흩어진 값들을 표준값으로 접어 중복을 없애고, 사용 빈도 순서대로 준다.
+  const canonical = [...new Set(categories.map(c => canonicalWorkOrderCategory(c)).filter(Boolean) as string[])];
+  res.json({ years, categories: sortWorkOrderCategories(canonical) });
 });
 
 router.post("/v1/work-orders", async (req, res): Promise<void> => {
@@ -173,7 +185,7 @@ router.post("/v1/work-orders", async (req, res): Promise<void> => {
     title: parsed.data.title,
     description: parsed.data.description ?? null,
     priority: parsed.data.priority ?? "Normal",
-    category: parsed.data.category ?? null,
+    category: canonicalWorkOrderCategory(parsed.data.category),
     assigned_contact_id: parsed.data.assigned_contact_id ?? null,
     reported_at: parsed.data.reported_at ?? null,
     scheduled_at: parsed.data.scheduled_at ?? null,
@@ -225,7 +237,7 @@ router.put("/v1/work-orders/:id", async (req, res): Promise<void> => {
   if (parsed.data.title != null) updates.title = parsed.data.title;
   if (parsed.data.description !== undefined) updates.description = parsed.data.description;
   if (parsed.data.priority != null) updates.priority = parsed.data.priority;
-  if (parsed.data.category !== undefined) updates.category = parsed.data.category;
+  if (parsed.data.category !== undefined) updates.category = canonicalWorkOrderCategory(parsed.data.category);
   if (parsed.data.assigned_contact_id !== undefined) updates.assigned_contact_id = parsed.data.assigned_contact_id;
   if (parsed.data.reported_at !== undefined) updates.reported_at = parsed.data.reported_at;
   if (parsed.data.scheduled_at !== undefined) updates.scheduled_at = parsed.data.scheduled_at;

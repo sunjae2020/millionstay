@@ -1605,7 +1605,7 @@
     "search_placeholder": "搜索工单...",
     "all_statuses": "所有状态",
     "all_priorities": "所有优先级",
-    "all_categories": "所有类别",
+    "all_categories": "全部类别",
     "no_workorders": "没有工单",
     "col_ref": "编号",
     "col_title": "标题",
@@ -1718,7 +1718,14 @@
     "photos_upload_n": "上传 {{count}} 张",
     "photos_empty": "暂无照片。",
     "photos_upload_failed": "上传失败",
-    "photos_delete_confirm": "删除这张照片？"
+    "photos_delete_confirm": "删除这张照片？",
+    "category_repair": "缺陷维修",
+    "category_move_in_cleaning": "入住保洁",
+    "category_move_out_cleaning": "退租保洁",
+    "category_day_tour": "一日游",
+    "category_fishing": "钓鱼",
+    "category_group_common": "常用项目",
+    "category_group_other": "其他"
   },
   "csticket": {
     "search_placeholder": "搜索工单...",

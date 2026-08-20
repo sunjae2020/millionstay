@@ -323,7 +323,16 @@
     "photo_delete_failed": "Failed to delete",
     "photo_upload_failed": "Upload failed",
     "notes_placeholder": "Describe the work you carried out…",
-    "notes_save_failed": "Failed to save notes"
+    "notes_save_failed": "Failed to save notes",
+    "cat_repair": "Repair",
+    "cat_move_in_cleaning": "Move-in cleaning",
+    "cat_move_out_cleaning": "Move-out cleaning",
+    "cat_hvac": "HVAC",
+    "cat_painting": "Painting",
+    "cat_carpentry": "Carpentry",
+    "cat_pest_control": "Pest control",
+    "cat_landscaping": "Landscaping",
+    "cat_security": "Security"
   },
   "documents": {
     "title": "Documents",

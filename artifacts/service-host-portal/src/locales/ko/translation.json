@@ -323,7 +323,16 @@
     "photo_delete_failed": "삭제에 실패했습니다",
     "photo_upload_failed": "업로드에 실패했습니다",
     "notes_placeholder": "수행한 작업 내용을 적어주세요…",
-    "notes_save_failed": "노트 저장에 실패했습니다"
+    "notes_save_failed": "노트 저장에 실패했습니다",
+    "cat_repair": "하자보수",
+    "cat_move_in_cleaning": "입주청소",
+    "cat_move_out_cleaning": "퇴거청소",
+    "cat_hvac": "냉난방공조",
+    "cat_painting": "도장",
+    "cat_carpentry": "목공",
+    "cat_pest_control": "방역",
+    "cat_landscaping": "조경",
+    "cat_security": "보안"
   },
   "documents": {
     "title": "문서함",

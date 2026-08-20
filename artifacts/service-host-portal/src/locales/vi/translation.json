@@ -314,7 +314,16 @@
     "photo_delete_failed": "Xóa thất bại",
     "photo_upload_failed": "Tải lên thất bại",
     "notes_placeholder": "Mô tả công việc bạn đã thực hiện…",
-    "notes_save_failed": "Lưu ghi chú thất bại"
+    "notes_save_failed": "Lưu ghi chú thất bại",
+    "cat_repair": "Sửa lỗi kỹ thuật",
+    "cat_move_in_cleaning": "Dọn dẹp nhận nhà",
+    "cat_move_out_cleaning": "Dọn dẹp trả nhà",
+    "cat_hvac": "Điều hòa thông gió",
+    "cat_painting": "Sơn",
+    "cat_carpentry": "Mộc",
+    "cat_pest_control": "Kiểm soát côn trùng",
+    "cat_landscaping": "Cảnh quan",
+    "cat_security": "An ninh"
   },
   "documents": {
     "title": "Tài liệu",

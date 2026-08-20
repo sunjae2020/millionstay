@@ -1714,7 +1714,14 @@
     "photos_upload_n": "อัปโหลด {{count}} รูป",
     "photos_empty": "ยังไม่มีรูปภาพ",
     "photos_upload_failed": "อัปโหลดไม่สำเร็จ",
-    "photos_delete_confirm": "ลบรูปภาพนี้หรือไม่?"
+    "photos_delete_confirm": "ลบรูปภาพนี้หรือไม่?",
+    "category_repair": "ซ่อมแซมข้อบกพร่อง",
+    "category_move_in_cleaning": "ทำความสะอาดก่อนเข้าอยู่",
+    "category_move_out_cleaning": "ทำความสะอาดเมื่อย้ายออก",
+    "category_day_tour": "ทัวร์รายวัน",
+    "category_fishing": "ตกปลา",
+    "category_group_common": "รายการที่ใช้บ่อย",
+    "category_group_other": "อื่น ๆ"
   },
   "csticket": {
     "search_placeholder": "ค้นหาตั๋ว...",

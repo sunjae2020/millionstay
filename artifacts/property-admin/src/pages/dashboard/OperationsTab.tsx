@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { useTranslation } from "react-i18next";
+import { useWorkOrderCategoryLabel } from "@/lib/workOrderCategories";
 import { Link } from "wouter";
 import { apiFetch } from "@/lib/apiFetch";
 import { unitSpaces } from "@/lib/unitScope";
@@ -71,6 +72,7 @@ export default function OperationsTab() {
   const [statusFilter, setStatusFilter] = useState("all");
   const { toast } = useToast();
   const { t } = useTranslation();
+  const categoryLabel = useWorkOrderCategoryLabel();
 
   const { data: workOrders, refetch: refetchWO } = useListWorkOrders({});
   const { data: spaces } = useListSpaces();
@@ -186,7 +188,7 @@ export default function OperationsTab() {
                 <div className="flex-1 min-w-0">
                   <p className="text-xs font-medium truncate">{wo.title}</p>
                   <p className="text-[10px] text-muted-foreground mt-0.5">
-                    {wo.order_ref} · {wo.priority ?? "Normal"} · {wo.category ?? "General"}
+                    {wo.order_ref} · {wo.priority ?? "Normal"} · {categoryLabel(wo.category ?? "general")}
                   </p>
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
