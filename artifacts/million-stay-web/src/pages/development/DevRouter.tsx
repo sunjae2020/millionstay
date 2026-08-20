@@ -39,6 +39,7 @@ import PortalCsNew from "@/pages/portal-cs-new";
 import PortalCsDetail from "@/pages/portal-cs-detail";
 import Sign from "@/pages/sign";
 import InspectionSign from "@/pages/inspection-sign";
+import WorkOrderSign from "@/pages/work-order-sign";
 import PaymentResult from "@/pages/payment-result";
 import NotFound from "@/pages/not-found";
 
@@ -117,6 +118,10 @@ export default function DevRouter() {
       <Route path="/sign/:token" component={Sign} />
       {/* 세대점검표 — tenant review & signature (token link, no login). */}
       <Route path="/inspection/:token" component={InspectionSign} />
+      {/* 작업 확인서 — 시설 담당자 확인 서명(토큰 링크, 로그인 없음).
+          토큰 페이지는 두 라우터에 **모두** 걸어야 한다 — 단일 건물 인스턴스는
+          이 DevRouter 만 타므로 App.tsx 쪽에만 넣으면 404 가 된다. */}
+      <Route path="/work-order/:token" component={WorkOrderSign} />
       <Route path="/payment-result" component={PaymentResult} />
 
       <Route component={NotFound} />
