@@ -32,6 +32,7 @@ import { DocumentPreviewDialog, useDocumentPreview } from "@/components/Document
 import { useState } from "react";
 import { apiJson } from "@/lib/apiFetch";
 import { WorkOrderPhotos, uploadStagedPhotos, type StagedPhoto } from "@/components/WorkOrderPhotos";
+import { WorkOrderSignPanel } from "@/components/WorkOrderSignPanel";
 
 /** ISO instant → the "YYYY-MM-DDTHH:mm" a datetime-local input expects (local tz). */
 function toLocalInput(value: string | null | undefined): string {
@@ -594,6 +595,9 @@ export default function WorkOrderDetail() {
             <h2 className="text-sm font-semibold uppercase text-primary tracking-wide mb-4">{t('common.notes')}</h2>
             <Textarea rows={3} placeholder={t('workorder.ph_notes')} {...register("notes")} />
           </div>
+
+          {/* 확인 서명 — 저장된 작업지시서에만. 신규는 링크를 걸 대상이 없다. */}
+          {!isNew && <WorkOrderSignPanel workOrderId={Number(id)} />}
         </form>
       </div>
       <DocumentPreviewDialog config={previewConfig} onClose={closePreview} />

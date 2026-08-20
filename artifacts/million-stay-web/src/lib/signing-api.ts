@@ -12,6 +12,32 @@ export interface SigningSigner {
   required: boolean;
 }
 
+/** 작업 확인서 요약 — 토큰 페이지가 로그인 없이 바로 그리는 내용. */
+export interface WorkOrderSummaryPhoto {
+  url: string;
+  kind: string;        // before | after
+  session_no: number;  // 회차
+  caption: string | null;
+}
+
+export interface WorkOrderSummary {
+  kind: "work_order";
+  order_ref: string;
+  title: string;
+  description: string | null;
+  notes: string | null;
+  category: string | null;
+  status: string;
+  property_name: string | null;
+  unit_no: string | null;
+  unit_type: string | null;
+  scheduled_at: string | null;
+  completed_at: string | null;
+  partner_name: string | null;
+  assignee_name: string | null;
+  photos: WorkOrderSummaryPhoto[];
+}
+
 export interface SigningRequest {
   id: number;
   status: string;
@@ -19,6 +45,7 @@ export interface SigningRequest {
   context_id: number;
   signers: SigningSigner[];
   expires_at: string | null;
+  summary?: WorkOrderSummary | null;
 }
 
 export class SigningError extends Error {
@@ -56,11 +83,13 @@ export async function submitSignatures(
   token: string,
   signatures: SubmitSignature[],
   consent: boolean,
+  /** 서명 화면의 언어 — 서버가 같은 언어의 동의문을 기록으로 남긴다. */
+  lang?: string,
 ): Promise<void> {
   const res = await fetch(`${BASE}/${encodeURIComponent(token)}/sign`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ signatures, consent }),
+    body: JSON.stringify({ signatures, consent, lang }),
   });
   const body = await readJson(res);
   if (!res.ok) throw new SigningError(res.status, body?.error ?? "error", body?.message ?? "Failed to submit signatures.");

@@ -1,11 +1,12 @@
 import { Router } from "express";
 import { DEFAULT_CURRENCY } from "../lib/currency";
 import multer from "multer";
-import { db, workOrdersTable, workOrderPhotosTable, propertiesTable, spacesTable, contactsTable, serviceHostsTable, invoicesTable, invoiceLineItemsTable, accountsTable, usersTable } from "@workspace/db";
+import { db, workOrdersTable, workOrderPhotosTable, contractSigningRequestsTable, propertiesTable, spacesTable, contactsTable, serviceHostsTable, invoicesTable, invoiceLineItemsTable, accountsTable, usersTable } from "@workspace/db";
 import { formatPersonName } from "../lib/nameFormat";
 import { sendAppointmentConfirmationEmail } from "../lib/email";
 import { eq, ilike, and, isNull, inArray, desc, sql } from "drizzle-orm";
 import { dispatchWorkOrder } from "../lib/dispatch/workOrderDispatch";
+import { createSigningRequest, signingBaseUrl } from "../services/contractSigning";
 import { logAction } from "../utils/auditLog";
 import { keywordCondition, spaceIdsByName, propertyIdsByName, dateRangeConditions, yearConditions, distinctYears, distinctValues } from "../lib/listSearch";
 import { deletedFilter, makeBulkDelete, makeBulkRestore } from "../lib/softDelete";
@@ -298,15 +299,17 @@ async function loadUnitInfo(spaceIds: number[]): Promise<Map<number, UnitInfo>> 
 }
 
 /** 작업지시별 사진. `kind`(before/after) 순서를 유지한 채 건별로 묶는다. */
-async function loadPhotos(workOrderIds: number[]): Promise<Map<number, Array<{ url: string; kind: string; caption: string | null }>>> {
-  const out = new Map<number, Array<{ url: string; kind: string; caption: string | null }>>();
+type LoadedPhoto = { url: string; kind: string; session_no: number; caption: string | null; created_at: Date | null };
+
+async function loadPhotos(workOrderIds: number[]): Promise<Map<number, LoadedPhoto[]>> {
+  const out = new Map<number, LoadedPhoto[]>();
   if (!workOrderIds.length) return out;
   const rows = await db.select().from(workOrderPhotosTable)
     .where(inArray(workOrderPhotosTable.work_order_id, workOrderIds))
-    .orderBy(workOrderPhotosTable.id);
+    .orderBy(workOrderPhotosTable.kind, workOrderPhotosTable.session_no, workOrderPhotosTable.id);
   for (const r of rows) {
     const list = out.get(r.work_order_id) ?? [];
-    list.push({ url: r.url, kind: r.kind, caption: r.caption ?? null });
+    list.push({ url: r.url, kind: r.kind, session_no: r.session_no, caption: r.caption ?? null, created_at: r.created_at ?? null });
     out.set(r.work_order_id, list);
   }
   return out;
@@ -616,23 +619,26 @@ router.post("/v1/work-orders/billing-statement/invoice", async (req, res): Promi
   res.status(201).json({ success: true, data: invoice, lines: billable.length, skipped });
 });
 
-// A — 작업지시서 PDF (요청·완료 사진 포함).
-router.get("/v1/work-orders/:id/document.pdf", async (req, res): Promise<void> => {
-  const id = Number(req.params.id);
+/**
+ * 작업지시서 문서 입력을 만든다. PDF 라우트와 서명 문서(작업 확인서)가 같은
+ * 본문을 써야 하므로 한 곳에서 조립한다.
+ */
+export async function buildWorkOrderDocInput(
+  id: number,
+  opts: { withholdingPct?: number } = {},
+): Promise<WorkOrderDocInput | null> {
   const [wo] = await db.select().from(workOrdersTable).where(eq(workOrdersTable.id, id));
-  if (!wo) { res.status(404).json({ success: false, error: { code: "NOT_FOUND", message: "Work order not found" } }); return; }
+  if (!wo) return null;
 
   const [enriched] = await enrichWorkOrders([wo]);
   const units = await loadUnitInfo(wo.space_id ? [wo.space_id] : []);
   const unit = wo.space_id ? units.get(wo.space_id) : undefined;
   const photos = (await loadPhotos([id])).get(id) ?? [];
-  const query = req.query as Record<string, any>;
-  const rawPct = Number(query.withholding_pct);
-  const pct = Number.isFinite(rawPct) && rawPct > 0 ? rawPct : 0;
+  const pct = Number.isFinite(opts.withholdingPct) && (opts.withholdingPct ?? 0) > 0 ? Number(opts.withholdingPct) : 0;
   const cost = Number(wo.cost ?? 0);
   const billed = billedAmountOf({ cost }, pct);
 
-  const data: WorkOrderDocInput = {
+  return {
     order_ref: wo.order_ref,
     title: wo.title,
     description: wo.description,
@@ -658,18 +664,120 @@ router.get("/v1/work-orders/:id/document.pdf", async (req, res): Promise<void> =
     billed_amount: billed,
     photos,
   };
+}
+
+/** 작업지시서 문서의 파일명. 서명본과 원본이 같은 규칙을 쓴다. */
+export async function workOrderDocFileName(id: number, data: WorkOrderDocInput): Promise<string> {
+  const [wo] = await db.select().from(workOrdersTable).where(eq(workOrdersTable.id, id));
+  return resolveDocFileName({
+    kind: "work_order",
+    entityType: "work_order",
+    entityId: id,
+    party: [data.unit_no, data.property_name, data.order_ref],
+    org: [data.property_name],
+    issueDate: wo ? workDateOf(wo) : undefined,
+  });
+}
+
+// ── 확인 서명 링크 ───────────────────────────────────────────────────────────
+//
+// 시설 담당자는 포털 계정이 없다. 링크 하나를 카톡으로 받아 열고, 작업 내용과
+// 전/후 사진을 확인한 뒤 손으로 서명하면 끝이다. 서명 시각의 IP·기기·동의문은
+// 서버가 찍어 `contract_signing_requests` 에 남는다(범용 전자서명 원장 재사용 —
+// 작업지시서 전용 테이블을 새로 파지 않는다).
+router.post("/v1/work-orders/:id/sign-link", async (req, res): Promise<void> => {
+  try {
+    const id = Number(req.params.id);
+    const [wo] = await db.select().from(workOrdersTable).where(eq(workOrdersTable.id, id));
+    if (!wo) { res.status(404).json({ success: false, error: { code: "NOT_FOUND", message: "Work order not found" } }); return; }
+
+    // 이미 서명이 끝났으면 새 링크를 내주지 않는다 — 확인은 한 번이다.
+    const existing = await db.select().from(contractSigningRequestsTable)
+      .where(and(
+        eq(contractSigningRequestsTable.context_type, "work_order"),
+        eq(contractSigningRequestsTable.context_id, id),
+      ));
+    if (existing.some((r) => r.status === "signed")) {
+      res.status(409).json({ success: false, error: { code: "ALREADY_SIGNED", message: "이미 확인 서명이 완료된 작업입니다." } });
+      return;
+    }
+    // 재발급이면 이전 대기 링크는 무효로 돌린다(살아 있는 링크는 하나만).
+    const stale = existing.filter((r) => r.status === "pending").map((r) => r.id);
+    if (stale.length) {
+      await db.update(contractSigningRequestsTable)
+        .set({ status: "cancelled", updated_at: new Date() })
+        .where(inArray(contractSigningRequestsTable.id, stale));
+    }
+
+    const [enriched] = await enrichWorkOrders([wo]);
+    const name = typeof req.body?.signer_name === "string" && req.body.signer_name.trim()
+      ? req.body.signer_name.trim()
+      : enriched?.service_host_name ?? enriched?.assigned_contact_name ?? "시설 담당자";
+    const days = Number(req.body?.expiry_days);
+    const signing = await createSigningRequest({
+      contextType: "work_order",
+      contextId: id,
+      signers: [{
+        role: "facility_manager",
+        name,
+        email: typeof req.body?.email === "string" ? req.body.email.trim() : "",
+        required: true,
+      }],
+      expiryDays: Number.isFinite(days) && days > 0 ? days : 14,
+    });
+
+    void logAction({
+      entityType: "work_order", entityId: id, action: "UPDATE",
+      actorId: (req as any).user?.id ?? null,
+      newValue: { sign_link_issued: signing.id, signer: name, expires_at: signing.expiresAt },
+    });
+
+    res.status(201).json({
+      success: true,
+      data: {
+        id: signing.id,
+        token: signing.token,
+        // 카톡으로 그대로 붙여 넣는 주소. SIGNING_BASE_URL(테넌트별 웹) 기준.
+        url: `${signingBaseUrl()}/work-order/${signing.token}`,
+        signer_name: name,
+        expires_at: signing.expiresAt,
+      },
+    });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: { code: "SERVER_ERROR", message: err.message } });
+  }
+});
+
+/** 이 작업지시서의 서명 요청들 — 상태·서명·인증 정보를 상세 화면이 그대로 그린다. */
+router.get("/v1/work-orders/:id/sign-link", async (req, res): Promise<void> => {
+  const id = Number(req.params.id);
+  const rows = await db.select().from(contractSigningRequestsTable)
+    .where(and(
+      eq(contractSigningRequestsTable.context_type, "work_order"),
+      eq(contractSigningRequestsTable.context_id, id),
+    ))
+    .orderBy(desc(contractSigningRequestsTable.id));
+  const base = signingBaseUrl();
+  res.json({
+    success: true,
+    data: rows.map(({ signed_snapshot, ...r }) => ({
+      ...r,
+      url: `${base}/work-order/${r.token}`,
+    })),
+  });
+});
+
+// A — 작업지시서 PDF (요청·완료 사진 포함).
+router.get("/v1/work-orders/:id/document.pdf", async (req, res): Promise<void> => {
+  const id = Number(req.params.id);
+  const query = req.query as Record<string, any>;
+  const data = await buildWorkOrderDocInput(id, { withholdingPct: Number(query.withholding_pct) });
+  if (!data) { res.status(404).json({ success: false, error: { code: "NOT_FOUND", message: "Work order not found" } }); return; }
 
   const company = await resolveCompanyInfo();
   const lang = normalizeLang(typeof query.lang === "string" ? query.lang : undefined);
   const html = buildWorkOrderHtml({ data, company, lang });
-  const filename = await resolveDocFileName({
-    kind: "work_order",
-    entityType: "work_order",
-    entityId: id,
-    party: [data.unit_no, data.property_name, wo.order_ref],
-    org: [data.property_name],
-    issueDate: workDateOf(wo),
-  });
+  const filename = await workOrderDocFileName(id, data);
   await sendDocument(res, html, filename, String(query.format ?? ""));
 });
 
@@ -906,8 +1014,10 @@ router.post("/v1/work-orders/:id/send-confirmation", async (req, res): Promise<v
 // ── Work-order photos (#7) — before/after (request/confirmation) evidence ─────
 router.get("/v1/work-orders/:id/photos", async (req, res): Promise<void> => {
   const id = Number(req.params.id);
+  // 전/후 → 회차 → 등록순. 클라이언트가 그대로 묶어 그릴 수 있게 정렬해서 준다.
   const rows = await db.select().from(workOrderPhotosTable)
-    .where(eq(workOrderPhotosTable.work_order_id, id)).orderBy(desc(workOrderPhotosTable.id));
+    .where(eq(workOrderPhotosTable.work_order_id, id))
+    .orderBy(workOrderPhotosTable.kind, workOrderPhotosTable.session_no, workOrderPhotosTable.id);
   res.json({ success: true, data: rows });
 });
 
@@ -939,10 +1049,24 @@ router.post("/v1/work-orders/:id/photos", upload.any(), async (req, res): Promis
     }
     if (urls.length === 0) { res.status(400).json({ success: false, error: { code: "NO_IMAGE", message: "Provide an image file or a url." } }); return; }
 
+    // 업로드 한 묶음 = 한 회차. 같은 전/후 안에서 다음 번호를 받아 붙인다.
+    // `session_no` 를 명시적으로 넘기면(재업로드 보정 등) 그 회차에 합류한다.
+    const asked = Number(req.body?.session_no);
+    let session_no: number;
+    if (Number.isFinite(asked) && asked > 0) {
+      session_no = Math.floor(asked);
+    } else {
+      const [last] = await db
+        .select({ max: sql<number>`coalesce(max(${workOrderPhotosTable.session_no}), 0)` })
+        .from(workOrderPhotosTable)
+        .where(and(eq(workOrderPhotosTable.work_order_id, id), eq(workOrderPhotosTable.kind, kind)));
+      session_no = Number(last?.max ?? 0) + 1;
+    }
+
     const rows = await db.insert(workOrderPhotosTable).values(
-      urls.map((url) => ({ work_order_id: id, url, kind, uploaded_by_type, caption })),
+      urls.map((url) => ({ work_order_id: id, url, kind, session_no, uploaded_by_type, caption })),
     ).returning();
-    void logAction({ entityType: "work_order", entityId: id, action: "UPDATE", actorId: (req as any).user?.id ?? null, newValue: { photos_added: rows.length, kind } });
+    void logAction({ entityType: "work_order", entityId: id, action: "UPDATE", actorId: (req as any).user?.id ?? null, newValue: { photos_added: rows.length, kind, session_no } });
     // `data` stays a single row for existing single-file callers; `items` carries them all.
     res.status(201).json({ success: true, data: rows[0], items: rows });
   } catch (err: any) {
