@@ -7,6 +7,7 @@ import { sendAppointmentConfirmationEmail } from "../lib/email";
 import { eq, ilike, and, isNull, inArray, desc, sql } from "drizzle-orm";
 import { dispatchWorkOrder } from "../lib/dispatch/workOrderDispatch";
 import { createSigningRequest, signingBaseUrl } from "../services/contractSigning";
+import { buildAppointmentIcs, buildCalendar, addDays } from "../lib/ical";
 import { logAction } from "../utils/auditLog";
 import { keywordCondition, spaceIdsByName, propertyIdsByName, dateRangeConditions, yearConditions, distinctYears, distinctValues } from "../lib/listSearch";
 import { deletedFilter, makeBulkDelete, makeBulkRestore } from "../lib/softDelete";
@@ -24,7 +25,7 @@ import {
 import { computeTax } from "./invoices";
 import { htmlToPdf, PdfUnavailableError } from "../lib/documents/pdf";
 import { resolveCompanyInfo } from "../lib/documents/companyInfo";
-import { normalizeLang } from "../lib/documents/i18n";
+import { normalizeLang, t, type DocLang } from "../lib/documents/i18n";
 import { buildReportFileName, resolveDocFileName, setDocFileName } from "../lib/documents/docFileName";
 import {
   billedAmountOf,
@@ -677,6 +678,80 @@ export async function workOrderDocFileName(id: number, data: WorkOrderDocInput):
     org: [data.property_name],
     issueDate: wo ? workDateOf(wo) : undefined,
   });
+}
+
+// ── 캘린더 저장(.ics) ────────────────────────────────────────────────────────
+//
+// 카톡으로 링크를 받은 시설 담당자가 그 자리에서 자기 폰 캘린더에 일정을
+// 넣을 수 있어야 한다. .ics 하나면 아이폰(탭 → 캘린더 추가 시트)과
+// 안드로이드(내려받아 캘린더 앱으로 열기) 양쪽이 모두 처리한다.
+//
+// 시각이 잡힌 방문이면 시간 일정, 날짜만 있으면 **종일 일정**으로 낸다 —
+// 없는 시각을 지어내면 담당자 캘린더에 엉뚱한 시간이 박힌다.
+export interface WorkOrderIcs {
+  ics: string;
+  filename: string;
+}
+
+export async function buildWorkOrderIcs(
+  id: number,
+  opts: { signUrl?: string | null; lang?: DocLang } = {},
+): Promise<WorkOrderIcs | null> {
+  const [wo] = await db.select().from(workOrdersTable).where(eq(workOrdersTable.id, id));
+  if (!wo) return null;
+
+  const data = await buildWorkOrderDocInput(id);
+  if (!data) return null;
+  const lang = opts.lang ?? "ko";
+  const company = await resolveCompanyInfo();
+  const brand = company.tradingName || company.legalName || "MillionStay";
+
+  const place = [data.property_name, data.unit_no].filter(Boolean).join(" ");
+  const summary = [data.unit_no, data.title].filter(Boolean).join(" · ");
+  const description = [
+    `${t(lang, "wo.heading")}: ${data.order_ref}`,
+    data.category ? `${t(lang, "wo.category")}: ${t(lang, `wo.cat.${data.category}`)}` : null,
+    data.partner_name ? `${t(lang, "wo.partner")}: ${data.partner_name}` : null,
+    data.location_note ? `${t(lang, "wo.locationNote")}: ${data.location_note}` : null,
+    data.description || null,
+    // 캘린더 항목에서 바로 확인 서명 화면으로 돌아올 수 있게 링크를 같이 넣는다.
+    opts.signUrl || null,
+  ].filter(Boolean).join("\n");
+
+  // 확정 메일에 붙는 초대장(sendAppointmentConfirmationEmail)과 **같은 UID**.
+  // 담당자가 메일 초대도 받아 뒀다면 새 일정이 하나 더 생기는 대신 같은 일정이
+  // 갱신된다.
+  const uid = `wo-${wo.order_ref}@millionstay`;
+  const prodId = "-//MillionStay//Work Orders//EN";
+  const filename = `${wo.order_ref}.ics`;
+
+  if (wo.scheduled_start_at) {
+    const start = new Date(wo.scheduled_start_at);
+    // 끝 시각이 없으면 1시간으로 둔다 — 0분짜리 일정은 캘린더에서 안 보인다.
+    const end = wo.scheduled_end_at ? new Date(wo.scheduled_end_at) : new Date(start.getTime() + 60 * 60 * 1000);
+    return {
+      filename,
+      ics: buildAppointmentIcs(
+        [{ uid, start, end, summary, description, location: place || null, organizer: null }],
+        { calendarName: brand, prodId },
+      ),
+    };
+  }
+
+  // 날짜만 있는 건 종일 일정. (DTEND 는 배타적이라 다음 날.)
+  const dateOnly = typeof wo.scheduled_at === "string" ? wo.scheduled_at.slice(0, 10) : null;
+  if (dateOnly && /^\d{4}-\d{2}-\d{2}$/.test(dateOnly)) {
+    return {
+      filename,
+      ics: buildCalendar(
+        [{ uid, start: dateOnly, endExclusive: addDays(dateOnly, 1), summary, description, location: place || null }],
+        { calendarName: brand, prodId },
+      ),
+    };
+  }
+
+  // 일정이 없으면 캘린더에 넣을 것이 없다.
+  return null;
 }
 
 // ── 확인 서명 링크 ───────────────────────────────────────────────────────────

@@ -2812,6 +2812,7 @@
     "cat_security": "警備",
     "cat_day_tour": "デイツアー",
     "cat_fishing": "釣り",
-    "cat_general": "一般"
+    "cat_general": "一般",
+    "add_to_calendar": "カレンダーに保存"
   }
 }

@@ -19,6 +19,7 @@ import {
   clientIp,
   createSigningRequest,
   DEFAULT_CONSENT_TEXT,
+  signingBaseUrl,
   type SignerSpec,
   type SigningContextType,
 } from "../services/contractSigning.js";
@@ -35,7 +36,7 @@ import {
 import { isCloudinaryConfigured, generateSignedUrl } from "../utils/cloudinary.js";
 import { resolveDocFileName, setDocFileName } from "../lib/documents/docFileName";
 import { normalizeLang, t } from "../lib/documents/i18n.js";
-import { buildWorkOrderDocInput } from "./work-orders.js";
+import { buildWorkOrderDocInput, buildWorkOrderIcs } from "./work-orders.js";
 
 /** Name of the first signer on a request — the person the document is about. */
 function primarySignerName(row: { signers: unknown }): string | null {
@@ -136,6 +137,43 @@ contractSigningPublicRouter.get("/v1/public/contract-signing/:token", async (req
   } catch (err) {
     console.error("[ContractSign] public get error:", err);
     res.status(500).json({ error: "server_error", message: "Failed to fetch signing data." });
+  }
+});
+
+// GET /v1/public/contract-signing/:token/calendar.ics — 담당자 폰 캘린더 저장용.
+// 아이폰은 탭하면 캘린더 추가 시트가 뜨고, 안드로이드는 내려받아 캘린더 앱으로
+// 연다. 서명 여부와 무관하게(취소된 링크만 빼고) 내려 준다 — 서명을 마친 뒤에도
+// 방문 일정은 캘린더에 남아야 한다.
+contractSigningPublicRouter.get("/v1/public/contract-signing/:token/calendar.ics", async (req, res): Promise<void> => {
+  try {
+    const [row] = await db
+      .select()
+      .from(contractSigningRequestsTable)
+      .where(eq(contractSigningRequestsTable.token, req.params.token))
+      .limit(1);
+    if (!row || row.status === "cancelled") { res.status(404).send("Not found"); return; }
+    if (row.context_type !== "work_order") { res.status(404).send("Not found"); return; }
+
+    const built = await buildWorkOrderIcs(row.context_id, {
+      signUrl: `${signingBaseUrl()}/work-order/${row.token}`,
+      lang: normalizeLang(typeof req.query.lang === "string" ? req.query.lang : undefined),
+    });
+    // 일정이 안 잡힌 작업지시서는 캘린더에 넣을 것이 없다.
+    if (!built) { res.status(409).json({ error: "no_schedule", message: "일정이 지정되지 않은 작업입니다." }); return; }
+
+    void appendAuditEvent(row.id, {
+      event: "calendar_downloaded",
+      at: new Date().toISOString(),
+      ip: clientIp(req),
+      userAgent: String(req.headers["user-agent"] ?? "").slice(0, 500),
+    });
+
+    res.setHeader("Content-Type", "text/calendar; charset=utf-8");
+    res.setHeader("Content-Disposition", `attachment; filename="${built.filename}"`);
+    res.send(built.ics);
+  } catch (err) {
+    console.error("[ContractSign] calendar error:", err);
+    res.status(500).send("Failed to build calendar file");
   }
 });
 

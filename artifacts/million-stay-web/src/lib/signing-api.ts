@@ -100,6 +100,15 @@ export function previewUrl(token: string): string {
   return `${BASE}/${encodeURIComponent(token)}/preview`;
 }
 
+/**
+ * 담당자 폰 캘린더 저장용 .ics. 아이폰은 탭하면 캘린더 추가 시트가 뜨고,
+ * 안드로이드는 내려받아 캘린더 앱으로 연다.
+ */
+export function workOrderIcsUrl(token: string, lang?: string): string {
+  const q = lang ? `?lang=${encodeURIComponent(lang)}` : "";
+  return `${BASE}/${encodeURIComponent(token)}/calendar.ics${q}`;
+}
+
 /** Token-gated signed PDF (redirects to a short-lived signed URL, or renders inline). */
 export function signedPdfUrl(token: string): string {
   return `${BASE}/${encodeURIComponent(token)}/pdf`;
