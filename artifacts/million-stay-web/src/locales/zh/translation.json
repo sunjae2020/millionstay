@@ -2665,6 +2665,7 @@
     "cat_security": "安保",
     "cat_day_tour": "一日游",
     "cat_fishing": "钓鱼",
-    "cat_general": "一般"
+    "cat_general": "一般",
+    "add_to_calendar": "保存到日历"
   }
 }

@@ -2811,6 +2811,7 @@
     "cat_security": "รักษาความปลอดภัย",
     "cat_day_tour": "ทัวร์รายวัน",
     "cat_fishing": "ตกปลา",
-    "cat_general": "ทั่วไป"
+    "cat_general": "ทั่วไป",
+    "add_to_calendar": "บันทึกลงปฏิทิน"
   }
 }

@@ -11,7 +11,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRoute } from "wouter";
 import { useTranslation } from "react-i18next";
-import { AlertCircle, CheckCircle2, FileText, Loader2 } from "lucide-react";
+import { AlertCircle, CalendarPlus, CheckCircle2, FileText, Loader2 } from "lucide-react";
 import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
 import { DevNavbar, DevFooter } from "@/components/development/DevLayout";
@@ -21,7 +21,7 @@ import { Input } from "@/components/ui/input";
 import SignaturePad from "@/components/SignaturePad";
 import { DocumentPreviewDialog, useDocumentPreview } from "@/components/DocumentPreviewDialog";
 import {
-  getSigningRequest, submitSignatures, previewUrl, signedPdfUrl, SigningError,
+  getSigningRequest, submitSignatures, previewUrl, signedPdfUrl, workOrderIcsUrl, SigningError,
   type SigningRequest, type WorkOrderSummary, type WorkOrderSummaryPhoto,
 } from "@/lib/signing-api";
 
@@ -244,7 +244,7 @@ export default function WorkOrderSign() {
           </div>
         )}
 
-        <div className={card}>
+        <div className={`${card} flex flex-wrap gap-2`}>
           <Button
             variant="outline" className="gap-2"
             onClick={() => openPreview({
@@ -255,6 +255,15 @@ export default function WorkOrderSign() {
           >
             <FileText className="h-4 w-4" /> {t("wosign.view_full", "확인서 전문 보기")}
           </Button>
+          {/* 일정이 잡힌 작업만 캘린더에 넣을 것이 있다. 링크로 두어야
+              iOS 는 캘린더 추가 시트, 안드로이드는 캘린더 앱 열기로 이어진다. */}
+          {wo?.scheduled_at && (
+            <Button asChild variant="outline" className="gap-2">
+              <a href={workOrderIcsUrl(token, i18n.language)}>
+                <CalendarPlus className="h-4 w-4" /> {t("wosign.add_to_calendar", "캘린더에 저장")}
+              </a>
+            </Button>
+          )}
         </div>
 
         <div className={card}>

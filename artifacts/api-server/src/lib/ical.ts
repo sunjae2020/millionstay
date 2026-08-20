@@ -13,6 +13,9 @@ export interface ICalEvent {
   start: string; // inclusive start, "YYYY-MM-DD"
   endExclusive: string; // exclusive end, "YYYY-MM-DD"
   summary: string;
+  /** 종일 일정에도 본문/장소를 실을 수 있다(채널 캘린더는 쓰지 않는다). */
+  description?: string | null;
+  location?: string | null;
 }
 
 /** Add `n` days to a "YYYY-MM-DD" string (UTC, DST-safe). */
@@ -102,9 +105,10 @@ export function buildCalendar(events: ICalEvent[], opts: BuildCalendarOptions): 
       `DTSTART;VALUE=DATE:${toICalDate(ev.start)}`,
       `DTEND;VALUE=DATE:${toICalDate(ev.endExclusive)}`,
       `SUMMARY:${escapeText(ev.summary)}`,
-      "TRANSP:OPAQUE",
-      "END:VEVENT",
     );
+    if (ev.description) lines.push(`DESCRIPTION:${escapeText(ev.description)}`);
+    if (ev.location) lines.push(`LOCATION:${escapeText(ev.location)}`);
+    lines.push("TRANSP:OPAQUE", "END:VEVENT");
   }
 
   lines.push("END:VCALENDAR");
