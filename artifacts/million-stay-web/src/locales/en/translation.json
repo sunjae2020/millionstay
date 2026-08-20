@@ -3164,6 +3164,22 @@
     "submitting": "Submitting…",
     "submit": "Submit confirmation",
     "done_title": "Confirmation signed",
-    "done_body": "Thank you. Your signature is kept with the work record."
+    "done_body": "Thank you. Your signature is kept with the work record.",
+    "cat_repair": "Repair",
+    "cat_move_out_cleaning": "Move-out cleaning",
+    "cat_move_in_cleaning": "Move-in cleaning",
+    "cat_cleaning": "Cleaning",
+    "cat_wallpaper": "Wallpaper",
+    "cat_plumbing": "Plumbing",
+    "cat_electrical": "Electrical",
+    "cat_hvac": "HVAC",
+    "cat_painting": "Painting",
+    "cat_carpentry": "Carpentry",
+    "cat_pest_control": "Pest control",
+    "cat_landscaping": "Landscaping",
+    "cat_security": "Security",
+    "cat_day_tour": "Day tour",
+    "cat_fishing": "Fishing",
+    "cat_general": "General"
   }
 }

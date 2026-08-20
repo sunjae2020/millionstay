@@ -2796,6 +2796,22 @@
     "submitting": "送信中…",
     "submit": "確認署名を送信",
     "done_title": "確認署名が完了しました",
-    "done_body": "ご確認ありがとうございました。署名内容は作業記録とともに保管されます。"
+    "done_body": "ご確認ありがとうございました。署名内容は作業記録とともに保管されます。",
+    "cat_repair": "不具合修繕",
+    "cat_move_out_cleaning": "退去清掃",
+    "cat_move_in_cleaning": "入居清掃",
+    "cat_cleaning": "清掃",
+    "cat_wallpaper": "壁紙",
+    "cat_plumbing": "配管",
+    "cat_electrical": "電気",
+    "cat_hvac": "空調",
+    "cat_painting": "塗装",
+    "cat_carpentry": "木工",
+    "cat_pest_control": "防疫",
+    "cat_landscaping": "造園",
+    "cat_security": "警備",
+    "cat_day_tour": "デイツアー",
+    "cat_fishing": "釣り",
+    "cat_general": "一般"
   }
 }

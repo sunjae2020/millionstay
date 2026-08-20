@@ -2795,6 +2795,22 @@
     "submitting": "กำลังส่ง…",
     "submit": "ส่งลายเซ็นยืนยัน",
     "done_title": "ลงลายเซ็นยืนยันเรียบร้อยแล้ว",
-    "done_body": "ขอบคุณสำหรับการยืนยัน ลายเซ็นจะถูกเก็บไว้พร้อมกับบันทึกงาน"
+    "done_body": "ขอบคุณสำหรับการยืนยัน ลายเซ็นจะถูกเก็บไว้พร้อมกับบันทึกงาน",
+    "cat_repair": "ซ่อมแซมข้อบกพร่อง",
+    "cat_move_out_cleaning": "ทำความสะอาดเมื่อย้ายออก",
+    "cat_move_in_cleaning": "ทำความสะอาดก่อนเข้าอยู่",
+    "cat_cleaning": "ทำความสะอาด",
+    "cat_wallpaper": "วอลเปเปอร์",
+    "cat_plumbing": "ระบบประปา",
+    "cat_electrical": "ระบบไฟฟ้า",
+    "cat_hvac": "ระบบปรับอากาศ",
+    "cat_painting": "งานทาสี",
+    "cat_carpentry": "งานไม้",
+    "cat_pest_control": "กำจัดแมลง",
+    "cat_landscaping": "จัดสวน",
+    "cat_security": "รักษาความปลอดภัย",
+    "cat_day_tour": "ทัวร์รายวัน",
+    "cat_fishing": "ตกปลา",
+    "cat_general": "ทั่วไป"
   }
 }

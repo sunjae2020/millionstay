@@ -3092,6 +3092,22 @@
     "submitting": "Đang gửi…",
     "submit": "Gửi chữ ký xác nhận",
     "done_title": "Đã ký xác nhận",
-    "done_body": "Cảm ơn bạn. Chữ ký được lưu cùng hồ sơ công việc."
+    "done_body": "Cảm ơn bạn. Chữ ký được lưu cùng hồ sơ công việc.",
+    "cat_repair": "Sửa lỗi kỹ thuật",
+    "cat_move_out_cleaning": "Dọn dẹp trả nhà",
+    "cat_move_in_cleaning": "Dọn dẹp nhận nhà",
+    "cat_cleaning": "Vệ sinh",
+    "cat_wallpaper": "Giấy dán tường",
+    "cat_plumbing": "Đường ống",
+    "cat_electrical": "Điện",
+    "cat_hvac": "Điều hòa thông gió",
+    "cat_painting": "Sơn",
+    "cat_carpentry": "Mộc",
+    "cat_pest_control": "Kiểm soát côn trùng",
+    "cat_landscaping": "Cảnh quan",
+    "cat_security": "An ninh",
+    "cat_day_tour": "Tour trong ngày",
+    "cat_fishing": "Câu cá",
+    "cat_general": "Chung"
   }
 }

@@ -2649,6 +2649,22 @@
     "submitting": "提交中…",
     "submit": "提交确认签名",
     "done_title": "确认签名已完成",
-    "done_body": "感谢您的确认。签名记录将与作业记录一同保存。"
+    "done_body": "感谢您的确认。签名记录将与作业记录一同保存。",
+    "cat_repair": "缺陷维修",
+    "cat_move_out_cleaning": "退租保洁",
+    "cat_move_in_cleaning": "入住保洁",
+    "cat_cleaning": "保洁",
+    "cat_wallpaper": "墙纸",
+    "cat_plumbing": "管道",
+    "cat_electrical": "电气",
+    "cat_hvac": "暖通空调",
+    "cat_painting": "涂装",
+    "cat_carpentry": "木工",
+    "cat_pest_control": "消杀",
+    "cat_landscaping": "园艺",
+    "cat_security": "安保",
+    "cat_day_tour": "一日游",
+    "cat_fishing": "钓鱼",
+    "cat_general": "一般"
   }
 }
