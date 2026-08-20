@@ -247,13 +247,14 @@ export default function WorkOrderDetail() {
     <Layout>
       <div className="p-4 sm:p-6 max-w-4xl mx-auto">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 gap-3">
-          <div>
-            <h1 className="text-xl sm:text-2xl font-bold tracking-tight">
+          <div className="min-w-0">
+            <h1 className="text-xl sm:text-2xl font-bold tracking-tight truncate" title={isNew ? undefined : wo?.order_ref ?? undefined}>
               {isNew ? t('workorder.new') : wo?.order_ref ?? t('nav.work_order')}
             </h1>
-            {!isNew && wo && <p className="text-sm text-muted-foreground">{wo.title}</p>}
+            {!isNew && wo && <p className="text-sm text-muted-foreground truncate">{wo.title}</p>}
           </div>
-          <div className="flex gap-2 flex-wrap">
+          {/* 헤더 버튼은 한 줄 유지 — 좁은 화면에서만 줄바꿈한다. */}
+          <div className="flex flex-wrap sm:flex-nowrap shrink-0 gap-2 [&>button]:shrink-0 [&>button]:whitespace-nowrap">
             <Button variant="outline" onClick={() => navigate("/maintenance/work-orders")}>
               <ArrowLeft className="h-4 w-4 mr-1" /> {t('common.back')}
             </Button>
