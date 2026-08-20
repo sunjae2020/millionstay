@@ -20,6 +20,17 @@ import {
   CompleteWorkOrderBody,
   CancelWorkOrderBody,
 } from "@workspace/api-zod";
+import { htmlToPdf, PdfUnavailableError } from "../lib/documents/pdf";
+import { resolveCompanyInfo } from "../lib/documents/companyInfo";
+import { normalizeLang } from "../lib/documents/i18n";
+import { buildReportFileName, resolveDocFileName, setDocFileName } from "../lib/documents/docFileName";
+import {
+  billedAmountOf,
+  buildRepairBillingHtml,
+  buildWorkOrderHtml,
+  type RepairBillingRow,
+  type WorkOrderDocInput,
+} from "../lib/documents/workOrderDocument";
 
 const router = Router();
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 10 * 1024 * 1024 } });
@@ -219,6 +230,308 @@ router.post("/v1/work-orders/:id/dispatch", async (req, res): Promise<void> => {
   const fresh = await db.select().from(workOrdersTable).where(eq(workOrdersTable.id, id)).then((r) => r[0]);
   const [enriched] = await enrichWorkOrders(fresh ? [fresh] : []);
   res.json({ success: true, data: enriched, dispatch: result });
+});
+
+// ── 문서 발행 — 작업지시서(A) · 하자·청소 청구 명세서(B) ─────────────────────
+//
+// 두 문서는 같은 원장을 읽는다. A는 작업지시 한 건을 종이 지시서/완료 보고서로
+// 뽑고, B는 기간 안의 작업지시를 한 장으로 묶어 회사에 청구한다 — 손으로 쓰던
+// "임대청소 & 하자 청구서" 시트가 원본이라 컬럼 순서를 그대로 지킨다.
+
+type WorkOrderRow = typeof workOrdersTable.$inferSelect;
+
+/** 작업일자 — 완료일 → 예정일 → 접수일 → 등록일 순으로 하나를 고른다. */
+function workDateOf(w: WorkOrderRow): Date | null {
+  const candidates: Array<string | Date | null> = [
+    w.completed_at, w.scheduled_start_at, w.scheduled_at, w.reported_at, w.created_at,
+  ];
+  for (const c of candidates) {
+    if (!c) continue;
+    const d = c instanceof Date ? c : new Date(c);
+    if (!Number.isNaN(d.getTime())) return d;
+  }
+  return null;
+}
+
+/** Date → "YYYY-MM-DD" (테넌트 타임존이 아니라 로컬 — 날짜 비교용). */
+function ymd(d: Date): string {
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+}
+
+interface UnitInfo { unit_no: string | null; unit_type: string | null; floor: number | null }
+
+/**
+ * 세대 정보 — 호수는 공간명, **타입은 상위 공간명**이다. Metheim 여수는 타입을
+ * 상위 공간(A~E타입) 8행으로 두고 실제 세대가 `parent_space_id`로 매달려 있어,
+ * 타입을 세대 행에서 직접 읽으면 항상 비어 있다.
+ */
+async function loadUnitInfo(spaceIds: number[]): Promise<Map<number, UnitInfo>> {
+  const out = new Map<number, UnitInfo>();
+  if (!spaceIds.length) return out;
+  const rows = await db.select({
+    id: spacesTable.id,
+    name: spacesTable.name,
+    floor_number: spacesTable.floor_number,
+    parent_space_id: spacesTable.parent_space_id,
+    custom_type_name: spacesTable.custom_type_name,
+    space_type: spacesTable.space_type,
+  }).from(spacesTable).where(inArray(spacesTable.id, spaceIds));
+
+  const parentIds = [...new Set(rows.map(r => r.parent_space_id).filter(Boolean))] as number[];
+  const parentNames = new Map<number, string>();
+  if (parentIds.length) {
+    const parents = await db.select({ id: spacesTable.id, name: spacesTable.name })
+      .from(spacesTable).where(inArray(spacesTable.id, parentIds));
+    for (const p of parents) parentNames.set(p.id, p.name);
+  }
+  for (const r of rows) {
+    out.set(r.id, {
+      unit_no: r.name,
+      unit_type: (r.parent_space_id ? parentNames.get(r.parent_space_id) : null)
+        ?? r.custom_type_name ?? r.space_type ?? null,
+      floor: r.floor_number ?? null,
+    });
+  }
+  return out;
+}
+
+/** 작업지시별 사진. `kind`(before/after) 순서를 유지한 채 건별로 묶는다. */
+async function loadPhotos(workOrderIds: number[]): Promise<Map<number, Array<{ url: string; kind: string; caption: string | null }>>> {
+  const out = new Map<number, Array<{ url: string; kind: string; caption: string | null }>>();
+  if (!workOrderIds.length) return out;
+  const rows = await db.select().from(workOrderPhotosTable)
+    .where(inArray(workOrderPhotosTable.work_order_id, workOrderIds))
+    .orderBy(workOrderPhotosTable.id);
+  for (const r of rows) {
+    const list = out.get(r.work_order_id) ?? [];
+    list.push({ url: r.url, kind: r.kind, caption: r.caption ?? null });
+    out.set(r.work_order_id, list);
+  }
+  return out;
+}
+
+/** PDF(또는 `?format=html` 미리보기)로 내보낸다. Chromium이 없으면 HTML로 폴백. */
+async function sendDocument(res: any, html: string, filename: string, format: string): Promise<void> {
+  if (format === "html") { res.setHeader("Content-Type", "text/html; charset=utf-8"); res.send(html); return; }
+  try {
+    const pdf = await htmlToPdf(html);
+    res.setHeader("Content-Type", "application/pdf");
+    setDocFileName(res, filename);
+    res.setHeader("Content-Length", String(pdf.length));
+    res.send(pdf);
+  } catch (err) {
+    if (err instanceof PdfUnavailableError) {
+      res.setHeader("Content-Type", "text/html; charset=utf-8");
+      res.send(html);
+      return;
+    }
+    throw err;
+  }
+}
+
+interface BillingFilters {
+  from: string | null;
+  to: string | null;
+  propertyId: number | null;
+  categories: string[];
+  statuses: string[];
+  withholdingPct: number;
+  photosPerUnit: number;
+}
+
+function billingFiltersFrom(query: Record<string, any>): BillingFilters {
+  const list = (v: any) => String(v ?? "").split(",").map((x) => x.trim()).filter(Boolean);
+  const cats = list(query.category).map((c) => canonicalWorkOrderCategory(c)).filter(Boolean) as string[];
+  const pct = Number(query.withholding_pct);
+  const per = Number(query.photos_per_unit);
+  return {
+    from: query.from ? String(query.from).slice(0, 10) : null,
+    to: query.to ? String(query.to).slice(0, 10) : null,
+    propertyId: query.property_id ? Number(query.property_id) : null,
+    categories: cats,
+    statuses: list(query.status),
+    withholdingPct: Number.isFinite(pct) && pct > 0 ? pct : 0,
+    photosPerUnit: Number.isFinite(per) && per >= 0 ? Math.min(per, 12) : 6,
+  };
+}
+
+/**
+ * 명세서 행을 모은다. 기간은 작업일자(완료일 우선) 기준이라 SQL로 밀어넣지 않고
+ * 조회 후 걸러낸다 — 완료일은 timestamptz, 접수일·예정일은 날짜 텍스트라 한
+ * 조건으로 묶이지 않는다.
+ */
+async function loadBillingRows(f: BillingFilters): Promise<{ rows: RepairBillingRow[]; orders: WorkOrderRow[] }> {
+  const conditions: any[] = [isNull(workOrdersTable.deleted_at)];
+  if (f.propertyId) conditions.push(eq(workOrdersTable.property_id, f.propertyId));
+  if (f.categories.length) {
+    // 카테고리는 canonical 값이지만 DB에는 옛 표기(`하자보수`)가 남아 있다 —
+    // 목록 조회와 같은 별칭 매칭을 써야 이관 전 데이터가 빠지지 않는다.
+    const aliases = [...new Set(f.categories.flatMap((c) => workOrderCategoryAliases(c)))];
+    conditions.push(sql`lower(trim(${workOrdersTable.category})) in (${sql.join(aliases.map((a) => sql`${a}`), sql`, `)})`);
+  }
+  if (f.statuses.length) conditions.push(inArray(workOrdersTable.status, f.statuses));
+
+  const all = await db.select().from(workOrdersTable).where(and(...conditions));
+  const inRange = all.filter((w) => {
+    const d = workDateOf(w);
+    if (!d) return !f.from && !f.to;
+    const key = ymd(d);
+    if (f.from && key < f.from) return false;
+    if (f.to && key > f.to) return false;
+    return true;
+  });
+  inRange.sort((a, b) => {
+    const da = workDateOf(a)?.getTime() ?? 0;
+    const db_ = workDateOf(b)?.getTime() ?? 0;
+    return da - db_ || a.id - b.id;
+  });
+
+  const units = await loadUnitInfo([...new Set(inRange.map((w) => w.space_id).filter(Boolean))] as number[]);
+  const photos = await loadPhotos(inRange.map((w) => w.id));
+
+  const rows: RepairBillingRow[] = inRange.map((w, i) => {
+    const unit = w.space_id ? units.get(w.space_id) : undefined;
+    const detail = [w.title, w.description].filter((v) => v && String(v).trim()).join("\n");
+    const pics = (photos.get(w.id) ?? []).map((p) => ({ url: p.url, caption: p.caption }));
+    return {
+      seq: i + 1,
+      order_ref: w.order_ref,
+      work_date: workDateOf(w),
+      unit_no: unit?.unit_no ?? null,
+      unit_type: unit?.unit_type ?? null,
+      category: canonicalWorkOrderCategory(w.category),
+      detail,
+      cost: Number(w.cost ?? 0),
+      billed: billedAmountOf({ cost: Number(w.cost ?? 0) }, f.withholdingPct),
+      photos: f.photosPerUnit > 0 ? pics.slice(0, f.photosPerUnit) : [],
+    };
+  });
+  return { rows, orders: inRange };
+}
+
+/** 청구 대상 이름 — 계정 id가 오면 계정명, 아니면 넘어온 문자열. */
+async function resolveBillTo(query: Record<string, any>): Promise<string | null> {
+  if (query.account_id) {
+    const [acc] = await db.select({ name: accountsTable.name }).from(accountsTable)
+      .where(eq(accountsTable.id, Number(query.account_id))).limit(1);
+    if (acc?.name) return acc.name;
+  }
+  const raw = String(query.bill_to ?? "").trim();
+  return raw || null;
+}
+
+// B — 명세서 미리보기용 JSON (합계·건수를 PDF를 굽기 전에 화면에서 확인한다).
+router.get("/v1/work-orders/billing-statement", async (req, res): Promise<void> => {
+  const f = billingFiltersFrom(req.query as Record<string, any>);
+  const { rows } = await loadBillingRows(f);
+  res.json({
+    success: true,
+    data: {
+      rows: rows.map(({ photos, ...r }) => ({ ...r, photo_count: photos.length })),
+      totals: {
+        count: rows.length,
+        cost: rows.reduce((s, r) => s + r.cost, 0),
+        billed: rows.reduce((s, r) => s + r.billed, 0),
+      },
+    },
+  });
+});
+
+// B — 하자·청소 청구 명세서 PDF. 각 호수 사진이 뒤에 증빙으로 붙는다.
+router.get("/v1/work-orders/billing-statement.pdf", async (req, res): Promise<void> => {
+  const query = req.query as Record<string, any>;
+  const f = billingFiltersFrom(query);
+  if (String(query.photos ?? "1") === "0") f.photosPerUnit = 0;
+  const { rows } = await loadBillingRows(f);
+
+  let propertyName: string | null = null;
+  if (f.propertyId) {
+    const [p] = await db.select({ name: propertiesTable.name }).from(propertiesTable)
+      .where(eq(propertiesTable.id, f.propertyId)).limit(1);
+    propertyName = p?.name ?? null;
+  }
+
+  const company = await resolveCompanyInfo();
+  const lang = normalizeLang(typeof query.lang === "string" ? query.lang : undefined);
+  const html = buildRepairBillingHtml({
+    data: {
+      property_name: propertyName,
+      bill_to: await resolveBillTo(query),
+      period_from: f.from,
+      period_to: f.to,
+      currency: String(query.currency ?? DEFAULT_CURRENCY),
+      rows,
+      includePhotos: f.photosPerUnit > 0,
+      withholdingPct: f.withholdingPct,
+    },
+    company,
+    lang,
+  });
+  const filename = await buildReportFileName({
+    reportType: "repair_billing",
+    target: propertyName ?? undefined,
+    asOf: f.to ?? undefined,
+    version: Number(query.version ?? 1),
+  });
+  await sendDocument(res, html, filename, String(query.format ?? ""));
+});
+
+// A — 작업지시서 PDF (요청·완료 사진 포함).
+router.get("/v1/work-orders/:id/document.pdf", async (req, res): Promise<void> => {
+  const id = Number(req.params.id);
+  const [wo] = await db.select().from(workOrdersTable).where(eq(workOrdersTable.id, id));
+  if (!wo) { res.status(404).json({ success: false, error: { code: "NOT_FOUND", message: "Work order not found" } }); return; }
+
+  const [enriched] = await enrichWorkOrders([wo]);
+  const units = await loadUnitInfo(wo.space_id ? [wo.space_id] : []);
+  const unit = wo.space_id ? units.get(wo.space_id) : undefined;
+  const photos = (await loadPhotos([id])).get(id) ?? [];
+  const query = req.query as Record<string, any>;
+  const rawPct = Number(query.withholding_pct);
+  const pct = Number.isFinite(rawPct) && rawPct > 0 ? rawPct : 0;
+  const cost = Number(wo.cost ?? 0);
+  const billed = billedAmountOf({ cost }, pct);
+
+  const data: WorkOrderDocInput = {
+    order_ref: wo.order_ref,
+    title: wo.title,
+    description: wo.description,
+    notes: wo.notes,
+    status: wo.status,
+    priority: wo.priority,
+    category: canonicalWorkOrderCategory(wo.category),
+    property_name: enriched?.property_name ?? null,
+    unit_no: unit?.unit_no ?? enriched?.space_name ?? null,
+    unit_type: unit?.unit_type ?? null,
+    floor: unit?.floor ?? null,
+    reported_at: wo.reported_at,
+    scheduled_at: wo.scheduled_start_at ?? wo.scheduled_at,
+    completed_at: wo.completed_at,
+    assignee_name: enriched?.assigned_user_name ?? enriched?.assigned_contact_name ?? null,
+    partner_name: enriched?.service_host_name ?? null,
+    attendee_name: enriched?.attendee_contact_name ?? null,
+    location_note: wo.location_note,
+    access_method: wo.access_method,
+    currency: wo.currency ?? DEFAULT_CURRENCY,
+    cost: wo.cost,
+    withholding_amount: cost - billed || null,
+    billed_amount: billed,
+    photos,
+  };
+
+  const company = await resolveCompanyInfo();
+  const lang = normalizeLang(typeof query.lang === "string" ? query.lang : undefined);
+  const html = buildWorkOrderHtml({ data, company, lang });
+  const filename = await resolveDocFileName({
+    kind: "work_order",
+    entityType: "work_order",
+    entityId: id,
+    party: [data.unit_no, data.property_name, wo.order_ref],
+    org: [data.property_name],
+    issueDate: workDateOf(wo),
+  });
+  await sendDocument(res, html, filename, String(query.format ?? ""));
 });
 
 router.get("/v1/work-orders/:id", async (req, res): Promise<void> => {

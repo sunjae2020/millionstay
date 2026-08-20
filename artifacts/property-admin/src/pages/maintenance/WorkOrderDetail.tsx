@@ -27,7 +27,8 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { COMMON_WORK_ORDER_CATEGORIES, OTHER_WORK_ORDER_CATEGORIES, canonicalWorkOrderCategory } from "@/lib/workOrderCategories";
-import { ArrowLeft, Trash2, Save, Send, ShieldAlert, CheckCircle2, Clock, CalendarClock, Mail } from "lucide-react";
+import { ArrowLeft, Trash2, Save, Send, ShieldAlert, CheckCircle2, Clock, CalendarClock, Mail, FileText } from "lucide-react";
+import { DocumentPreviewDialog, useDocumentPreview } from "@/components/DocumentPreviewDialog";
 import { useState } from "react";
 import { apiJson } from "@/lib/apiFetch";
 import { WorkOrderPhotos, uploadStagedPhotos, type StagedPhoto } from "@/components/WorkOrderPhotos";
@@ -82,8 +83,9 @@ export default function WorkOrderDetail() {
   const { id } = useParams<{ id: string }>();
   const [, navigate] = useLocation();
   const qc = useQueryClient();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { currency, currencyPosition } = useBrand();
+  const { previewConfig, openPreview, closePreview } = useDocumentPreview();
   const isNew = !id || id === "new";
 
   const { data: wo, refetch } = useGetWorkOrder(Number(id), {
@@ -252,6 +254,20 @@ export default function WorkOrderDetail() {
             <Button variant="outline" onClick={() => navigate("/maintenance/work-orders")}>
               <ArrowLeft className="h-4 w-4 mr-1" /> {t('common.back')}
             </Button>
+            {!isNew && (
+              <Button
+                variant="outline"
+                onClick={() =>
+                  openPreview({
+                    title: wo?.order_ref ?? t('workorder.btn_document', 'Work order PDF'),
+                    filename: `${wo?.order_ref ?? "work-order"}.pdf`,
+                    source: { kind: "api", path: `/api/v1/work-orders/${id}/document.pdf?lang=${encodeURIComponent(i18n.language)}` },
+                  })
+                }
+              >
+                <FileText className="h-4 w-4 mr-1" /> {t('workorder.btn_document', 'Work order PDF')}
+              </Button>
+            )}
             {!isNew && (
               <Button variant="destructive" onClick={() => deleteMutation.mutate({ id: Number(id) })}>
                 <Trash2 className="h-4 w-4 mr-1" /> {t('common.delete')}
@@ -580,6 +596,7 @@ export default function WorkOrderDetail() {
           </div>
         </form>
       </div>
+      <DocumentPreviewDialog config={previewConfig} onClose={closePreview} />
     </Layout>
   );
 }
