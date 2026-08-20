@@ -81,6 +81,10 @@ export default function WorkOrderSign() {
   const before = useMemo(() => bySession(wo?.photos ?? [], "before"), [wo]);
   const after = useMemo(() => bySession(wo?.photos ?? [], "after"), [wo]);
 
+  // 작업분류는 표준값(`cleaning`)으로 내려온다 — 읽는 사람 언어로 바꿔 준다.
+  const categoryLabel = (v: string | null | undefined) =>
+    v ? t(`wosign.cat_${v}` as any, v) : null;
+
   const consentText = t(
     "wosign.consent",
     "위 작업 내용을 확인하였으며, 기재된 대로 작업이 완료되었음을 확인합니다.",
@@ -221,7 +225,7 @@ export default function WorkOrderSign() {
             <h2 className="text-sm font-semibold mb-3">{t("wosign.section_work", "작업 내용")}</h2>
             <dl className="text-sm divide-y divide-gray-100">
               <Row label={t("wosign.field_title", "작업명")} value={wo.title} />
-              <Row label={t("wosign.field_category", "작업분류")} value={wo.category} />
+              <Row label={t("wosign.field_category", "작업분류")} value={categoryLabel(wo.category)} />
               <Row label={t("wosign.field_unit", "대상 세대")} value={[wo.unit_no, wo.unit_type].filter(Boolean).join(" · ")} />
               <Row label={t("wosign.field_scheduled", "예정일")} value={fmtDate(wo.scheduled_at, i18n.language)} />
               <Row label={t("wosign.field_completed", "완료일")} value={fmtDate(wo.completed_at, i18n.language)} />

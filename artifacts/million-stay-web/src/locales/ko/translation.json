@@ -2690,6 +2690,22 @@
     "submitting": "제출 중…",
     "submit": "확인 서명 제출",
     "done_title": "확인 서명이 완료되었습니다",
-    "done_body": "확인해 주셔서 감사합니다. 서명 내역은 작업 기록에 함께 보관됩니다."
+    "done_body": "확인해 주셔서 감사합니다. 서명 내역은 작업 기록에 함께 보관됩니다.",
+    "cat_repair": "하자보수",
+    "cat_move_out_cleaning": "퇴거청소",
+    "cat_move_in_cleaning": "입주청소",
+    "cat_cleaning": "청소",
+    "cat_wallpaper": "도배",
+    "cat_plumbing": "배관",
+    "cat_electrical": "전기",
+    "cat_hvac": "냉난방공조",
+    "cat_painting": "도장",
+    "cat_carpentry": "목공",
+    "cat_pest_control": "방역",
+    "cat_landscaping": "조경",
+    "cat_security": "보안",
+    "cat_day_tour": "데이투어",
+    "cat_fishing": "낚시",
+    "cat_general": "일반"
   }
 }
