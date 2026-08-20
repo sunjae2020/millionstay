@@ -29,8 +29,9 @@ last_verified: 2026-08-20
 ## B. 임대청소 · 하자 청구 명세서
 
 ```
-GET /api/v1/work-orders/billing-statement       # 건수·합계만 (다이얼로그 요약용)
-GET /api/v1/work-orders/billing-statement.pdf   # 명세서 + 호수별 증빙 사진
+GET  /api/v1/work-orders/billing-statement          # 건수·합계 (다이얼로그 요약용)
+GET  /api/v1/work-orders/billing-statement.pdf      # 명세서 + 호수별 증빙 사진
+POST /api/v1/work-orders/billing-statement/invoice  # 같은 조건으로 청구서 발행
 ```
 
 필터: `from` `to` `property_id` `category`(콤마 다건) `status`
@@ -47,6 +48,25 @@ GET /api/v1/work-orders/billing-statement.pdf   # 명세서 + 호수별 증빙 �
 
 파일명은 리포트 규칙 — `buildReportFileName({ reportType: "repair_billing" })`
 → `리포트-여수-하자청구명세-20260831_v1`.
+
+## C. 명세서 → 청구서
+
+`POST /api/v1/work-orders/billing-statement/invoice` — 다이얼로그의 **청구서 발행**.
+
+명세서와 같은 필터를 그대로 받아 **명세서 한 줄 = 청구서 한 줄**로 발행한다
+(`invoice_line_items`, `charge_kind="other"`). 줄마다 `work_order_id`와 `space_id`가
+남아 종이·청구서·작업 사진이 줄 단위로 되짚어진다.
+
+- **청구 대상**: `account_id`를 주면 그 계정, 없으면 대상 세대의 집주인
+  (`spaces.landlord_account_id`). 집주인이 둘 이상이면 400 `MULTIPLE_OWNERS`로
+  돌려주고 고르게 한다 — 조용히 아무나 고르면 엉뚱한 곳에 청구된다.
+- **중복 방지**: 이미 살아 있는 청구서에 실린 작업지시는 건너뛰고 `skipped`로
+  알린다. 요약 응답도 `billable_count`/`billable_amount`로 미리 보여 준다.
+  무효(Void)·삭제된 청구서는 세지 않는다 — 취소분 때문에 재청구가 막히면 안 된다.
+- **금액**: `amount`는 공급가액(=청구비용 합계). 기본 `tax_mode="none"`이고,
+  과세로 끊어야 하면 `tax_mode="exclusive"`(`tax_rate` 기본 10)로 부른다.
+- 발행 상태는 `Draft`다. 검토 후 기존 청구서 화면에서 발송·수납하면 GL·정산은
+  기존 경로를 그대로 탄다.
 
 ## 계산 규칙 — 청구비용
 
@@ -71,6 +91,6 @@ GET /api/v1/work-orders/billing-statement.pdf   # 명세서 + 호수별 증빙 �
   필터는 조회 후 코드에서 건다.
 - `billing-statement*` 라우트는 `/v1/work-orders/:id`보다 **먼저** 등록해야 한다.
   세그먼트 수가 같아서 순서가 바뀌면 `:id`가 `billing-statement.pdf`를 먹는다.
-- 명세서는 아직 인보이스를 만들지 않는다. 회계로 넘기는 단계는 별도로 붙인다 —
-  월세용 통합(단체) 청구서 파이프라인은 계약 단위라 하자 청구를 얹을 수 없다
-  ([CONSOLIDATED_INVOICING](CONSOLIDATED_INVOICING.md)).
+- 월세용 통합(단체) 청구서 파이프라인에는 얹지 않는다. 그쪽은 계약 단위 자식
+  인보이스를 요구하고 크론이 (계정, 월) 단위로 금액을 다시 계산해서, 하자 청구를
+  넣으면 덮어써진다 ([CONSOLIDATED_INVOICING](CONSOLIDATED_INVOICING.md)).

@@ -82,6 +82,10 @@ export const invoiceLineItemsTable = pgTable("invoice_line_items", {
   // 통합 청구서 한 줄이 어느 호실/계약의 임대료인지. 공간별 인보이스에서도
   // 채워두면 청구서 PDF와 세입자 포털이 호실 단위로 묶어 보여줄 수 있다.
   space_id: integer("space_id"),
+  // 하자·청소 청구 명세서에서 발행된 줄이 어느 작업지시(work_orders.id)에서
+  // 나왔는지. 한 장에 여러 작업지시가 실리므로 invoices.work_order_id(1:1)로는
+  // 표현되지 않는다. 같은 작업지시가 두 번 청구되지 않게 막는 근거이기도 하다.
+  work_order_id: integer("work_order_id"),
   contract_id: integer("contract_id"),
   // 이 줄이 커버하는 기간(일할계산 이월분은 지난달 구간이 들어간다).
   period_start: text("period_start"),

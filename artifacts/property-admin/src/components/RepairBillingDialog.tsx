@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useLocation } from "wouter";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -9,11 +10,13 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { DateInput } from "@/components/ui/date-input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { LookupSelect } from "@/components/LookupSelect";
+import { AccountLookupSelect } from "@/components/AccountLookupSelect";
 import { WORK_ORDER_CATEGORIES } from "@/lib/workOrderCategories";
 import { DocumentPreviewDialog, useDocumentPreview } from "@/components/DocumentPreviewDialog";
 import { apiJson } from "@/lib/apiFetch";
 import { formatMoney } from "@/lib/currency";
 import { useBrand } from "@/contexts/ThemeContext";
+import { useToast } from "@/hooks/use-toast";
 
 /**
  * 하자·청소 청구 명세서 발행 — 기간 안의 작업지시를 한 장으로 묶어 회사에
@@ -44,6 +47,7 @@ function monthRange(): { from: string; to: string } {
 
 interface StatementRow {
   seq: number;
+  work_order_id: number;
   order_ref: string;
   unit_no: string | null;
   unit_type: string | null;
@@ -51,6 +55,16 @@ interface StatementRow {
   cost: number;
   billed: number;
   photo_count: number;
+  /** 이미 청구서에 실린 줄 — 발행 시 건너뛴다. */
+  invoiced_invoice_id: number | null;
+}
+
+interface StatementTotals {
+  count: number;
+  cost: number;
+  billed: number;
+  billable_count: number;
+  billable_amount: number;
 }
 
 interface Props {
@@ -62,6 +76,8 @@ export function RepairBillingDialog({ open, onOpenChange }: Props) {
   const { t, i18n } = useTranslation();
   const { currency: brandCurrency, currencyPosition } = useBrand();
   const { previewConfig, openPreview, closePreview } = useDocumentPreview();
+  const { toast } = useToast();
+  const [, navigate] = useLocation();
 
   const defaults = useMemo(monthRange, []);
   const [from, setFrom] = useState(defaults.from);
@@ -73,6 +89,8 @@ export function RepairBillingDialog({ open, onOpenChange }: Props) {
   const [includePhotos, setIncludePhotos] = useState(true);
   const [photosPerUnit, setPhotosPerUnit] = useState("6");
   const [billTo, setBillTo] = useState("");
+  const [accountId, setAccountId] = useState<number | null>(null);
+  const [dueDate, setDueDate] = useState("");
 
   const query = useMemo(() => {
     const p = new URLSearchParams();
@@ -89,7 +107,7 @@ export function RepairBillingDialog({ open, onOpenChange }: Props) {
   const { data: summary, isFetching } = useQuery({
     queryKey: ["wo-billing-statement", query.toString()],
     queryFn: () =>
-      apiJson<{ data: { rows: StatementRow[]; totals: { count: number; cost: number; billed: number } } }>(
+      apiJson<{ data: { rows: StatementRow[]; totals: StatementTotals } }>(
         `/api/v1/work-orders/billing-statement?${query.toString()}`,
       ).then((r) => r.data),
     enabled: open,
@@ -99,6 +117,7 @@ export function RepairBillingDialog({ open, onOpenChange }: Props) {
 
   function preview() {
     const p = new URLSearchParams(query);
+    if (accountId) p.set("account_id", String(accountId));
     if (billTo.trim()) p.set("bill_to", billTo.trim());
     p.set("lang", i18n.language);
     openPreview({
@@ -107,6 +126,36 @@ export function RepairBillingDialog({ open, onOpenChange }: Props) {
       source: { kind: "api", path: `/api/v1/work-orders/billing-statement.pdf?${p.toString()}` },
     });
   }
+
+  // 청구서 발행 — 명세서 한 줄이 청구서 한 줄이 된다. 이미 청구된 건은 서버가
+  // 건너뛰고 몇 건을 건너뛰었는지 함께 돌려준다.
+  const issue = useMutation({
+    mutationFn: async () => {
+      const p = new URLSearchParams(query);
+      if (accountId) p.set("account_id", String(accountId));
+      if (dueDate) p.set("due_date", dueDate);
+      return apiJson<{ data: { id: number; invoice_ref: string }; lines: number; skipped: number }>(
+        `/api/v1/work-orders/billing-statement/invoice?${p.toString()}`,
+        { method: "POST", body: JSON.stringify({}) },
+      );
+    },
+    onSuccess: (r) => {
+      toast({
+        title: t("workorder.billing_invoice_created", "Invoice {{ref}} created", { ref: r.data.invoice_ref }),
+        description: r.skipped
+          ? t("workorder.billing_invoice_skipped", "{{n}} already-invoiced item(s) skipped.", { n: r.skipped })
+          : undefined,
+      });
+      onOpenChange(false);
+      navigate(`/finance/invoices/${r.data.id}`);
+    },
+    onError: (err: unknown) =>
+      toast({
+        title: t("workorder.billing_invoice_failed", "Could not create the invoice"),
+        description: err instanceof Error ? err.message : undefined,
+        variant: "destructive",
+      }),
+  });
 
   const toggleCategory = (c: string) =>
     setCategories((prev) => (prev.includes(c) ? prev.filter((x) => x !== c) : [...prev, c]));
@@ -183,12 +232,21 @@ export function RepairBillingDialog({ open, onOpenChange }: Props) {
             </div>
             <div>
               <Label>{t("workorder.billing_bill_to", "Bill to")}</Label>
-              <Input
-                value={billTo}
-                onChange={(e) => setBillTo(e.target.value)}
+              <AccountLookupSelect
+                value={accountId}
+                onChange={setAccountId}
+                lookupUrl="/api/v1/lookup/accounts"
                 placeholder={t("workorder.billing_ph_bill_to", "Company or account name")}
               />
+              <p className="text-xs text-muted-foreground mt-1">
+                {t("workorder.billing_bill_to_hint", "Leave empty to bill the unit owner.")}
+              </p>
             </div>
+          </div>
+
+          <div>
+            <Label>{t("workorder.billing_due_date", "Due date")}</Label>
+            <DateInput value={dueDate} onChange={(v) => setDueDate(v ?? "")} />
           </div>
 
           <div className="flex items-center gap-4">
@@ -217,6 +275,13 @@ export function RepairBillingDialog({ open, onOpenChange }: Props) {
                 <span>{t("workorder.billing_count", "Items")}: <strong>{summary.totals.count}</strong></span>
                 <span>{t("workorder.col_cost")}: <strong>{money(summary.totals.cost)}</strong></span>
                 <span>{t("workorder.billing_billed_total", "Billed")}: <strong>{money(summary.totals.billed)}</strong></span>
+                {summary.totals.billable_count < summary.totals.count && (
+                  <span className="text-amber-700">
+                    {t("workorder.billing_already_invoiced", "{{n}} already invoiced", {
+                      n: summary.totals.count - summary.totals.billable_count,
+                    })}
+                  </span>
+                )}
               </div>
             ) : (
               <span className="text-muted-foreground">{t("workorder.billing_no_rows", "No work orders match these filters.")}</span>
@@ -225,8 +290,15 @@ export function RepairBillingDialog({ open, onOpenChange }: Props) {
 
           <DialogFooter>
             <Button variant="outline" onClick={() => onOpenChange(false)}>{t("common.close")}</Button>
-            <Button onClick={preview} disabled={!summary || summary.totals.count === 0}>
+            <Button variant="outline" onClick={preview} disabled={!summary || summary.totals.count === 0}>
               {t("workorder.billing_preview", "Preview")}
+            </Button>
+            <Button
+              onClick={() => issue.mutate()}
+              disabled={issue.isPending || !summary || summary.totals.billable_count === 0}
+            >
+              {t("workorder.billing_issue_invoice", "Create invoice")}
+              {summary && summary.totals.billable_count > 0 ? ` · ${money(summary.totals.billable_amount)}` : ""}
             </Button>
           </DialogFooter>
         </DialogContent>
