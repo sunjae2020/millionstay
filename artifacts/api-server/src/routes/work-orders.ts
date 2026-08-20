@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { DEFAULT_CURRENCY } from "../lib/currency";
 import multer from "multer";
-import { db, workOrdersTable, workOrderPhotosTable, propertiesTable, spacesTable, contactsTable, serviceHostsTable, invoicesTable, accountsTable, usersTable } from "@workspace/db";
+import { db, workOrdersTable, workOrderPhotosTable, propertiesTable, spacesTable, contactsTable, serviceHostsTable, invoicesTable, invoiceLineItemsTable, accountsTable, usersTable } from "@workspace/db";
 import { formatPersonName } from "../lib/nameFormat";
 import { sendAppointmentConfirmationEmail } from "../lib/email";
 import { eq, ilike, and, isNull, inArray, desc, sql } from "drizzle-orm";
@@ -20,6 +20,7 @@ import {
   CompleteWorkOrderBody,
   CancelWorkOrderBody,
 } from "@workspace/api-zod";
+import { computeTax } from "./invoices";
 import { htmlToPdf, PdfUnavailableError } from "../lib/documents/pdf";
 import { resolveCompanyInfo } from "../lib/documents/companyInfo";
 import { normalizeLang } from "../lib/documents/i18n";
@@ -396,6 +397,7 @@ async function loadBillingRows(f: BillingFilters): Promise<{ rows: RepairBilling
     const pics = (photos.get(w.id) ?? []).map((p) => ({ url: p.url, caption: p.caption }));
     return {
       seq: i + 1,
+      work_order_id: w.id,
       order_ref: w.order_ref,
       work_date: workDateOf(w),
       unit_no: unit?.unit_no ?? null,
@@ -425,14 +427,25 @@ async function resolveBillTo(query: Record<string, any>): Promise<string | null>
 router.get("/v1/work-orders/billing-statement", async (req, res): Promise<void> => {
   const f = billingFiltersFrom(req.query as Record<string, any>);
   const { rows } = await loadBillingRows(f);
+  // 이미 청구된 건은 화면에서 미리 보여 준다 — 발행 버튼을 누르고 나서야
+  // "3건은 이미 청구됨"을 알게 되면 늦다.
+  const invoiced = await loadInvoicedWorkOrders(rows.map((r) => r.work_order_id));
+  const billable = rows.filter((r) => !invoiced.has(r.work_order_id));
   res.json({
     success: true,
     data: {
-      rows: rows.map(({ photos, ...r }) => ({ ...r, photo_count: photos.length })),
+      rows: rows.map(({ photos, ...r }) => ({
+        ...r,
+        photo_count: photos.length,
+        invoiced_invoice_id: invoiced.get(r.work_order_id) ?? null,
+      })),
       totals: {
         count: rows.length,
         cost: rows.reduce((s, r) => s + r.cost, 0),
         billed: rows.reduce((s, r) => s + r.billed, 0),
+        /** 아직 청구서에 실리지 않은 건수·금액 — 청구서 발행이 만들 금액이다. */
+        billable_count: billable.length,
+        billable_amount: billable.reduce((s, r) => s + r.billed, 0),
       },
     },
   });
@@ -475,6 +488,132 @@ router.get("/v1/work-orders/billing-statement.pdf", async (req, res): Promise<vo
     version: Number(query.version ?? 1),
   });
   await sendDocument(res, html, filename, String(query.format ?? ""));
+});
+
+/**
+ * 이미 청구서에 실린 작업지시. 줄 단위 역참조(`invoice_line_items.work_order_id`)를
+ * 보고, 무효(Void)·삭제된 청구서는 세지 않는다 — 취소한 청구서 때문에 다시
+ * 청구하지 못하면 안 된다.
+ */
+async function loadInvoicedWorkOrders(workOrderIds: number[]): Promise<Map<number, number>> {
+  const out = new Map<number, number>();
+  if (!workOrderIds.length) return out;
+  const rows = await db
+    .select({ work_order_id: invoiceLineItemsTable.work_order_id, invoice_id: invoicesTable.id })
+    .from(invoiceLineItemsTable)
+    .innerJoin(invoicesTable, eq(invoiceLineItemsTable.invoice_id, invoicesTable.id))
+    .where(and(
+      inArray(invoiceLineItemsTable.work_order_id, workOrderIds),
+      isNull(invoicesTable.deleted_at),
+      sql`${invoicesTable.status} <> 'Void'`,
+    ));
+  for (const r of rows) if (r.work_order_id) out.set(r.work_order_id, r.invoice_id);
+  return out;
+}
+
+/**
+ * 청구 대상 계정. 명시적으로 받은 계정이 우선이고, 없으면 대상 세대의 집주인
+ * (`spaces.landlord_account_id`)에서 찾는다. 집주인이 여러 명이면 한 장으로
+ * 묶을 수 없으므로 고르게 한다 — 조용히 아무나 고르면 엉뚱한 곳에 청구된다.
+ */
+async function resolveBillingAccount(
+  explicitId: number | null,
+  spaceIds: number[],
+): Promise<{ accountId: number } | { error: string; candidates: number[] }> {
+  if (explicitId) return { accountId: explicitId };
+  if (!spaceIds.length) return { error: "NO_ACCOUNT", candidates: [] };
+  const rows = await db.select({ landlord: spacesTable.landlord_account_id })
+    .from(spacesTable).where(inArray(spacesTable.id, spaceIds));
+  const owners = [...new Set(rows.map(r => r.landlord).filter(Boolean))] as number[];
+  if (owners.length === 1) return { accountId: owners[0]! };
+  return { error: owners.length ? "MULTIPLE_OWNERS" : "NO_ACCOUNT", candidates: owners };
+}
+
+// C — 명세서를 청구서로 발행. 명세서 한 줄 = 청구서 한 줄이라 종이와 회계가
+// 줄 단위로 맞는다. 이미 청구된 작업지시는 건너뛰고 그 사실을 함께 돌려준다.
+router.post("/v1/work-orders/billing-statement/invoice", async (req, res): Promise<void> => {
+  const body = { ...(req.query as Record<string, any>), ...(req.body ?? {}) };
+  const f = billingFiltersFrom(body);
+  const { rows, orders } = await loadBillingRows(f);
+  if (!rows.length) {
+    res.status(400).json({ success: false, error: { code: "NO_ROWS", message: "No work orders match these filters." } });
+    return;
+  }
+
+  const invoiced = await loadInvoicedWorkOrders(orders.map(o => o.id));
+  const billable = rows.filter(r => !invoiced.has(r.work_order_id));
+  const skipped = rows.length - billable.length;
+  if (!billable.length) {
+    res.status(409).json({
+      success: false,
+      error: { code: "ALREADY_INVOICED", message: "Every work order in this period is already on an invoice." },
+      data: { skipped },
+    });
+    return;
+  }
+
+  const orderById = new Map(orders.map(o => [o.id, o]));
+  const spaceIds = [...new Set(billable.map(r => orderById.get(r.work_order_id)?.space_id).filter(Boolean))] as number[];
+  const resolved = await resolveBillingAccount(body.account_id ? Number(body.account_id) : null, spaceIds);
+  if ("error" in resolved) {
+    res.status(400).json({
+      success: false,
+      error: {
+        code: resolved.error,
+        message: resolved.error === "MULTIPLE_OWNERS"
+          ? "These work orders belong to more than one owner — pass account_id to choose who is billed."
+          : "Could not resolve who to bill; pass account_id.",
+      },
+      data: { candidates: resolved.candidates },
+    });
+    return;
+  }
+
+  const ccy = String(body.currency ?? DEFAULT_CURRENCY);
+  const supply = billable.reduce((sum, r) => sum + Number(r.billed ?? 0), 0);
+  const taxMode = body.tax_mode === "exclusive" ? "exclusive" : "none";
+  const taxRate = Number(body.tax_rate ?? (taxMode === "exclusive" ? 10 : 0));
+  const period = f.to ? f.to.slice(0, 7) : f.from ? f.from.slice(0, 7) : null;
+
+  const [invoice] = await db.insert(invoicesTable).values({
+    invoice_ref: await nextInvoiceRef(),
+    account_id: resolved.accountId,
+    amount: String(supply),
+    currency: ccy,
+    exchange_rate_to_aud: await getRateToAud(ccy),
+    tax_mode: taxMode,
+    tax_rate: String(taxRate),
+    tax_amount: String(computeTax(supply, taxMode, taxRate, ccy)),
+    status: "Draft",
+    billing_period: period,
+    due_date: body.due_date ?? null,
+    description: `${period ?? ""} 하자·청소 청구 (${billable.length}건)`.trim(),
+    notes: body.notes ?? null,
+  }).returning();
+
+  await db.insert(invoiceLineItemsTable).values(billable.map((r, i) => {
+    const wo = orderById.get(r.work_order_id);
+    return {
+      invoice_id: invoice.id,
+      // 명세서 줄과 같은 순서·같은 표기 — 종이와 청구서를 나란히 놓고 대조한다.
+      label: [r.unit_no ? `${r.unit_no}호` : null, r.category, wo?.title].filter(Boolean).join(" · "),
+      description: r.detail || null,
+      charge_kind: "other" as const,
+      space_id: wo?.space_id ?? null,
+      work_order_id: r.work_order_id,
+      quantity: "1",
+      unit_amount: String(r.billed),
+      total_amount: String(r.billed),
+      sort_order: i,
+    };
+  }));
+
+  void logAction({
+    entityType: "work_order", entityId: billable[0]!.work_order_id, action: "UPDATE",
+    actorId: (req as any).user?.id ?? null,
+    newValue: { billing_statement_invoice_id: invoice.id, lines: billable.length, skipped },
+  });
+  res.status(201).json({ success: true, data: invoice, lines: billable.length, skipped });
 });
 
 // A — 작업지시서 PDF (요청·완료 사진 포함).
