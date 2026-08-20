@@ -105,12 +105,84 @@ function renderPhotoGrid(photos: Array<{ url: string; caption?: string | null }>
   return `<div class="wo-photos">${cells}</div>`;
 }
 
+/**
+ * 회차(세션)별로 나눠 그린다. 재방문 작업이면 `1차 / 2차`가 각자의 소제목을
+ * 달고 떨어져 나오므로, 종이에서도 언제 찍은 사진인지 헷갈리지 않는다.
+ * 회차가 하나뿐이면 소제목 없이 그냥 한 판으로 둔다.
+ */
+function renderPhotoSessions(photos: WorkOrderDocPhoto[], lang: DocLang, emptyText: string): string {
+  if (!photos.length) return `<div class="wo-empty">${escapeHtml(emptyText)}</div>`;
+  const groups = new Map<number, WorkOrderDocPhoto[]>();
+  for (const p of photos) {
+    const no = p.session_no && p.session_no > 0 ? p.session_no : 1;
+    groups.set(no, [...(groups.get(no) ?? []), p]);
+  }
+  const ordered = [...groups.entries()].sort((a, b) => a[0] - b[0]);
+  if (ordered.length === 1) return renderPhotoGrid(ordered[0]![1], emptyText);
+  return ordered
+    .map(([no, group]) =>
+      `<div class="wo-session">${escapeHtml(t(lang, "wo.photoSession", { n: String(no) }))}</div>${renderPhotoGrid(group, emptyText)}`,
+    )
+    .join("");
+}
+
+/** 서명란 — 미서명이면 빈 칸, 서명 완료면 서명 이미지 + 인증 정보. */
+function renderSignatureBlock(d: WorkOrderDocInput, lang: DocLang): string {
+  const sig = d.signature;
+  const confirmed = sig?.signature_image
+    ? `<img class="wo-sig-img" src="${escapeHtml(sig.signature_image)}" alt="" />` +
+      (sig.signer_name ? `<div class="wo-sig-name">${escapeHtml(sig.signer_name)}</div>` : "")
+    : "";
+
+  const table = `<table class="wo-sign">
+      <tr>
+        <th>${escapeHtml(t(lang, "wo.requestedBy"))}</th><td></td>
+        <th>${escapeHtml(t(lang, "wo.performedBy"))}</th><td></td>
+        <th>${escapeHtml(t(lang, "wo.confirmedBy"))}</th><td>${confirmed}</td>
+      </tr>
+    </table>`;
+
+  if (!sig?.signature_image) return table;
+
+  const rows: Array<[string, string]> = [
+    [t(lang, "wo.signerName"), sig.signer_name ?? DASH],
+    [t(lang, "wo.signedAt"), formatDocDate(sig.signed_at, lang, DASH)],
+    [t(lang, "wo.signIp"), sig.ip || DASH],
+    [t(lang, "wo.signDevice"), sig.user_agent || DASH],
+    [t(lang, "wo.signConsent"), sig.consent_text || t(lang, "wo.signConsentText")],
+  ];
+  if (sig.content_hash) rows.push([t(lang, "wo.signHash"), sig.content_hash]);
+
+  return `${table}
+    <div class="wo-sec">${escapeHtml(t(lang, "wo.signAudit"))}</div>
+    <table class="wo-grid wo-audit">
+      ${rows.map(([k, v]) => `<tr><th>${escapeHtml(k)}</th><td colspan="5">${escapeHtml(v)}</td></tr>`).join("")}
+    </table>`;
+}
+
 // ── A. 작업지시서 ────────────────────────────────────────────────────────────
 
 export interface WorkOrderDocPhoto {
   url: string;
   kind: string; // before | after
+  /** 회차 — 한 번의 업로드가 한 세션이다. 없으면 1차로 본다. */
+  session_no?: number | null;
   caption?: string | null;
+}
+
+/**
+ * 무로그인 링크로 받은 시설 담당자의 확인 서명. 서명 이미지와 함께 **어떤 기기·
+ * 어느 IP에서 언제 서명했는지**를 문서에 같이 박아 두는 것이 요점 — 전자서명의
+ * 효력은 그 기록에서 나온다.
+ */
+export interface WorkOrderDocSignature {
+  signer_name?: string | null;
+  signature_image?: string | null; // data URL
+  signed_at?: string | Date | null;
+  ip?: string | null;
+  user_agent?: string | null;
+  consent_text?: string | null;
+  content_hash?: string | null;
 }
 
 export interface WorkOrderDocInput {
@@ -139,6 +211,8 @@ export interface WorkOrderDocInput {
   withholding_amount?: number | null;
   billed_amount: number;
   photos: WorkOrderDocPhoto[];
+  /** 확인 서명이 끝났으면 서명란이 실제 서명 + 인증 정보로 채워진다. */
+  signature?: WorkOrderDocSignature | null;
 }
 
 const WORK_ORDER_STYLE = `<style>
@@ -147,16 +221,27 @@ const WORK_ORDER_STYLE = `<style>
   table.wo-sign th, table.wo-sign td { border:1px solid #b9c0cc; padding:5px 7px; }
   table.wo-sign th { background:#eef3fa; font-weight:700; text-align:center; white-space:nowrap; width:16%; }
   table.wo-sign td { height:44px; }
+  .wo-session { font-size:11px; font-weight:700; color:#41506a; margin:10px 0 4px; }
+  .wo-sig-img { max-height:38px; max-width:100%; display:block; margin:0 auto; }
+  .wo-sig-name { text-align:center; font-size:10.5px; color:#41506a; margin-top:2px; }
+  table.wo-audit td { word-break:break-all; font-size:10.5px; }
 </style>`;
 
-export function buildWorkOrderBody(d: WorkOrderDocInput, lang: DocLang): string {
+export function buildWorkOrderBody(
+  d: WorkOrderDocInput,
+  lang: DocLang,
+  opts: { confirmation?: boolean } = {},
+): string {
+  // 서명 링크로 나가는 문서는 "작업 확인서" 로 제목이 바뀐다 — 받는 사람이
+  // 지시서가 아니라 확인을 요청받는 쪽이기 때문이다.
+  const heading = t(lang, opts.confirmation ? "wo.confirmHeading" : "wo.heading");
   const before = d.photos.filter((p) => p.kind === "before");
   const after = d.photos.filter((p) => p.kind !== "before");
   const money = (v: number | null | undefined) => (v == null ? DASH : formatDocMoney(v, d.currency));
 
   return `${WORK_ORDER_STYLE}
     <div class="wo-title">
-      <h1>${escapeHtml(t(lang, "wo.heading"))}</h1>
+      <h1>${escapeHtml(heading)}</h1>
       <div class="wo-sub">${escapeHtml(d.order_ref)}</div>
     </div>
 
@@ -204,17 +289,11 @@ export function buildWorkOrderBody(d: WorkOrderDocInput, lang: DocLang): string 
     </table>
 
     <div class="wo-sec">${escapeHtml(t(lang, "wo.photosBefore"))}</div>
-    ${renderPhotoGrid(before, t(lang, "wo.noPhotos"))}
+    ${renderPhotoSessions(before, lang, t(lang, "wo.noPhotos"))}
     <div class="wo-sec">${escapeHtml(t(lang, "wo.photosAfter"))}</div>
-    ${renderPhotoGrid(after, t(lang, "wo.noPhotos"))}
+    ${renderPhotoSessions(after, lang, t(lang, "wo.noPhotos"))}
 
-    <table class="wo-sign">
-      <tr>
-        <th>${escapeHtml(t(lang, "wo.requestedBy"))}</th><td></td>
-        <th>${escapeHtml(t(lang, "wo.performedBy"))}</th><td></td>
-        <th>${escapeHtml(t(lang, "wo.confirmedBy"))}</th><td></td>
-      </tr>
-    </table>
+    ${renderSignatureBlock(d, lang)}
   `;
 }
 
@@ -223,12 +302,14 @@ export function buildWorkOrderHtml(opts: {
   company?: CompanyInfo;
   lang?: DocLang;
   forPrint?: boolean;
+  /** 확인 서명용 문서(작업 확인서)로 낼 때. */
+  confirmation?: boolean;
 }): string {
   const co = opts.company ?? getCompanyInfo();
   const lang = opts.lang ?? "ko";
   return renderDocumentShell({
-    docType: t(lang, "wo.heading"),
-    bodyHtml: buildWorkOrderBody(opts.data, lang),
+    docType: t(lang, opts.confirmation ? "wo.confirmHeading" : "wo.heading"),
+    bodyHtml: buildWorkOrderBody(opts.data, lang, { confirmation: opts.confirmation }),
     company: co,
     forPrint: opts.forPrint ?? true,
   });

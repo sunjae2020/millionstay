@@ -19,6 +19,7 @@ import {
   accountsTable,
   emailLogsTable,
   integrationSettings,
+  workOrdersTable,
 } from "@workspace/db";
 import { buildServiceBriefHtml } from "../lib/documents/serviceBrief.js";
 import { htmlToPdf, PdfUnavailableError } from "../lib/documents/pdf.js";
@@ -35,6 +36,8 @@ import {
 import { type ContractSignature } from "../lib/documents/contractDocument.js";
 import { resolveCompanyInfo } from "../lib/documents/companyInfo.js";
 import { buildContractDocInput, renderContractHtml } from "../routes/contracts.js";
+import { buildWorkOrderDocInput } from "../routes/work-orders.js";
+import { buildWorkOrderHtml, type WorkOrderDocSignature } from "../lib/documents/workOrderDocument.js";
 import { isCloudinaryConfigured, uploadPrivateToCloudinary, cldFolder } from "../utils/cloudinary.js";
 import { sendDocumentEmail, sendApplicationAckEmail } from "../lib/email.js";
 import { resolveTemplate } from "../lib/documents/templateEngine.js";
@@ -214,11 +217,43 @@ function toContractSignatures(raw: unknown): ContractSignature[] {
  * (reusing the same renderer as /v1/contracts/:id/pdf, with drawn signatures
  * embedded once signed). Returns null when the underlying record is gone.
  */
+/**
+ * 저장된 signatures JSON 의 첫 서명을 문서 서명란 형태로 옮긴다.
+ * IP·기기·동의문은 서버가 서명 시각에 찍은 값이라 이것이 정본이다.
+ */
+function firstSignature(raw: unknown): WorkOrderDocSignature | null {
+  const list = Array.isArray(raw) ? (raw as any[]) : [];
+  const s = list.find((x) => x?.signatureImage);
+  if (!s) return null;
+  return {
+    signer_name: s.name ?? null,
+    signature_image: s.signatureImage ?? null,
+    signed_at: s.serverSignedAt ?? s.signedAt ?? null,
+    ip: s.ip ?? null,
+    user_agent: s.userAgent ?? null,
+    consent_text: s.consent?.text ?? null,
+  };
+}
+
 export async function buildSignedDocumentHtml(
   signing: Pick<SigningRow, "context_type" | "context_id" | "status" | "signers" | "signatures" | "signed_at">,
   opts: { signed?: boolean; forPrint?: boolean; lang?: DocLang } = {},
 ): Promise<string | null> {
   const lang = opts.lang ?? normalizeLang(undefined);
+  if (signing.context_type === "work_order") {
+    // 작업 확인서 — 지시서와 같은 본문에 확인 서명란만 채운다.
+    const data = await buildWorkOrderDocInput(signing.context_id);
+    if (!data) return null;
+    const signed = opts.signed ?? signing.status === "signed";
+    const sig = signed ? firstSignature(signing.signatures) : null;
+    return buildWorkOrderHtml({
+      data: { ...data, signature: sig },
+      company: await resolveCompanyInfo(),
+      lang,
+      forPrint: opts.forPrint ?? true,
+      confirmation: true,
+    });
+  }
   if (signing.context_type === "contract") {
     const built = await buildContractDocInput(signing.context_id, lang);
     if (!built) return null;
@@ -363,6 +398,7 @@ function logMeta(contextType: string): { entityType: string; templateCode: strin
   if (contextType === "short_term_app") return { entityType: "short_term_application", templateCode: "document.short_term_application" };
   if (contextType === "placement_contract") return { entityType: "homestay_placement", templateCode: "document.homestay_placement_contract" };
   if (contextType === "contract") return { entityType: "contract", templateCode: "document.contract" };
+  if (contextType === "work_order") return { entityType: "work_order", templateCode: "document.work_order" };
   return { entityType: "homestay_student_request", templateCode: "document.homestay_student_application" };
 }
 
@@ -381,8 +417,12 @@ export async function docFilenameForSigning(
   const signerName = Array.isArray(signing.signers)
     ? (signing.signers as Array<{ name?: string }>).find((x) => x?.name)?.name ?? null
     : null;
+  // 작업 확인서는 계약 서명본(SGN)이 아니라 작업지시서(WOR) 계열이다.
+  const kind = signing.context_type === "work_order"
+    ? "work_order" as const
+    : isApplication ? "application" as const : "signed_contract" as const;
   return resolveDocFileName({
-    kind: isApplication ? "application" : "signed_contract",
+    kind,
     entityType: signing.context_type,
     entityId: signing.context_id,
     party: [partyName, signerName],
@@ -398,7 +438,8 @@ export async function emailApplicationPdf(
   ref: string,
 ): Promise<string[]> {
   const docTypeLabel =
-    signing.context_type === "host_app" ? "Host Family Application"
+    signing.context_type === "work_order" ? "Work Completion Confirmation"
+    : signing.context_type === "host_app" ? "Host Family Application"
     : signing.context_type === "short_term_app" ? "Short-term Accommodation Application"
     : signing.context_type === "placement_contract" ? "Homestay Placement Agreement"
     : signing.context_type === "contract" ? "Accommodation Agreement"
@@ -427,9 +468,11 @@ export async function emailApplicationPdf(
         pdf,
         filename,
         lang: "en",
-        note: signing.context_type === "contract"
-          ? "A signed copy of your agreement is attached as a PDF."
-          : "A signed copy of your homestay application is attached as a PDF.",
+        note: signing.context_type === "work_order"
+          ? "A signed copy of the work completion confirmation is attached as a PDF."
+          : signing.context_type === "contract"
+            ? "A signed copy of your agreement is attached as a PDF."
+            : "A signed copy of your homestay application is attached as a PDF.",
       });
       if (result.ok) sent.push(t.email);
       // Record the send in the per-record email history (best-effort).
@@ -589,6 +632,11 @@ export async function refForSigning(signing: Pick<SigningRow, "context_type" | "
       const [row] = await db.select({ ref: homestayPlacementsTable.placement_ref })
         .from(homestayPlacementsTable)
         .where(eq(homestayPlacementsTable.id, signing.context_id)).limit(1);
+      if (row?.ref) return row.ref;
+    } else if (signing.context_type === "work_order") {
+      const [row] = await db.select({ ref: workOrdersTable.order_ref })
+        .from(workOrdersTable)
+        .where(eq(workOrdersTable.id, signing.context_id)).limit(1);
       if (row?.ref) return row.ref;
     } else if (signing.context_type === "contract") {
       const [row] = await db.select({ ref: contractsTable.contract_ref })

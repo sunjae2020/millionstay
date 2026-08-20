@@ -62,6 +62,10 @@ export const workOrderPhotosTable = pgTable("work_order_photos", {
   work_order_id: integer("work_order_id").notNull(), // work_orders.id
   url: text("url").notNull(),
   kind: text("kind").notNull().default("after"), // before | after
+  // 회차(세션) — 한 번의 업로드가 하나의 세션이다. 같은 세대를 두 번 방문해
+  // 작업 전 사진을 두 번 찍으면 before 1차 / before 2차로 남는다. 번호는
+  // (work_order_id, kind) 안에서 1부터 올라간다.
+  session_no: integer("session_no").notNull().default(1),
   uploaded_by_type: text("uploaded_by_type").notNull().default("admin"), // admin | partner
   caption: text("caption"),
   created_at: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),

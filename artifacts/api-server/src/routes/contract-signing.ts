@@ -35,6 +35,7 @@ import {
 import { isCloudinaryConfigured, generateSignedUrl } from "../utils/cloudinary.js";
 import { resolveDocFileName, setDocFileName } from "../lib/documents/docFileName";
 import { normalizeLang, t } from "../lib/documents/i18n.js";
+import { buildWorkOrderDocInput } from "./work-orders.js";
 
 /** Name of the first signer on a request — the person the document is about. */
 function primarySignerName(row: { signers: unknown }): string | null {
@@ -49,6 +50,43 @@ function primarySignerName(row: { signers: unknown }): string | null {
 export const contractSigningPublicRouter: IRouter = Router();
 
 // GET /v1/public/contract-signing/:token — data for the signing page.
+/**
+ * 토큰 페이지가 로그인 없이 보여 줄 요약. 지금은 작업 확인서만 —
+ * 나머지 문서는 기존대로 /preview HTML 을 그대로 띄운다.
+ */
+async function publicSummary(contextType: string, contextId: number): Promise<unknown> {
+  if (contextType !== "work_order") return null;
+  try {
+    const data = await buildWorkOrderDocInput(contextId);
+    if (!data) return null;
+    return {
+      kind: "work_order",
+      order_ref: data.order_ref,
+      title: data.title,
+      description: data.description ?? null,
+      notes: data.notes ?? null,
+      category: data.category ?? null,
+      status: data.status,
+      property_name: data.property_name ?? null,
+      unit_no: data.unit_no ?? null,
+      unit_type: data.unit_type ?? null,
+      scheduled_at: data.scheduled_at ?? null,
+      completed_at: data.completed_at ?? null,
+      partner_name: data.partner_name ?? null,
+      assignee_name: data.assignee_name ?? null,
+      photos: data.photos.map((p) => ({
+        url: p.url,
+        kind: p.kind,
+        session_no: p.session_no ?? 1,
+        caption: p.caption ?? null,
+      })),
+    };
+  } catch (err) {
+    console.error("[ContractSign] summary build failed:", err);
+    return null;
+  }
+}
+
 contractSigningPublicRouter.get("/v1/public/contract-signing/:token", async (req, res): Promise<void> => {
   try {
     const [row] = await db
@@ -91,6 +129,9 @@ contractSigningPublicRouter.get("/v1/public/contract-signing/:token", async (req
       context_id: row.context_id,
       signers: row.signers,
       expires_at: row.expires_at,
+      // 작업 확인서는 휴대폰에서 바로 읽히게 요약을 함께 준다 — 시설 담당자가
+      // 카톡으로 받은 링크를 열자마자 무엇을 확인하는지 보여야 한다.
+      summary: await publicSummary(row.context_type, row.context_id),
     });
   } catch (err) {
     console.error("[ContractSign] public get error:", err);
@@ -146,7 +187,17 @@ contractSigningPublicRouter.post("/v1/public/contract-signing/:token/sign", asyn
     const ip = clientIp(req);
     const ua = String(req.headers["user-agent"] ?? "").slice(0, 500);
     const nowIso = new Date().toISOString();
-    const consentBlock = { accepted: true, text: DEFAULT_CONSENT_TEXT, acceptedAt: nowIso };
+    // 동의문은 **서명자가 실제로 읽은 문장**이어야 기록으로서 의미가 있다.
+    // 작업 확인서는 계약 동의문이 아니라 작업 완료 확인 문구를 쓰고, 언어도
+    // 서명 화면과 맞춘다.
+    const consentLang = normalizeLang(
+      (typeof req.body?.lang === "string" ? req.body.lang : undefined)
+      ?? (req.headers["accept-language"] as string | undefined),
+    );
+    const consentText = row.context_type === "work_order"
+      ? t(consentLang, "wo.signConsentText")
+      : DEFAULT_CONSENT_TEXT;
+    const consentBlock = { accepted: true, text: consentText, acceptedAt: nowIso };
     const byRole = new Map(signers.map((s) => [s.role, s]));
     const enriched = signatures.map((s) => ({
       role: s.role,
@@ -397,7 +448,10 @@ contractSigningAdminRouter.get("/v1/contract-signing/:contextType/:contextId", a
       .select()
       .from(contractSigningRequestsTable)
       .where(eq(contractSigningRequestsTable.context_id, Number(req.params.contextId)));
-    res.json(rows.filter((r) => r.context_type === req.params.contextType));
+    // signed_snapshot 은 서명 시점 HTML 통째라 목록에 실을 이유가 없다(수백 KB).
+    res.json(rows
+      .filter((r) => r.context_type === req.params.contextType)
+      .map(({ signed_snapshot, ...rest }) => rest));
   } catch (err) {
     console.error("[ContractSign] list error:", err);
     res.status(500).json({ error: "server_error", message: "Failed to list signing requests." });
