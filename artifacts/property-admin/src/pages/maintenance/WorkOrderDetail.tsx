@@ -510,7 +510,7 @@ export default function WorkOrderDetail() {
                 )} />
               </div>
               <div>
-                <Label>{t('workorder.label_scheduled_date', 'Scheduled Date')}</Label>
+                <Label>{t('workorder.label_scheduled_date', 'Work Date')}</Label>
                 <Controller name="scheduled_at" control={control} render={({ field }) => (
                   <DateInput value={field.value ?? ""} onChange={field.onChange} />
                 )} />

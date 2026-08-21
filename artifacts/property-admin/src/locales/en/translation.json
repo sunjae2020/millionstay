@@ -1687,7 +1687,7 @@
     "section_location": "Location",
     "section_schedule": "Schedule & Assignment",
     "label_reported_date": "Reported Date",
-    "label_scheduled_date": "Scheduled Date",
+    "label_scheduled_date": "Work Date",
     "label_cost": "Estimated Cost",
     "section_completed": "Completed",
     "completed_on": "Completed on",

@@ -1687,7 +1687,7 @@
     "section_location": "위치",
     "section_schedule": "일정 및 배정",
     "label_reported_date": "접수일",
-    "label_scheduled_date": "예정일",
+    "label_scheduled_date": "작업일",
     "label_cost": "예상 비용",
     "section_completed": "완료",
     "completed_on": "완료일",

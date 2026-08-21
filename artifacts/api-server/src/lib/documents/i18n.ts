@@ -487,7 +487,7 @@ const LABELS: Dict = {
   "wo.category":        { en: "Work type",           ko: "작업분류",       zh: "作业分类",     ja: "作業区分",       th: "ประเภทงาน",              vi: "Loại công việc" },
   "wo.status":          { en: "Status",              ko: "상태",           zh: "状态",         ja: "状態",           th: "สถานะ",                  vi: "Trạng thái" },
   "wo.reportedAt":      { en: "Reported",            ko: "접수일",         zh: "受理日",       ja: "受付日",         th: "วันที่แจ้ง",             vi: "Ngày tiếp nhận" },
-  "wo.scheduledAt":     { en: "Scheduled",           ko: "예정일",         zh: "预定日",       ja: "予定日",         th: "วันที่นัดหมาย",          vi: "Ngày dự kiến" },
+  "wo.scheduledAt":     { en: "Work Date",           ko: "작업일",         zh: "作业日期",     ja: "作業日",         th: "วันปฏิบัติงาน",          vi: "Ngày thi công" },
   "wo.completedAt":     { en: "Completed",           ko: "완료일",         zh: "完成日",       ja: "完了日",         th: "วันที่เสร็จ",            vi: "Ngày hoàn thành" },
   "wo.partner":         { en: "Partner",             ko: "작업 파트너",    zh: "合作方",       ja: "施工パートナー", th: "พันธมิตรผู้ดำเนินงาน",   vi: "Đối tác thi công" },
   "wo.assignee":        { en: "Assignee",            ko: "담당자",         zh: "负责人",       ja: "担当者",         th: "ผู้รับผิดชอบ",           vi: "Người phụ trách" },

@@ -1658,7 +1658,7 @@
     "section_location": "สถานที่",
     "section_schedule": "กำหนดการและผู้รับผิดชอบ",
     "label_reported_date": "วันที่แจ้ง",
-    "label_scheduled_date": "วันที่กำหนด",
+    "label_scheduled_date": "วันปฏิบัติงาน",
     "label_cost": "ค่าใช้จ่ายโดยประมาณ",
     "section_completed": "เสร็จสิ้น",
     "completed_on": "เสร็จเมื่อ",
