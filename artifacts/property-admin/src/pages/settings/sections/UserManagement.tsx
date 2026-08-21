@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Checkbox } from "@/components/ui/checkbox";
-import { UserPlus, Trash2, Shield, User, Check, X, Clock, Loader2, RefreshCw, AlertTriangle, Archive } from "lucide-react";
+import { UserPlus, Trash2, Shield, User, Check, X, Clock, Loader2, RefreshCw, AlertTriangle, Archive, Search, RotateCcw, Ban } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiFetch } from "@/lib/apiFetch";
 import { useAuth } from "@/contexts/AuthContext";
@@ -31,13 +31,17 @@ interface AdminUser {
   role: string;
   is_active: boolean;
   status: string;
+  deleted_at?: string | null;
   last_login_at: string | null;
   created_at: string;
 }
 
 type TFunc = (key: string, opts?: Record<string, unknown>) => string;
 
-function statusBadge(status: string, t: TFunc) {
+type StatusFilter = "all" | "active" | "inactive" | "pending" | "rejected" | "archived";
+
+function statusBadge(user: AdminUser, t: TFunc) {
+  const status = user.status;
   if (status === "pending") return (
     <Badge variant="outline" className="text-amber-600 border-amber-300 bg-amber-50 gap-1">
       <Clock className="h-3 w-3" /> {t("settings_users.status_pending")}
@@ -46,6 +50,16 @@ function statusBadge(status: string, t: TFunc) {
   if (status === "rejected") return (
     <Badge variant="outline" className="text-red-600 border-red-300 bg-red-50 gap-1">
       <X className="h-3 w-3" /> {t("settings_users.status_rejected")}
+    </Badge>
+  );
+  if (status === "archived" || user.deleted_at) return (
+    <Badge variant="outline" className="text-muted-foreground border-muted-foreground/30 bg-muted gap-1">
+      <Archive className="h-3 w-3" /> {t("settings_users.status_archived")}
+    </Badge>
+  );
+  if (!user.is_active) return (
+    <Badge variant="outline" className="text-slate-600 border-slate-300 bg-slate-50 gap-1">
+      <Ban className="h-3 w-3" /> {t("settings_users.status_inactive")}
     </Badge>
   );
   return (
@@ -75,23 +89,43 @@ export function UserManagement() {
   const [bulkAction, setBulkAction] = useState<"archive" | "permanent" | null>(null);
   const [isBulkLoading, setIsBulkLoading] = useState(false);
 
+  const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
+  const showArchived = statusFilter === "archived";
+  const [isRestoring, setIsRestoring] = useState(false);
+
   const emptyForm = { first_name: "", last_name: "", email: "", password: "", role: "Admin" };
   const [createOpen, setCreateOpen] = useState(false);
   const [createForm, setCreateForm] = useState(emptyForm);
   const [isCreating, setIsCreating] = useState(false);
 
   const { data, isLoading, isError, refetch } = useQuery<{ success: boolean; users: AdminUser[] }>({
-    queryKey: ["admin-users"],
+    queryKey: ["admin-users", showArchived ? "archived" : "current"],
     queryFn: async () => {
-      const res = await apiFetch("/api/v1/admin/users");
+      const res = await apiFetch(`/api/v1/admin/users${showArchived ? "?deleted=only" : ""}`);
       if (!res.ok) throw new Error("Failed to load users");
       return res.json();
     },
   });
 
-  const users = data?.users ?? [];
+  const allUsers = data?.users ?? [];
+  const q = search.trim().toLowerCase();
+  const matchesSearch = (u: AdminUser) =>
+    !q || `${u.first_name ?? ""} ${u.last_name ?? ""} ${u.email ?? ""}`.toLowerCase().includes(q);
+  const matchesStatus = (u: AdminUser) => {
+    const decided = u.status !== "pending" && u.status !== "rejected";
+    switch (statusFilter) {
+      case "active": return decided && u.is_active;
+      case "inactive": return decided && !u.is_active;
+      case "pending": return u.status === "pending";
+      case "rejected": return u.status === "rejected";
+      default: return true; // "all" and "archived" (the query is already scoped)
+    }
+  };
+  const users = allUsers.filter(u => matchesSearch(u) && matchesStatus(u));
   const pendingUsers = users.filter(u => u.status === "pending");
   const activeUsers = users.filter(u => u.status !== "pending");
+  const isFiltered = q.length > 0 || statusFilter !== "all";
 
   const selectableUsers = activeUsers.filter(u => u.id !== currentUser?.id && u.role !== "SuperAdmin");
   const allSelected = selectableUsers.length > 0 && selectableUsers.every(u => selectedIds.has(u.id));
@@ -183,6 +217,26 @@ export function UserManagement() {
     }
   }
 
+  async function restoreUsers(ids: number[]) {
+    setIsRestoring(true);
+    try {
+      const res = await apiFetch("/api/v1/admin/users/bulk-restore", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ids }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) throw new Error(data.error ?? t("settings_users.toast_restore_failed"));
+      qc.invalidateQueries({ queryKey: ["admin-users"] });
+      toast({ title: t("settings_users.toast_users_restored", { count: data.affected }) });
+      clearSelection();
+    } catch (err: any) {
+      toast({ title: t("settings_users.toast_error"), description: err.message ?? t("settings_users.toast_restore_failed"), variant: "destructive" });
+    } finally {
+      setIsRestoring(false);
+    }
+  }
+
   const handleBulkDelete = async (permanent: boolean) => {
     setIsBulkLoading(true);
     setBulkAction(null);
@@ -249,7 +303,7 @@ export function UserManagement() {
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  {statusBadge(user.status, t)}
+                  {statusBadge(user, t)}
                   <Button
                     size="sm"
                     variant="outline"
@@ -286,8 +340,14 @@ export function UserManagement() {
       <div className="space-y-3">
         <div className="flex items-center justify-between">
           <div>
-            <h3 className="text-base font-semibold">{t("settings_users.admin_accounts_title")}</h3>
-            <p className="text-sm text-muted-foreground mt-0.5">{t("settings_users.admin_accounts_count", { count: activeUsers.length })}</p>
+            <h3 className="text-base font-semibold">
+              {showArchived ? t("settings_users.archived_accounts_title") : t("settings_users.admin_accounts_title")}
+            </h3>
+            <p className="text-sm text-muted-foreground mt-0.5">
+              {isFiltered
+                ? t("settings_users.showing_count", { count: activeUsers.length, total: allUsers.filter(u => u.status !== "pending").length })
+                : t("settings_users.admin_accounts_count", { count: activeUsers.length })}
+            </p>
           </div>
           <div className="flex items-center gap-2">
             {isSuperAdmin && selectableUsers.length > 0 && (
@@ -312,6 +372,45 @@ export function UserManagement() {
           </div>
         </div>
 
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+          <div className="relative flex-1">
+            <Search className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder={t("settings_users.search_placeholder")}
+              className="pl-8 pr-8"
+              aria-label={t("settings_users.search_placeholder")}
+            />
+            {search && (
+              <button
+                type="button"
+                onClick={() => setSearch("")}
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                aria-label={t("common.clear")}
+              >
+                <X className="h-3.5 w-3.5" />
+              </button>
+            )}
+          </div>
+          <Select
+            value={statusFilter}
+            onValueChange={(v) => { setStatusFilter(v as StatusFilter); clearSelection(); }}
+          >
+            <SelectTrigger className="sm:w-44" aria-label={t("settings_users.filter_status")}>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">{t("settings_users.filter_all")}</SelectItem>
+              <SelectItem value="active">{t("common.active")}</SelectItem>
+              <SelectItem value="inactive">{t("settings_users.status_inactive")}</SelectItem>
+              <SelectItem value="pending">{t("settings_users.status_pending")}</SelectItem>
+              <SelectItem value="rejected">{t("settings_users.status_rejected")}</SelectItem>
+              <SelectItem value="archived">{t("settings_users.status_archived")}</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
         {isSuperAdmin && selectedIds.size > 0 && (
           <div className="flex items-center gap-3 px-4 py-2.5 rounded-lg bg-primary/10 border border-primary/20">
             <span className="text-sm font-medium text-primary">{t("settings_users.selected_count", { count: selectedIds.size })}</span>
@@ -319,11 +418,18 @@ export function UserManagement() {
               <X className="h-3.5 w-3.5" />
             </button>
             <div className="ml-auto flex items-center gap-2">
-              {isBulkLoading && <Loader2 className="h-4 w-4 animate-spin text-primary" />}
-              <Button size="sm" variant="outline" className="h-7 border-amber-300 text-amber-700 hover:bg-amber-50 gap-1.5"
-                onClick={() => setBulkAction("archive")} disabled={isBulkLoading}>
-                <Archive className="h-3.5 w-3.5" /> {t("settings_users.archive_selected")}
-              </Button>
+              {(isBulkLoading || isRestoring) && <Loader2 className="h-4 w-4 animate-spin text-primary" />}
+              {showArchived ? (
+                <Button size="sm" variant="outline" className="h-7 gap-1.5"
+                  onClick={() => restoreUsers(Array.from(selectedIds))} disabled={isRestoring || isBulkLoading}>
+                  <RotateCcw className="h-3.5 w-3.5" /> {t("settings_users.restore_selected")}
+                </Button>
+              ) : (
+                <Button size="sm" variant="outline" className="h-7 border-amber-300 text-amber-700 hover:bg-amber-50 gap-1.5"
+                  onClick={() => setBulkAction("archive")} disabled={isBulkLoading}>
+                  <Archive className="h-3.5 w-3.5" /> {t("settings_users.archive_selected")}
+                </Button>
+              )}
               <Button size="sm" variant="destructive" className="h-7 gap-1.5"
                 onClick={() => setBulkAction("permanent")} disabled={isBulkLoading}>
                 <Trash2 className="h-3.5 w-3.5" /> {t("settings_users.delete_forever")}
@@ -334,7 +440,9 @@ export function UserManagement() {
 
         <div className="rounded-lg border divide-y">
           {activeUsers.length === 0 ? (
-            <div className="px-4 py-8 text-center text-sm text-muted-foreground">{t("settings_users.no_active_users")}</div>
+            <div className="px-4 py-8 text-center text-sm text-muted-foreground">
+              {isFiltered ? t("settings_users.no_matching_users") : t("settings_users.no_active_users")}
+            </div>
           ) : (
             activeUsers.map(user => {
               const isSelectable = isSuperAdmin && user.id !== currentUser?.id && user.role !== "SuperAdmin";
@@ -369,8 +477,19 @@ export function UserManagement() {
                   </div>
                   <div className="flex items-center gap-2">
                     {roleBadge(user.role, t)}
-                    {statusBadge(user.status, t)}
-                    {user.id !== currentUser?.id && user.role !== "SuperAdmin" && (
+                    {statusBadge(user, t)}
+                    {showArchived && isSuperAdmin && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="h-7 gap-1.5"
+                        disabled={isRestoring}
+                        onClick={() => restoreUsers([user.id])}
+                      >
+                        <RotateCcw className="h-3.5 w-3.5" /> {t("settings_users.restore")}
+                      </Button>
+                    )}
+                    {!showArchived && user.id !== currentUser?.id && user.role !== "SuperAdmin" && (
                       <Button
                         variant="ghost"
                         size="icon"

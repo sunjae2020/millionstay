@@ -4422,7 +4422,19 @@
     "toast_user_created": "User created",
     "toast_user_created_desc": "The account has been created and is active.",
     "toast_create_failed": "Failed to create user",
-    "page_subtitle": "Manage admin users and access permissions"
+    "page_subtitle": "Manage admin users and access permissions",
+    "status_inactive": "Inactive",
+    "status_archived": "Archived",
+    "search_placeholder": "Search by name or email",
+    "filter_status": "Filter by status",
+    "filter_all": "All statuses",
+    "showing_count": "Showing {{count}} of {{total}} users",
+    "no_matching_users": "No users match your search or filter.",
+    "archived_accounts_title": "Archived Accounts",
+    "restore": "Restore",
+    "restore_selected": "Restore Selected",
+    "toast_users_restored": "{{count}} user(s) restored",
+    "toast_restore_failed": "Restore failed"
   },
   "coming_soon": {
     "heading": "Coming Soon",

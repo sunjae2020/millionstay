@@ -4372,7 +4372,19 @@
     "toast_user_created": "สร้างผู้ใช้แล้ว",
     "toast_user_created_desc": "สร้างบัญชีและเปิดใช้งานแล้ว",
     "toast_create_failed": "ไม่สามารถสร้างผู้ใช้ได้",
-    "page_subtitle": "จัดการผู้ใช้ผู้ดูแลและสิทธิ์การเข้าถึง"
+    "page_subtitle": "จัดการผู้ใช้ผู้ดูแลและสิทธิ์การเข้าถึง",
+    "status_inactive": "ไม่ใช้งาน",
+    "status_archived": "จัดเก็บแล้ว",
+    "search_placeholder": "ค้นหาด้วยชื่อหรืออีเมล",
+    "filter_status": "กรองตามสถานะ",
+    "filter_all": "ทุกสถานะ",
+    "showing_count": "แสดง {{count}} จาก {{total}} ผู้ใช้",
+    "no_matching_users": "ไม่พบผู้ใช้ที่ตรงกับการค้นหาหรือตัวกรอง",
+    "archived_accounts_title": "บัญชีที่จัดเก็บ",
+    "restore": "กู้คืน",
+    "restore_selected": "กู้คืนรายการที่เลือก",
+    "toast_users_restored": "กู้คืนผู้ใช้ {{count}} รายแล้ว",
+    "toast_restore_failed": "กู้คืนไม่สำเร็จ"
   },
   "coming_soon": {
     "heading": "เร็วๆ นี้",
