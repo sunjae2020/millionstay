@@ -13,16 +13,12 @@ import {
   AlertDialog, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import {
-  Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
-} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { formatPersonName } from "@/lib/nameFormat";
+import { UserFormDialog } from "./UserFormDialog";
 
 interface AdminUser {
   id: number;
@@ -33,6 +29,10 @@ interface AdminUser {
   is_active: boolean;
   status: string;
   deleted_at?: string | null;
+  profile_photo_url?: string | null;
+  phone?: string | null;
+  department?: string | null;
+  job_title?: string | null;
   last_login_at: string | null;
   created_at: string;
 }
@@ -96,15 +96,9 @@ export function UserManagement() {
   const showArchived = statusFilter === "archived";
   const [isRestoring, setIsRestoring] = useState(false);
 
-  const emptyEditForm = { first_name: "", last_name: "", email: "", role: "Admin", is_active: true, password: "" };
-  const [editTarget, setEditTarget] = useState<AdminUser | null>(null);
-  const [editForm, setEditForm] = useState(emptyEditForm);
-  const [isSaving, setIsSaving] = useState(false);
-
-  const emptyForm = { first_name: "", last_name: "", email: "", password: "", role: "Admin" };
-  const [createOpen, setCreateOpen] = useState(false);
-  const [createForm, setCreateForm] = useState(emptyForm);
-  const [isCreating, setIsCreating] = useState(false);
+  // One dialog drives both flows: null id = create, a number = edit.
+  const [formOpen, setFormOpen] = useState(false);
+  const [formUserId, setFormUserId] = useState<number | null>(null);
 
   const { data, isLoading, isError, refetch } = useQuery<{ success: boolean; users: AdminUser[] }>({
     queryKey: ["admin-users", showArchived ? "archived" : "current"],
@@ -151,73 +145,6 @@ export function UserManagement() {
   };
 
   const clearSelection = () => setSelectedIds(new Set());
-
-  function openEdit(u: AdminUser) {
-    setEditForm({
-      first_name: u.first_name ?? "",
-      last_name: u.last_name ?? "",
-      email: u.email ?? "",
-      role: u.role,
-      is_active: u.is_active,
-      password: "",
-    });
-    setEditTarget(u);
-  }
-
-  async function saveEdit() {
-    if (!editTarget) return;
-    // Names go to every write-capable admin; the privileged fields are only
-    // sent when they actually changed, so a plain Admin's save never 403s.
-    const payload: Record<string, unknown> = {
-      first_name: editForm.first_name.trim(),
-      last_name: editForm.last_name.trim(),
-    };
-    if (isSuperAdmin) {
-      const email = editForm.email.trim().toLowerCase();
-      if (email !== (editTarget.email ?? "").toLowerCase()) payload.email = email;
-      if (editForm.role !== editTarget.role) payload.role = editForm.role;
-      if (editForm.is_active !== editTarget.is_active) payload.is_active = editForm.is_active;
-      if (editForm.password.trim()) payload.password = editForm.password;
-    }
-    setIsSaving(true);
-    try {
-      const res = await apiFetch(`/api/v1/admin/users/${editTarget.id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-      const data = await res.json();
-      if (!res.ok || !data.success) throw new Error(data.error ?? t("settings_users.toast_action_failed"));
-      qc.invalidateQueries({ queryKey: ["admin-users"] });
-      toast({ title: t("settings_users.toast_user_updated") });
-      setEditTarget(null);
-    } catch (err: any) {
-      toast({ title: t("settings_users.toast_error"), description: err.message ?? t("settings_users.toast_action_failed"), variant: "destructive" });
-    } finally {
-      setIsSaving(false);
-    }
-  }
-
-  async function createUser() {
-    setIsCreating(true);
-    try {
-      const res = await apiFetch("/api/v1/admin/users", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(createForm),
-      });
-      const data = await res.json();
-      if (!res.ok || !data.success) throw new Error(data.error ?? t("settings_users.toast_create_failed"));
-      qc.invalidateQueries({ queryKey: ["admin-users"] });
-      toast({ title: t("settings_users.toast_user_created"), description: t("settings_users.toast_user_created_desc") });
-      setCreateOpen(false);
-      setCreateForm(emptyForm);
-    } catch (err: any) {
-      toast({ title: t("settings_users.toast_error"), description: err.message ?? t("settings_users.toast_create_failed"), variant: "destructive" });
-    } finally {
-      setIsCreating(false);
-    }
-  }
 
   async function updateUser(id: number, payload: object, action: string) {
     setActionLoading(prev => ({ ...prev, [id]: action }));
@@ -420,9 +347,9 @@ export function UserManagement() {
             <Button
               size="sm"
               className="gap-1.5"
-              disabled={!isSuperAdmin}
-              title={isSuperAdmin ? undefined : t("settings_users.superadmin_only")}
-              onClick={() => { setCreateForm(emptyForm); setCreateOpen(true); }}
+              disabled={isViewer}
+              title={isViewer ? t("settings_users.viewer_readonly") : undefined}
+              onClick={() => { setFormUserId(null); setFormOpen(true); }}
             >
               <UserPlus className="h-4 w-4" /> {t("settings_users.add_user")}
             </Button>
@@ -517,8 +444,10 @@ export function UserManagement() {
                         )}
                       </div>
                     )}
-                    <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center">
-                      {user.role === "SuperAdmin" ? (
+                    <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center overflow-hidden shrink-0">
+                      {user.profile_photo_url ? (
+                        <img src={user.profile_photo_url} alt="" className="h-full w-full object-cover" />
+                      ) : user.role === "SuperAdmin" ? (
                         <Shield className="h-4 w-4 text-muted-foreground" />
                       ) : (
                         <User className="h-4 w-4 text-muted-foreground" />
@@ -529,7 +458,12 @@ export function UserManagement() {
                         {formatPersonName(user.first_name, user.last_name)}
                         {!user.first_name && !user.last_name && <span className="text-muted-foreground">—</span>}
                       </p>
-                      <p className="text-xs text-muted-foreground">{user.email}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {user.email}
+                        {(user.department || user.job_title) && (
+                          <span> · {[user.department, user.job_title].filter(Boolean).join(" ")}</span>
+                        )}
+                      </p>
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
@@ -553,7 +487,7 @@ export function UserManagement() {
                         className="h-7 w-7 text-muted-foreground hover:text-foreground"
                         title={t("common.edit")}
                         aria-label={t("common.edit")}
-                        onClick={() => openEdit(user)}
+                        onClick={() => { setFormUserId(user.id); setFormOpen(true); }}
                       >
                         <Pencil className="h-3.5 w-3.5" />
                       </Button>
@@ -663,146 +597,12 @@ export function UserManagement() {
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* ── Edit User Dialog ───────────────────────────────────── */}
-      <Dialog open={!!editTarget} onOpenChange={(o) => { if (!o && !isSaving) setEditTarget(null); }}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Pencil className="h-4 w-4" /> {t("settings_users.edit_user_title")}
-            </DialogTitle>
-            <DialogDescription>
-              {isSuperAdmin ? t("settings_users.edit_user_desc") : t("settings_users.edit_user_desc_admin")}
-            </DialogDescription>
-          </DialogHeader>
-          <form className="space-y-4" onSubmit={(e) => { e.preventDefault(); if (!isSaving) saveEdit(); }}>
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1.5">
-                <Label htmlFor="eu-first">{t("settings_users.field_first_name")}</Label>
-                <Input id="eu-first" value={editForm.first_name}
-                  onChange={(e) => setEditForm(f => ({ ...f, first_name: e.target.value }))} />
-              </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="eu-last">{t("settings_users.field_last_name")}</Label>
-                <Input id="eu-last" value={editForm.last_name}
-                  onChange={(e) => setEditForm(f => ({ ...f, last_name: e.target.value }))} />
-              </div>
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="eu-email">{t("settings_users.field_email")}</Label>
-              <Input id="eu-email" type="email" value={editForm.email} disabled={!isSuperAdmin}
-                onChange={(e) => setEditForm(f => ({ ...f, email: e.target.value }))} />
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="eu-role">{t("settings_users.field_role")}</Label>
-              <Select
-                value={editForm.role}
-                disabled={!isSuperAdmin || editTarget?.id === currentUser?.id}
-                onValueChange={(v) => setEditForm(f => ({ ...f, role: v }))}
-              >
-                <SelectTrigger id="eu-role"><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Admin">{t("settings_users.role_admin")}</SelectItem>
-                  <SelectItem value="Viewer">{t("settings_users.role_viewer")}</SelectItem>
-                  <SelectItem value="SuperAdmin">{t("settings_users.role_superadmin")}</SelectItem>
-                </SelectContent>
-              </Select>
-              {editTarget?.id === currentUser?.id && (
-                <p className="text-xs text-muted-foreground">{t("settings_users.self_edit_hint")}</p>
-              )}
-            </div>
-            <div className="flex items-center justify-between rounded-lg border px-3 py-2.5">
-              <div>
-                <Label htmlFor="eu-active" className="text-sm">{t("settings_users.field_is_active")}</Label>
-                <p className="text-xs text-muted-foreground">{t("settings_users.field_is_active_hint")}</p>
-              </div>
-              <Switch
-                id="eu-active"
-                checked={editForm.is_active}
-                disabled={!isSuperAdmin || editTarget?.id === currentUser?.id}
-                onCheckedChange={(v) => setEditForm(f => ({ ...f, is_active: v }))}
-              />
-            </div>
-            {isSuperAdmin && (
-              <div className="space-y-1.5">
-                <Label htmlFor="eu-password">{t("settings_users.field_reset_password")}</Label>
-                <Input id="eu-password" type="text" autoComplete="off" value={editForm.password}
-                  placeholder={t("settings_users.field_reset_password_ph")}
-                  onChange={(e) => setEditForm(f => ({ ...f, password: e.target.value }))} />
-                <p className="text-xs text-muted-foreground">{t("settings_users.field_reset_password_hint")}</p>
-              </div>
-            )}
-            <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => setEditTarget(null)} disabled={isSaving}>
-                {t("common.cancel")}
-              </Button>
-              <Button type="submit" disabled={isSaving} className="gap-1.5">
-                {isSaving && <Loader2 className="h-4 w-4 animate-spin" />}
-                {t("common.save")}
-              </Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
-
-      {/* ── Create User Dialog ─────────────────────────────────── */}
-      <Dialog open={createOpen} onOpenChange={(o) => { if (!isCreating) setCreateOpen(o); }}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <UserPlus className="h-4 w-4" /> {t("settings_users.add_user_title")}
-            </DialogTitle>
-            <DialogDescription>{t("settings_users.add_user_desc")}</DialogDescription>
-          </DialogHeader>
-          <form
-            className="space-y-4"
-            onSubmit={(e) => { e.preventDefault(); if (!isCreating) createUser(); }}
-          >
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1.5">
-                <Label htmlFor="cu-first">{t("settings_users.field_first_name")}</Label>
-                <Input id="cu-first" value={createForm.first_name} required
-                  onChange={(e) => setCreateForm(f => ({ ...f, first_name: e.target.value }))} />
-              </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="cu-last">{t("settings_users.field_last_name")}</Label>
-                <Input id="cu-last" value={createForm.last_name} required
-                  onChange={(e) => setCreateForm(f => ({ ...f, last_name: e.target.value }))} />
-              </div>
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="cu-email">{t("settings_users.field_email")}</Label>
-              <Input id="cu-email" type="email" value={createForm.email} required
-                onChange={(e) => setCreateForm(f => ({ ...f, email: e.target.value }))} />
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="cu-password">{t("settings_users.field_temp_password")}</Label>
-              <Input id="cu-password" type="text" value={createForm.password} required autoComplete="off"
-                onChange={(e) => setCreateForm(f => ({ ...f, password: e.target.value }))} />
-              <p className="text-xs text-muted-foreground">{t("settings_users.field_temp_password_hint")}</p>
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="cu-role">{t("settings_users.field_role")}</Label>
-              <Select value={createForm.role} onValueChange={(v) => setCreateForm(f => ({ ...f, role: v }))}>
-                <SelectTrigger id="cu-role"><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Admin">{t("settings_users.role_admin")}</SelectItem>
-                  <SelectItem value="Viewer">{t("settings_users.role_viewer")}</SelectItem>
-                  <SelectItem value="SuperAdmin">{t("settings_users.role_superadmin")}</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => setCreateOpen(false)} disabled={isCreating}>
-                {t("common.cancel")}
-              </Button>
-              <Button type="submit" disabled={isCreating} className="gap-1.5">
-                {isCreating && <Loader2 className="h-4 w-4 animate-spin" />}
-                {t("settings_users.create_user")}
-              </Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
+      <UserFormDialog
+        open={formOpen}
+        onOpenChange={setFormOpen}
+        userId={formUserId}
+        onSaved={() => refetch()}
+      />
     </div>
   );
 }
