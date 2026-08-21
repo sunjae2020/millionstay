@@ -2,7 +2,6 @@
 // Studio. Single-tenant (no auto-fork): edits update the row in place.
 // Mounted behind requireAuth by routes/index.ts.
 import { Router, type IRouter } from "express";
-import { Resend } from "resend";
 import { and, asc, eq } from "drizzle-orm";
 import { db, documentTemplatesTable, documentTemplateTranslationsTable } from "@workspace/db";
 import { resolveTemplate, renderString, sampleVarsFromSchema } from "../lib/documents/templateEngine.js";
@@ -11,7 +10,7 @@ import { renderDocumentShell } from "../lib/documents/theme.js";
 import { renderSampleDocumentHtml, sampleTemplateVars } from "../lib/documents/sampleDocs.js";
 import { normalizeLang, t } from "../lib/documents/i18n.js";
 import { DOC_NAMES_KO, sanitizePartyName, setDocFileName } from "../lib/documents/docFileName";
-import { emailSender } from "../lib/email.js";
+import { emailSender, resendClient } from "../lib/email.js";
 import { resolveEmailBrand, renderEmailShell } from "../lib/emailBrand.js";
 import { logAction } from "../utils/auditLog.js";
 
@@ -134,8 +133,8 @@ router.post("/v1/document-templates/:id/test-send", async (req, res): Promise<vo
     // Wrap in the same tenant-branded shell real sends use, so a test preview
     // shows the logo/palette the recipient would actually get.
     const html = renderEmailShell({ brand: await resolveEmailBrand(), body: renderString(resolved.bodyHtml, vars) });
-    const client = new Resend(process.env.RESEND_API_KEY);
-    const result = await client.emails.send({ ...emailSender(), to: [to], subject: `[TEST] ${subject}`, html });
+    const client = resendClient(process.env.RESEND_API_KEY)!;
+    const result = await client.emails.send({ ...emailSender((await resolveEmailBrand()).name), to: [to], subject: `[TEST] ${subject}`, html });
     res.json({ data: { sentTo: to, id: (result as any)?.data?.id ?? null, locale } });
   } catch (err) {
     console.error("[document-templates] test-send failed:", err);

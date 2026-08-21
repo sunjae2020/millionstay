@@ -16,8 +16,7 @@
 // English only (project i18n policy: transactional auth emails are English).
 import crypto from "node:crypto";
 import bcrypt from "bcryptjs";
-import { Resend } from "resend";
-import { emailSender } from "../email";
+import { emailSender, resendClient } from "../email";
 import { resolveEmailBrand, renderEmailShell } from "../emailBrand";
 import { escapeHtml } from "../htmlEscape";
 import { eq } from "drizzle-orm";
@@ -161,9 +160,9 @@ async function sendInviteEmail(opts: {
   });
 
   try {
-    const client = new Resend(key);
+    const client = resendClient(key)!;
     await client.emails.send({
-      ...emailSender(),
+      ...emailSender(brand.name),
       to: [opts.to],
       subject: `Set up your ${brand.name} student portal`,
       html,

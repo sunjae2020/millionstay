@@ -7,8 +7,7 @@
 // they never throw, so they can never block the main flow that triggers them.
 //
 // English only (project i18n policy: transactional lifecycle emails are English).
-import { Resend } from "resend";
-import { emailSender } from "../email";
+import { emailSender, resendClient } from "../email";
 import { resolveEmailBrand, renderEmailShell } from "../emailBrand";
 import { escapeHtml } from "../htmlEscape";
 
@@ -48,9 +47,9 @@ export async function sendHomestayNotification(opts: {
   });
 
   try {
-    const client = new Resend(key);
+    const client = resendClient(key)!;
     await client.emails.send({
-      ...emailSender(),
+      ...emailSender(brand.name),
       to: [to],
       ...(cc ? { cc: [cc] } : {}),
       subject: opts.subject,

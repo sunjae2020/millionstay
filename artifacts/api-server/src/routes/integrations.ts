@@ -1,11 +1,11 @@
 import { Router, type IRouter } from "express";
 import { v2 as cloudinary } from "cloudinary";
 import Stripe from "stripe";
-import { Resend } from "resend";
 import type { Request, Response } from "express";
 import { db, integrationSettings } from "@workspace/db";
 import { eq } from "drizzle-orm";
-import { emailSender } from "../lib/email.js";
+import { emailSender, resendClient, escapeHtml } from "../lib/email.js";
+import { resolveEmailBrand } from "../lib/emailBrand.js";
 
 const router: IRouter = Router();
 
@@ -216,7 +216,10 @@ router.post("/v1/integrations/resend/test", async (req: Request, res: Response):
   // Loads EMAIL_FROM into process.env; emailSender() then applies the same
   // free-mail guard as real sends, so the test mirrors production behaviour.
   await getEnvVar("EMAIL_FROM");
-  const sender = emailSender();
+  // The test must look exactly like a real send, sender identity included —
+  // that is the thing an operator is checking when they press "test".
+  const brand = await resolveEmailBrand();
+  const sender = emailSender(brand.name);
   if (!resendKey) {
     res.status(400).json({ success: false, error: "RESEND_API_KEY not configured" });
     return;
@@ -227,12 +230,12 @@ router.post("/v1/integrations/resend/test", async (req: Request, res: Response):
     return;
   }
   try {
-    const resend = new Resend(resendKey);
+    const resend = resendClient(resendKey)!;
     const result = await resend.emails.send({
       ...sender,
       to: [to_email],
-      subject: "MillionStay — Resend Test Email",
-      html: "<p>This is a test email from MillionStay Admin. Resend is connected successfully.</p>",
+      subject: `${brand.name} — Resend Test Email`,
+      html: `<p>This is a test email from ${escapeHtml(brand.name)} Admin. Resend is connected successfully.</p>`,
     });
     res.json({ success: true, message_id: result.data?.id ?? null });
   } catch (e: any) {
