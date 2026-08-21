@@ -34,13 +34,24 @@ export function cldFolder(sub: string): string {
 export async function uploadToCloudinary(
   buffer: Buffer,
   options: Record<string, unknown> = {}
-): Promise<{ secure_url: string; thumbnail_url: string; public_id: string; bytes: number; format: string }> {
+): Promise<{
+  secure_url: string;
+  thumbnail_url: string;
+  public_id: string;
+  bytes: number;
+  format: string;
+  version: number;
+  width: number;
+  height: number;
+}> {
   const result = await new Promise<{
     secure_url: string;
     public_id: string;
     bytes: number;
     format: string;
     version: number;
+    width: number;
+    height: number;
   }>((resolve, reject) => {
     const stream = cloudinary.uploader.upload_stream(
       {
@@ -54,7 +65,7 @@ export async function uploadToCloudinary(
       },
       (error, res) => {
         if (error || !res) reject(error ?? new Error("Cloudinary upload failed"));
-        else resolve(res as { secure_url: string; public_id: string; bytes: number; format: string; version: number });
+        else resolve(res as { secure_url: string; public_id: string; bytes: number; format: string; version: number; width: number; height: number });
       }
     );
     stream.end(buffer);
@@ -75,7 +86,18 @@ export async function uploadToCloudinary(
     public_id: result.public_id,
     bytes: result.bytes,
     format: result.format,
+    version: result.version,
+    width: Number(result.width ?? 0),
+    height: Number(result.height ?? 0),
   };
+}
+
+/**
+ * 업로드된 자산의 배포 URL을 변환과 함께 만든다. 두 번째 업로드 없이
+ * Cloudinary가 첫 요청에 파생본을 만들어 CDN에 캐시한다.
+ */
+export function cloudinaryUrl(publicId: string, options: Record<string, unknown> = {}): string {
+  return cloudinary.url(publicId, { secure: true, ...options });
 }
 
 /**

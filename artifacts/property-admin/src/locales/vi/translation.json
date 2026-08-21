@@ -1694,7 +1694,7 @@
     "photo_kind_before": "Trước khi làm",
     "photo_kind_after": "Sau khi làm",
     "label_photo_caption": "Chú thích",
-    "ph_photo_caption": "VD: Rò nước nhà tắm, phòng khách sau sửa chữa",
+    "ph_photo_caption": "Ghi chú ảnh (vd: trám lại xi măng bồn cầu)",
     "photos_dropzone": "Kéo và thả ảnh vào đây, hoặc nhấp để chọn",
     "photos_formats": "JPG, PNG, WEBP · tối đa 10MB mỗi ảnh",
     "photos_staged_hint": "Các ảnh này sẽ được tải lên khi bạn lưu lệnh công việc.",
@@ -1760,7 +1760,7 @@
     "sign_view_document": "Xem bản xác nhận đã ký",
     "sign_document": "Xác nhận công việc",
     "photos_sessions_count": "{{sessions}} lần · {{count}} ảnh",
-    "ph_photo_session_caption": "Ghi chú cho đợt này (tùy chọn)",
+    "ph_photo_session_caption": "Ghi chú mặc định cho ảnh thêm tiếp theo (tùy chọn)",
     "photos_dropzone_kind": "Thêm ảnh {{kind}} — kéo thả hoặc bấm chọn",
     "photos_session_hint": "Mỗi lần tải lên được lưu thành một đợt riêng.",
     "photos_upload_as_session": "Tải lên thành lần {{n}}",
@@ -1777,7 +1777,8 @@
     "dispatch_pick_partner": "Chọn đối tác",
     "dispatch_no_partners": "Không có đối tác đang hoạt động. Hãy thêm ở mục Đối tác.",
     "dispatch_auto": "Tự động khớp theo danh mục",
-    "btn_dispatch_confirm": "Giao việc"
+    "btn_dispatch_confirm": "Giao việc",
+    "photos_caption_hint": "Ngày chụp, bất động sản/căn hộ và ghi chú này được in chìm lên từng ảnh."
   },
   "csticket": {
     "search_placeholder": "Tìm kiếm phiếu hỗ trợ...",

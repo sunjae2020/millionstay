@@ -333,7 +333,9 @@
     "cat_carpentry": "목공",
     "cat_pest_control": "방역",
     "cat_landscaping": "조경",
-    "cat_security": "보안"
+    "cat_security": "보안",
+    "photo_caption_ph": "사진 설명 (예: 변기 백시멘트 보수)",
+    "photo_caption_hint": "촬영일, 매물/호수와 이 설명이 사진에 워터마크로 새겨집니다."
   },
   "documents": {
     "title": "문서함",

@@ -1736,7 +1736,7 @@
     "photo_kind_before": "작업 전",
     "photo_kind_after": "작업 후",
     "label_photo_caption": "설명",
-    "ph_photo_caption": "예: 욕실 누수, 거실 보수 완료",
+    "ph_photo_caption": "사진 설명 (예: 변기 백시멘트 보수)",
     "photos_dropzone": "사진을 끌어다 놓거나 클릭해서 선택하세요",
     "photos_formats": "JPG, PNG, WEBP · 장당 10MB까지",
     "photos_staged_hint": "선택한 사진은 작업지시를 저장할 때 함께 업로드됩니다.",
@@ -1802,7 +1802,7 @@
     "sign_view_document": "서명된 확인서 보기",
     "sign_document": "작업 확인서",
     "photos_sessions_count": "{{sessions}}회차 · 사진 {{count}}장",
-    "ph_photo_session_caption": "이번 묶음 메모 (선택)",
+    "ph_photo_session_caption": "다음에 추가할 사진의 기본 설명 (선택)",
     "photos_dropzone_kind": "{{kind}} 사진 추가 — 끌어다 놓거나 눌러서 선택",
     "photos_session_hint": "한 번에 올린 사진이 한 회차로 저장됩니다.",
     "photos_upload_as_session": "{{n}}차로 업로드",
@@ -1819,7 +1819,8 @@
     "dispatch_pick_partner": "파트너를 선택하세요",
     "dispatch_no_partners": "활성 파트너가 없습니다. 파트너 메뉴에서 등록하세요.",
     "dispatch_auto": "카테고리 자동 매칭",
-    "btn_dispatch_confirm": "배정"
+    "btn_dispatch_confirm": "배정",
+    "photos_caption_hint": "촬영일, 매물/호수와 이 설명이 사진에 워터마크로 새겨집니다."
   },
   "csticket": {
     "search_placeholder": "티켓 검색...",

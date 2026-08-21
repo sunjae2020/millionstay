@@ -324,7 +324,9 @@
     "cat_carpentry": "Mộc",
     "cat_pest_control": "Kiểm soát côn trùng",
     "cat_landscaping": "Cảnh quan",
-    "cat_security": "An ninh"
+    "cat_security": "An ninh",
+    "photo_caption_ph": "Ghi chú ảnh (vd: trám lại xi măng bồn cầu)",
+    "photo_caption_hint": "Ngày chụp, bất động sản/căn hộ và ghi chú này được in chìm lên ảnh."
   },
   "documents": {
     "title": "Tài liệu",

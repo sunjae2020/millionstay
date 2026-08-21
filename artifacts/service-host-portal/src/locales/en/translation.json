@@ -333,7 +333,9 @@
     "cat_carpentry": "Carpentry",
     "cat_pest_control": "Pest control",
     "cat_landscaping": "Landscaping",
-    "cat_security": "Security"
+    "cat_security": "Security",
+    "photo_caption_ph": "Photo note (e.g. toilet re-cemented)",
+    "photo_caption_hint": "The date, property/unit and this note are burned onto the photo as a watermark."
   },
   "documents": {
     "title": "Documents",

@@ -48,10 +48,10 @@ export async function uploadStagedPhotos(workOrderId: number, staged: StagedPhot
     const group = staged.filter((p) => p.kind === kind);
     if (group.length === 0) continue;
     const fd = new FormData();
+    // 사진 순서와 설명 순서가 짝이 맞아야 워터마크가 엉키지 않는다.
     for (const p of group) fd.append("images", p.file);
+    for (const p of group) fd.append("captions", p.caption ?? "");
     fd.append("kind", kind);
-    const caption = group.find((p) => p.caption)?.caption;
-    if (caption) fd.append("caption", caption);
     await fetch(`/api/v1/work-orders/${workOrderId}/photos`, { method: "POST", headers, body: fd });
   }
 }
@@ -150,7 +150,7 @@ function PhotoKindSection({
   const isNew = !workOrderId;
 
   const [caption, setCaption] = useState("");
-  const [pending, setPending] = useState<File[]>([]);
+  const [pending, setPending] = useState<Array<{ file: File; caption: string; previewUrl: string }>>([]);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isDragging, setIsDragging] = useState(false);
@@ -181,7 +181,7 @@ function PhotoKindSection({
         ...images.map((file) => ({ file, kind, caption, previewUrl: URL.createObjectURL(file) })),
       ]);
     } else {
-      setPending((prev) => [...prev, ...images]);
+      setPending((prev) => [...prev, ...images.map((file) => ({ file, caption, previewUrl: URL.createObjectURL(file) }))]);
     }
   }
 
@@ -194,7 +194,8 @@ function PhotoKindSection({
       if (token) headers["Authorization"] = `Bearer ${token}`;
       // 이 묶음 전체가 한 회차로 들어간다(서버가 다음 번호를 매긴다).
       const fd = new FormData();
-      for (const f of pending) fd.append("images", f);
+      for (const p of pending) fd.append("images", p.file);
+      for (const p of pending) fd.append("captions", p.caption ?? "");
       fd.append("kind", kind);
       if (caption) fd.append("caption", caption);
       const res = await fetch(`/api/v1/work-orders/${workOrderId}/photos`, { method: "POST", headers, body: fd });
@@ -202,6 +203,7 @@ function PhotoKindSection({
         const body = await res.json().catch(() => null);
         throw new Error(body?.error?.message ?? t("workorder.photos_upload_failed", "Upload failed"));
       }
+      pending.forEach((p) => URL.revokeObjectURL(p.previewUrl));
       setPending([]); setCaption("");
       await onUploaded();
     } catch (e: any) {
@@ -237,7 +239,7 @@ function PhotoKindSection({
         className="mb-2 bg-white"
         value={caption}
         onChange={(e) => setCaption(e.target.value)}
-        placeholder={t("workorder.ph_photo_session_caption", "Note for this batch (optional)")}
+        placeholder={t("workorder.ph_photo_session_caption", "Default note for photos added next (optional)")}
       />
 
       <div
@@ -286,19 +288,48 @@ function PhotoKindSection({
                     <X className="h-3.5 w-3.5" />
                   </button>
                 </div>
-                {p.caption && <p className="p-2 text-xs text-muted-foreground truncate">{p.caption}</p>}
+                <Input
+                  className="border-0 border-t rounded-none text-xs h-9"
+                  value={p.caption}
+                  onChange={(e) => onStagedChange?.((staged ?? []).map((q) => (q === p ? { ...q, caption: e.target.value } : q)))}
+                  placeholder={t("workorder.ph_photo_caption", "Photo note (e.g. toilet re-cemented)")}
+                />
               </div>
             ))}
           </div>
         </>
       )}
 
-      {/* 기존 작업 지시서 — 업로드 대기열. */}
+      {/* 기존 작업 지시서 — 업로드 대기열. 사진마다 설명을 달아 올린다. */}
       {!isNew && pending.length > 0 && (
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mt-3 flex items-center justify-between gap-3 flex-wrap">
-          <p className="text-xs text-primary truncate">{pending.map((f) => f.name).join(", ")}</p>
-          <div className="flex items-center gap-2 ml-auto">
-            <Button type="button" variant="ghost" size="sm" onClick={() => setPending([])}>{t("common.clear", "Clear")}</Button>
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mt-3 space-y-3">
+          <p className="text-xs text-primary">
+            {t("workorder.photos_caption_hint", "The date, property/unit and this note are burned onto each photo as a watermark.")}
+          </p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            {pending.map((p, i) => (
+              <div key={`${p.file.name}-${i}`} className="rounded-lg border bg-white overflow-hidden">
+                <div className="relative aspect-[4/3] bg-slate-100">
+                  <img src={p.previewUrl} alt={p.file.name} className="w-full h-full object-cover" />
+                  <button
+                    type="button"
+                    onClick={() => { URL.revokeObjectURL(p.previewUrl); setPending((prev) => prev.filter((_, j) => j !== i)); }}
+                    className="absolute top-1.5 right-1.5 rounded-full bg-black/60 p-1 text-white hover:bg-black/80"
+                  >
+                    <X className="h-3.5 w-3.5" />
+                  </button>
+                </div>
+                <Input
+                  className="border-0 border-t rounded-none text-xs h-9"
+                  value={p.caption}
+                  onChange={(e) => setPending((prev) => prev.map((q, j) => (j === i ? { ...q, caption: e.target.value } : q)))}
+                  placeholder={t("workorder.ph_photo_caption", "Photo note (e.g. toilet re-cemented)")}
+                />
+              </div>
+            ))}
+          </div>
+          <div className="flex items-center gap-2 justify-end">
+            <Button type="button" variant="ghost" size="sm" onClick={() => { pending.forEach((p) => URL.revokeObjectURL(p.previewUrl)); setPending([]); }}>{t("common.clear", "Clear")}</Button>
             <Button type="button" size="sm" className="gap-1.5" onClick={handleUpload} disabled={uploading}>
               {uploading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Upload className="h-3.5 w-3.5" />}
               {t("workorder.photos_upload_as_session", "Upload as session {{n}}", { n: sessions.length + 1 })}

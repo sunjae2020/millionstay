@@ -6,6 +6,7 @@ import { formatPersonName } from "../lib/nameFormat";
 import { sendAppointmentConfirmationEmail } from "../lib/email";
 import { eq, ilike, and, isNull, inArray, desc, sql } from "drizzle-orm";
 import { dispatchWorkOrder } from "../lib/dispatch/workOrderDispatch";
+import { buildPhotoWatermark, loadPhotoWatermarkContext, watermarkedPhotoUrl } from "../lib/workOrders/photoWatermark";
 import { createSigningRequest, signingBaseUrl } from "../services/contractSigning";
 import { buildAppointmentIcs, buildCalendar, addDays } from "../lib/ical";
 import { logAction } from "../utils/auditLog";
@@ -1119,6 +1120,23 @@ router.post("/v1/work-orders/:id/send-confirmation", async (req, res): Promise<v
 });
 
 // ── Work-order photos (#7) — before/after (request/confirmation) evidence ─────
+
+/** `captions` 폼 필드 → 파일 순서와 짝이 맞는 설명 배열. */
+function parseCaptions(value: unknown): string[] {
+  if (Array.isArray(value)) return value.map((v) => String(v ?? ""));
+  if (typeof value === "string") {
+    const raw = value.trim();
+    if (raw.startsWith("[")) {
+      try {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed)) return parsed.map((v) => String(v ?? ""));
+      } catch { /* 배열이 아니면 단일 설명으로 본다 */ }
+    }
+    return [value];
+  }
+  return [];
+}
+
 router.get("/v1/work-orders/:id/photos", async (req, res): Promise<void> => {
   const id = Number(req.params.id);
   // 전/후 → 회차 → 등록순. 클라이언트가 그대로 묶어 그릴 수 있게 정렬해서 준다.
@@ -1130,7 +1148,10 @@ router.get("/v1/work-orders/:id/photos", async (req, res): Promise<void> => {
 
 // Accepts multipart files (field `image` or `images`, several at a time) uploaded
 // to Cloudinary, or a JSON body with an existing `url`.
-// Fields: kind (before|after), caption, uploaded_by_type.
+// Fields: kind (before|after), caption, captions[] (파일별 설명), uploaded_by_type.
+//
+// 사진마다 `YYYY/MM/DD-매물/공간_사진설명` 워터마크를 태워 저장한다 — 사진이
+// 원장에서 떨어져 나와도 언제/어디/무엇인지가 이미지 안에 남는다.
 router.post("/v1/work-orders/:id/photos", upload.any(), async (req, res): Promise<void> => {
   try {
     const id = Number(req.params.id);
@@ -1139,22 +1160,30 @@ router.post("/v1/work-orders/:id/photos", upload.any(), async (req, res): Promis
 
     const kind = req.body?.kind === "before" ? "before" : "after";
     const uploaded_by_type = req.body?.uploaded_by_type === "partner" ? "partner" : "admin";
-    const caption = req.body?.caption || null;
+    const batchCaption = typeof req.body?.caption === "string" && req.body.caption.trim() ? req.body.caption.trim() : null;
+    // 파일별 설명. multipart는 같은 필드를 여러 번 보내면 배열이 되고, 하나만
+    // 보내면 문자열이 된다. JSON 배열 문자열도 받아 준다.
+    const perFileCaptions = parseCaptions(req.body?.captions);
 
     const files = ((req.files as Express.Multer.File[] | undefined) ?? [])
       .filter((f) => f.fieldname === "image" || f.fieldname === "images");
-    const urls: string[] = [];
+    const uploads: Array<{ url: string; caption: string | null }> = [];
 
     if (files.length > 0) {
       if (!isCloudinaryConfigured()) { res.status(503).json({ success: false, error: { code: "NOT_CONFIGURED", message: "Image upload not configured" } }); return; }
-      for (const file of files) {
+      const place = await loadPhotoWatermarkContext(id);
+      for (const [i, file] of files.entries()) {
+        const caption = perFileCaptions[i]?.trim() || batchCaption;
         const result = await uploadToCloudinary(file.buffer, { folder: cldFolder("work-orders") });
-        urls.push(result.secure_url);
+        uploads.push({
+          url: watermarkedPhotoUrl(result, buildPhotoWatermark(place, caption)),
+          caption: caption ?? null,
+        });
       }
     } else if (typeof req.body?.url === "string" && req.body.url) {
-      urls.push(req.body.url);
+      uploads.push({ url: req.body.url, caption: perFileCaptions[0]?.trim() || batchCaption });
     }
-    if (urls.length === 0) { res.status(400).json({ success: false, error: { code: "NO_IMAGE", message: "Provide an image file or a url." } }); return; }
+    if (uploads.length === 0) { res.status(400).json({ success: false, error: { code: "NO_IMAGE", message: "Provide an image file or a url." } }); return; }
 
     // 업로드 한 묶음 = 한 회차. 같은 전/후 안에서 다음 번호를 받아 붙인다.
     // `session_no` 를 명시적으로 넘기면(재업로드 보정 등) 그 회차에 합류한다.
@@ -1171,7 +1200,7 @@ router.post("/v1/work-orders/:id/photos", upload.any(), async (req, res): Promis
     }
 
     const rows = await db.insert(workOrderPhotosTable).values(
-      urls.map((url) => ({ work_order_id: id, url, kind, session_no, uploaded_by_type, caption })),
+      uploads.map((u) => ({ work_order_id: id, url: u.url, kind, session_no, uploaded_by_type, caption: u.caption })),
     ).returning();
     void logAction({ entityType: "work_order", entityId: id, action: "UPDATE", actorId: (req as any).user?.id ?? null, newValue: { photos_added: rows.length, kind, session_no } });
     // `data` stays a single row for existing single-file callers; `items` carries them all.

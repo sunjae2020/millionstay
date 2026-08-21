@@ -333,7 +333,9 @@
     "cat_carpentry": "木工",
     "cat_pest_control": "防疫",
     "cat_landscaping": "造園",
-    "cat_security": "警備"
+    "cat_security": "警備",
+    "photo_caption_ph": "写真の説明（例: 便器のセメント補修）",
+    "photo_caption_hint": "撮影日・物件/部屋番号とこの説明が写真に透かしとして焼き込まれます。"
   },
   "documents": {
     "title": "書類",

@@ -333,7 +333,9 @@
     "cat_carpentry": "木工",
     "cat_pest_control": "消杀",
     "cat_landscaping": "园艺",
-    "cat_security": "安保"
+    "cat_security": "安保",
+    "photo_caption_ph": "照片说明（例：马桶白水泥修补）",
+    "photo_caption_hint": "拍摄日期、房源/房号以及该说明会以水印形式写入照片。"
   },
   "documents": {
     "title": "文档",
