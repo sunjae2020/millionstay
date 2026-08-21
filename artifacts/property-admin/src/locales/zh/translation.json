@@ -396,7 +396,8 @@
     "uploading": "上传中…",
     "export_csv": "导出 CSV",
     "export_csv_count": "导出 {{count}} 行为 CSV",
-    "export_csv_empty": "没有可导出的数据"
+    "export_csv_empty": "没有可导出的数据",
+    "retry": "重试"
   },
   "lang": {
     "label": "语言"
@@ -1774,6 +1775,14 @@
     "billing_billed_total": "请款金额",
     "billing_no_rows": "没有符合条件的工作指令。",
     "billing_preview": "预览",
+    "billing_preset_this_month": "本月",
+    "billing_preset_last_month": "上月",
+    "billing_preset_last_3m": "最近3个月",
+    "billing_preset_this_year": "今年",
+    "billing_preset_last_year": "去年",
+    "billing_preset_all": "全部时间",
+    "billing_load_failed": "无法加载明细。",
+    "billing_issue_disabled_hint": "此期间没有尚未开票的工作指令。",
     "billing_bill_to_hint": "留空则向该房号的业主请款。",
     "billing_due_date": "到期日",
     "billing_already_invoiced": "{{n}} 项已请款",

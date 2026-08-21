@@ -396,7 +396,8 @@
     "uploading": "กำลังอัปโหลด…",
     "export_csv": "ส่งออก CSV",
     "export_csv_count": "ส่งออก {{count}} รายการเป็น CSV",
-    "export_csv_empty": "ไม่มีข้อมูลให้ส่งออก"
+    "export_csv_empty": "ไม่มีข้อมูลให้ส่งออก",
+    "retry": "ลองใหม่"
   },
   "lang": {
     "label": "ภาษา"
@@ -1770,6 +1771,14 @@
     "billing_billed_total": "ยอดเรียกเก็บ",
     "billing_no_rows": "ไม่พบใบสั่งงานที่ตรงกับเงื่อนไข",
     "billing_preview": "ดูตัวอย่าง",
+    "billing_preset_this_month": "เดือนนี้",
+    "billing_preset_last_month": "เดือนที่แล้ว",
+    "billing_preset_last_3m": "3 เดือนล่าสุด",
+    "billing_preset_this_year": "ปีนี้",
+    "billing_preset_last_year": "ปีที่แล้ว",
+    "billing_preset_all": "ทั้งหมด",
+    "billing_load_failed": "ไม่สามารถโหลดใบแจ้งรายการได้",
+    "billing_issue_disabled_hint": "ไม่มีใบสั่งงานที่ยังไม่ได้วางบิลในช่วงนี้",
     "billing_bill_to_hint": "เว้นว่างไว้เพื่อเรียกเก็บจากเจ้าของห้อง",
     "billing_due_date": "วันครบกำหนด",
     "billing_already_invoiced": "{{n}} รายการเรียกเก็บแล้ว",

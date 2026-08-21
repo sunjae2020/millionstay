@@ -399,7 +399,8 @@
     "uploading": "Uploading…",
     "export_csv": "Export CSV",
     "export_csv_count": "Export {{count}} rows to CSV",
-    "export_csv_empty": "Nothing to export"
+    "export_csv_empty": "Nothing to export",
+    "retry": "Retry"
   },
   "lang": {
     "label": "Language",
@@ -1799,6 +1800,14 @@
     "billing_billed_total": "Billed",
     "billing_no_rows": "No work orders match these filters.",
     "billing_preview": "Preview",
+    "billing_preset_this_month": "This month",
+    "billing_preset_last_month": "Last month",
+    "billing_preset_last_3m": "Last 3 months",
+    "billing_preset_this_year": "This year",
+    "billing_preset_last_year": "Last year",
+    "billing_preset_all": "All time",
+    "billing_load_failed": "Could not load the statement.",
+    "billing_issue_disabled_hint": "No un-invoiced work orders in this period.",
     "billing_bill_to_hint": "Leave empty to bill the unit owner.",
     "billing_due_date": "Due date",
     "billing_already_invoiced": "{{n}} already invoiced",

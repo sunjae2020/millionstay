@@ -35,14 +35,39 @@ import { useToast } from "@/hooks/use-toast";
  */
 const BILLABLE_CATEGORIES = WORK_ORDER_CATEGORIES.filter((c) => c.common);
 
+const pad2 = (n: number) => String(n).padStart(2, "0");
+const ymd = (d: Date) => `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`;
+
+/** 월 단위로 끊은 기간 — `back`만큼 거슬러 올라간 달의 1일 ~ 말일. */
+function monthsBack(back: number, span = 1): { from: string; to: string } {
+  const now = new Date();
+  const end = new Date(now.getFullYear(), now.getMonth() - back + 1, 0);
+  const start = new Date(end.getFullYear(), end.getMonth() - (span - 1), 1);
+  return { from: ymd(start), to: ymd(end) };
+}
+
 /** 이번 달 1일 / 말일 — 명세서는 월 단위로 끊는 것이 기본이다. */
 function monthRange(): { from: string; to: string } {
-  const now = new Date();
-  const pad = (n: number) => String(n).padStart(2, "0");
-  const y = now.getFullYear();
-  const m = now.getMonth();
-  const last = new Date(y, m + 1, 0).getDate();
-  return { from: `${y}-${pad(m + 1)}-01`, to: `${y}-${pad(m + 1)}-${pad(last)}` };
+  return monthsBack(0);
+}
+
+/**
+ * 자주 쓰는 기간. 손으로 날짜 두 칸을 채우는 것이 실제 사용에서 가장 잦은
+ * 실수 지점이라 — 달을 잘못 잡으면 조용히 0건이 된다 — 한 번에 끊어 준다.
+ * `전체 기간`은 두 칸을 비워 기간 조건을 아예 떼는 뜻이다.
+ */
+const PERIOD_PRESETS: Array<{ key: string; labelKey: string; fallback: string; range: () => { from: string; to: string } }> = [
+  { key: "this_month", labelKey: "workorder.billing_preset_this_month", fallback: "This month", range: () => monthsBack(0) },
+  { key: "last_month", labelKey: "workorder.billing_preset_last_month", fallback: "Last month", range: () => monthsBack(1) },
+  { key: "last_3m", labelKey: "workorder.billing_preset_last_3m", fallback: "Last 3 months", range: () => monthsBack(1, 3) },
+  { key: "this_year", labelKey: "workorder.billing_preset_this_year", fallback: "This year", range: () => yearRange(0) },
+  { key: "last_year", labelKey: "workorder.billing_preset_last_year", fallback: "Last year", range: () => yearRange(1) },
+  { key: "all", labelKey: "workorder.billing_preset_all", fallback: "All time", range: () => ({ from: "", to: "" }) },
+];
+
+function yearRange(back: number): { from: string; to: string } {
+  const y = new Date().getFullYear() - back;
+  return { from: `${y}-01-01`, to: `${y}-12-31` };
 }
 
 interface StatementRow {
@@ -88,7 +113,6 @@ export function RepairBillingDialog({ open, onOpenChange }: Props) {
   const [withholdingPct, setWithholdingPct] = useState("3.3");
   const [includePhotos, setIncludePhotos] = useState(true);
   const [photosPerUnit, setPhotosPerUnit] = useState("6");
-  const [billTo, setBillTo] = useState("");
   const [accountId, setAccountId] = useState<number | null>(null);
   const [dueDate, setDueDate] = useState("");
 
@@ -104,7 +128,7 @@ export function RepairBillingDialog({ open, onOpenChange }: Props) {
     return p;
   }, [from, to, propertyId, categories, status, withholdingPct, includePhotos, photosPerUnit]);
 
-  const { data: summary, isFetching } = useQuery({
+  const { data: summary, isFetching, error, refetch } = useQuery({
     queryKey: ["wo-billing-statement", query.toString()],
     queryFn: () =>
       apiJson<{ data: { rows: StatementRow[]; totals: StatementTotals } }>(
@@ -118,7 +142,6 @@ export function RepairBillingDialog({ open, onOpenChange }: Props) {
   function preview() {
     const p = new URLSearchParams(query);
     if (accountId) p.set("account_id", String(accountId));
-    if (billTo.trim()) p.set("bill_to", billTo.trim());
     p.set("lang", i18n.language);
     openPreview({
       title: t("workorder.billing_title", "Repair & cleaning billing statement"),
@@ -181,6 +204,25 @@ export function RepairBillingDialog({ open, onOpenChange }: Props) {
               <Label>{t("workorder.billing_to", "To")}</Label>
               <DateInput value={to} onChange={(v) => setTo(v ?? "")} />
             </div>
+          </div>
+
+          <div className="flex flex-wrap gap-1.5 -mt-1">
+            {PERIOD_PRESETS.map((preset) => {
+              const r = preset.range();
+              const active = r.from === from && r.to === to;
+              return (
+                <Button
+                  key={preset.key}
+                  type="button"
+                  size="sm"
+                  variant={active ? "secondary" : "outline"}
+                  className="h-7 px-2.5 text-xs font-normal"
+                  onClick={() => { setFrom(r.from); setTo(r.to); }}
+                >
+                  {t(preset.labelKey as any, preset.fallback)}
+                </Button>
+              );
+            })}
           </div>
 
           <div>
@@ -270,6 +312,18 @@ export function RepairBillingDialog({ open, onOpenChange }: Props) {
           <div className="border rounded-lg bg-muted/40 p-3 text-sm">
             {isFetching && !summary ? (
               t("common.loading")
+            ) : error ? (
+              // 조회가 실패한 것과 "해당 건이 없다"는 것은 다르다 — 예전에는
+              // 둘 다 "작업지시가 없습니다"로 보여 원인을 알 수 없었다.
+              <div className="flex flex-wrap items-center gap-2 text-destructive">
+                <span>
+                  {t("workorder.billing_load_failed", "Could not load the statement.")}{" "}
+                  {error instanceof Error ? error.message : ""}
+                </span>
+                <Button type="button" size="sm" variant="outline" className="h-7 px-2.5 text-xs" onClick={() => refetch()}>
+                  {t("common.retry", "Retry")}
+                </Button>
+              </div>
             ) : summary && summary.totals.count > 0 ? (
               <div className="flex flex-wrap gap-x-6 gap-y-1">
                 <span>{t("workorder.billing_count", "Items")}: <strong>{summary.totals.count}</strong></span>
@@ -290,12 +344,20 @@ export function RepairBillingDialog({ open, onOpenChange }: Props) {
 
           <DialogFooter>
             <Button variant="outline" onClick={() => onOpenChange(false)}>{t("common.close")}</Button>
-            <Button variant="outline" onClick={preview} disabled={!summary || summary.totals.count === 0}>
+            {/* 미리보기는 합계 조회와 무관하게 열어 둔다 — PDF는 자기 엔드포인트에서
+                직접 굽고, 0건이면 빈 명세서가 그대로 보이는 편이 버튼이 죽어 있는
+                것보다 낫다. 발행은 반대로 청구할 건이 있을 때만 눌린다. */}
+            <Button variant="outline" onClick={preview}>
               {t("workorder.billing_preview", "Preview")}
             </Button>
             <Button
               onClick={() => issue.mutate()}
               disabled={issue.isPending || !summary || summary.totals.billable_count === 0}
+              title={
+                !summary || summary.totals.billable_count === 0
+                  ? t("workorder.billing_issue_disabled_hint", "No un-invoiced work orders in this period.")
+                  : undefined
+              }
             >
               {t("workorder.billing_issue_invoice", "Create invoice")}
               {summary && summary.totals.billable_count > 0 ? ` · ${money(summary.totals.billable_amount)}` : ""}

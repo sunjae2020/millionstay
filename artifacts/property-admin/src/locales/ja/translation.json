@@ -396,7 +396,8 @@
     "uploading": "アップロード中…",
     "export_csv": "CSVエクスポート",
     "export_csv_count": "{{count}}件をCSVにエクスポート",
-    "export_csv_empty": "エクスポートするデータがありません"
+    "export_csv_empty": "エクスポートするデータがありません",
+    "retry": "再試行"
   },
   "lang": {
     "label": "言語"
@@ -1772,6 +1773,14 @@
     "billing_billed_total": "請求費用",
     "billing_no_rows": "条件に合う作業指示がありません。",
     "billing_preview": "プレビュー",
+    "billing_preset_this_month": "今月",
+    "billing_preset_last_month": "先月",
+    "billing_preset_last_3m": "直近3か月",
+    "billing_preset_this_year": "今年",
+    "billing_preset_last_year": "昨年",
+    "billing_preset_all": "全期間",
+    "billing_load_failed": "明細を読み込めませんでした。",
+    "billing_issue_disabled_hint": "この期間に未請求の作業指示がありません。",
     "billing_bill_to_hint": "空欄の場合は住戸の所有者に請求します。",
     "billing_due_date": "支払期限",
     "billing_already_invoiced": "{{n}}件は請求済み",
