@@ -12,6 +12,7 @@ import {
   CreditCard, ChevronDown, X, Check, Mail, Camera, Loader2,
 } from "lucide-react";
 import { getApiBase } from "@/lib/api-base";
+import { DateInput } from "@/components/ui/date-input";
 
 const API_BASE = getApiBase();
 
@@ -470,8 +471,8 @@ export default function PortalProfile() {
             </div>
             <div>
               <label className={labelCls}>{t("portal.profile.date_of_birth", "Date of Birth")}</label>
-              <input type="date" value={profileForm.date_of_birth}
-                onChange={(e) => setProfileForm((f) => ({ ...f, date_of_birth: e.target.value }))}
+              <DateInput value={profileForm.date_of_birth}
+                onChange={(v) => setProfileForm((f) => ({ ...f, date_of_birth: v }))}
                 className={inputCls} />
             </div>
             <SelectField label={t("portal.profile.gender", "Gender")} value={profileForm.gender}

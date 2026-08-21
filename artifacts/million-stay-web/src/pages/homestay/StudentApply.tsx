@@ -8,6 +8,7 @@ import { HS, HS_FONT } from "@/lib/homestay-theme";
 import { HomestayTermsBody } from "@/lib/homestay-terms-content";
 import { ScrollToAgree } from "@/components/ScrollToAgree";
 import { submitStudentApplication, type StudentApplicationInput } from "@/lib/students-api";
+import { DateInput } from "@/components/ui/date-input";
 
 // 2.5 Apply Now — the online student application (Phase 3). Mirrors the official
 // "Homestay Application and Agreement" document so the intake captures the same
@@ -285,7 +286,7 @@ export default function StudentApply() {
               <Field label={t("homestay.student_apply.label_family_name")} required><input className={inputCls} style={ring} value={f.student_last_name} onChange={(e) => set("student_last_name", e.target.value)} /></Field>
               <Field label={t("homestay.student_apply.label_given_name")} required><input className={inputCls} style={ring} value={f.student_first_name} onChange={(e) => set("student_first_name", e.target.value)} /></Field>
               <Field label={t("homestay.student_apply.label_other_name")}><input className={inputCls} style={ring} value={f.other_name} onChange={(e) => set("other_name", e.target.value)} /></Field>
-              <Field label={t("homestay.student_apply.label_date_of_birth")} required><input type="date" className={inputCls} style={ring} value={f.date_of_birth} onChange={(e) => set("date_of_birth", e.target.value)} /></Field>
+              <Field label={t("homestay.student_apply.label_date_of_birth")} required><DateInput className={inputCls} value={f.date_of_birth} onChange={(v) => set("date_of_birth", v)} /></Field>
               <Field label={t("homestay.student_apply.label_gender")}>
                 <select className={inputCls + " bg-white"} style={ring} value={f.gender} onChange={(e) => set("gender", e.target.value)}>
                   <option value="">{t("homestay.student_apply.gender_prefer_not")}</option><option value="Female">{t("homestay.student_apply.gender_female")}</option><option value="Male">{t("homestay.student_apply.gender_male")}</option><option value="Other">{t("homestay.student_apply.gender_other")}</option>
@@ -352,7 +353,7 @@ export default function StudentApply() {
             <div className="grid gap-4 sm:grid-cols-2">
               <Field label={t("homestay.student_apply.label_school_name")}><input className={inputCls} style={ring} value={f.school} onChange={(e) => set("school", e.target.value)} /></Field>
               <Field label={t("homestay.student_apply.label_course_name")}><input className={inputCls} style={ring} value={f.course_name} onChange={(e) => set("course_name", e.target.value)} /></Field>
-              <Field label={t("homestay.student_apply.label_course_start_date")}><input type="date" className={inputCls} style={ring} value={f.course_start_date} onChange={(e) => set("course_start_date", e.target.value)} /></Field>
+              <Field label={t("homestay.student_apply.label_course_start_date")}><DateInput className={inputCls} value={f.course_start_date} onChange={(v) => set("course_start_date", v)} /></Field>
               <Field label={t("homestay.student_apply.label_campus_location")}><input className={inputCls} style={ring} value={f.campus_location} onChange={(e) => set("campus_location", e.target.value)} /></Field>
             </div>
           </div>
@@ -378,7 +379,7 @@ export default function StudentApply() {
                   {SPACE_SHARINGS.map((o) => <option key={o} value={o}>{t(`homestay.student_apply.${SPACE_SHARING_LABELS[o]}`)}</option>)}
                 </select>
               </Field>
-              <Field label={t("homestay.student_apply.label_homestay_start_date")}><input type="date" className={inputCls} style={ring} value={f.homestay_start_date} onChange={(e) => set("homestay_start_date", e.target.value)} /></Field>
+              <Field label={t("homestay.student_apply.label_homestay_start_date")}><DateInput className={inputCls} value={f.homestay_start_date} onChange={(v) => set("homestay_start_date", v)} /></Field>
               <Field label={t("homestay.student_apply.label_duration")} hint={t("homestay.student_apply.hint_duration")}><input type="number" min={4} className={inputCls} style={ring} value={f.duration_weeks} onChange={(e) => set("duration_weeks", e.target.value)} placeholder={t("homestay.student_apply.placeholder_duration")} /></Field>
               <Field label={t("homestay.student_apply.label_room_preference")}>
                 <select className={inputCls + " bg-white"} style={ring} value={f.room_type} onChange={(e) => set("room_type", e.target.value)}>
@@ -428,7 +429,7 @@ export default function StudentApply() {
             </Field>
             {airportRequired && (
               <div className="grid gap-4 sm:grid-cols-3 mt-4">
-                <Field label={t("homestay.student_apply.label_arrival_date")}><input type="date" className={inputCls} style={ring} value={f.arrival_date} onChange={(e) => set("arrival_date", e.target.value)} /></Field>
+                <Field label={t("homestay.student_apply.label_arrival_date")}><DateInput className={inputCls} value={f.arrival_date} onChange={(v) => set("arrival_date", v)} /></Field>
                 <Field label={t("homestay.student_apply.label_arrival_time")}><input type="time" className={inputCls} style={ring} value={f.arrival_time} onChange={(e) => set("arrival_time", e.target.value)} /></Field>
                 <Field label={t("homestay.student_apply.label_flight_no")}><input className={inputCls} style={ring} value={f.flight_no} onChange={(e) => set("flight_no", e.target.value)} /></Field>
               </div>

@@ -46,7 +46,7 @@ export function docLocale(lang: DocLang): string {
 // each build. Time (when shown) is always appended as 24-hour HH:mm.
 type DateFormatLabel = "DD/MM/YYYY" | "MM/DD/YYYY" | "YYYY-MM-DD" | "YYYY/MM/DD" | "D MMM YYYY";
 const KNOWN_DATE_FORMATS: string[] = ["DD/MM/YYYY", "MM/DD/YYYY", "YYYY-MM-DD", "YYYY/MM/DD", "D MMM YYYY"];
-let currentDateFormat: DateFormatLabel = "DD/MM/YYYY";
+let currentDateFormat: DateFormatLabel = "YYYY/MM/DD";
 
 /** Set the app-wide document date format (ignores unknown labels). */
 export function setDocDateFormat(label: string | null | undefined): void {

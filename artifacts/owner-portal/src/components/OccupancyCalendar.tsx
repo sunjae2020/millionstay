@@ -4,6 +4,7 @@ import { apiGet, apiPost, apiDelete, ApiError } from "@/lib/api";
 import { formatMoney } from "@/lib/money";
 import { ChevronLeft, ChevronRight, Ban, Sun, RotateCcw, CalendarOff, Search } from "lucide-react";
 import { matchesQuery } from "@/lib/search";
+import { DateInput } from "@/components/ui/date-input";
 
 /* ── types ── */
 interface SpaceLite { id: number; name: string; space_type: string | null; status: string }
@@ -213,16 +214,15 @@ export function OccupancyCalendar() {
         </select>
 
         <div className="flex items-center gap-2 ml-auto">
-          <input
-            type="date"
+          <DateInput
             value={jumpDate}
             title={t("calendar.jump_to")}
-            onChange={(e) => {
-              setJumpDate(e.target.value);
-              const d = new Date(e.target.value + "T00:00:00");
+            onChange={(v) => {
+              setJumpDate(v);
+              const d = new Date(v + "T00:00:00");
               if (!isNaN(d.getTime())) setCursor({ year: d.getFullYear(), month: d.getMonth() });
             }}
-            className="px-3 py-2 rounded-lg border border-input bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+            className="w-40"
           />
           <button onClick={() => setCursor((c) => { const m = c.month - 1; return m < 0 ? { year: c.year - 1, month: 11 } : { year: c.year, month: m }; })}
             className="p-2 rounded-lg border border-input hover:bg-muted/60" aria-label="prev">

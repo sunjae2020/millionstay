@@ -5,6 +5,7 @@ import { ChevronRight, Send, CalendarRange } from "lucide-react";
 import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
 import { submitShortTermApplication } from "@/lib/short-term-api";
+import { DateInput } from "@/components/ui/date-input";
 
 const inputCls =
   "w-full rounded-lg border border-gray-300 px-3.5 py-2.5 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition";
@@ -124,10 +125,10 @@ export default function ForShortTerm() {
             <h2 className="text-lg font-semibold text-gray-900 mb-4 pb-2 border-b">{t("short_term.section_stay")}</h2>
             <div className="grid gap-4 sm:grid-cols-2">
               <Field label={t("short_term.label_check_in")}>
-                <input type="date" className={inputCls} value={f.check_in} onChange={(e) => set("check_in", e.target.value)} />
+                <DateInput className={inputCls} value={f.check_in} onChange={(v) => set("check_in", v)} />
               </Field>
               <Field label={t("short_term.label_check_out")}>
-                <input type="date" className={inputCls} value={f.check_out} onChange={(e) => set("check_out", e.target.value)} />
+                <DateInput className={inputCls} value={f.check_out} onChange={(v) => set("check_out", v)} />
               </Field>
               <Field label={t("short_term.label_guests")}>
                 <input type="number" min={1} className={inputCls} value={f.guests} onChange={(e) => set("guests", e.target.value)} />

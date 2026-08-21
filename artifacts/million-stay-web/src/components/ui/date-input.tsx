@@ -3,6 +3,7 @@ import { CalendarDays } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Popover, PopoverContent, PopoverTrigger, PopoverAnchor } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
+import { formatDate, getDatePlaceholder } from "@/lib/dateFormat";
 
 interface DateInputProps {
   value: string;
@@ -16,29 +17,12 @@ interface DateInputProps {
   "data-testid"?: string;
 }
 
-function isoToDmy(iso: string): string {
-  if (!iso) return "";
-  const [y, m, d] = iso.split("-");
-  if (!y || !m || !d) return iso;
-  return `${d}/${m}/${y}`;
-}
-
-function dmyToIso(dmy: string): string {
-  const clean = dmy.replace(/\D/g, "");
-  if (clean.length < 8) return "";
-  const d = clean.slice(0, 2);
-  const m = clean.slice(2, 4);
-  const y = clean.slice(4, 8);
-  const date = new Date(`${y}-${m}-${d}`);
-  if (isNaN(date.getTime())) return "";
-  return `${y}-${m}-${d}`;
-}
-
-function autoSlash(raw: string): string {
-  const digits = raw.replace(/\D/g, "").slice(0, 8);
-  if (digits.length <= 2) return digits;
-  if (digits.length <= 4) return `${digits.slice(0, 2)}/${digits.slice(2)}`;
-  return `${digits.slice(0, 2)}/${digits.slice(2, 4)}/${digits.slice(4)}`;
+/**
+ * 입력칸에 보여줄 문자열. 표기는 테넌트 설정(VITE_DATE_FORMAT, 기본 YYYY/MM/DD)을
+ * 따른다 — 예전엔 DD/MM/YYYY 로 못 박혀 있어 어드민·문서와 다르게 보였다.
+ */
+function isoToDisplay(iso: string): string {
+  return iso ? formatDate(iso, iso) : "";
 }
 
 function isoToDate(iso: string): Date | undefined {
@@ -59,54 +43,37 @@ export function DateInput({
   onChange,
   min,
   max,
-  placeholder = "DD/MM/YYYY",
+  placeholder = getDatePlaceholder(),
   className,
   disabled,
   noIcon = false,
   "data-testid": testId,
 }: DateInputProps) {
-  const [display, setDisplay] = useState(isoToDmy(value));
-  const [error, setError] = useState(false);
+  const [display, setDisplay] = useState(isoToDisplay(value));
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
-    setDisplay(isoToDmy(value));
+    setDisplay(isoToDisplay(value));
   }, [value]);
-
-  const handleTextChange = (raw: string) => {
-    const formatted = autoSlash(raw);
-    setDisplay(formatted);
-    if (formatted.length === 10) {
-      const iso = dmyToIso(formatted);
-      if (iso) {
-        setError(false);
-        onChange(iso);
-      } else {
-        setError(true);
-      }
-    } else {
-      setError(false);
-      if (formatted.length === 0) onChange("");
-    }
-  };
-
-  const handleBlur = () => {
-    if (display.length > 0 && display.length < 10) setError(true);
-    if (display.length === 0) setError(false);
-  };
 
   const handleCalendarSelect = (date: Date | undefined) => {
     if (!date) return;
     const iso = dateToIso(date);
     onChange(iso);
-    setDisplay(isoToDmy(iso));
-    setError(false);
+    setDisplay(isoToDisplay(iso));
     setOpen(false);
   };
 
   const minDate = isoToDate(min ?? "");
   const maxDate = isoToDate(max ?? "");
   const selectedDate = isoToDate(value);
+
+  // react-day-picker v9 는 startMonth/endMonth 가 없으면 연도 드롭다운을 올해로만
+  // 좁힌다. 생년월일처럼 과거로 한참 가야 하는 칸이 막히지 않도록 min/max 에서
+  // 범위를 잡고, 없으면 넉넉한 창을 준다.
+  const anchor = selectedDate ?? new Date();
+  const navStart = minDate ?? new Date(anchor.getFullYear() - 100, 0, 1);
+  const navEnd = maxDate ?? new Date(anchor.getFullYear() + 10, 11, 31);
 
   const isDisabledDay = (date: Date) => {
     if (minDate) {
@@ -126,8 +93,6 @@ export function DateInput({
     <input
       type="text"
       value={display}
-      onChange={(e) => handleTextChange(e.target.value)}
-      onBlur={handleBlur}
       onClick={() => !disabled && setOpen(true)}
       placeholder={placeholder}
       disabled={disabled}
@@ -135,11 +100,8 @@ export function DateInput({
       className={cn(
         "w-full focus:outline-none focus:ring-2 focus:ring-primary cursor-pointer",
         !noIcon && "pr-9",
-        error && "ring-2 ring-red-400",
         className,
       )}
-      maxLength={10}
-      inputMode="numeric"
       autoComplete="off"
       readOnly
     />
@@ -157,6 +119,8 @@ export function DateInput({
         onSelect={handleCalendarSelect}
         disabled={isDisabledDay}
         defaultMonth={selectedDate ?? minDate}
+        startMonth={navStart}
+        endMonth={navEnd}
         captionLayout="dropdown"
       />
     </PopoverContent>

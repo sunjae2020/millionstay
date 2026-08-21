@@ -24,7 +24,7 @@ const PATTERN_MAP: Record<string, string> = {
   "D MMM YYYY": "d MMM yyyy",
 };
 
-const DEFAULT_PATTERN = "dd/MM/yyyy"; // DD/MM/YYYY — the app default
+const DEFAULT_PATTERN = "yyyy/MM/dd"; // YYYY/MM/DD — the app-wide default
 
 export function getDatePattern(): string {
   const setting = loadTheme().date_format;
@@ -34,7 +34,7 @@ export function getDatePattern(): string {
 /** Human-facing label for the configured pattern (e.g. "DD/MM/YYYY") — used as input placeholders. */
 export function getDatePlaceholder(): string {
   const setting = loadTheme().date_format;
-  return (setting && PATTERN_MAP[setting] ? setting : "DD/MM/YYYY");
+  return (setting && PATTERN_MAP[setting] ? setting : "YYYY/MM/DD");
 }
 
 type DateInput = string | number | Date | null | undefined;

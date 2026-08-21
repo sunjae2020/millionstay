@@ -21,6 +21,7 @@ import { formatDate } from "@/lib/date";
 import { useDocumentRowActions } from "@/components/DocumentRowActions";
 import { apiJson } from "@/lib/apiFetch";
 import { LeaseAmountCell, monthlyEquivalent } from "@/components/LeaseAmountCell";
+import { DateRangeFilter } from "@/components/list-filters";
 
 /** 계약 구분 / 서식 코드 → i18n 키. 이관 데이터는 자유 문자열이라 매핑이 없으면 값 그대로 보여준다. */
 const CATEGORY_LABELS: Record<string, string> = {
@@ -267,25 +268,14 @@ export default function ContractList() {
                   </SelectContent>
                 </Select>
               )}
-              <div className="flex items-center gap-1">
-                <Input
-                  type="date"
-                  className="w-36"
-                  aria-label={t("contract.filter_date_from")}
-                  title={t("contract.filter_date_from")}
-                  value={dateFrom}
-                  onChange={e => setDateFrom(e.target.value)}
-                />
-                <span className="text-muted-foreground text-sm">~</span>
-                <Input
-                  type="date"
-                  className="w-36"
-                  aria-label={t("contract.filter_date_to")}
-                  title={t("contract.filter_date_to")}
-                  value={dateTo}
-                  onChange={e => setDateTo(e.target.value)}
-                />
-              </div>
+              <DateRangeFilter
+                from={dateFrom}
+                to={dateTo}
+                onFrom={setDateFrom}
+                onTo={setDateTo}
+                fromLabel={t("contract.filter_date_from")}
+                toLabel={t("contract.filter_date_to")}
+              />
               {hasFilters && (
                 <Button variant="ghost" size="sm" onClick={resetFilters}>
                   <X className="h-4 w-4 mr-1" />{t("contract.filter_reset")}

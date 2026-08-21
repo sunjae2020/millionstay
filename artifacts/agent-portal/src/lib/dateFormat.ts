@@ -18,7 +18,7 @@ const KNOWN = ["DD/MM/YYYY", "MM/DD/YYYY", "YYYY-MM-DD", "YYYY/MM/DD", "D MMM YY
 
 function resolvePattern(): string {
   const v = (import.meta.env.VITE_DATE_FORMAT as string | undefined)?.trim();
-  return v && KNOWN.includes(v) ? v : "DD/MM/YYYY";
+  return v && KNOWN.includes(v) ? v : "YYYY/MM/DD";
 }
 
 const PATTERN = resolvePattern();
@@ -31,6 +31,11 @@ function toDate(value: DateInput): Date | null {
 
 function pad2(n: number): string {
   return String(n).padStart(2, "0");
+}
+
+/** 표시 형식 라벨(예: "YYYY/MM/DD") — 날짜 입력칸의 placeholder 로 쓴다. */
+export function getDatePlaceholder(): string {
+  return PATTERN;
 }
 
 /** Format a date value using the configured tenant date format. */
