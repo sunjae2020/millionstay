@@ -28,6 +28,7 @@ import { getRateToAud } from "../lib/rateSnapshot";
 import multer from "multer";
 import { isCloudinaryConfigured, uploadToCloudinary, deleteFromCloudinary, cldFolder } from "../utils/cloudinary";
 import { formatPersonName } from "../lib/nameFormat";
+import { insertInvoiceWithRef } from "../lib/billing/invoiceRef";
 
 const avatarUpload = multer({
   storage: multer.memoryStorage(),
@@ -845,27 +846,20 @@ router.post("/v1/guest/payment/confirm", async (req, res): Promise<void> => {
     // Only create an invoice if none exists for this booking
     let invoice;
     if (existingInvRows.length === 0) {
-      const allInvRows = await db.select({ id: invoicesTable.id }).from(invoicesTable);
-      const invCount = allInvRows.length + 1;
-      const invoice_ref = `MS-INV-${year}-${String(invCount).padStart(5, "0")}`;
       const invoiceAmount = amount ?? (booking.total_rent ? Number(booking.total_rent) : 0);
 
-      const [newInvoice] = await db
-        .insert(invoicesTable)
-        .values({
-          invoice_ref,
-          booking_id: booking.id,
-          account_id: booking.account_id ?? undefined,
-          amount: String(invoiceAmount),
-          currency: DEFAULT_CURRENCY,
-          // TODO(metheim): rate hardcoded to 1 — wrong for non-AUD tenants; should use getRateToAud(DEFAULT_CURRENCY)
-          exchange_rate_to_aud: "1",
-          status: payment_method === "bank_transfer" ? "Sent" : "Paid",
-          paid_at: payment_method === "bank_transfer" ? null : new Date(),
-          payment_method,
-          description: `Booking payment — ${booking.booking_ref}`,
-        })
-        .returning();
+      const newInvoice = await insertInvoiceWithRef({
+        booking_id: booking.id,
+        account_id: booking.account_id ?? undefined,
+        amount: String(invoiceAmount),
+        currency: DEFAULT_CURRENCY,
+        // TODO(metheim): rate hardcoded to 1 — wrong for non-AUD tenants; should use getRateToAud(DEFAULT_CURRENCY)
+        exchange_rate_to_aud: "1",
+        status: payment_method === "bank_transfer" ? "Sent" : "Paid",
+        paid_at: payment_method === "bank_transfer" ? null : new Date(),
+        payment_method,
+        description: `Booking payment — ${booking.booking_ref}`,
+      });
       invoice = newInvoice;
     } else {
       // Update existing invoice to paid if card payment

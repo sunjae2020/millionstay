@@ -17,6 +17,7 @@ import {
   integrationSettings,
 } from "@workspace/db";
 import { getRateToAud } from "../rateSnapshot.js";
+import { insertInvoiceWithRef } from "./invoiceRef";
 
 /** Settings key (also an integrations ALLOWED_KEY) toggling the recurring cron. */
 export const RECURRING_INVOICES_ENABLED_KEY = "RECURRING_INVOICES_ENABLED";
@@ -71,20 +72,6 @@ function periodLabel(frequency: string, ymd: string): string {
   const [y, m, d] = ymd.split("-").map(Number);
   if (frequency === "Monthly") return `${MONTHS[m - 1]} ${y}`;
   return `${String(d).padStart(2, "0")} ${MONTHS[m - 1]} ${y}`;
-}
-
-/** Next invoice ref for the current year (max existing + 1). */
-async function nextInvoiceRef(): Promise<string> {
-  const year = new Date().getFullYear();
-  const [last] = await db.select({ ref: invoicesTable.invoice_ref }).from(invoicesTable)
-    .where(like(invoicesTable.invoice_ref, `MS-INV-${year}-%`))
-    .orderBy(desc(invoicesTable.id)).limit(1);
-  let counter = 0;
-  if (last?.ref) {
-    const n = parseInt(last.ref.split("-").pop() ?? "0", 10);
-    counter = Number.isNaN(n) ? 0 : n;
-  }
-  return `MS-INV-${year}-${String(counter + 1).padStart(5, "0")}`;
 }
 
 export interface RecurringBillingResult { enabled: boolean; scanned: number; created: number; skipped: number; ended: number; errors: number }
@@ -155,9 +142,7 @@ export async function generateRecurringInvoices(): Promise<RecurringBillingResul
       const [dup] = await db.select({ id: invoicesTable.id }).from(invoicesTable).where(and(...dupConds)).limit(1);
 
       if (!dup) {
-        const invoice_ref = await nextInvoiceRef();
-        await db.insert(invoicesTable).values({
-          invoice_ref,
+        await insertInvoiceWithRef({
           booking_id: s.booking_id || null,
           contract_id: s.contract_id ?? null,
           account_id: s.account_id || null,
