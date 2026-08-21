@@ -58,6 +58,10 @@ export const logger = pino({
       "*.visa_type",
       "*.visa_expiry",
       "*.nationality",
+      // 관리자 프로필(설정 → 사용자)의 개인 연락 정보
+      "*.emergency_contact_name",
+      "*.emergency_contact_relation",
+      "*.emergency_contact_phone",
     ],
     censor: "[REDACTED]",
   },
