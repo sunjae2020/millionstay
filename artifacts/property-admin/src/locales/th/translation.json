@@ -4407,7 +4407,17 @@
     "restore": "กู้คืน",
     "restore_selected": "กู้คืนรายการที่เลือก",
     "toast_users_restored": "กู้คืนผู้ใช้ {{count}} รายแล้ว",
-    "toast_restore_failed": "กู้คืนไม่สำเร็จ"
+    "toast_restore_failed": "กู้คืนไม่สำเร็จ",
+    "edit_user_title": "แก้ไขผู้ใช้",
+    "edit_user_desc": "แก้ไขโปรไฟล์ บทบาท และสิทธิ์เข้าถึงของบัญชีนี้",
+    "edit_user_desc_admin": "แก้ไขได้เฉพาะชื่อ ส่วนบทบาท อีเมล และการเปิดใช้งานสงวนไว้สำหรับ SuperAdmin",
+    "field_is_active": "เปิดใช้งานบัญชี",
+    "field_is_active_hint": "หากปิด จะเข้าสู่ระบบไม่ได้และเซสชันปัจจุบันจะถูกยกเลิก",
+    "field_reset_password": "ตั้งรหัสผ่านใหม่ (ไม่บังคับ)",
+    "field_reset_password_ph": "เว้นว่างเพื่อคงรหัสผ่านเดิม",
+    "field_reset_password_hint": "ผู้ใช้ต้องเปลี่ยนรหัสผ่านในการเข้าสู่ระบบครั้งถัดไป",
+    "self_edit_hint": "คุณไม่สามารถเปลี่ยนบทบาทของตนเองหรือปิดใช้งานบัญชีตนเองได้",
+    "superadmin_only": "เฉพาะ SuperAdmin"
   },
   "coming_soon": {
     "heading": "เร็วๆ นี้",

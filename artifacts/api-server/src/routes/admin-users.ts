@@ -156,19 +156,25 @@ router.patch("/v1/admin/users/:id", async (req, res): Promise<void> => {
 
     const isSuperAdmin = currentUser?.role === SUPER_ADMIN;
 
-    const { status, role, is_active, password } = req.body as {
+    const { status, role, is_active, password, first_name, last_name, email } = req.body as {
       status?: string;
       role?: string;
       is_active?: boolean;
       password?: string;
+      first_name?: string;
+      last_name?: string;
+      email?: string;
     };
 
-    // Determine which fields require SuperAdmin
+    // Determine which fields require SuperAdmin. Names are ordinary profile
+    // data (any write-capable admin may fix a typo); email is a login identity,
+    // so it stays SuperAdmin-only alongside role/status/activation/password.
     const wantsPrivileged =
       role !== undefined ||
       is_active !== undefined ||
       status !== undefined ||
-      password !== undefined;
+      password !== undefined ||
+      email !== undefined;
 
     if (wantsPrivileged && !isSuperAdmin) {
       res.status(403).json({
@@ -200,6 +206,25 @@ router.patch("/v1/admin/users/:id", async (req, res): Promise<void> => {
       if (status === "active") updates.is_active = true;
       if (status === "rejected") updates.is_active = false;
     }
+    if (first_name !== undefined) updates.first_name = String(first_name).trim();
+    if (last_name !== undefined) updates.last_name = String(last_name).trim();
+    if (email !== undefined) {
+      const normalized = String(email).trim().toLowerCase();
+      if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(normalized)) {
+        res.status(400).json({ success: false, error: "Invalid email address" });
+        return;
+      }
+      const [clash] = await db
+        .select({ id: usersTable.id })
+        .from(usersTable)
+        .where(eq(usersTable.email, normalized))
+        .limit(1);
+      if (clash && clash.id !== id) {
+        res.status(409).json({ success: false, error: "That email is already in use" });
+        return;
+      }
+      updates.email = normalized;
+    }
     if (role !== undefined) updates.role = role;
     if (is_active !== undefined) updates.is_active = is_active;
     if (password) {
@@ -230,13 +255,14 @@ router.patch("/v1/admin/users/:id", async (req, res): Promise<void> => {
         newValue: {
           fields: Object.keys(updates),
           role_changed: role !== undefined,
+          email_changed: email !== undefined,
           password_reset: !!password,
           status_changed: status !== undefined || is_active !== undefined,
         },
       });
     } catch {}
 
-    if (password || is_active === false || status === "rejected") {
+    if (password || email !== undefined || is_active === false || status === "rejected") {
       try { await revokeAllForUser(id, "admin"); } catch {}
       invalidateUserCache(id);
     }
