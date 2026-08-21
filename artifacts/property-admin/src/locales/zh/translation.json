@@ -4382,7 +4382,19 @@
     "toast_user_created": "用户已创建",
     "toast_user_created_desc": "账户已创建并已激活。",
     "toast_create_failed": "创建用户失败",
-    "page_subtitle": "管理管理员用户和访问权限"
+    "page_subtitle": "管理管理员用户和访问权限",
+    "status_inactive": "未启用",
+    "status_archived": "已归档",
+    "search_placeholder": "按姓名或邮箱搜索",
+    "filter_status": "按状态筛选",
+    "filter_all": "全部状态",
+    "showing_count": "共 {{total}} 位用户，显示 {{count}} 位",
+    "no_matching_users": "没有符合搜索或筛选条件的用户。",
+    "archived_accounts_title": "已归档账户",
+    "restore": "恢复",
+    "restore_selected": "恢复所选",
+    "toast_users_restored": "已恢复 {{count}} 位用户",
+    "toast_restore_failed": "恢复失败"
   },
   "coming_soon": {
     "heading": "敬请期待",

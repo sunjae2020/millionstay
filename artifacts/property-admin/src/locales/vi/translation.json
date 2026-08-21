@@ -4343,7 +4343,20 @@
     "toast_user_created": "Đã tạo người dùng",
     "toast_user_created_desc": "Tài khoản đã được tạo và đang hoạt động.",
     "toast_create_failed": "Tạo người dùng thất bại",
-    "page_subtitle": "Quản lý người dùng quản trị và quyền truy cập"
+    "page_subtitle": "Quản lý người dùng quản trị và quyền truy cập",
+    "status_inactive": "Ngừng hoạt động",
+    "status_archived": "Đã lưu trữ",
+    "search_placeholder": "Tìm theo tên hoặc email",
+    "filter_status": "Lọc theo trạng thái",
+    "filter_all": "Tất cả trạng thái",
+    "showing_count": "Hiển thị {{count}} trong {{total}} người dùng",
+    "no_matching_users": "Không có người dùng nào khớp với tìm kiếm hoặc bộ lọc.",
+    "archived_accounts_title": "Tài khoản đã lưu trữ",
+    "restore": "Khôi phục",
+    "restore_selected": "Khôi phục mục đã chọn",
+    "toast_users_restored": "Đã khôi phục {{count}} người dùng",
+    "toast_restore_failed": "Khôi phục thất bại",
+    "field_email": "Email"
   },
   "coming_soon": {
     "heading": "Sắp ra mắt",

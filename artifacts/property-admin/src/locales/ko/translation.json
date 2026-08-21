@@ -4422,7 +4422,19 @@
     "toast_user_created": "사용자가 생성되었습니다",
     "toast_user_created_desc": "계정이 생성되어 활성화되었습니다.",
     "toast_create_failed": "사용자 생성에 실패했습니다",
-    "page_subtitle": "관리자 사용자 및 접근 권한 관리"
+    "page_subtitle": "관리자 사용자 및 접근 권한 관리",
+    "status_inactive": "비활성",
+    "status_archived": "보관됨",
+    "search_placeholder": "이름 또는 이메일로 검색",
+    "filter_status": "상태로 필터",
+    "filter_all": "전체 상태",
+    "showing_count": "전체 {{total}}명 중 {{count}}명 표시",
+    "no_matching_users": "검색·필터 조건에 맞는 사용자가 없습니다.",
+    "archived_accounts_title": "보관된 계정",
+    "restore": "복원",
+    "restore_selected": "선택 항목 복원",
+    "toast_users_restored": "{{count}}명 복원됨",
+    "toast_restore_failed": "복원 실패"
   },
   "coming_soon": {
     "heading": "준비 중입니다",

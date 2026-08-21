@@ -16,7 +16,7 @@ export default function UsersPage() {
         }
         subtitle={t("settings_users.page_subtitle")}
       />
-      <div className="max-w-2xl px-8 py-6">
+      <div className="max-w-4xl px-8 py-6">
         <UserManagement />
       </div>
     </Layout>

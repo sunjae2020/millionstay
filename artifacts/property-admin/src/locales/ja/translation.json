@@ -4379,7 +4379,19 @@
     "toast_user_created": "ユーザーを作成しました",
     "toast_user_created_desc": "アカウントが作成され、有効になりました。",
     "toast_create_failed": "ユーザーの作成に失敗しました",
-    "page_subtitle": "管理者ユーザーとアクセス権限を管理"
+    "page_subtitle": "管理者ユーザーとアクセス権限を管理",
+    "status_inactive": "無効",
+    "status_archived": "アーカイブ済み",
+    "search_placeholder": "名前またはメールで検索",
+    "filter_status": "ステータスで絞り込み",
+    "filter_all": "すべてのステータス",
+    "showing_count": "{{total}}人中{{count}}人を表示",
+    "no_matching_users": "検索・絞り込み条件に一致するユーザーがいません。",
+    "archived_accounts_title": "アーカイブ済みアカウント",
+    "restore": "復元",
+    "restore_selected": "選択項目を復元",
+    "toast_users_restored": "{{count}}人を復元しました",
+    "toast_restore_failed": "復元に失敗しました"
   },
   "coming_soon": {
     "heading": "近日公開予定",
