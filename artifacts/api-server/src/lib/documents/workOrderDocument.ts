@@ -14,9 +14,8 @@
  *    같은 PDF 뒤에 증빙으로 붙는다.
  *
  * 청구비용은 작업비용에서 원천징수를 뺀 값이다 (₩100,000 → ₩96,700 = 3.3%).
- * 지금은 호출자가 준 원천징수율로 계산하지만, 작업지시에 실지급액(net_cost)·
- * 원천징수액 컬럼이 붙으면 그 값이 비율보다 먼저다 — `billedAmountOf()`가 이미
- * 그 순서로 되어 있어 컬럼이 생기면 값만 넘기면 된다.
+ * 작업지시의 실지급액(net_cost)·원천징수액이 채워져 있으면 그 값이 먼저고,
+ * 비어 있는 건에만 호출자가 준 원천징수율로 계산한다 — `billedAmountOf()`의 순서.
  */
 import { renderDocumentShell, escapeHtml, formatDocMoney, getCompanyInfo, type CompanyInfo } from "./theme";
 import { formatDocDate, t, statusLabel, type DocLang } from "./i18n";

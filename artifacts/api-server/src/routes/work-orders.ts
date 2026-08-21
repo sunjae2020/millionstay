@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { DEFAULT_CURRENCY } from "../lib/currency";
 import multer from "multer";
-import { db, workOrdersTable, workOrderPhotosTable, contractSigningRequestsTable, propertiesTable, spacesTable, contactsTable, serviceHostsTable, invoicesTable, invoiceLineItemsTable, accountsTable, usersTable } from "@workspace/db";
+import { db, workOrdersTable, workOrderPhotosTable, contractSigningRequestsTable, propertiesTable, spacesTable, contactsTable, serviceHostsTable, invoicesTable, invoiceLineItemsTable, accountsTable, contractsTable, usersTable } from "@workspace/db";
 import { formatPersonName } from "../lib/nameFormat";
 import { sendAppointmentConfirmationEmail } from "../lib/email";
 import { eq, ilike, and, isNull, inArray, desc, sql } from "drizzle-orm";
@@ -73,15 +73,17 @@ async function enrichWorkOrders(rows: (typeof workOrdersTable.$inferSelect)[]) {
   const contactIds = [...new Set(rows.flatMap(r => [r.assigned_contact_id, r.attendee_contact_id]).filter(Boolean))] as number[];
   const userIds = [...new Set(rows.map(r => r.assigned_user_id).filter(Boolean))] as number[];
   const hostIds = [...new Set(rows.map(r => r.service_host_id).filter(Boolean))] as number[];
+  const contractIds = [...new Set(rows.map(r => r.contract_id).filter(Boolean))] as number[];
 
   const propertyMap: Record<number, string> = {};
   const spaceMap: Record<number, string> = {};
   const contactMap: Record<number, string> = {};
   const hostMap: Record<number, string> = {};
   const userMap: Record<number, string> = {};
+  const contractMap: Record<number, string> = {};
 
   // Batched lookups — see enrichContracts in contracts.ts.
-  const [propertyRows, spaceRows, contactRows, hostRows, userRows] = await Promise.all([
+  const [propertyRows, spaceRows, contactRows, hostRows, userRows, contractRows] = await Promise.all([
     propertyIds.length
       ? db.select({ id: propertiesTable.id, name: propertiesTable.name }).from(propertiesTable).where(inArray(propertiesTable.id, propertyIds))
       : Promise.resolve([]),
@@ -96,6 +98,9 @@ async function enrichWorkOrders(rows: (typeof workOrdersTable.$inferSelect)[]) {
       : Promise.resolve([]),
     userIds.length
       ? db.select({ id: usersTable.id, first_name: usersTable.first_name, last_name: usersTable.last_name, email: usersTable.email }).from(usersTable).where(inArray(usersTable.id, userIds))
+      : Promise.resolve([]),
+    contractIds.length
+      ? db.select({ id: contractsTable.id, ref: contractsTable.contract_ref }).from(contractsTable).where(inArray(contractsTable.id, contractIds))
       : Promise.resolve([]),
   ]);
   for (const p of propertyRows) propertyMap[p.id] = p.name;
@@ -114,6 +119,7 @@ async function enrichWorkOrders(rows: (typeof workOrdersTable.$inferSelect)[]) {
   for (const c of contactRows) contactMap[c.id] = formatPersonName(c.first_name, c.last_name);
   for (const h of hostRows) hostMap[h.id] = h.name;
   for (const u of userRows) userMap[u.id] = formatPersonName(u.first_name, u.last_name) || u.email;
+  for (const c of contractRows) contractMap[c.id] = c.ref;
 
   return rows.map(r => ({
     ...r,
@@ -128,8 +134,16 @@ async function enrichWorkOrders(rows: (typeof workOrdersTable.$inferSelect)[]) {
     service_host_name: r.service_host_id ? (hostMap[r.service_host_id] ?? null) : null,
     attendee_contact_name: r.attendee_contact_id ? (contactMap[r.attendee_contact_id] ?? null) : null,
     assigned_user_name: r.assigned_user_id ? (userMap[r.assigned_user_id] ?? null) : null,
+    contract_ref: r.contract_id ? (contractMap[r.contract_id] ?? null) : null,
   }));
 }
+
+// 청소/하자 원장 fields — the generated zod bodies strip unknown keys, so these
+// ride straight off req.body (same pattern as the Korean payment fields on
+// contracts, and as the 방문 약속 fields below).
+type LedgerFields = Partial<Pick<typeof workOrdersTable.$inferInsert,
+  "contract_id" | "net_cost" | "withholding_amount" | "billed_on" | "settled_on"
+  | "settlement_method" | "charged_to">>;
 
 // 방문 약속 fields — the generated zod bodies strip unknown keys, so these ride
 // straight off req.body (same pattern as the Korean payment fields on contracts).
@@ -165,9 +179,32 @@ function appointmentFieldsFrom(body: any, { partial }: { partial: boolean }): Ap
   return out;
 }
 
+function ledgerFieldsFrom(body: any, { partial }: { partial: boolean }): LedgerFields {
+  const num = (v: any) => {
+    if (v === null || v === undefined || v === "") return null;
+    const n = Number(v);
+    return Number.isFinite(n) ? n : null;
+  };
+  const str = (v: any) => (v === null || v === undefined || v === "" ? null : String(v));
+  const out: LedgerFields = {};
+  const take = (key: keyof LedgerFields, value: any) => {
+    if (partial && body?.[key] === undefined) return;
+    (out as any)[key] = value;
+  };
+  take("contract_id", num(body?.contract_id));
+  take("net_cost", num(body?.net_cost));
+  take("withholding_amount", num(body?.withholding_amount));
+  take("billed_on", str(body?.billed_on));
+  take("settled_on", str(body?.settled_on));
+  take("settlement_method", str(body?.settlement_method));
+  // charged_to is NOT NULL — an explicit empty falls back to the tenant default.
+  take("charged_to", str(body?.charged_to) ?? "tenant");
+  return out;
+}
+
 router.get("/v1/work-orders", async (req, res): Promise<void> => {
   const {
-    q, status, priority, property_id, space_id, category,
+    q, status, priority, property_id, space_id, contract_id, category,
     date_from, date_to, year,
   } = req.query as Record<string, string>;
   const conditions: any[] = [deletedFilter(workOrdersTable.deleted_at, req)];
@@ -192,6 +229,7 @@ router.get("/v1/work-orders", async (req, res): Promise<void> => {
     conditions.push(sql`lower(trim(${workOrdersTable.category})) in (${sql.join(aliases.map(a => sql`${a}`), sql`, `)})`);
   }
   if (space_id) conditions.push(eq(workOrdersTable.space_id, Number(space_id)));
+  if (contract_id) conditions.push(eq(workOrdersTable.contract_id, Number(contract_id)));
   if (property_id) conditions.push(eq(workOrdersTable.property_id, Number(property_id)));
   // 기간은 예정일 기준(미정 건은 접수일로 대체하지 않는다 — 일정 조회가 목적).
   conditions.push(...dateRangeConditions(workOrdersTable.scheduled_at, date_from, date_to));
@@ -233,6 +271,7 @@ router.post("/v1/work-orders", async (req, res): Promise<void> => {
     cost: parsed.data.cost ?? null,
     notes: parsed.data.notes ?? null,
     ...appointmentFieldsFrom(req.body, { partial: false }),
+    ...ledgerFieldsFrom(req.body, { partial: false }),
   }).returning();
 
   // Auto-dispatch to a matching partner when a category is set (unless the caller
@@ -440,7 +479,11 @@ async function loadBillingRows(f: BillingFilters): Promise<{ rows: RepairBilling
       category: canonicalWorkOrderCategory(w.category),
       detail,
       cost: Number(w.cost ?? 0),
-      billed: billedAmountOf({ cost: Number(w.cost ?? 0) }, f.withholdingPct),
+      // 원장에 확정된 청구비용이 먼저다. 없는 건에만 원천징수율로 계산한다.
+      billed: billedAmountOf(
+        { cost: Number(w.cost ?? 0), net_cost: w.net_cost, withholding_amount: w.withholding_amount },
+        f.withholdingPct,
+      ),
       photos: f.photosPerUnit > 0 ? pics.slice(0, f.photosPerUnit) : [],
     };
   });
@@ -669,7 +712,7 @@ export async function buildWorkOrderDocInput(
   const photos = (await loadPhotos([id])).get(id) ?? [];
   const pct = Number.isFinite(opts.withholdingPct) && (opts.withholdingPct ?? 0) > 0 ? Number(opts.withholdingPct) : 0;
   const cost = Number(wo.cost ?? 0);
-  const billed = billedAmountOf({ cost }, pct);
+  const billed = billedAmountOf({ cost, net_cost: wo.net_cost, withholding_amount: wo.withholding_amount }, pct);
 
   return {
     order_ref: wo.order_ref,
@@ -915,6 +958,7 @@ router.put("/v1/work-orders/:id", async (req, res): Promise<void> => {
   if (parsed.data.cost !== undefined) updates.cost = parsed.data.cost;
   if (parsed.data.notes !== undefined) updates.notes = parsed.data.notes;
   Object.assign(updates, appointmentFieldsFrom(req.body, { partial: true }));
+  Object.assign(updates, ledgerFieldsFrom(req.body, { partial: true }));
   const [row] = await db.update(workOrdersTable).set(updates).where(eq(workOrdersTable.id, Number(req.params.id))).returning();
   if (!row) { res.status(404).json({ error: "Not found" }); return; }
   const [result] = await enrichWorkOrders([row]);
@@ -1000,6 +1044,9 @@ router.post("/v1/work-orders/:id/complete", async (req, res): Promise<void> => {
   }
   if (parsed.data.cost != null) updates.cost = parsed.data.cost;
   if (parsed.data.notes != null) updates.notes = parsed.data.notes;
+  // 검토 단계에서 확정한 청구비용 — 완료 처리와 같은 요청으로 원장에 박는다.
+  // 완료 뒤에 따로 저장하지 않아도 청구 명세서가 맞는 금액을 집도록.
+  Object.assign(updates, ledgerFieldsFrom(req.body ?? {}, { partial: true }));
   const [row] = await db.update(workOrdersTable).set(updates)
     .where(eq(workOrdersTable.id, id))
     .returning();

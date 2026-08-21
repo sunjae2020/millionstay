@@ -79,6 +79,14 @@ interface FormData {
   attendee_contact_id: number | null;
   location_note: string;
   access_method: string;
+  // 청소/하자 원장 — tenancy reference + Korean withholding & recharge fields
+  contract_id: number | null;
+  settlement_method: string;
+  charged_to: string;
+  net_cost: string;
+  withholding_amount: string;
+  billed_on: string;
+  settled_on: string;
 }
 
 export default function WorkOrderDetail() {
@@ -112,6 +120,8 @@ export default function WorkOrderDetail() {
       reported_at: "", scheduled_at: "", cost: "", notes: "",
       inspection_type: "", scheduled_start_at: "", scheduled_end_at: "",
       assigned_user_id: null, attendee_contact_id: null, location_note: "", access_method: "",
+      contract_id: null, settlement_method: "", charged_to: "tenant",
+      net_cost: "", withholding_amount: "", billed_on: "", settled_on: "",
     },
   });
 
@@ -142,6 +152,13 @@ export default function WorkOrderDetail() {
         attendee_contact_id: (wo as any).attendee_contact_id ?? null,
         location_note: (wo as any).location_note ?? "",
         access_method: (wo as any).access_method ?? "",
+        contract_id: (wo as any).contract_id ?? null,
+        settlement_method: (wo as any).settlement_method ?? "",
+        charged_to: (wo as any).charged_to ?? "tenant",
+        net_cost: (wo as any).net_cost != null ? String((wo as any).net_cost) : "",
+        withholding_amount: (wo as any).withholding_amount != null ? String((wo as any).withholding_amount) : "",
+        billed_on: (wo as any).billed_on ?? "",
+        settled_on: (wo as any).settled_on ?? "",
       });
     }
   }, [wo, reset]);
@@ -193,6 +210,13 @@ export default function WorkOrderDetail() {
     attendee_contact_id: data.attendee_contact_id ?? null,
     location_note: data.location_note || null,
     access_method: data.access_method || null,
+    contract_id: data.contract_id ?? null,
+    settlement_method: data.settlement_method || null,
+    charged_to: data.charged_to || "tenant",
+    net_cost: data.net_cost ? Number(data.net_cost) : null,
+    withholding_amount: data.withholding_amount ? Number(data.withholding_amount) : null,
+    billed_on: data.billed_on || null,
+    settled_on: data.settled_on || null,
   });
 
   const onSubmit = (data: FormData) => {
@@ -238,6 +262,57 @@ export default function WorkOrderDetail() {
     } finally {
       setDispatching(false);
     }
+  };
+
+  // 검토 단계 — 완료 처리 전에 청구비용을 확정하는 팝업. 청구 명세서가 집는 값이
+  // 원장의 net_cost라, 완료한 뒤에 고치면 이미 발행된 청구서와 어긋난다.
+  const [reviewOpen, setReviewOpen] = useState(false);
+  const [reviewCost, setReviewCost] = useState("");
+  const [reviewNetCost, setReviewNetCost] = useState("");
+  const [reviewWithholding, setReviewWithholding] = useState("");
+  const [reviewChargedTo, setReviewChargedTo] = useState("tenant");
+
+  const openReviewCosts = () => {
+    const w = wo as any;
+    setReviewCost(w?.cost != null ? String(w.cost) : "");
+    setReviewNetCost(w?.net_cost != null ? String(w.net_cost) : "");
+    setReviewWithholding(w?.withholding_amount != null ? String(w.withholding_amount) : "");
+    setReviewChargedTo(w?.charged_to || "tenant");
+    setReviewOpen(true);
+  };
+
+  /** 작업비용에서 원천징수 3.3%를 떼어 청구비용을 채운다 (₩100,000 → ₩96,700). */
+  const applyWithholding = () => {
+    const base = Number(reviewCost);
+    if (!Number.isFinite(base) || base <= 0) return;
+    const tax = Math.round(base * 0.033);
+    setReviewWithholding(String(tax));
+    setReviewNetCost(String(base - tax));
+  };
+
+  const confirmReviewCosts = () => {
+    const numOrNull = (v: string) => (v.trim() === "" ? null : Number(v));
+    completeMutation.mutate(
+      {
+        id: Number(id),
+        data: {
+          cost: numOrNull(reviewCost),
+          net_cost: numOrNull(reviewNetCost),
+          withholding_amount: numOrNull(reviewWithholding),
+          charged_to: reviewChargedTo || "tenant",
+        } as any,
+      },
+      {
+        onSuccess: () => {
+          // 폼에도 확정값을 반영해 두 화면이 어긋나지 않게 한다.
+          setValue("cost", reviewCost);
+          setValue("net_cost", reviewNetCost);
+          setValue("withholding_amount", reviewWithholding);
+          setValue("charged_to", reviewChargedTo || "tenant");
+          setReviewOpen(false);
+        },
+      },
+    );
   };
 
   // 작업지시서 PDF의 사진 타일 크기 — 원본 비율은 유지되고 크기만 바뀐다.
@@ -360,7 +435,7 @@ export default function WorkOrderDetail() {
                 </Button>
               )}
               {status === "PendingReview" && (
-                <Button variant="default" className="bg-green-600 hover:bg-green-700" onClick={() => completeMutation.mutate({ id: Number(id), data: {} })}>
+                <Button variant="default" className="bg-green-600 hover:bg-green-700" onClick={openReviewCosts}>
                   {t('workorder.btn_complete')}
                 </Button>
               )}
@@ -631,6 +706,77 @@ export default function WorkOrderDetail() {
             </div>
           </div>
 
+          {/* 정산 — tenancy reference, withholding, tenant recharge */}
+          <div className="border rounded-lg bg-white p-4 sm:p-6">
+            <h2 className="text-sm font-semibold uppercase text-primary tracking-wide mb-4">{t('workorder.section_settlement', 'Settlement')}</h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="col-span-1 sm:col-span-2">
+                <Label>{t('workorder.label_contract', 'Contract')}</Label>
+                <Controller name="contract_id" control={control} render={({ field }) => (
+                  <LookupSelect
+                    lookupUrl="/api/v1/lookup/contracts"
+                    value={field.value}
+                    onChange={field.onChange}
+                    placeholder={t('workorder.ph_contract_search', 'Search contracts…')}
+                    displayValue={(wo as any)?.contract_ref ?? null}
+                  />
+                )} />
+                <p className="text-xs text-muted-foreground mt-1">{t('workorder.contract_hint', 'Optional — work done while the unit is vacant belongs to no tenancy.')}</p>
+              </div>
+              <div>
+                <Label>{t('workorder.label_net_cost', 'Billed amount')} ({currency})</Label>
+                <Input type="number" step="0.01" placeholder="0.00" {...register("net_cost")} />
+                <p className="text-xs text-muted-foreground mt-1">{t('workorder.net_cost_hint', 'What the billing statement charges for this job. Empty = work cost less withholding.')}</p>
+              </div>
+              <div>
+                <Label>{t('workorder.label_withholding', 'Withholding tax')} ({currency})</Label>
+                <Input type="number" step="0.01" placeholder="0.00" {...register("withholding_amount")} />
+              </div>
+              <div>
+                <Label>{t('workorder.label_charged_to', 'Charged to')}</Label>
+                <Controller name="charged_to" control={control} render={({ field }) => (
+                  <Select value={field.value || "tenant"} onValueChange={field.onChange}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="tenant">{t('workorder.charged_to_tenant', 'Tenant')}</SelectItem>
+                      <SelectItem value="landlord">{t('workorder.charged_to_landlord', 'Landlord')}</SelectItem>
+                      <SelectItem value="company">{t('workorder.charged_to_company', 'Company')}</SelectItem>
+                    </SelectContent>
+                  </Select>
+                )} />
+              </div>
+              <div>
+                <Label>{t('workorder.label_settlement_method', 'Settlement method')}</Label>
+                <Controller name="settlement_method" control={control} render={({ field }) => (
+                  <Select value={field.value || "_none"} onValueChange={(v) => field.onChange(v === "_none" ? "" : v)}>
+                    <SelectTrigger><SelectValue placeholder={t('workorder.ph_settlement_method', 'Not decided')} /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="_none">— {t('common.none')} —</SelectItem>
+                      <SelectItem value="tenant_payment">{t('workorder.settle_tenant_payment', 'Paid at move-out')}</SelectItem>
+                      <SelectItem value="deposit_deduction">{t('workorder.settle_deposit_deduction', 'Deducted from deposit')}</SelectItem>
+                    </SelectContent>
+                  </Select>
+                )} />
+                <p className="text-xs text-muted-foreground mt-1">{t('workorder.settlement_hint', 'How the tenant settles this job at move-out.')}</p>
+              </div>
+              <div>
+                <Label>{t('workorder.label_billed_on', 'Billed to tenant')}</Label>
+                <Controller name="billed_on" control={control} render={({ field }) => (
+                  <DateInput value={field.value ?? ""} onChange={field.onChange} />
+                )} />
+              </div>
+              <div>
+                <Label>{t('workorder.label_settled_on', 'Payment received')}</Label>
+                <Controller name="settled_on" control={control} render={({ field }) => (
+                  <DateInput value={field.value ?? ""} onChange={field.onChange} />
+                )} />
+                {!isNew && (wo as any)?.billed_on && !(wo as any)?.settled_on && (
+                  <p className="text-xs text-orange-600 mt-1">{t('workorder.outstanding', 'Outstanding — billed but not received')}</p>
+                )}
+              </div>
+            </div>
+          </div>
+
           {/* Completion info (read-only) */}
           {wo?.completed_at && (
             <div className="border rounded-lg bg-green-50 p-6">
@@ -691,6 +837,58 @@ export default function WorkOrderDetail() {
             <Button disabled={dispatching || !pickedHostId} onClick={() => dispatch(Number(pickedHostId))}>
               <Send className="h-3.5 w-3.5 mr-1" />
               {t('workorder.btn_dispatch_confirm', 'Dispatch')}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* 검토 → 완료: 청구비용 확정 팝업 */}
+      <Dialog open={reviewOpen} onOpenChange={setReviewOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>{t('workorder.review_costs_title', 'Confirm billing amounts')}</DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-muted-foreground -mt-2">
+            {t('workorder.review_costs_desc', 'Fix the amounts here before completing — the billing statement reads these values.')}
+          </p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <Label>{t('workorder.label_cost', 'Estimated Cost')} ({currency})</Label>
+              <Input type="number" step="0.01" placeholder="0.00" value={reviewCost} onChange={(e) => setReviewCost(e.target.value)} />
+            </div>
+            <div>
+              <Label>{t('workorder.label_withholding', 'Withholding tax')} ({currency})</Label>
+              <Input type="number" step="0.01" placeholder="0.00" value={reviewWithholding} onChange={(e) => setReviewWithholding(e.target.value)} />
+            </div>
+            <div className="sm:col-span-2">
+              <Label>{t('workorder.label_net_cost', 'Billed amount')} ({currency})</Label>
+              <Input type="number" step="0.01" placeholder="0.00" value={reviewNetCost} onChange={(e) => setReviewNetCost(e.target.value)} />
+              <div className="flex items-center justify-between gap-2 mt-1">
+                <p className="text-xs text-muted-foreground">
+                  {t('workorder.review_costs_hint', 'This is the amount billed on the statement.')}
+                </p>
+                <Button type="button" size="sm" variant="outline" onClick={applyWithholding}>
+                  {t('workorder.review_apply_withholding', 'Apply 3.3%')}
+                </Button>
+              </div>
+            </div>
+            <div className="sm:col-span-2">
+              <Label>{t('workorder.label_charged_to', 'Charged to')}</Label>
+              <Select value={reviewChargedTo} onValueChange={setReviewChargedTo}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="tenant">{t('workorder.charged_to_tenant', 'Tenant')}</SelectItem>
+                  <SelectItem value="landlord">{t('workorder.charged_to_landlord', 'Landlord')}</SelectItem>
+                  <SelectItem value="company">{t('workorder.charged_to_company', 'Company')}</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={() => setReviewOpen(false)}>{t('common.cancel')}</Button>
+            <Button className="bg-green-600 hover:bg-green-700" disabled={completeMutation.isPending} onClick={confirmReviewCosts}>
+              <CheckCircle2 className="h-4 w-4 mr-1" />
+              {t('workorder.btn_complete')}
             </Button>
           </DialogFooter>
         </DialogContent>

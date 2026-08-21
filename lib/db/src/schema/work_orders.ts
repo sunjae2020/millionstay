@@ -26,6 +26,26 @@ export const workOrdersTable = pgTable("work_orders", {
   completed_at: timestamp("completed_at", { withTimezone: true }),
   cost: numeric("cost", { precision: 12, scale: 2, mode: "number" }),
   currency: text("currency").notNull().default("AUD"),
+  // ── 청소/하자 원장 (Korean 퇴거청소·입주청소·하자보수 LIST) ────────────────
+  // A job happens to a *space*; the tenancy it belongs to is a reference, not a
+  // requirement — work done while the unit is vacant has no contract.
+  contract_id: integer("contract_id"),
+  // 작업비용(cost) is the vendor's gross claim. Korean 원천징수 3.3% is withheld,
+  // so net_cost is what is actually remitted to the vendor — and what the
+  // 청구 명세서 bills.
+  net_cost: numeric("net_cost", { precision: 12, scale: 2, mode: "number" }),
+  withholding_amount: numeric("withholding_amount", { precision: 12, scale: 2, mode: "number" }),
+  // The job is recharged to the *outgoing tenant*, settled at move-out — either
+  // paid directly or taken out of the deposit. billed_on = 청구일,
+  // settled_on = 수령일자 (null while outstanding — the sheet's '청구' state).
+  billed_on: text("billed_on"),
+  settled_on: text("settled_on"),
+  // How the tenant settles it: tenant_payment (퇴거 시 납부) | deposit_deduction
+  // (보증금 차감). Null = not decided yet.
+  settlement_method: text("settlement_method"),
+  // Who bears the cost: tenant (default — including 입주청소, which the departing
+  // tenant pays) | landlord | company.
+  charged_to: text("charged_to").notNull().default("tenant"),
   // ── 방문 약속 (인스펙션·현장 방문) ──────────────────────────────────────────
   // `scheduled_at` above is a legacy date-only text column (kept for compat).
   // A real appointment needs a start AND an end instant, so the calendar can lay
