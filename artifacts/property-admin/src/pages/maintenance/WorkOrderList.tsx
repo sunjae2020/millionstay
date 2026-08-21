@@ -16,6 +16,9 @@ import { DataTable, ACTIONS_KEY, type ColumnDef } from "@/components/ui/data-tab
 import { ALL, SearchBox, DateRangeFilter, FacetSelect, ResetFiltersButton, useListFacets, useYearLabel } from "@/components/list-filters";
 import { useQueryClient } from "@tanstack/react-query";
 import { useWorkOrderCategoryLabel } from "@/lib/workOrderCategories";
+import { formatMoney } from "@/lib/currency";
+import { formatDate } from "@/lib/date";
+import { useBrand } from "@/contexts/ThemeContext";
 
 const statusColors: Record<string, string> = {
   Open: "bg-blue-100 text-blue-700",
@@ -24,6 +27,17 @@ const statusColors: Record<string, string> = {
   Completed: "bg-green-100 text-green-700",
   Cancelled: "bg-gray-100 text-gray-600",
 };
+
+/**
+ * 청구비용(실지급액) — what the billing statement actually charges for a job:
+ * the stored net amount, else the vendor's cost minus withholding. Mirrors
+ * billedAmountOf() in api-server/src/lib/documents/workOrderDocument.ts.
+ */
+function billedAmountOf(wo: any): number | null {
+  if (wo.net_cost != null) return Number(wo.net_cost);
+  if (wo.cost == null) return null;
+  return Number(wo.cost) - Number(wo.withholding_amount ?? 0);
+}
 
 const priorityColors: Record<string, string> = {
   Low: "bg-gray-100 text-gray-600",
@@ -45,6 +59,7 @@ export default function WorkOrderList() {
   const [showDeleted, setShowDeleted] = useState(false);
   const [billingOpen, setBillingOpen] = useState(false);
   const qc = useQueryClient();
+  const { currency: brandCurrency, currencyPosition } = useBrand();
 
   // ?space_id=N — arriving from a space's 하자보수 tab, scoped to that unit.
   const spaceIdFilter = new URLSearchParams(window.location.search).get("space_id");
@@ -96,6 +111,23 @@ export default function WorkOrderList() {
         cell: (wo) => <span className="text-muted-foreground">{wo.space_name ?? "—"}</span>,
       },
       {
+        // 접수일 — reported_at is a date-only text column.
+        key: "reported_at",
+        header: "workorder.col_reported_at",
+        cell: (wo) => <span className="text-muted-foreground">{wo.reported_at ? formatDate(wo.reported_at) : "—"}</span>,
+      },
+      {
+        // 작업일 — the legacy date-only scheduled_at, falling back to the
+        // appointment start (scheduled_start_at) and finally the completion.
+        key: "scheduled_at",
+        header: "workorder.col_scheduled_at",
+        sortAccessor: (wo) => wo.scheduled_at ?? wo.scheduled_start_at ?? wo.completed_at ?? null,
+        cell: (wo) => {
+          const d = wo.scheduled_at ?? wo.scheduled_start_at ?? wo.completed_at;
+          return <span className="text-muted-foreground">{d ? formatDate(d) : "—"}</span>;
+        },
+      },
+      {
         key: "category",
         header: "workorder.col_category",
         cell: (wo) => <span className="text-muted-foreground">{categoryLabel(wo.category)}</span>,
@@ -104,6 +136,23 @@ export default function WorkOrderList() {
         key: "assigned_contact_name",
         header: "workorder.col_assigned",
         cell: (wo) => <span className="text-muted-foreground">{wo.assigned_contact_name ?? "—"}</span>,
+      },
+      {
+        // 파트너 — the dispatched service host, distinct from the assigned
+        // contact (an individual).
+        key: "service_host_name",
+        header: "workorder.col_partner",
+        cell: (wo) => <span className="text-muted-foreground">{wo.service_host_name ?? "—"}</span>,
+      },
+      {
+        key: "billed_amount",
+        header: "workorder.col_billed_amount",
+        align: "right",
+        sortAccessor: (wo) => billedAmountOf(wo),
+        cell: (wo) => {
+          const amount = billedAmountOf(wo);
+          return <span>{amount != null ? formatMoney(amount, brandCurrency, currencyPosition) : "—"}</span>;
+        },
       },
       {
         key: "priority",
@@ -139,7 +188,7 @@ export default function WorkOrderList() {
         ),
       },
     ],
-    [t, categoryLabel],
+    [t, categoryLabel, brandCurrency, currencyPosition],
   );
 
   return (
