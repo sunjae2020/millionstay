@@ -38,15 +38,10 @@ import {
   type WorkOrderDocInput,
 } from "../lib/documents/workOrderDocument";
 
+import { insertInvoiceWithRef } from "../lib/billing/invoiceRef";
+
 const router = Router();
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 10 * 1024 * 1024 } });
-
-async function nextInvoiceRef(): Promise<string> {
-  const year = new Date().getFullYear();
-  const rows = await db.select({ id: invoicesTable.id }).from(invoicesTable)
-    .where(ilike(invoicesTable.invoice_ref, `MS-INV-${year}-%`));
-  return `MS-INV-${year}-${String(rows.length + 1).padStart(5, "0")}`;
-}
 
 async function nextOrderRef(): Promise<string> {
   const year = new Date().getFullYear();
@@ -654,8 +649,7 @@ router.post("/v1/work-orders/billing-statement/invoice", async (req, res): Promi
   const taxRate = Number(body.tax_rate ?? (taxMode === "exclusive" ? 10 : 0));
   const period = f.to ? f.to.slice(0, 7) : f.from ? f.from.slice(0, 7) : null;
 
-  const [invoice] = await db.insert(invoicesTable).values({
-    invoice_ref: await nextInvoiceRef(),
+  const invoice = await insertInvoiceWithRef({
     account_id: resolved.accountId,
     amount: String(supply),
     currency: ccy,
@@ -668,7 +662,7 @@ router.post("/v1/work-orders/billing-statement/invoice", async (req, res): Promi
     due_date: body.due_date ?? null,
     description: `${period ?? ""} 하자·청소 청구 (${billable.length}건)`.trim(),
     notes: body.notes ?? null,
-  }).returning();
+  });
 
   await db.insert(invoiceLineItemsTable).values(billable.map((r, i) => {
     const wo = orderById.get(r.work_order_id);
@@ -1091,8 +1085,7 @@ router.post("/v1/work-orders/:id/charge-owner", async (req, res): Promise<void> 
   }
 
   const ccy = req.body?.currency ?? wo.currency ?? DEFAULT_CURRENCY;
-  const [inv] = await db.insert(invoicesTable).values({
-    invoice_ref: await nextInvoiceRef(),
+  const inv = await insertInvoiceWithRef({
     account_id: ownerAccountId,
     work_order_id: id,
     amount: String(amount),
@@ -1101,7 +1094,7 @@ router.post("/v1/work-orders/:id/charge-owner", async (req, res): Promise<void> 
     status: "Draft",
     due_date: req.body?.due_date ?? null,
     description: `Repair charge — ${wo.order_ref}${wo.title ? `: ${wo.title}` : ""}${markupPct ? ` (+${markupPct}% admin)` : ""}`,
-  }).returning();
+  });
   void logAction({ entityType: "work_order", entityId: id, action: "UPDATE", actorId: (req as any).user?.id ?? null, newValue: { charged_owner_invoice_id: inv.id, account_id: ownerAccountId, amount } });
   res.status(201).json({ success: true, data: inv });
 });

@@ -29,15 +29,9 @@ import {
   PayInvoiceBody,
 } from "@workspace/api-zod";
 
-const router = Router();
+import { insertInvoiceWithRef } from "../lib/billing/invoiceRef";
 
-async function nextInvoiceRef(): Promise<string> {
-  const year = new Date().getFullYear();
-  const rows = await db.select({ id: invoicesTable.id }).from(invoicesTable)
-    .where(ilike(invoicesTable.invoice_ref, `MS-INV-${year}-%`));
-  const count = rows.length + 1;
-  return `MS-INV-${year}-${String(count).padStart(5, "0")}`;
-}
+const router = Router();
 
 /**
  * Optional itemised line items accepted on invoice create/update. When present
@@ -256,13 +250,11 @@ router.post("/v1/invoices", async (req, res): Promise<void> => {
   const lineItems = itemsParsed.data.line_items ?? [];
   const hasLineItems = lineItems.length > 0;
 
-  const invoice_ref = await nextInvoiceRef();
   const ccy = parsed.data.currency ?? DEFAULT_CURRENCY;
   const amount = hasLineItems ? sumLineItems(lineItems) : String(parsed.data.amount ?? 0);
   const taxMode = taxParsed.data.tax_mode ?? "none";
   const taxRate = taxParsed.data.tax_rate ?? (taxMode === "exclusive" ? 10 : 0);
-  const [row] = await db.insert(invoicesTable).values({
-    invoice_ref,
+  const row = await insertInvoiceWithRef({
     booking_id: parsed.data.booking_id ?? null,
     contract_id: parsed.data.contract_id ?? null,
     account_id: parsed.data.account_id ?? null,
@@ -276,7 +268,7 @@ router.post("/v1/invoices", async (req, res): Promise<void> => {
     due_date: parsed.data.due_date ?? null,
     description: parsed.data.description ?? null,
     notes: parsed.data.notes ?? null,
-  }).returning();
+  });
   if (hasLineItems) {
     await db.insert(invoiceLineItemsTable).values(buildLineItemRows(row.id, lineItems));
   }
