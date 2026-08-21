@@ -78,34 +78,19 @@ export function buildPhotoWatermark(
  * 늘어나 사진 양옆에 회색 여백이 생긴다. `c_fit`이라 긴 설명은 줄바꿈된다.
  */
 /**
- * 워터마크 한 줄이 사진 폭을 꽉 채우도록 글자 크기를 고른다.
- *
- * 크게 쓰되 **절대 두 줄로 넘기지 않는다** — Cloudinary `c_fit`은 넘치면
- * 줄바꿈하므로, 넘칠 일이 없도록 글자 크기 쪽을 줄여 맞춘다. 글리프 폭은
- * 볼드 기준 어림치(한글·한자 1em, 공백 0.3em, 나머지 0.58em)로 재고, 어림이
- * 살짝 빗나가도 줄바꿈이 나지 않게 5% 여유를 둔다.
+ * 워터마크 글자 크기(px). 사진 폭에 따라 늘였다 줄였다 하면 사진마다 다르게
+ * 보여서, 한 값으로 고정한다. 띠 폭을 넘치면 `c_fit`이 줄을 바꾼다 — 두세 줄이
+ * 되어도 괜찮다는 게 현장 요청이다.
  */
-export function watermarkFontSize(imageWidth: number, bandWidth: number, text: string): number {
-  let ems = 0;
-  for (const ch of text) {
-    if (ch === " ") ems += 0.3;
-    else if (/[\u1100-\u11FF\u3000-\u303F\u3130-\u318F\uAC00-\uD7AF\u4E00-\u9FFF\uFF00-\uFFEF]/u.test(ch)) ems += 1;
-    else ems += 0.58;
-  }
-  if (ems <= 0) return Math.round(imageWidth / 24);
-  const fits = Math.floor((bandWidth * 0.95) / ems);
-  // 짧은 문구가 우스꽝스럽게 커지지 않도록 위쪽을, 읽기 어려워지지 않도록
-  // 아래쪽을 막는다.
-  return Math.min(Math.round(imageWidth / 16), Math.max(14, fits));
-}
+const WATERMARK_FONT_SIZE = 45;
 
 /**
  * 업로드된 사진에 워터마크를 얹은 배포 URL.
  *
  * 폰트는 `Arial`로 요청하지만 Cloudinary가 한글 글리프를 CJK 폰트로 대체해
- * 그린다(실측 확인). 띠 너비와 글자 크기를 **업로드된 실제 가로폭 기준**으로
- * 잡는 게 핵심 — 고정 픽셀로 주면 텍스트가 사진보다 넓어질 때 캔버스가
- * 늘어나 사진 양옆에 회색 여백이 생긴다.
+ * 그린다(실측 확인). 띠 너비만 **업로드된 실제 가로폭 기준**으로 잡는 게 핵심
+ * — 고정 픽셀로 주면 텍스트가 사진보다 넓어질 때 캔버스가 늘어나 사진 양옆에
+ * 회색 여백이 생긴다. 여러 줄이 되면 가운데로 모아 찍는다.
  */
 export function watermarkedPhotoUrl(
   asset: { public_id: string; width?: number | null; version?: number | null; format?: string | null },
@@ -116,7 +101,13 @@ export function watermarkedPhotoUrl(
   return cloudinaryUrl(asset.public_id, {
     transformation: [
       {
-        overlay: { font_family: "Arial", font_size: watermarkFontSize(width, bandWidth, text), font_weight: "bold", text },
+        overlay: {
+          font_family: "Arial",
+          font_size: WATERMARK_FONT_SIZE,
+          font_weight: "bold",
+          text_align: "center",
+          text,
+        },
         color: "white",
         background: "rgb:00000099",
         crop: "fit",

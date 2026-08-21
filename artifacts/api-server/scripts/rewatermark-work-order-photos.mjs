@@ -71,17 +71,8 @@ function watermarkText({ property, unit: unitName, caption, when }) {
   return `${date}${place ? `-${place}` : ""}${note ? `_${note}` : ""}`;
 }
 
-/** 한 줄을 넘기지 않는 글자 크기 (src/lib/workOrders/photoWatermark.ts와 같은 규칙). */
-function fontSize(imageWidth, bandWidth, text) {
-  let ems = 0;
-  for (const ch of text) {
-    if (ch === " ") ems += 0.3;
-    else if (/[ᄀ-ᇿ　-〿㄰-㆏가-힯一-鿿＀-￯]/u.test(ch)) ems += 1;
-    else ems += 0.58;
-  }
-  if (ems <= 0) return Math.round(imageWidth / 24);
-  return Math.min(Math.round(imageWidth / 16), Math.max(14, Math.floor((bandWidth * 0.95) / ems)));
-}
+/** 워터마크 글자 크기 (src/lib/workOrders/photoWatermark.ts와 같은 값). */
+const FONT_SIZE = 45;
 
 function watermarkedUrl(asset, text) {
   const width = Number(asset.width) > 0 ? Number(asset.width) : 1600;
@@ -90,7 +81,7 @@ function watermarkedUrl(asset, text) {
     secure: true,
     transformation: [
       {
-        overlay: { font_family: "Arial", font_size: fontSize(width, bandWidth, text), font_weight: "bold", text },
+        overlay: { font_family: "Arial", font_size: FONT_SIZE, font_weight: "bold", text_align: "center", text },
         color: "white", background: "rgb:00000099", crop: "fit", width: bandWidth,
       },
       { flags: "layer_apply", gravity: "south", y: Math.max(6, Math.round(width / 120)) },
