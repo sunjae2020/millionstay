@@ -1781,7 +1781,16 @@
     "photos_empty_kind": "ยังไม่มีรูป{{kind}}",
     "btn_sign_request": "ขอลายเซ็น",
     "btn_sign_pending": "ลิงก์ลงนาม",
-    "btn_sign_signed": "ลงนามแล้ว"
+    "btn_sign_signed": "ลงนามแล้ว",
+    "photo_size": "ขนาดรูปภาพ",
+    "photo_size_s": "รูปภาพ: เล็ก",
+    "photo_size_m": "รูปภาพ: กลาง",
+    "photo_size_l": "รูปภาพ: ใหญ่",
+    "dispatch_picker_title": "มอบหมายให้พาร์ทเนอร์",
+    "dispatch_pick_partner": "เลือกพาร์ทเนอร์",
+    "dispatch_no_partners": "ไม่มีพาร์ทเนอร์ที่ใช้งานอยู่ กรุณาเพิ่มในเมนูพาร์ทเนอร์",
+    "dispatch_auto": "จับคู่อัตโนมัติตามหมวดหมู่",
+    "btn_dispatch_confirm": "มอบหมาย"
   },
   "csticket": {
     "search_placeholder": "ค้นหาตั๋ว...",

@@ -83,14 +83,43 @@ const SHARED_STYLE = `
   table.wo-grid th { background:#dce6f2; font-weight:700; text-align:center; white-space:nowrap; width:13%; }
   .wo-sec { font-size:12.5px; font-weight:700; margin:14px 0 5px; }
   .wo-money { text-align:right; font-variant-numeric:tabular-nums; white-space:nowrap; }
-  .wo-photos { display:flex; flex-wrap:wrap; gap:6px; margin:0 0 10px; }
-  .wo-photo { width:31.5%; border:1px solid #b9c0cc; padding:3px; }
-  .wo-photo img { width:100%; height:104px; object-fit:cover; display:block; }
+  .wo-photos { display:flex; flex-wrap:wrap; gap:6px; margin:0 0 10px;
+    --wo-photo-w:31.5%; --wo-photo-h:132px; }
+  .wo-photo { width:var(--wo-photo-w); border:1px solid #b9c0cc; padding:3px; }
+  /* 사진은 원본 비율 그대로(contain) — 타일 크기만 photo_size로 조절한다. */
+  .wo-photo img { width:100%; height:var(--wo-photo-h); object-fit:contain;
+    background:#f7f8fa; display:block; }
   .wo-photo .wo-cap { font-size:9.5px; color:#555; margin-top:2px; text-align:center;
     overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
   .wo-empty { font-size:11px; color:#888; padding:6px 0; }
   @media print { .wo-photo, table.wo-grid tr { page-break-inside:avoid; } }
 `;
+
+/**
+ * 사진 타일 크기. 원본 비율은 언제나 유지하고(잘라내지 않는다) 타일 한 칸의
+ * 폭·높이만 바꾼다 — s는 한 줄 4장, m은 3장, l은 2장.
+ */
+export type DocPhotoSize = "s" | "m" | "l";
+
+const PHOTO_SIZES: Record<DocPhotoSize, { w: string; h: string }> = {
+  s: { w: "23.2%", h: "92px" },
+  m: { w: "31.5%", h: "132px" },
+  l: { w: "48.5%", h: "210px" },
+};
+
+export function normalizeDocPhotoSize(v: unknown): DocPhotoSize {
+  const k = String(v ?? "").trim().toLowerCase();
+  if (k === "s" || k === "small") return "s";
+  if (k === "l" || k === "large") return "l";
+  return "m";
+}
+
+/** photo_size를 CSS 변수로 덮어쓰는 스타일 조각. */
+function photoSizeStyle(size: DocPhotoSize | undefined): string {
+  if (!size) return "";
+  const { w, h } = PHOTO_SIZES[size];
+  return `<style>.wo-photos { --wo-photo-w:${w}; --wo-photo-h:${h}; }</style>`;
+}
 
 /** 사진 묶음 하나 (요청/완료, 또는 호수별 증빙). */
 function renderPhotoGrid(photos: Array<{ url: string; caption?: string | null }>, emptyText: string): string {
@@ -213,6 +242,8 @@ export interface WorkOrderDocInput {
   photos: WorkOrderDocPhoto[];
   /** 확인 서명이 끝났으면 서명란이 실제 서명 + 인증 정보로 채워진다. */
   signature?: WorkOrderDocSignature | null;
+  /** 사진 타일 크기 (기본 m). 비율은 유지되고 크기만 바뀐다. */
+  photo_size?: DocPhotoSize;
 }
 
 const WORK_ORDER_STYLE = `<style>
@@ -239,7 +270,7 @@ export function buildWorkOrderBody(
   const after = d.photos.filter((p) => p.kind !== "before");
   const money = (v: number | null | undefined) => (v == null ? DASH : formatDocMoney(v, d.currency));
 
-  return `${WORK_ORDER_STYLE}
+  return `${WORK_ORDER_STYLE}${photoSizeStyle(d.photo_size)}
     <div class="wo-title">
       <h1>${escapeHtml(heading)}</h1>
       <div class="wo-sub">${escapeHtml(d.order_ref)}</div>
@@ -344,6 +375,8 @@ export interface RepairBillingInput {
   includePhotos: boolean;
   /** net_cost도 withholding도 없는 행에 적용한 원천징수율 (표기용). */
   withholdingPct?: number;
+  /** 증빙 사진 타일 크기 (기본 m). */
+  photo_size?: DocPhotoSize;
 }
 
 const BILLING_STYLE = `<style>
@@ -406,7 +439,7 @@ export function buildRepairBillingBody(d: RepairBillingInput, lang: DocLang, hea
     ? `<div class="wo-note">${escapeHtml(t(lang, "wo.withholdingNote", { pct: String(d.withholdingPct) }))}</div>`
     : "";
 
-  return `${BILLING_STYLE}
+  return `${BILLING_STYLE}${photoSizeStyle(d.photo_size)}
     <div class="wo-title">
       <h1>${escapeHtml([headingPrefix, d.property_name].filter(Boolean).join(" "))} ${escapeHtml(t(lang, "wo.billing.heading"))}</h1>
       <div class="wo-sub">${escapeHtml(period || DASH)}</div>

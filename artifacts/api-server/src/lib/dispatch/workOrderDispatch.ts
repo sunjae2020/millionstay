@@ -21,7 +21,7 @@ function hostSpecialties(h: { specialties: unknown }): string[] {
 
 export type DispatchResult =
   | { ok: true; service_host_id: number; service_host_name: string; sla_ack_due_at: string }
-  | { ok: false; reason: "not_found" | "already_dispatched" | "no_category" | "no_match" };
+  | { ok: false; reason: "not_found" | "already_dispatched" | "no_category" | "no_match" | "host_not_found" };
 
 /**
  * Auto-dispatch a work order to the best-matching active partner. Idempotent:
@@ -30,11 +30,19 @@ export type DispatchResult =
  */
 export async function dispatchWorkOrder(
   workOrderId: number,
-  opts: { slaAckMinutes?: number; force?: boolean } = {},
+  opts: { slaAckMinutes?: number; force?: boolean; serviceHostId?: number } = {},
 ): Promise<DispatchResult> {
   const [wo] = await db.select().from(workOrdersTable).where(eq(workOrdersTable.id, workOrderId)).limit(1);
   if (!wo) return { ok: false, reason: "not_found" };
-  if (wo.service_host_id && !opts.force) return { ok: false, reason: "already_dispatched" };
+  if (wo.service_host_id && !opts.force && !opts.serviceHostId) return { ok: false, reason: "already_dispatched" };
+
+  // 관리자가 파트너를 직접 고른 배정 — 카테고리 매칭을 건너뛴다.
+  if (opts.serviceHostId) {
+    const [host] = await db.select().from(serviceHostsTable)
+      .where(eq(serviceHostsTable.id, opts.serviceHostId)).limit(1);
+    if (!host) return { ok: false, reason: "host_not_found" };
+    return assignHost(wo, host, opts.slaAckMinutes);
+  }
 
   const category = normalize(wo.category);
   if (!category) return { ok: false, reason: "no_category" };
@@ -55,16 +63,23 @@ export async function dispatchWorkOrder(
   const countMap = new Map(counts.map((r) => [r.id, Number(r.c)]));
   pool.sort((a, b) => (countMap.get(a.id) ?? 0) - (countMap.get(b.id) ?? 0) || a.id - b.id);
   const chosen = pool[0]!;
+  return assignHost(wo, chosen, opts.slaAckMinutes);
+}
 
+/** 파트너 배정 + SLA 시계 리셋 + 알림. 자동 매칭·수동 지정이 공유한다. */
+async function assignHost(
+  wo: typeof workOrdersTable.$inferSelect,
+  host: typeof serviceHostsTable.$inferSelect,
+  slaAckMinutes?: number,
+): Promise<DispatchResult> {
   const now = new Date();
-  const slaMin = opts.slaAckMinutes ?? DEFAULT_SLA_ACK_MINUTES;
-  const due = new Date(now.getTime() + slaMin * 60_000);
+  const due = new Date(now.getTime() + (slaAckMinutes ?? DEFAULT_SLA_ACK_MINUTES) * 60_000);
   await db.update(workOrdersTable)
-    .set({ service_host_id: chosen.id, dispatched_at: now, acknowledged_at: null, sla_ack_due_at: due, sla_status: "pending_ack", updated_at: now })
-    .where(eq(workOrdersTable.id, workOrderId));
+    .set({ service_host_id: host.id, dispatched_at: now, acknowledged_at: null, sla_ack_due_at: due, sla_status: "pending_ack", updated_at: now })
+    .where(eq(workOrdersTable.id, wo.id));
 
-  void notifyPartnerDispatched(chosen.account_id, chosen.name, wo.order_ref, wo.title, wo.category, due);
-  return { ok: true, service_host_id: chosen.id, service_host_name: chosen.name, sla_ack_due_at: due.toISOString() };
+  void notifyPartnerDispatched(host.account_id, host.name, wo.order_ref, wo.title, wo.category, due);
+  return { ok: true, service_host_id: host.id, service_host_name: host.name, sla_ack_due_at: due.toISOString() };
 }
 
 async function partnerEmail(accountId: number | null): Promise<string | null> {

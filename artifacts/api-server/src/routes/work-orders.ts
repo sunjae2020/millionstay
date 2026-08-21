@@ -31,6 +31,8 @@ import {
   billedAmountOf,
   buildRepairBillingHtml,
   buildWorkOrderHtml,
+  normalizeDocPhotoSize,
+  type DocPhotoSize,
   type RepairBillingRow,
   type WorkOrderDocInput,
 } from "../lib/documents/workOrderDocument";
@@ -53,6 +55,16 @@ async function nextOrderRef(): Promise<string> {
   return `MS-WO-${year}-${String(count).padStart(5, "0")}`;
 }
 
+/** 건물명 — 작업지시의 property_id, 없으면 호수가 속한 건물. */
+function resolvePropertyName(
+  r: { property_id: number | null; space_id: number | null },
+  propertyMap: Record<number, string>,
+  spaceProperty: Record<number, number>,
+): string | null {
+  const pid = r.property_id ?? (r.space_id ? spaceProperty[r.space_id] ?? null : null);
+  return pid ? propertyMap[pid] ?? null : null;
+}
+
 async function enrichWorkOrders(rows: (typeof workOrdersTable.$inferSelect)[]) {
   if (rows.length === 0) return [];
   const propertyIds = [...new Set(rows.map(r => r.property_id).filter(Boolean))] as number[];
@@ -73,7 +85,7 @@ async function enrichWorkOrders(rows: (typeof workOrdersTable.$inferSelect)[]) {
       ? db.select({ id: propertiesTable.id, name: propertiesTable.name }).from(propertiesTable).where(inArray(propertiesTable.id, propertyIds))
       : Promise.resolve([]),
     spaceIds.length
-      ? db.select({ id: spacesTable.id, name: spacesTable.name }).from(spacesTable).where(inArray(spacesTable.id, spaceIds))
+      ? db.select({ id: spacesTable.id, name: spacesTable.name, property_id: spacesTable.property_id }).from(spacesTable).where(inArray(spacesTable.id, spaceIds))
       : Promise.resolve([]),
     contactIds.length
       ? db.select({ id: contactsTable.id, first_name: contactsTable.first_name, last_name: contactsTable.last_name }).from(contactsTable).where(inArray(contactsTable.id, contactIds))
@@ -87,6 +99,17 @@ async function enrichWorkOrders(rows: (typeof workOrdersTable.$inferSelect)[]) {
   ]);
   for (const p of propertyRows) propertyMap[p.id] = p.name;
   for (const s of spaceRows) spaceMap[s.id] = s.name;
+
+  // 호수만 지정된 작업지시(property_id 비어 있음)도 건물명을 채운다 — 공간이
+  // 속한 건물로 되짚어 간다. 작업지시서 PDF의 '건물명' 칸이 여기서 온다.
+  const spaceProperty: Record<number, number> = {};
+  for (const s of spaceRows) if (s.property_id) spaceProperty[s.id] = s.property_id;
+  const extraPropertyIds = [...new Set(Object.values(spaceProperty))].filter((pid) => !(pid in propertyMap));
+  if (extraPropertyIds.length) {
+    const extra = await db.select({ id: propertiesTable.id, name: propertiesTable.name })
+      .from(propertiesTable).where(inArray(propertiesTable.id, extraPropertyIds));
+    for (const p of extra) propertyMap[p.id] = p.name;
+  }
   for (const c of contactRows) contactMap[c.id] = formatPersonName(c.first_name, c.last_name);
   for (const h of hostRows) hostMap[h.id] = h.name;
   for (const u of userRows) userMap[u.id] = formatPersonName(u.first_name, u.last_name) || u.email;
@@ -95,7 +118,7 @@ async function enrichWorkOrders(rows: (typeof workOrdersTable.$inferSelect)[]) {
     ...r,
     // 백필 전 옛 표기(`Cleaning`/`청소`)가 남아 있어도 화면은 표준값 하나로 본다.
     category: canonicalWorkOrderCategory(r.category),
-    property_name: r.property_id ? (propertyMap[r.property_id] ?? null) : null,
+    property_name: resolvePropertyName(r, propertyMap, spaceProperty),
     space_name: r.space_id ? (spaceMap[r.space_id] ?? null) : null,
     assigned_contact_name: r.assigned_contact_id ? (contactMap[r.assigned_contact_id] ?? null) : null,
     service_host_name: r.service_host_id ? (hostMap[r.service_host_id] ?? null) : null,
@@ -223,9 +246,13 @@ router.post("/v1/work-orders", async (req, res): Promise<void> => {
 // Manually (re)dispatch a work order to a matching partner.
 router.post("/v1/work-orders/:id/dispatch", async (req, res): Promise<void> => {
   const id = Number(req.params.id);
-  const result = await dispatchWorkOrder(id, { force: req.body?.force === true });
+  const hostId = Number(req.body?.service_host_id);
+  const result = await dispatchWorkOrder(id, {
+    force: req.body?.force === true,
+    serviceHostId: Number.isFinite(hostId) && hostId > 0 ? hostId : undefined,
+  });
   if (!result.ok) {
-    const code = result.reason === "not_found" ? 404 : 409;
+    const code = result.reason === "not_found" || result.reason === "host_not_found" ? 404 : 409;
     res.status(code).json({ success: false, error: { code: result.reason.toUpperCase(), message: `Dispatch failed: ${result.reason}` } });
     return;
   }
@@ -481,6 +508,7 @@ router.get("/v1/work-orders/billing-statement.pdf", async (req, res): Promise<vo
       rows,
       includePhotos: f.photosPerUnit > 0,
       withholdingPct: f.withholdingPct,
+      photo_size: normalizeDocPhotoSize(query.photo_size),
     },
     company,
     lang,
@@ -626,7 +654,7 @@ router.post("/v1/work-orders/billing-statement/invoice", async (req, res): Promi
  */
 export async function buildWorkOrderDocInput(
   id: number,
-  opts: { withholdingPct?: number } = {},
+  opts: { withholdingPct?: number; photoSize?: DocPhotoSize } = {},
 ): Promise<WorkOrderDocInput | null> {
   const [wo] = await db.select().from(workOrdersTable).where(eq(workOrdersTable.id, id));
   if (!wo) return null;
@@ -664,6 +692,7 @@ export async function buildWorkOrderDocInput(
     withholding_amount: cost - billed || null,
     billed_amount: billed,
     photos,
+    photo_size: opts.photoSize,
   };
 }
 
@@ -846,7 +875,10 @@ router.get("/v1/work-orders/:id/sign-link", async (req, res): Promise<void> => {
 router.get("/v1/work-orders/:id/document.pdf", async (req, res): Promise<void> => {
   const id = Number(req.params.id);
   const query = req.query as Record<string, any>;
-  const data = await buildWorkOrderDocInput(id, { withholdingPct: Number(query.withholding_pct) });
+  const data = await buildWorkOrderDocInput(id, {
+    withholdingPct: Number(query.withholding_pct),
+    photoSize: normalizeDocPhotoSize(query.photo_size),
+  });
   if (!data) { res.status(404).json({ success: false, error: { code: "NOT_FOUND", message: "Work order not found" } }); return; }
 
   const company = await resolveCompanyInfo();

@@ -1785,7 +1785,16 @@
     "photos_empty_kind": "暂无{{kind}}照片。",
     "btn_sign_request": "请求签名",
     "btn_sign_pending": "签名链接",
-    "btn_sign_signed": "已签名"
+    "btn_sign_signed": "已签名",
+    "photo_size": "照片尺寸",
+    "photo_size_s": "照片：小",
+    "photo_size_m": "照片：中",
+    "photo_size_l": "照片：大",
+    "dispatch_picker_title": "指派合作伙伴",
+    "dispatch_pick_partner": "选择合作伙伴",
+    "dispatch_no_partners": "没有可用的合作伙伴，请在合作伙伴页面添加。",
+    "dispatch_auto": "按类别自动匹配",
+    "btn_dispatch_confirm": "指派"
   },
   "csticket": {
     "search_placeholder": "搜索工单...",
