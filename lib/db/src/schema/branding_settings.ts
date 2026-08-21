@@ -42,7 +42,7 @@ export const brandingSettingsTable = pgTable("branding_settings", {
   dark_mode: boolean("dark_mode").notNull().default(false),
 
   // Display preferences.
-  date_format: text("date_format").notNull().default("DD/MM/YYYY"),
+  date_format: text("date_format").notNull().default("YYYY/MM/DD"),
   currency: text("currency").notNull().default("AUD"),
   currency_position: text("currency_position").notNull().default("prefix"),
 

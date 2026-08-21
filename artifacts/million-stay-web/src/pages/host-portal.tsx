@@ -17,6 +17,7 @@ import {
   type HomestayApplication, type HomestayDocument, type HomestayWwccRecord,
 } from "@/lib/homestay-api";
 import { formatPersonName } from "@/lib/nameFormat";
+import { DateInput } from "@/components/ui/date-input";
 
 const STATUS_META: Record<string, { color: string; icon: typeof CheckCircle2; key: string }> = {
   Draft: { color: "text-gray-700 bg-gray-50 border-gray-200", icon: FileEdit, key: "draft" },
@@ -453,8 +454,8 @@ export default function HostPortal() {
                           </div>
                           <div className="sm:col-span-3">
                             <label className="block text-[11px] text-gray-500 mb-1">{t("homestay.portal.wwcc_expiry")}</label>
-                            <Input type="date" value={r.expiry_date} onChange={(e) => updateWwcc(i, { expiry_date: e.target.value })}
-                              className={`h-10 bg-white ${expiring ? "border-red-400 text-red-600" : ""}`} />
+                            <DateInput value={r.expiry_date} onChange={(v) => updateWwcc(i, { expiry_date: v })}
+                              className={`h-10 rounded-md border px-3 text-sm bg-white ${expiring ? "border-red-400 text-red-600" : "border-input"}`} />
                           </div>
                           <div className="sm:col-span-1 flex items-center pb-2.5">
                             {r.verified ? (
@@ -488,8 +489,8 @@ export default function HostPortal() {
                 </div>
                 <div>
                   <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">{t("homestay.portal.ins_expiry")}</label>
-                  <Input type="date" value={insExpiry} onChange={(e) => setInsExpiry(e.target.value)}
-                    className={`h-10 ${isExpiringSoon(insExpiry) ? "border-red-400 text-red-600" : ""}`} />
+                  <DateInput value={insExpiry} onChange={setInsExpiry}
+                    className={`h-10 rounded-md border px-3 text-sm bg-white ${isExpiringSoon(insExpiry) ? "border-red-400 text-red-600" : "border-input"}`} />
                 </div>
               </div>
 

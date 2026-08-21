@@ -376,7 +376,13 @@ function RegistrationForm({ registration, accountId, accountName, onDone, onCanc
         </div>
         <div className="space-y-1.5">
           <Label>{t("settings_rental_biz.first_registered_on")}</Label>
-          <Input {...register("first_registered_on")} type="date" />
+          <Controller
+            name="first_registered_on"
+            control={control}
+            render={({ field }) => (
+              <DateInput value={field.value ?? ""} onChange={field.onChange} clearable />
+            )}
+          />
         </div>
         <div className="space-y-1.5">
           <Label>{t("settings_rental_biz.operator_name")}</Label>
@@ -404,7 +410,13 @@ function RegistrationForm({ registration, accountId, accountName, onDone, onCanc
         </div>
         <div className="space-y-1.5">
           <Label>{t("settings_rental_biz.issued_on")}</Label>
-          <Input {...register("issued_on")} type="date" />
+          <Controller
+            name="issued_on"
+            control={control}
+            render={({ field }) => (
+              <DateInput value={field.value ?? ""} onChange={field.onChange} clearable />
+            )}
+          />
         </div>
         <div className="space-y-1.5">
           <Label>{t("settings_rental_biz.nationality")}</Label>
@@ -755,7 +767,7 @@ function UnitForm({ row, registrationId, onDone, onCancel }: {
   const { toast } = useToast();
   const [saving, setSaving] = useState(false);
   const [spaceId, setSpaceId] = useState<number | null>(row?.space_id ?? null);
-  const { register, handleSubmit } = useForm<UnitDraft>({
+  const { register, handleSubmit, control } = useForm<UnitDraft>({
     defaultValues: {
       unit_no: row?.unit_no ?? "",
       building_address: row?.building_address ?? "",
@@ -835,11 +847,23 @@ function UnitForm({ row, registrationId, onDone, onCancel }: {
         </div>
         <div className="space-y-1">
           <Label className="text-xs">{t("settings_rental_biz.col_registered_on")}</Label>
-          <Input {...register("registered_on")} type="date" className="h-9" />
+          <Controller
+            name="registered_on"
+            control={control}
+            render={({ field }) => (
+              <DateInput value={field.value ?? ""} onChange={field.onChange} className="h-9" clearable />
+            )}
+          />
         </div>
         <div className="space-y-1">
           <Label className="text-xs">{t("settings_rental_biz.col_lease_started_on")}</Label>
-          <Input {...register("lease_started_on")} type="date" className="h-9" />
+          <Controller
+            name="lease_started_on"
+            control={control}
+            render={({ field }) => (
+              <DateInput value={field.value ?? ""} onChange={field.onChange} className="h-9" clearable />
+            )}
+          />
         </div>
         <div className="space-y-1">
           <Label className="text-xs">{t("settings_rental_biz.col_history")}</Label>

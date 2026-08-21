@@ -16,6 +16,7 @@ import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
 import { DevNavbar, DevFooter } from "@/components/development/DevLayout";
 import { isDevelopmentSite } from "@/lib/site-mode";
+import { formatDate } from "@/lib/dateFormat";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import SignaturePad from "@/components/SignaturePad";
@@ -196,7 +197,7 @@ export default function WorkOrderSign() {
     );
   }
 
-  const expires = req?.expires_at ? new Date(req.expires_at).toLocaleDateString(i18n.language) : null;
+  const expires = req?.expires_at ? formatDate(req.expires_at) : null;
 
   return (
     <Frame>
@@ -227,8 +228,8 @@ export default function WorkOrderSign() {
               <Row label={t("wosign.field_title", "작업명")} value={wo.title} />
               <Row label={t("wosign.field_category", "작업분류")} value={categoryLabel(wo.category)} />
               <Row label={t("wosign.field_unit", "대상 세대")} value={[wo.unit_no, wo.unit_type].filter(Boolean).join(" · ")} />
-              <Row label={t("wosign.field_scheduled", "예정일")} value={fmtDate(wo.scheduled_at, i18n.language)} />
-              <Row label={t("wosign.field_completed", "완료일")} value={fmtDate(wo.completed_at, i18n.language)} />
+              <Row label={t("wosign.field_scheduled", "예정일")} value={fmtDate(wo.scheduled_at)} />
+              <Row label={t("wosign.field_completed", "완료일")} value={fmtDate(wo.completed_at)} />
               <Row label={t("wosign.field_partner", "작업 파트너")} value={wo.partner_name} />
               <Row label={t("wosign.field_description", "상세")} value={wo.description} multiline />
               <Row label={t("wosign.field_notes", "비고")} value={wo.notes} multiline />
@@ -344,8 +345,8 @@ function PhotoBlock({ title, sessions }: { title: string; sessions: Array<[numbe
   );
 }
 
-function fmtDate(value: string | null | undefined, lang: string): string | null {
+function fmtDate(value: string | null | undefined): string | null {
   if (!value) return null;
-  const d = new Date(value);
-  return Number.isNaN(d.getTime()) ? String(value) : d.toLocaleDateString(lang);
+  // 표기는 테넌트 날짜 형식을 따른다 — 파싱이 안 되는 값은 원문 그대로 둔다.
+  return formatDate(value, String(value));
 }

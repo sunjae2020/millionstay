@@ -9,6 +9,7 @@ import { formatMoney } from "@/lib/money";
 import { Calendar, CalendarDays, List, Search, X } from "lucide-react";
 
 import { ExportableTable } from "@/components/ui/ExportCsvButton";
+import { DateInput } from "@/components/ui/date-input";
 interface Booking {
   id: number;
   booking_ref: string;
@@ -114,22 +115,20 @@ export default function BookingsPage() {
 
         <div className="flex flex-col">
           <label className="text-xs text-muted-foreground mb-1">{t("bookings.date_from")}</label>
-          <input
-            type="date"
+          <DateInput
             value={dateFrom}
             max={dateTo || undefined}
-            onChange={(e) => setDateFrom(e.target.value)}
-            className="px-3 py-2 rounded-lg border border-input bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+            onChange={setDateFrom}
+            clearable
           />
         </div>
         <div className="flex flex-col">
           <label className="text-xs text-muted-foreground mb-1">{t("bookings.date_to")}</label>
-          <input
-            type="date"
+          <DateInput
             value={dateTo}
             min={dateFrom || undefined}
-            onChange={(e) => setDateTo(e.target.value)}
-            className="px-3 py-2 rounded-lg border border-input bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+            onChange={setDateTo}
+            clearable
           />
         </div>
 

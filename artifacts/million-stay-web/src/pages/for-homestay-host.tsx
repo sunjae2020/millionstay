@@ -20,6 +20,7 @@ import { HomestayTermsBody } from "@/lib/homestay-terms-content";
 import { ScrollToAgree } from "@/components/ScrollToAgree";
 import { HS } from "@/lib/homestay-theme";
 import { formatPersonName } from "@/lib/nameFormat";
+import { DateInput } from "@/components/ui/date-input";
 
 // ─── Option constants ─────────────────────────────────────────────────────────
 const GENDERS = ["Male", "Female", "Other"];
@@ -302,7 +303,7 @@ export default function ForHomestayHost() {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                 <Field label={t("homestay.apply.date_of_birth")} required>
-                  <Input type="date" value={f.date_of_birth} onChange={(e) => set("date_of_birth", e.target.value)} className="h-11" />
+                  <DateInput value={f.date_of_birth} onChange={(v) => set("date_of_birth", v)} className={inputCls + " h-11"} />
                 </Field>
                 <Field label={t("homestay.apply.gender")} required>
                   <select value={f.gender} onChange={(e) => set("gender", e.target.value)} className={inputCls + " h-11"}>

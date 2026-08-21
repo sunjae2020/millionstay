@@ -11,6 +11,7 @@ import {
 import { apiFetch, apiPost } from "@/lib/apiFetch";
 import { formatPersonName } from "@/lib/nameFormat";
 import { ExportableTable } from "@/components/ui/ExportCsvButton";
+import { formatDate } from "@/lib/date";
 import {
   Building2, User, Upload, Trash2, Sparkles, Loader2, UserRoundCheck, BadgeCheck, ShieldAlert, ShieldQuestion,
 } from "lucide-react";
@@ -419,7 +420,7 @@ export function AccountIdentityPanel({
             </Badge>
             {bizVerify.verified_at && (
               <span className="text-xs text-muted-foreground">
-                {new Date(bizVerify.verified_at).toLocaleDateString()}
+                {formatDate(bizVerify.verified_at)}
               </span>
             )}
           </div>
