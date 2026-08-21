@@ -41,6 +41,21 @@ export function watermarkDate(when: Date = new Date()): string {
   }).format(d).replace(/-/g, "/");
 }
 
+/**
+ * 매물명에서 괄호로 병기된 **영문**을 뗀다 — `메트하임 여수 (Metheim Yeosu)`
+ * → `메트하임 여수`. 사진 위 한 줄은 짧을수록 읽히므로 워터마크에서만 줄이고
+ * 원장의 매물명은 그대로 둔다. 괄호 안에 한글이 있으면(`메트하임(여수)`)
+ * 이름의 일부라 보고 두며, 떼고 나면 남는 게 없는 영문 전용 매물도 건드리지
+ * 않는다.
+ */
+function shortPlaceName(name: string): string {
+  const m = name.match(/^(.*?)\s*[(（]([^()（）]*)[)）]\s*$/u);
+  if (!m) return name;
+  const [, head = "", inside = ""] = m;
+  if (/[가-힣]/u.test(inside)) return name;
+  return head.trim() || name;
+}
+
 /** `YYYY/MM/DD-매물/공간_사진설명` 한 줄을 만든다. */
 export function buildPhotoWatermark(
   ctx: PhotoWatermarkContext,
@@ -48,7 +63,8 @@ export function buildPhotoWatermark(
   when: Date = new Date(),
 ): string {
   const clean = (v: unknown): string => String(v ?? "").replace(/\s+/g, " ").trim();
-  const place = [clean(ctx.property), clean(ctx.unit)].filter(Boolean).join("/");
+  const property = clean(ctx.property) ? shortPlaceName(clean(ctx.property)) : "";
+  const place = [property, clean(ctx.unit)].filter(Boolean).join("/");
   const note = clean(caption).slice(0, MAX_CAPTION);
   return `${watermarkDate(when)}${place ? `-${place}` : ""}${note ? `_${note}` : ""}`;
 }
