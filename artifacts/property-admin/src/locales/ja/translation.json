@@ -1709,7 +1709,7 @@
     "photo_kind_before": "作業前",
     "photo_kind_after": "作業後",
     "label_photo_caption": "説明",
-    "ph_photo_caption": "例: 浴室の水漏れ、リビング補修後",
+    "ph_photo_caption": "写真の説明（例: 便器のセメント補修）",
     "photos_dropzone": "写真をドラッグ＆ドロップ、またはクリックして選択",
     "photos_formats": "JPG、PNG、WEBP · 1枚10MBまで",
     "photos_staged_hint": "選択した写真は作業指示の保存時にアップロードされます。",
@@ -1775,7 +1775,7 @@
     "sign_view_document": "署名済み確認書を見る",
     "sign_document": "作業確認書",
     "photos_sessions_count": "{{sessions}}回 · 写真 {{count}}枚",
-    "ph_photo_session_caption": "今回のまとめのメモ（任意）",
+    "ph_photo_session_caption": "次に追加する写真の既定の説明（任意）",
     "photos_dropzone_kind": "{{kind}}の写真を追加 — ドラッグ＆ドロップまたはクリック",
     "photos_session_hint": "一度にアップロードした写真が 1 回分として保存されます。",
     "photos_upload_as_session": "{{n}}回目としてアップロード",
@@ -1792,7 +1792,8 @@
     "dispatch_pick_partner": "パートナーを選択",
     "dispatch_no_partners": "有効なパートナーがありません。パートナー画面で登録してください。",
     "dispatch_auto": "カテゴリ自動マッチング",
-    "btn_dispatch_confirm": "割当"
+    "btn_dispatch_confirm": "割当",
+    "photos_caption_hint": "撮影日・物件/部屋番号とこの説明が写真に透かしとして焼き込まれます。"
   },
   "csticket": {
     "search_placeholder": "チケットを検索...",

@@ -1736,7 +1736,7 @@
     "photo_kind_before": "Before",
     "photo_kind_after": "After",
     "label_photo_caption": "Caption",
-    "ph_photo_caption": "e.g. Bathroom leak, living room after repair",
+    "ph_photo_caption": "Photo note (e.g. toilet re-cemented)",
     "photos_dropzone": "Drag & drop photos here, or click to choose",
     "photos_formats": "JPG, PNG, WEBP · up to 10MB each",
     "photos_staged_hint": "These photos are uploaded when you save the work order.",
@@ -1802,7 +1802,7 @@
     "sign_view_document": "View signed confirmation",
     "sign_document": "Work completion confirmation",
     "photos_sessions_count": "{{sessions}} session(s) · {{count}} photo(s)",
-    "ph_photo_session_caption": "Note for this batch (optional)",
+    "ph_photo_session_caption": "Default note for photos added next (optional)",
     "photos_dropzone_kind": "Add {{kind}} photos — drag & drop or click",
     "photos_session_hint": "Each upload is saved as its own session.",
     "photos_upload_as_session": "Upload as session {{n}}",
@@ -1819,7 +1819,8 @@
     "dispatch_pick_partner": "Select a partner",
     "dispatch_no_partners": "No active partners. Add one under Partners.",
     "dispatch_auto": "Auto-match by category",
-    "btn_dispatch_confirm": "Dispatch"
+    "btn_dispatch_confirm": "Dispatch",
+    "photos_caption_hint": "The date, property/unit and this note are burned onto each photo as a watermark."
   },
   "csticket": {
     "search_placeholder": "Search tickets...",

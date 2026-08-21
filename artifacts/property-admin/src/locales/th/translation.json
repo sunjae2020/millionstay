@@ -1707,7 +1707,7 @@
     "photo_kind_before": "ก่อนดำเนินการ",
     "photo_kind_after": "หลังดำเนินการ",
     "label_photo_caption": "คำอธิบาย",
-    "ph_photo_caption": "เช่น น้ำรั่วในห้องน้ำ, ห้องนั่งเล่นหลังซ่อม",
+    "ph_photo_caption": "คำอธิบายรูป (เช่น ซ่อมปูนโถสุขภัณฑ์)",
     "photos_dropzone": "ลากและวางรูปภาพที่นี่ หรือคลิกเพื่อเลือก",
     "photos_formats": "JPG, PNG, WEBP · ไม่เกิน 10MB ต่อรูป",
     "photos_staged_hint": "รูปภาพเหล่านี้จะถูกอัปโหลดเมื่อคุณบันทึกใบสั่งงาน",
@@ -1773,7 +1773,7 @@
     "sign_view_document": "ดูหนังสือยืนยันที่ลงนามแล้ว",
     "sign_document": "หนังสือยืนยันงาน",
     "photos_sessions_count": "{{sessions}} ครั้ง · {{count}} รูป",
-    "ph_photo_session_caption": "หมายเหตุสำหรับชุดนี้ (ไม่บังคับ)",
+    "ph_photo_session_caption": "คำอธิบายเริ่มต้นสำหรับรูปที่จะเพิ่มถัดไป (ไม่บังคับ)",
     "photos_dropzone_kind": "เพิ่มรูป{{kind}} — ลากมาวางหรือคลิกเลือก",
     "photos_session_hint": "รูปที่อัปโหลดพร้อมกันจะถูกบันทึกเป็นหนึ่งครั้ง",
     "photos_upload_as_session": "อัปโหลดเป็นครั้งที่ {{n}}",
@@ -1790,7 +1790,8 @@
     "dispatch_pick_partner": "เลือกพาร์ทเนอร์",
     "dispatch_no_partners": "ไม่มีพาร์ทเนอร์ที่ใช้งานอยู่ กรุณาเพิ่มในเมนูพาร์ทเนอร์",
     "dispatch_auto": "จับคู่อัตโนมัติตามหมวดหมู่",
-    "btn_dispatch_confirm": "มอบหมาย"
+    "btn_dispatch_confirm": "มอบหมาย",
+    "photos_caption_hint": "วันที่ถ่าย ทรัพย์สิน/ห้อง และคำอธิบายนี้จะถูกฝังลงบนรูปเป็นลายน้ำ"
   },
   "csticket": {
     "search_placeholder": "ค้นหาตั๋ว...",

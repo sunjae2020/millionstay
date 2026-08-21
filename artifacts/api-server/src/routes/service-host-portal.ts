@@ -18,6 +18,7 @@ import {
 } from "@workspace/db";
 import { requireServiceHostAuth, type PartnerAuthPayload } from "../middlewares/requirePartnerAuth";
 import { isCloudinaryConfigured, uploadToCloudinary, uploadPrivateToCloudinary, generateSignedUrl, deleteFromCloudinary, cldFolder } from "../utils/cloudinary";
+import { buildPhotoWatermark, loadPhotoWatermarkContext, watermarkedPhotoUrl } from "../lib/workOrders/photoWatermark";
 import { parsePageParams, pageMeta } from "../utils/pagination";
 import { decodeUploadFilename } from "../lib/uploadFilename";
 
@@ -167,15 +168,20 @@ router.post(
       const existing = await db.select({ id: workOrderPhotosTable.id }).from(workOrderPhotosTable).where(eq(workOrderPhotosTable.work_order_id, wo.id));
       if (existing.length >= MAX_WO_PHOTOS) { res.status(400).json({ success: false, error: { code: "MAX_REACHED", message: `Maximum of ${MAX_WO_PHOTOS} photos already uploaded` } }); return; }
 
+      const caption = typeof req.body?.caption === "string" && req.body.caption.trim() ? req.body.caption.trim() : null;
+      // 관리자 업로드와 같은 워터마크를 태운다 — 파트너가 올린 사진도 그대로
+      // 청구 증빙으로 쓰이므로 출처가 이미지 안에 남아야 한다.
+      const place = await loadPhotoWatermarkContext(wo.id);
       const uploaded = await uploadToCloudinary(file.buffer, { folder: cldFolder("work-orders") });
       publicId = uploaded.public_id;
+      const url = watermarkedPhotoUrl(uploaded, buildPhotoWatermark(place, caption));
       const kind = req.body?.kind === "before" ? "before" : "after";
       const [row] = await db.insert(workOrderPhotosTable).values({
         work_order_id: wo.id,
-        url: uploaded.secure_url,
+        url,
         kind,
         uploaded_by_type: "partner",
-        caption: typeof req.body?.caption === "string" && req.body.caption.trim() ? req.body.caption.trim() : null,
+        caption,
       }).returning();
       res.status(201).json({ success: true, data: row });
     } catch (err: any) {

@@ -1711,7 +1711,7 @@
     "photo_kind_before": "施工前",
     "photo_kind_after": "施工后",
     "label_photo_caption": "说明",
-    "ph_photo_caption": "例如：卫生间漏水、客厅维修后",
+    "ph_photo_caption": "照片说明（例：马桶白水泥修补）",
     "photos_dropzone": "将照片拖放到此处，或点击选择",
     "photos_formats": "JPG、PNG、WEBP · 每张最大 10MB",
     "photos_staged_hint": "所选照片将在保存工单时一并上传。",
@@ -1777,7 +1777,7 @@
     "sign_view_document": "查看已签确认书",
     "sign_document": "作业确认书",
     "photos_sessions_count": "{{sessions}} 次 · {{count}} 张照片",
-    "ph_photo_session_caption": "本次批次备注（选填）",
+    "ph_photo_session_caption": "接下来添加照片的默认说明（可选）",
     "photos_dropzone_kind": "添加{{kind}}照片 — 拖放或点击选择",
     "photos_session_hint": "一次上传的照片会保存为一个批次。",
     "photos_upload_as_session": "作为第 {{n}} 次上传",
@@ -1794,7 +1794,8 @@
     "dispatch_pick_partner": "选择合作伙伴",
     "dispatch_no_partners": "没有可用的合作伙伴，请在合作伙伴页面添加。",
     "dispatch_auto": "按类别自动匹配",
-    "btn_dispatch_confirm": "指派"
+    "btn_dispatch_confirm": "指派",
+    "photos_caption_hint": "拍摄日期、房源/房号以及该说明会以水印形式写入每张照片。"
   },
   "csticket": {
     "search_placeholder": "搜索工单...",

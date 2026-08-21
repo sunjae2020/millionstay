@@ -333,7 +333,9 @@
     "cat_carpentry": "งานไม้",
     "cat_pest_control": "กำจัดแมลง",
     "cat_landscaping": "จัดสวน",
-    "cat_security": "รักษาความปลอดภัย"
+    "cat_security": "รักษาความปลอดภัย",
+    "photo_caption_ph": "คำอธิบายรูป (เช่น ซ่อมปูนโถสุขภัณฑ์)",
+    "photo_caption_hint": "วันที่ถ่าย ทรัพย์สิน/ห้อง และคำอธิบายนี้จะถูกฝังลงบนรูปเป็นลายน้ำ"
   },
   "documents": {
     "title": "เอกสาร",

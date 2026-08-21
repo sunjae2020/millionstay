@@ -74,6 +74,7 @@ export default function WorkOrderDetailPage() {
   const [uploading, setUploading] = useState(false);
   const [delPhoto, setDelPhoto] = useState<number | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
+  const [photoCaption, setPhotoCaption] = useState("");
 
   const load = useCallback(async () => {
     try {
@@ -123,11 +124,14 @@ export default function WorkOrderDetailPage() {
       const fd = new FormData();
       fd.append("image", file);
       fd.append("kind", "after");
+      // 촬영일·매물/호수와 함께 사진에 워터마크로 새겨진다.
+      if (photoCaption.trim()) fd.append("caption", photoCaption.trim());
       const res = await apiFetch(`/v1/service-host/work-orders/${wo.id}/photos`, { method: "POST", body: fd });
       if (!res.ok) {
         const body = await res.json().catch(() => null);
         throw new ApiError(res.status, "UPLOAD", (body as any)?.error?.message ?? t("workorders.photo_upload_failed", "Upload failed"));
       }
+      setPhotoCaption("");
       await loadPhotos();
     } catch (e) {
       setError(e instanceof ApiError ? e.message : t("workorders.photo_upload_failed", "Upload failed"));
@@ -256,6 +260,17 @@ export default function WorkOrderDetailPage() {
                   {uploading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <UploadCloud className="w-3.5 h-3.5" />}
                   {uploading ? t("workorders.photo_uploading", "Uploading…") : t("workorders.photo_add", "Add photo")}
                 </button>
+              </div>
+              <div className="mb-3">
+                <input
+                  value={photoCaption}
+                  onChange={(e) => setPhotoCaption(e.target.value)}
+                  placeholder={t("workorders.photo_caption_ph", "Photo note (e.g. toilet re-cemented)")}
+                  className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
+                />
+                <p className="mt-1 text-[11px] text-muted-foreground">
+                  {t("workorders.photo_caption_hint", "The date, property/unit and this note are burned onto the photo as a watermark.")}
+                </p>
               </div>
               {photos.length === 0 ? (
                 <p className="text-sm text-muted-foreground py-6 text-center">{t("workorders.photos_empty", "No photos yet. Upload photos of the completed work.")}</p>
