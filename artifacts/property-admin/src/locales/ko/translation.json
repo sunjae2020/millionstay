@@ -4457,7 +4457,17 @@
     "restore": "복원",
     "restore_selected": "선택 항목 복원",
     "toast_users_restored": "{{count}}명 복원됨",
-    "toast_restore_failed": "복원 실패"
+    "toast_restore_failed": "복원 실패",
+    "edit_user_title": "사용자 편집",
+    "edit_user_desc": "이 계정의 프로필·역할·접근 권한을 수정합니다.",
+    "edit_user_desc_admin": "이름만 수정할 수 있습니다. 역할·이메일·활성 여부는 SuperAdmin 전용입니다.",
+    "field_is_active": "계정 활성",
+    "field_is_active_hint": "끄면 로그인이 차단되고 현재 세션도 만료됩니다.",
+    "field_reset_password": "비밀번호 재설정 (선택)",
+    "field_reset_password_ph": "비워 두면 기존 비밀번호를 유지합니다",
+    "field_reset_password_hint": "사용자는 다음 로그인 때 비밀번호를 바꿔야 합니다.",
+    "self_edit_hint": "본인 역할 변경이나 비활성화는 할 수 없습니다.",
+    "superadmin_only": "SuperAdmin 전용"
   },
   "coming_soon": {
     "heading": "준비 중입니다",

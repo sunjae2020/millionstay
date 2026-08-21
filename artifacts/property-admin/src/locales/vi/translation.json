@@ -4379,7 +4379,17 @@
     "restore_selected": "Khôi phục mục đã chọn",
     "toast_users_restored": "Đã khôi phục {{count}} người dùng",
     "toast_restore_failed": "Khôi phục thất bại",
-    "field_email": "Email"
+    "field_email": "Email",
+    "edit_user_title": "Sửa người dùng",
+    "edit_user_desc": "Cập nhật hồ sơ, vai trò và quyền truy cập của tài khoản này.",
+    "edit_user_desc_admin": "Bạn chỉ có thể sửa tên. Vai trò, email và trạng thái kích hoạt dành riêng cho SuperAdmin.",
+    "field_is_active": "Tài khoản đang hoạt động",
+    "field_is_active_hint": "Tắt sẽ chặn đăng nhập và thu hồi các phiên hiện tại.",
+    "field_reset_password": "Đặt lại mật khẩu (tuỳ chọn)",
+    "field_reset_password_ph": "Để trống để giữ mật khẩu hiện tại",
+    "field_reset_password_hint": "Người dùng phải đổi mật khẩu ở lần đăng nhập tiếp theo.",
+    "self_edit_hint": "Bạn không thể đổi vai trò của chính mình hoặc tự vô hiệu hoá.",
+    "superadmin_only": "Chỉ dành cho SuperAdmin"
   },
   "coming_soon": {
     "heading": "Sắp ra mắt",

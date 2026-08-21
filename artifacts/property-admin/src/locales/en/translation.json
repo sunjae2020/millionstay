@@ -4457,7 +4457,17 @@
     "restore": "Restore",
     "restore_selected": "Restore Selected",
     "toast_users_restored": "{{count}} user(s) restored",
-    "toast_restore_failed": "Restore failed"
+    "toast_restore_failed": "Restore failed",
+    "edit_user_title": "Edit User",
+    "edit_user_desc": "Update the profile, role and access of this account.",
+    "edit_user_desc_admin": "You can update the name. Role, email and activation are SuperAdmin only.",
+    "field_is_active": "Account active",
+    "field_is_active_hint": "Turning this off blocks sign-in and revokes current sessions.",
+    "field_reset_password": "Reset password (optional)",
+    "field_reset_password_ph": "Leave blank to keep the current password",
+    "field_reset_password_hint": "The user must change it on next sign-in.",
+    "self_edit_hint": "You cannot change your own role or deactivate yourself.",
+    "superadmin_only": "SuperAdmin only"
   },
   "coming_soon": {
     "heading": "Coming Soon",
