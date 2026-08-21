@@ -17,6 +17,7 @@
  */
 import { resolveTemplate, renderString } from "./documents/templateEngine.js";
 import { inMarketingQuietHours } from "./email.js";
+import { resolveEmailBrand } from "./emailBrand.js";
 
 export type SmsType = "SMS" | "LMS";
 
@@ -156,7 +157,11 @@ export async function sendSms(opts: SendSmsOptions): Promise<SmsSendResult> {
     const meta = (tpl.variablesSchema as Record<string, unknown>)?.kakao;
     if (meta && typeof meta === "object") kakao = meta as KakaoMeta;
   }
-  body = renderString(body, opts.vars ?? {});
+  // 문자는 발신자 표기가 번호뿐이다. 수신자가 누구한테 받았는지 아는 유일한 단서가
+  // 본문의 상호라서, {{brand}} 는 호출부가 챙기지 않아도 여기서 테넌트 상호로 채운다.
+  const vars = { ...(opts.vars ?? {}) };
+  if (!String(vars.brand ?? "").trim()) vars.brand = (await resolveEmailBrand()).name;
+  body = renderString(body, vars);
   if (!body.trim()) return { ok: false, error: "본문이 비었습니다" };
 
   // 2. 광고성 규칙 (야간 차단은 이메일과 같은 창을 쓴다).
@@ -196,7 +201,7 @@ export async function sendSms(opts: SendSmsOptions): Promise<SmsSendResult> {
     ? {
         pfId,
         templateId: kakao!.templateId!,
-        variables: kakaoVariables(opts.vars ?? {}),
+        variables: kakaoVariables(vars),
         // false = 알림톡 실패 시 같은 text 로 SMS 대체발송. 이 값이 대체발송 스위치다.
         disableSms: false,
         ...(kakao!.buttons?.length ? { buttons: kakao!.buttons } : {}),

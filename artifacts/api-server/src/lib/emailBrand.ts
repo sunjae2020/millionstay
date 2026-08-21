@@ -12,6 +12,8 @@
  * minimum take its colours/logo/names from `resolveEmailBrand()`). Do not
  * re-introduce a literal brand colour, logo URL or company name in a template.
  */
+import { db, brandingSettingsTable, BRANDING_SINGLETON_ID } from "@workspace/db";
+import { eq } from "drizzle-orm";
 import { resolveCompanyInfo } from "./documents/companyInfo";
 import { DOC_TOKENS } from "./documents/theme";
 import { escapeHtml } from "./htmlEscape";
@@ -62,16 +64,42 @@ const FALLBACK = {
 };
 
 /**
+ * The name a recipient sees as the sender.
+ *
+ * Settings → Design (`branding.brand_name`) wins over the registered trading
+ * name because they are not the same thing: Metheim trades as "메트하임 여수"
+ * on paperwork but presents itself as "Metheim" to customers, and the From
+ * line, subject and SMS body are customer-facing. Documents keep using the
+ * trading name — only messaging follows the brand. Matches
+ * `resolveCampaignBrand()` so campaigns and transactional mail agree.
+ */
+async function resolveBrandName(): Promise<string> {
+  try {
+    const [row] = await db
+      .select({ brand_name: brandingSettingsTable.brand_name })
+      .from(brandingSettingsTable)
+      .where(eq(brandingSettingsTable.id, BRANDING_SINGLETON_ID))
+      .limit(1);
+    return row?.brand_name?.trim() ?? "";
+  } catch {
+    return "";
+  }
+}
+
+/**
  * Resolve the sending tenant's identity and palette. Read per-send (never
  * cached) so an edit in Settings → Organisation applies to the next email
  * without a restart. Never throws — falls back to env/MillionStay defaults so a
  * DB hiccup can't stop a transactional email going out.
  */
 export async function resolveEmailBrand(): Promise<EmailBrand> {
-  const company = await resolveCompanyInfo().catch(() => null);
+  const [company, brandName] = await Promise.all([
+    resolveCompanyInfo().catch(() => null),
+    resolveBrandName(),
+  ]);
   const color = company?.brandColor || DOC_TOKENS.brand;
   return {
-    name: company?.tradingName || FALLBACK.name,
+    name: brandName || company?.tradingName || FALLBACK.name,
     legalName: company?.legalName || FALLBACK.legalName,
     logoUrl: rasterLogoUrl(company?.logoUrl || FALLBACK.logoUrl),
     supportEmail: company?.email || FALLBACK.supportEmail,

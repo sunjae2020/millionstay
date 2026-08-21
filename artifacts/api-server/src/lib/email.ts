@@ -21,6 +21,62 @@ function safeName(name: string | null | undefined, max = 80): string {
   return escapeHtml((name ?? "").slice(0, max));
 }
 
+/**
+ * Addresses copied on **every** outbound email, from `EMAIL_ALWAYS_CC`
+ * (comma-separated). Per-tenant config rather than a literal — Metheim points it
+ * at its Yeosu operations mailbox so the team keeps a copy of everything the
+ * system sends. Read per-send so a change applies without a restart.
+ */
+export function alwaysCcAddresses(): string[] {
+  return (process.env.EMAIL_ALWAYS_CC ?? "")
+    .split(",")
+    .map((a) => a.trim())
+    .filter((a) => a.includes("@"));
+}
+
+function addressList(value: unknown): string[] {
+  if (!value) return [];
+  return (Array.isArray(value) ? value : [value]).map((v) => String(v)).filter(Boolean);
+}
+
+/** Merge `EMAIL_ALWAYS_CC` into a send payload's `cc`, de-duplicated. */
+function withAlwaysCc<T extends { to?: unknown; cc?: unknown }>(payload: T): T {
+  const always = alwaysCcAddresses();
+  if (!always.length) return payload;
+  const recipients = new Set(addressList(payload.to).map((a) => a.toLowerCase()));
+  const cc = addressList(payload.cc);
+  const seen = new Set(cc.map((a) => a.toLowerCase()));
+  for (const addr of always) {
+    const key = addr.toLowerCase();
+    // Skip when already a recipient — Resend rejects an address listed twice.
+    if (seen.has(key) || recipients.has(key)) continue;
+    seen.add(key);
+    cc.push(addr);
+  }
+  return cc.length ? { ...payload, cc } : payload;
+}
+
+const CC_PATCHED = Symbol.for("millionstay.resend.alwaysCc");
+
+/**
+ * The single place a Resend client is constructed. `emails.send` is patched to
+ * append `EMAIL_ALWAYS_CC` to every payload, so the operations copy cannot be
+ * forgotten by a new caller. Never `new Resend(...)` elsewhere.
+ */
+export function resendClient(apiKey?: string | null): Resend | null {
+  const key = apiKey ?? process.env.RESEND_API_KEY;
+  if (!key) return null;
+  const client = new Resend(key);
+  const emails = client.emails as unknown as Record<string | symbol, unknown>;
+  if (!emails[CC_PATCHED]) {
+    const send = client.emails.send.bind(client.emails);
+    client.emails.send = ((payload: Parameters<typeof send>[0], options?: Parameters<typeof send>[1]) =>
+      send(withAlwaysCc(payload as unknown as { to?: unknown; cc?: unknown }) as Parameters<typeof send>[0], options)) as typeof send;
+    emails[CC_PATCHED] = true;
+  }
+  return client;
+}
+
 function getResend(): Resend | null {
   const key = process.env.RESEND_API_KEY;
   if (!key) return null;
@@ -28,7 +84,7 @@ function getResend(): Resend | null {
   // Integrations) so a new key takes effect without a server restart. The client
   // was previously cached forever, so a stale/invalid key kept being used.
   if (!resend || resendKey !== key) {
-    resend = new Resend(key);
+    resend = resendClient(key);
     resendKey = key;
   }
   return resend;
@@ -65,23 +121,55 @@ function bareAddress(from: string): string {
  * the provider cannot authorise, we fall back to the verified default sender and
  * keep the configured address as Reply-To so replies still reach the tenant.
  */
-export function emailSender(): { from: string; replyTo?: string } {
+const DEFAULT_FROM_ADDRESS = bareAddress(DEFAULT_FROM);
+
+/**
+ * Quote a From display name for RFC 5322. Names carrying a special character
+ * (`,` `<` `"` … — and Korean trading names often carry none, but a legal name
+ * like "(주)메트하임" does) must be a quoted-string or the whole header breaks.
+ */
+function quoteDisplayName(name: string): string {
+  const clean = name.replace(/[\r\n"\\]/g, "").trim();
+  if (!clean) return "";
+  return /[(),:;<>@\[\]]/.test(clean) ? `"${clean}"` : clean;
+}
+
+/**
+ * Envelope sender for every outbound email.
+ *
+ * The **display name** is the sending tenant's trading name, passed in by the
+ * caller from `resolveEmailBrand()` — recipients of a Metheim email must see
+ * "Metheim", never the MillionStay default baked into `EMAIL_FROM`/`DEFAULT_FROM`.
+ * Only the *address* comes from configuration, because an ESP will only send
+ * from a domain the account has verified.
+ *
+ * `EMAIL_FROM` is tenant-configurable (env, or Settings → Integrations which
+ * writes it into `process.env`), so it is read per-send rather than captured at
+ * import time. When it is missing, malformed, or points at a free-mail domain
+ * the provider cannot authorise, we fall back to the verified default address
+ * and keep the configured address as Reply-To so replies still reach the tenant.
+ */
+export function emailSender(brandName?: string | null): { from: string; replyTo?: string } {
+  const display = quoteDisplayName(brandName ?? "");
+  const withDisplay = (address: string, fallback: string) =>
+    display ? `${display} <${address}>` : fallback;
+
   const configured = (process.env.EMAIL_FROM ?? "").trim();
-  if (!configured) return { from: DEFAULT_FROM };
+  if (!configured) return { from: withDisplay(DEFAULT_FROM_ADDRESS, DEFAULT_FROM) };
   const address = bareAddress(configured);
   const domain = address.split("@")[1];
   if (!domain || !address.includes("@")) {
     console.warn(`[email] EMAIL_FROM is not a valid address (${configured}) — using ${DEFAULT_FROM}`);
-    return { from: DEFAULT_FROM };
+    return { from: withDisplay(DEFAULT_FROM_ADDRESS, DEFAULT_FROM) };
   }
   if (FREE_MAIL_DOMAINS.has(domain)) {
     console.warn(
       `[email] EMAIL_FROM domain "${domain}" cannot be used as a sender (free/shared mailbox) — ` +
-        `sending from ${DEFAULT_FROM} with Reply-To ${address}. Configure EMAIL_FROM to an address on a domain verified with the email provider.`,
+        `sending from ${DEFAULT_FROM_ADDRESS} with Reply-To ${address}. Configure EMAIL_FROM to an address on a domain verified with the email provider.`,
     );
-    return { from: DEFAULT_FROM, replyTo: address };
+    return { from: withDisplay(DEFAULT_FROM_ADDRESS, DEFAULT_FROM), replyTo: address };
   }
-  return { from: configured };
+  return { from: withDisplay(address, configured) };
 }
 const SUPPORT_EMAIL = process.env.SUPPORT_EMAIL ?? "millionstay.com@gmail.com";
 
@@ -165,7 +253,7 @@ export async function sendDocumentEmail(
   // 으로 바뀌면서 생긴 회귀다. contentType 도 함께 명시해 추론에 기대지 않는다.
   const attachmentName = /\.[A-Za-z0-9]{2,4}$/.test(opts.filename) ? opts.filename : `${opts.filename}.pdf`;
   const payload = {
-    ...emailSender(),
+    ...emailSender(brand.name),
     to: recipients,
     subject,
     html,
@@ -311,7 +399,7 @@ export async function sendDunningEmail(opts: {
 
   try {
     const { data, error } = await client.emails.send({
-      ...emailSender(), to: [opts.to], subject, html,
+      ...emailSender(brand.name), to: [opts.to], subject, html,
     });
     if (error || !data?.id) {
       console.error(`[email] 독촉 발송 거부 (${opts.templateKey} #${opts.invoiceId}):`, error);
@@ -368,7 +456,7 @@ export async function sendCsEmail(opts: {
 
   try {
     const { data, error } = await client.emails.send({
-      ...emailSender(), to: [opts.to], subject, html,
+      ...emailSender(brand.name), to: [opts.to], subject, html,
     });
     if (error || !data?.id) {
       console.error(`[email] CS 발송 거부 (${opts.templateKey} #${opts.ticketId}):`, error);
@@ -448,7 +536,7 @@ export async function sendPasswordResetEmail(
   });
   try {
     await client.emails.send({
-      ...emailSender(),
+      ...emailSender(brand.name),
       to: [opts.to],
       subject: copy?.subject ?? `[${brand.name} ${productLabel}] Password Reset Request`,
       html,
@@ -490,7 +578,7 @@ export async function sendRegistrationRequestEmail(to: string, name: string, adm
     <a href="${escapeHtml(adminPanelUrl)}/settings/users" class="btn">Review in Admin Panel →</a>`,
   });
   try {
-    await client.emails.send({ ...emailSender(), to: [to], subject: copy?.subject ?? `[${brand.name} Admin] New Account Request`, html });
+    await client.emails.send({ ...emailSender(brand.name), to: [to], subject: copy?.subject ?? `[${brand.name} Admin] New Account Request`, html });
     console.log(`[email] Registration notification sent to ${to}`);
     return true;
   } catch (err) {
@@ -623,7 +711,7 @@ export async function sendBookingConfirmation(data: BookingConfirmationData): Pr
 
   try {
     await client.emails.send({
-      ...emailSender(),
+      ...emailSender(brand.name),
       to: [to],
       subject: `[${brand.name}] Booking Confirmed — ${bookingRef}`,
       html,
@@ -688,7 +776,7 @@ export async function sendLeadNotificationEmail(data: LeadNotificationData): Pro
 
   try {
     await client.emails.send({
-      ...emailSender(),
+      ...emailSender(brand.name),
       to: [to],
       replyTo: data.email,
       subject: `[${brand.name} Lead] ${data.inquiryType} — ${fullName || data.email} (${data.leadRef})`,
@@ -721,12 +809,13 @@ interface HomestayHostEmailOptions {
   attachments?: Array<{ filename: string; content: Buffer }>;
 }
 
-const HOMESTAY_EMAIL_COPY: Record<HomestayEmailKind, { subject: (ref: string) => string; heading: string; body: (portalUrl: string) => string }> = {
+// 상호는 인자로 받는다 — 문안에 박으면 Metheim 호스트가 MillionStay 메일을 받는다.
+const HOMESTAY_EMAIL_COPY: Record<HomestayEmailKind, { subject: (ref: string, brand: string) => string; heading: string; body: (portalUrl: string, brand: string) => string }> = {
   received: {
     subject: (ref) => `We received your Homestay Host application (${ref})`,
     heading: "Application received",
-    body: (portalUrl) =>
-      `Thank you for applying to become a MillionStay homestay host. Your application is now with our team for review.` +
+    body: (portalUrl, brand) =>
+      `Thank you for applying to become a ${brand} homestay host. Your application is now with our team for review.` +
       ` You can log in to your host portal at any time to track your status and complete any outstanding steps:` +
       ` <a href="${portalUrl}">${portalUrl}</a>.`,
   },
@@ -738,7 +827,7 @@ const HOMESTAY_EMAIL_COPY: Record<HomestayEmailKind, { subject: (ref: string) =>
       ` Please log in to your host portal to upload them: <a href="${portalUrl}">${portalUrl}</a>.`,
   },
   approved: {
-    subject: (ref) => `You're approved as a MillionStay Homestay Host (${ref})`,
+    subject: (ref, brand) => `You're approved as a ${brand} Homestay Host (${ref})`,
     heading: "Welcome — you're approved!",
     body: (portalUrl) =>
       `Congratulations! Your homestay host application has been approved.` +
@@ -748,8 +837,8 @@ const HOMESTAY_EMAIL_COPY: Record<HomestayEmailKind, { subject: (ref: string) =>
   rejected: {
     subject: (ref) => `Update on your Homestay Host application (${ref})`,
     heading: "Application update",
-    body: () =>
-      `Thank you for your interest in hosting with MillionStay. After review, we're unable to approve your` +
+    body: (_portalUrl, brand) =>
+      `Thank you for your interest in hosting with ${brand}. After review, we're unable to approve your` +
       ` application at this time. If you believe this was in error or your circumstances change, please reply to this email.`,
   },
   placement_proposed: {
@@ -789,14 +878,14 @@ export async function sendHomestayHostEmail(opts: HomestayHostEmailOptions): Pro
   let cardInner: string;
   if (tpl && tpl.bodyHtml) {
     const vars = { ref: opts.applicationRef, name: safeName(opts.toName) || "there", portal_url: portalUrl, note: opts.note ?? "" };
-    subject = renderString(tpl.subject || copy.subject(opts.applicationRef), vars);
+    subject = renderString(tpl.subject || copy.subject(opts.applicationRef, brand.name), vars);
     cardInner = `${renderString(tpl.bodyHtml, vars)}${noteHtml}
     <p style="font-size:13px;color:#9ca3af;margin:20px 0 0;">Application reference: <strong>${escapeHtml(opts.applicationRef)}</strong></p>`;
   } else {
-    subject = copy.subject(opts.applicationRef);
+    subject = copy.subject(opts.applicationRef, brand.name);
     cardInner = `<h1 style="font-size:20px;margin:0 0 12px;color:#1f2937;">${escapeHtml(copy.heading)}</h1>
     <p style="font-size:14px;color:#4b5563;line-height:1.6;margin:0;">Hi ${safeName(opts.toName) || "there"},</p>
-    <p style="font-size:14px;color:#4b5563;line-height:1.6;margin:12px 0 0;">${copy.body(portalUrl)}</p>
+    <p style="font-size:14px;color:#4b5563;line-height:1.6;margin:12px 0 0;">${copy.body(portalUrl, brand.name)}</p>
     ${noteHtml}
     <p style="font-size:13px;color:#9ca3af;margin:20px 0 0;">Application reference: <strong>${escapeHtml(opts.applicationRef)}</strong></p>`;
   }
@@ -808,7 +897,7 @@ export async function sendHomestayHostEmail(opts: HomestayHostEmailOptions): Pro
   });
   const attachments = (opts.attachments ?? []).map((a) => ({ filename: a.filename, content: a.content.toString("base64") }));
   try {
-    await client.emails.send({ ...emailSender(), to: [opts.to], subject, html, ...(attachments.length ? { attachments } : {}) });
+    await client.emails.send({ ...emailSender(brand.name), to: [opts.to], subject, html, ...(attachments.length ? { attachments } : {}) });
     console.log(`[email] Homestay ${opts.kind} sent for ${opts.applicationRef} → ${opts.to}${tpl ? " (template)" : ""}${attachments.length ? " (+pdf)" : ""}`);
     return true;
   } catch (err) {
@@ -868,7 +957,7 @@ export async function sendApplicationAckEmail(opts: ApplicationAckEmailOptions):
     : [];
   try {
     await client.emails.send({
-      ...emailSender(),
+      ...emailSender(brand.name),
       to: [opts.to],
       subject: `We received your ${opts.appTypeLabel} (${opts.ref})`,
       html,
@@ -1048,7 +1137,7 @@ export async function sendMarketingEmail(
 
   try {
     const result = await client.emails.send({
-      ...emailSender(),
+      ...emailSender(brand.name),
       to: [to],
       // 4. Ad marker in the subject (KR §50④). No-op where unset.
       subject: applyAdPrefix(opts.subject),
@@ -1211,7 +1300,7 @@ export async function sendInspectionSignLinkEmail(
 
   try {
     const { data, error } = await client.emails.send({
-      ...emailSender(),
+      ...emailSender(brand.name),
       to: [opts.to],
       subject: copy.subject(brand.name, phaseLabel),
       html,
@@ -1410,7 +1499,7 @@ export async function sendAppointmentConfirmationEmail(
 
   try {
     const { data, error } = await client.emails.send({
-      ...emailSender(),
+      ...emailSender(brand.name),
       to: [opts.to],
       subject: copy.subject(brand.name, dateShort),
       html,

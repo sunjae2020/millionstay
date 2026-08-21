@@ -54,10 +54,11 @@ async function notifyBilling(args: {
     });
   }
   if (!args.mobile) return false;
+  // {{brand}} 는 sendSms 가 테넌트 상호로 채운다 — 여기서 빈 값을 넘기면 덮어써진다.
   const res = await sendSms({
     to: args.mobile,
     templateKey: args.smsKey,
-    vars: { ...args.vars, brand: "", contact_phone: process.env.SUPPORT_PHONE ?? "" },
+    vars: { ...args.vars, contact_phone: process.env.SUPPORT_PHONE ?? "" },
   });
   // 채널이 달라도 멱등 키는 이메일 문안 키로 통일한다 — "이 단계는 통보했다" 가
   // 기록의 뜻이고, 채널별로 나누면 이메일→SMS 전환 시 중복 통보가 나간다.

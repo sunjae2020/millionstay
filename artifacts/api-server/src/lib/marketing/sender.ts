@@ -8,9 +8,9 @@
  * window must stop the send. Checking only at build time is how systems mail
  * people who already opted out.
  */
-import { Resend } from "resend";
 import { db, emailLogsTable, type emailCampaignsTable, type prospectsTable } from "@workspace/db";
-import { emailSender } from "../email";
+import { emailSender, resendClient } from "../email";
+import type { Resend } from "resend";
 import { checkSendable } from "./consent";
 import { renderCampaignMessage, type CampaignBrand, type RenderVariables } from "./render";
 
@@ -25,7 +25,7 @@ function getClient(): Resend | null {
   const key = process.env.RESEND_API_KEY;
   if (!key) return null;
   if (!client || clientKey !== key) {
-    client = new Resend(key);
+    client = resendClient(key);
     clientKey = key;
   }
   return client;
@@ -61,8 +61,10 @@ export function prospectVars(prospect: Prospect, campaign: Campaign): RenderVari
  * the provider has verified for this account — otherwise Resend rejects the
  * whole send. Unknown domains fall back to the instance default.
  */
-function resolveFrom(campaign: Campaign): { from: string; replyTo?: string } {
-  const base = emailSender();
+function resolveFrom(campaign: Campaign, brandName: string): { from: string; replyTo?: string } {
+  // The fallback sender still identifies the tenant — a Metheim campaign that
+  // does not name its own sender must not go out as "MillionStay".
+  const base = emailSender(brandName);
   const configured = campaign.from_email.trim();
   if (!configured) return { from: base.from, replyTo: campaign.reply_to.trim() || base.replyTo };
 
@@ -146,7 +148,7 @@ export async function sendCampaignMessage(opts: SendCampaignMessageOptions): Pro
     return { ok: false, skipped: true, reason: "email_disabled", error: "Email service not configured" };
   }
 
-  const sender = resolveFrom(opts.campaign);
+  const sender = resolveFrom(opts.campaign, opts.brand.name);
   try {
     const result = await resend.emails.send({
       from: sender.from,
