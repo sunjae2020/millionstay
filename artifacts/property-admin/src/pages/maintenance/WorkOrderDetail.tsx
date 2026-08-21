@@ -29,6 +29,7 @@ import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrig
 import { COMMON_WORK_ORDER_CATEGORIES, OTHER_WORK_ORDER_CATEGORIES, canonicalWorkOrderCategory } from "@/lib/workOrderCategories";
 import { ArrowLeft, Trash2, Save, Send, ShieldAlert, CheckCircle2, Clock, CalendarClock, Mail, FileText, FileSignature } from "lucide-react";
 import { DocumentPreviewDialog, useDocumentPreview } from "@/components/DocumentPreviewDialog";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useState } from "react";
 import { apiJson } from "@/lib/apiFetch";
 import { WorkOrderPhotos, uploadStagedPhotos, type StagedPhoto } from "@/components/WorkOrderPhotos";
@@ -201,10 +202,36 @@ export default function WorkOrderDetail() {
 
   const [dispatching, setDispatching] = useState(false);
   const [dispatchError, setDispatchError] = useState<string | null>(null);
-  const dispatch = async (force = false) => {
+  // 배정/재배정은 파트너를 직접 고르는 팝업으로 한다 — 자동 매칭만 있으면 후보가
+  // 하나뿐인 카테고리에서 "재배정"이 같은 파트너를 다시 꽂아 아무 변화가 없다.
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const [hosts, setHosts] = useState<Array<{ id: number; name: string; specialties?: unknown }>>([]);
+  const [hostsLoading, setHostsLoading] = useState(false);
+  const [pickedHostId, setPickedHostId] = useState<string>("");
+
+  const openPicker = async () => {
+    setPickerOpen(true); setDispatchError(null);
+    setPickedHostId(String((wo as any)?.service_host_id ?? ""));
+    setHostsLoading(true);
+    try {
+      const rows = await apiJson<any>(`/api/v1/service-hosts?status=Active`);
+      setHosts(Array.isArray(rows) ? rows : rows?.data ?? []);
+    } catch {
+      setHosts([]);
+    } finally {
+      setHostsLoading(false);
+    }
+  };
+
+  /** serviceHostId를 주면 그 파트너로, 없으면 카테고리 자동 매칭으로 배정한다. */
+  const dispatch = async (serviceHostId?: number) => {
     setDispatching(true); setDispatchError(null);
     try {
-      await apiJson(`/api/v1/work-orders/${id}/dispatch`, { method: "POST", body: JSON.stringify({ force }) });
+      await apiJson(`/api/v1/work-orders/${id}/dispatch`, {
+        method: "POST",
+        body: JSON.stringify({ force: true, ...(serviceHostId ? { service_host_id: serviceHostId } : {}) }),
+      });
+      setPickerOpen(false);
       invalidate(); refetch();
     } catch (e: any) {
       setDispatchError(e?.message ?? t('workorder.dispatch_failed', 'Dispatch failed — no matching partner'));
@@ -212,6 +239,9 @@ export default function WorkOrderDetail() {
       setDispatching(false);
     }
   };
+
+  // 작업지시서 PDF의 사진 타일 크기 — 원본 비율은 유지되고 크기만 바뀐다.
+  const [photoSize, setPhotoSize] = useState<"s" | "m" | "l">("m");
 
   const [sendingConfirm, setSendingConfirm] = useState(false);
   const [confirmMsg, setConfirmMsg] = useState<{ ok: boolean; text: string } | null>(null);
@@ -259,13 +289,25 @@ export default function WorkOrderDetail() {
               <ArrowLeft className="h-4 w-4 mr-1" /> {t('common.back')}
             </Button>
             {!isNew && (
+              <Select value={photoSize} onValueChange={(v) => setPhotoSize(v as "s" | "m" | "l")}>
+                <SelectTrigger className="w-[124px]" title={t('workorder.photo_size', 'Photo size')}>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="s">{t('workorder.photo_size_s', 'Photos: small')}</SelectItem>
+                  <SelectItem value="m">{t('workorder.photo_size_m', 'Photos: medium')}</SelectItem>
+                  <SelectItem value="l">{t('workorder.photo_size_l', 'Photos: large')}</SelectItem>
+                </SelectContent>
+              </Select>
+            )}
+            {!isNew && (
               <Button
                 variant="outline"
                 onClick={() =>
                   openPreview({
                     title: wo?.order_ref ?? t('workorder.btn_document', 'Work order PDF'),
                     filename: `${wo?.order_ref ?? "work-order"}.pdf`,
-                    source: { kind: "api", path: `/api/v1/work-orders/${id}/document.pdf?lang=${encodeURIComponent(i18n.language)}` },
+                    source: { kind: "api", path: `/api/v1/work-orders/${id}/document.pdf?lang=${encodeURIComponent(i18n.language)}&photo_size=${photoSize}` },
                   })
                 }
               >
@@ -349,7 +391,7 @@ export default function WorkOrderDetail() {
                   <Send className="h-4 w-4" /> {t('workorder.section_dispatch', 'Partner Dispatch & SLA')}
                 </h2>
                 {canDispatch && (
-                  <Button size="sm" variant={w?.service_host_id ? "outline" : "default"} disabled={dispatching} onClick={() => dispatch(!!w?.service_host_id)}>
+                  <Button size="sm" variant={w?.service_host_id ? "outline" : "default"} disabled={dispatching} onClick={openPicker}>
                     <Send className="h-3.5 w-3.5 mr-1" />
                     {w?.service_host_id ? t('workorder.btn_redispatch', 'Re-dispatch') : t('workorder.btn_dispatch', 'Dispatch to partner')}
                   </Button>
@@ -618,6 +660,42 @@ export default function WorkOrderDetail() {
           </div>
         </form>
       </div>
+      <Dialog open={pickerOpen} onOpenChange={(o) => { if (!o) setPickerOpen(false); }}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>{t('workorder.dispatch_picker_title', 'Dispatch to partner')}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-2">
+            <Label>{t('workorder.label_partner', 'Partner')}</Label>
+            <Select value={pickedHostId} onValueChange={setPickedHostId} disabled={hostsLoading}>
+              <SelectTrigger>
+                <SelectValue placeholder={hostsLoading ? t('common.loading', 'Loading…') : t('workorder.dispatch_pick_partner', 'Select a partner')} />
+              </SelectTrigger>
+              <SelectContent>
+                {hosts.map((h) => (
+                  <SelectItem key={h.id} value={String(h.id)}>
+                    {h.name}{Array.isArray(h.specialties) && h.specialties.length ? ` (${h.specialties.join(", ")})` : ""}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {!hostsLoading && hosts.length === 0 && (
+              <p className="text-xs text-muted-foreground">{t('workorder.dispatch_no_partners', 'No active partners. Add one under Partners.')}</p>
+            )}
+            {dispatchError && <p className="text-xs text-red-600">{dispatchError}</p>}
+          </div>
+          <DialogFooter className="gap-2">
+            <Button variant="outline" disabled={dispatching} onClick={() => dispatch()}>
+              {t('workorder.dispatch_auto', 'Auto-match by category')}
+            </Button>
+            <Button disabled={dispatching || !pickedHostId} onClick={() => dispatch(Number(pickedHostId))}>
+              <Send className="h-3.5 w-3.5 mr-1" />
+              {t('workorder.btn_dispatch_confirm', 'Dispatch')}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       <DocumentPreviewDialog config={previewConfig} onClose={closePreview} />
     </Layout>
   );

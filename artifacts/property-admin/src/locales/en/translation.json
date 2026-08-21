@@ -1810,7 +1810,16 @@
     "photos_empty_kind": "No {{kind}} photos yet.",
     "btn_sign_request": "Request signature",
     "btn_sign_pending": "Signing link",
-    "btn_sign_signed": "Signed"
+    "btn_sign_signed": "Signed",
+    "photo_size": "Photo size",
+    "photo_size_s": "Photos: small",
+    "photo_size_m": "Photos: medium",
+    "photo_size_l": "Photos: large",
+    "dispatch_picker_title": "Dispatch to partner",
+    "dispatch_pick_partner": "Select a partner",
+    "dispatch_no_partners": "No active partners. Add one under Partners.",
+    "dispatch_auto": "Auto-match by category",
+    "btn_dispatch_confirm": "Dispatch"
   },
   "csticket": {
     "search_placeholder": "Search tickets...",

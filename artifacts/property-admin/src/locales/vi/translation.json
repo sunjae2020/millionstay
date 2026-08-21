@@ -1768,7 +1768,16 @@
     "photos_empty_kind": "Chưa có ảnh {{kind}}.",
     "btn_sign_request": "Yêu cầu ký",
     "btn_sign_pending": "Liên kết ký",
-    "btn_sign_signed": "Đã ký"
+    "btn_sign_signed": "Đã ký",
+    "photo_size": "Kích thước ảnh",
+    "photo_size_s": "Ảnh: nhỏ",
+    "photo_size_m": "Ảnh: vừa",
+    "photo_size_l": "Ảnh: lớn",
+    "dispatch_picker_title": "Giao cho đối tác",
+    "dispatch_pick_partner": "Chọn đối tác",
+    "dispatch_no_partners": "Không có đối tác đang hoạt động. Hãy thêm ở mục Đối tác.",
+    "dispatch_auto": "Tự động khớp theo danh mục",
+    "btn_dispatch_confirm": "Giao việc"
   },
   "csticket": {
     "search_placeholder": "Tìm kiếm phiếu hỗ trợ...",

@@ -1810,7 +1810,16 @@
     "photos_empty_kind": "{{kind}} 사진이 아직 없습니다.",
     "btn_sign_request": "서명 요청",
     "btn_sign_pending": "서명 링크",
-    "btn_sign_signed": "서명 완료"
+    "btn_sign_signed": "서명 완료",
+    "photo_size": "사진 크기",
+    "photo_size_s": "사진: 작게",
+    "photo_size_m": "사진: 보통",
+    "photo_size_l": "사진: 크게",
+    "dispatch_picker_title": "파트너 배정",
+    "dispatch_pick_partner": "파트너를 선택하세요",
+    "dispatch_no_partners": "활성 파트너가 없습니다. 파트너 메뉴에서 등록하세요.",
+    "dispatch_auto": "카테고리 자동 매칭",
+    "btn_dispatch_confirm": "배정"
   },
   "csticket": {
     "search_placeholder": "티켓 검색...",

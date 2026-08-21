@@ -1783,7 +1783,16 @@
     "photos_empty_kind": "{{kind}}の写真はまだありません。",
     "btn_sign_request": "署名を依頼",
     "btn_sign_pending": "署名リンク",
-    "btn_sign_signed": "署名済み"
+    "btn_sign_signed": "署名済み",
+    "photo_size": "写真サイズ",
+    "photo_size_s": "写真: 小",
+    "photo_size_m": "写真: 中",
+    "photo_size_l": "写真: 大",
+    "dispatch_picker_title": "パートナー割当",
+    "dispatch_pick_partner": "パートナーを選択",
+    "dispatch_no_partners": "有効なパートナーがありません。パートナー画面で登録してください。",
+    "dispatch_auto": "カテゴリ自動マッチング",
+    "btn_dispatch_confirm": "割当"
   },
   "csticket": {
     "search_placeholder": "チケットを検索...",
