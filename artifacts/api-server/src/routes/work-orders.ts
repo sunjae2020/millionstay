@@ -119,6 +119,9 @@ async function enrichWorkOrders(rows: (typeof workOrdersTable.$inferSelect)[]) {
     // 백필 전 옛 표기(`Cleaning`/`청소`)가 남아 있어도 화면은 표준값 하나로 본다.
     category: canonicalWorkOrderCategory(r.category),
     property_name: resolvePropertyName(r, propertyMap, spaceProperty),
+    // 호수만 지정된 작업지시는 property_id가 비어 있다. 화면의 '매물' 칸이
+    // 빈칸으로 보이지 않도록 공간이 속한 건물 id를 함께 실어 보낸다.
+    space_property_id: r.space_id ? (spaceProperty[r.space_id] ?? null) : null,
     space_name: r.space_id ? (spaceMap[r.space_id] ?? null) : null,
     assigned_contact_name: r.assigned_contact_id ? (contactMap[r.assigned_contact_id] ?? null) : null,
     service_host_name: r.service_host_id ? (hostMap[r.service_host_id] ?? null) : null,

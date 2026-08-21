@@ -146,6 +146,27 @@ router.get("/v1/lookup/payment-info", async (req, res): Promise<void> => {
   }));
 });
 
+router.get("/v1/lookup/properties", async (req, res): Promise<void> => {
+  const q = (req.query["q"] as string) || "";
+  const conditions: SQL[] = [isNull(propertiesTable.deleted_at)];
+  if (q) conditions.push(keywordCondition(q, [propertiesTable.name, propertiesTable.address]));
+  const rows = await db.select({
+    id: propertiesTable.id,
+    name: propertiesTable.name,
+    address: propertiesTable.address,
+  })
+    .from(propertiesTable)
+    .where(and(...conditions))
+    .orderBy(asc(propertiesTable.name))
+    .limit(20);
+
+  res.json(rows.map((r) => ({
+    id: r.id,
+    display: r.address ? `${r.name} — ${r.address}` : r.name,
+    name: r.name,
+  })));
+});
+
 router.get("/v1/lookup/spaces", async (req, res): Promise<void> => {
   const q = (req.query["q"] as string) || "";
   const property_id = req.query["property_id"] ? parseInt(req.query["property_id"] as string, 10) : null;
