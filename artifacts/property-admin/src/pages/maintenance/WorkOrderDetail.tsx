@@ -124,7 +124,7 @@ export default function WorkOrderDetail() {
   useEffect(() => {
     if (wo) {
       reset({
-        property_id: wo.property_id ?? null,
+        property_id: wo.property_id ?? (wo as any).space_property_id ?? null,
         space_id: wo.space_id ?? null,
         title: wo.title ?? "",
         description: wo.description ?? "",
