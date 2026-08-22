@@ -24,6 +24,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { DateInput } from "@/components/ui/date-input";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { COMMON_WORK_ORDER_CATEGORIES, OTHER_WORK_ORDER_CATEGORIES, canonicalWorkOrderCategory } from "@/lib/workOrderCategories";
@@ -68,6 +69,19 @@ const statusColors: Record<string, string> = {
 const WITHHOLDING_RATE_PCT = 3.3;
 const VAT_RATE_PCT = 10;
 
+/**
+ * 저장된 세액이 "적용 있음"인지. 0은 사용자가 체크를 끈 것이고, null은 아직
+ * 정해진 적이 없는 것(이 기능 이전 행 포함)이라 기본값인 적용 있음으로 연다.
+ */
+function taxApplied(amount: unknown): boolean {
+  return amount == null || Number(amount) !== 0;
+}
+
+/** 체크가 켜져 있을 때 작업비용에서 나오는 세액. 꺼져 있으면 빈칸이다. */
+function taxOf(base: number, ratePct: number, applied: boolean): string {
+  return applied ? String(Math.round(base * ratePct / 100)) : "";
+}
+
 interface FormData {
   property_id: number | null;
   space_id: number | null;
@@ -95,6 +109,10 @@ interface FormData {
   net_cost: string;
   withholding_amount: string;
   vat_amount: string;
+  // 세금 적용 여부 — 서버 컬럼이 아니라 금액의 표현이다. 끄면 0으로 저장되고
+  // (= 명시적 "적용 안 함"), 켜면 작업비용 기준으로 자동 계산된다.
+  withholding_applied: boolean;
+  vat_applied: boolean;
   billed_on: string;
   settled_on: string;
 }
@@ -132,6 +150,7 @@ export default function WorkOrderDetail() {
       assigned_user_id: null, attendee_contact_id: null, location_note: "", access_method: "",
       contract_id: null, settlement_method: "", charged_to: "tenant",
       net_cost: "", withholding_amount: "", vat_amount: "", billed_on: "", settled_on: "",
+      withholding_applied: true, vat_applied: true,
     },
   });
 
@@ -168,6 +187,10 @@ export default function WorkOrderDetail() {
         net_cost: (wo as any).net_cost != null ? String((wo as any).net_cost) : "",
         withholding_amount: (wo as any).withholding_amount != null ? String((wo as any).withholding_amount) : "",
         vat_amount: (wo as any).vat_amount != null ? String((wo as any).vat_amount) : "",
+        // 0으로 저장된 세액만 "적용 안 함"이다. 이 기능 이전 행(null)은 기본값인
+        // 적용 있음으로 열려, 작업비용을 넣으면 그대로 계산된다.
+        withholding_applied: taxApplied((wo as any).withholding_amount),
+        vat_applied: taxApplied((wo as any).vat_amount),
         billed_on: (wo as any).billed_on ?? "",
         settled_on: (wo as any).settled_on ?? "",
       });
@@ -177,48 +200,61 @@ export default function WorkOrderDetail() {
         cost: wo.cost != null ? String(wo.cost) : "",
         withholding: (wo as any).withholding_amount != null ? String((wo as any).withholding_amount) : "",
         vat: (wo as any).vat_amount != null ? String((wo as any).vat_amount) : "",
+        whOn: taxApplied((wo as any).withholding_amount),
+        vatOn: taxApplied((wo as any).vat_amount),
       };
     }
   }, [wo, reset]);
 
-  // 세금 자동 계산 — 작업비용을 고치면 원천징수 3.3%와 부가세 10%를 다시 채우고,
-  // 세액을 손으로 고치면 청구비용만 다시 잡는다. 세 칸 모두 그대로 수기 수정할 수
-  // 있고, 계산은 다음에 입력이 바뀔 때까지 덮어쓰지 않는다.
+  // 세금 자동 계산 — 작업비용이 바뀌거나 적용 체크를 켜고 끄면 원천징수 3.3%와
+  // 부가세 10%를 다시 채우고, 청구비용을 작업비용 − 원천징수 + 부가세로 잡는다.
+  // 세 금액 칸은 그대로 수기 수정할 수 있고, 계산은 다음에 입력이 바뀔 때까지
+  // 덮어쓰지 않는다.
   const watchedCost = useWatch({ control, name: "cost" });
   const watchedWithholding = useWatch({ control, name: "withholding_amount" });
   const watchedVat = useWatch({ control, name: "vat_amount" });
-  const taxBase = useRef<{ cost: string; withholding: string; vat: string } | null>(null);
+  const withholdingApplied = useWatch({ control, name: "withholding_applied" });
+  const vatApplied = useWatch({ control, name: "vat_applied" });
+  const taxBase = useRef<{
+    cost: string; withholding: string; vat: string; whOn: boolean; vatOn: boolean;
+  } | null>(null);
 
   useEffect(() => {
     const cost = watchedCost ?? "";
     const withholding = watchedWithholding ?? "";
     const vat = watchedVat ?? "";
+    const whOn = withholdingApplied !== false;
+    const vatOn = vatApplied !== false;
     const prev = taxBase.current;
     // 첫 렌더(또는 서버 값 주입 직후)는 기준점만 잡고 아무것도 건드리지 않는다.
-    if (!prev) { taxBase.current = { cost, withholding, vat }; return; }
-    if (prev.cost === cost && prev.withholding === withholding && prev.vat === vat) return;
+    if (!prev) { taxBase.current = { cost, withholding, vat, whOn, vatOn }; return; }
+    if (prev.cost === cost && prev.withholding === withholding && prev.vat === vat
+      && prev.whOn === whOn && prev.vatOn === vatOn) return;
 
     const base = Number(cost);
     const valid = cost.trim() !== "" && Number.isFinite(base) && base > 0;
 
-    if (prev.cost !== cost) {
-      if (!valid) { taxBase.current = { cost, withholding, vat }; return; }
-      const nextWithholding = String(WITHHOLDING_RATE_PCT ? Math.round(base * WITHHOLDING_RATE_PCT / 100) : 0);
-      const nextVat = String(Math.round(base * VAT_RATE_PCT / 100));
-      const nextNet = String(base - Number(nextWithholding) + Number(nextVat));
-      taxBase.current = { cost, withholding: nextWithholding, vat: nextVat };
-      setValue("withholding_amount", nextWithholding, { shouldDirty: true });
-      setValue("vat_amount", nextVat, { shouldDirty: true });
-      setValue("net_cost", nextNet, { shouldDirty: true });
-      return;
+    let nextWithholding = withholding;
+    let nextVat = vat;
+    // 작업비용이 바뀌면 켜져 있는 세금을 다시 계산한다.
+    if (prev.cost !== cost && valid) {
+      nextWithholding = taxOf(base, WITHHOLDING_RATE_PCT, whOn);
+      nextVat = taxOf(base, VAT_RATE_PCT, vatOn);
+    } else {
+      // 체크만 바뀐 경우 — 켜면 채우고, 끄면 비운다.
+      if (prev.whOn !== whOn) nextWithholding = valid ? taxOf(base, WITHHOLDING_RATE_PCT, whOn) : "";
+      if (prev.vatOn !== vatOn) nextVat = valid ? taxOf(base, VAT_RATE_PCT, vatOn) : "";
     }
 
-    // 세액만 바뀐 경우 — 청구비용을 다시 잡는다.
-    taxBase.current = { cost, withholding, vat };
+    taxBase.current = { cost, withholding: nextWithholding, vat: nextVat, whOn, vatOn };
+    if (nextWithholding !== withholding) setValue("withholding_amount", nextWithholding, { shouldDirty: true });
+    if (nextVat !== vat) setValue("vat_amount", nextVat, { shouldDirty: true });
     if (!valid) return;
-    const nextNet = String(base - (Number(withholding) || 0) + (Number(vat) || 0));
-    setValue("net_cost", nextNet, { shouldDirty: true });
-  }, [watchedCost, watchedWithholding, watchedVat, setValue]);
+    const nextNet = base
+      - (whOn ? Number(nextWithholding) || 0 : 0)
+      + (vatOn ? Number(nextVat) || 0 : 0);
+    setValue("net_cost", String(nextNet), { shouldDirty: true });
+  }, [watchedCost, watchedWithholding, watchedVat, withholdingApplied, vatApplied, setValue]);
 
   const invalidate = () => {
     qc.invalidateQueries({ queryKey: getListWorkOrdersQueryKey() });
@@ -271,8 +307,10 @@ export default function WorkOrderDetail() {
     settlement_method: data.settlement_method || null,
     charged_to: data.charged_to || "tenant",
     net_cost: data.net_cost ? Number(data.net_cost) : null,
-    withholding_amount: data.withholding_amount ? Number(data.withholding_amount) : null,
-    vat_amount: data.vat_amount ? Number(data.vat_amount) : null,
+    // 체크를 끈 세금은 0으로 저장한다 — null은 "아직 정한 적 없음"이라 다시 열 때
+    // 기본값인 적용 있음으로 돌아가 버린다.
+    withholding_amount: data.withholding_applied === false ? 0 : (data.withholding_amount ? Number(data.withholding_amount) : null),
+    vat_amount: data.vat_applied === false ? 0 : (data.vat_amount ? Number(data.vat_amount) : null),
     billed_on: data.billed_on || null,
     settled_on: data.settled_on || null,
   });
@@ -329,6 +367,8 @@ export default function WorkOrderDetail() {
   const [reviewNetCost, setReviewNetCost] = useState("");
   const [reviewWithholding, setReviewWithholding] = useState("");
   const [reviewVat, setReviewVat] = useState("");
+  const [reviewWithholdingOn, setReviewWithholdingOn] = useState(true);
+  const [reviewVatOn, setReviewVatOn] = useState(true);
   const [reviewChargedTo, setReviewChargedTo] = useState("tenant");
 
   const openReviewCosts = () => {
@@ -337,6 +377,8 @@ export default function WorkOrderDetail() {
     setReviewNetCost(w?.net_cost != null ? String(w.net_cost) : "");
     setReviewWithholding(w?.withholding_amount != null ? String(w.withholding_amount) : "");
     setReviewVat(w?.vat_amount != null ? String(w.vat_amount) : "");
+    setReviewWithholdingOn(taxApplied(w?.withholding_amount));
+    setReviewVatOn(taxApplied(w?.vat_amount));
     setReviewChargedTo(w?.charged_to || "tenant");
     setReviewOpen(true);
   };
@@ -349,11 +391,11 @@ export default function WorkOrderDetail() {
   const applyTaxes = () => {
     const base = Number(reviewCost);
     if (!Number.isFinite(base) || base <= 0) return;
-    const withholding = Math.round(base * WITHHOLDING_RATE_PCT / 100);
-    const vat = Math.round(base * VAT_RATE_PCT / 100);
-    setReviewWithholding(String(withholding));
-    setReviewVat(String(vat));
-    setReviewNetCost(String(base - withholding + vat));
+    const withholding = taxOf(base, WITHHOLDING_RATE_PCT, reviewWithholdingOn);
+    const vat = taxOf(base, VAT_RATE_PCT, reviewVatOn);
+    setReviewWithholding(withholding);
+    setReviewVat(vat);
+    setReviewNetCost(String(base - (Number(withholding) || 0) + (Number(vat) || 0)));
   };
 
   const confirmReviewCosts = () => {
@@ -364,8 +406,8 @@ export default function WorkOrderDetail() {
         data: {
           cost: numOrNull(reviewCost),
           net_cost: numOrNull(reviewNetCost),
-          withholding_amount: numOrNull(reviewWithholding),
-          vat_amount: numOrNull(reviewVat),
+          withholding_amount: reviewWithholdingOn ? numOrNull(reviewWithholding) : 0,
+          vat_amount: reviewVatOn ? numOrNull(reviewVat) : 0,
           charged_to: reviewChargedTo || "tenant",
         } as any,
       },
@@ -376,9 +418,14 @@ export default function WorkOrderDetail() {
           setValue("net_cost", reviewNetCost);
           setValue("withholding_amount", reviewWithholding);
           setValue("vat_amount", reviewVat);
+          setValue("withholding_applied", reviewWithholdingOn);
+          setValue("vat_applied", reviewVatOn);
           setValue("charged_to", reviewChargedTo || "tenant");
           // 팝업에서 확정한 값이 다시 자동 계산으로 덮이지 않도록 기준점을 옮긴다.
-          taxBase.current = { cost: reviewCost, withholding: reviewWithholding, vat: reviewVat };
+          taxBase.current = {
+            cost: reviewCost, withholding: reviewWithholding, vat: reviewVat,
+            whOn: reviewWithholdingOn, vatOn: reviewVatOn,
+          };
           setReviewOpen(false);
         },
       },
@@ -799,14 +846,46 @@ export default function WorkOrderDetail() {
                 <p className="text-xs text-muted-foreground mt-1">{t('workorder.net_cost_hint', 'What the billing statement charges for this job. Recalculated as work cost − withholding + VAT whenever those change; overwrite it freely.')}</p>
               </div>
               <div>
-                <Label>{t('workorder.label_withholding', 'Withholding tax')} ({currency})</Label>
-                <Input type="number" step="0.01" placeholder="0.00" {...register("withholding_amount")} />
-                <p className="text-xs text-muted-foreground mt-1">{t('workorder.withholding_hint', 'Auto-filled as 3.3% of the work cost — overwrite it if the job is taxed differently.')}</p>
+                <div className="flex items-center gap-2">
+                  <Controller name="withholding_applied" control={control} render={({ field }) => (
+                    <Checkbox
+                      id="withholding_applied"
+                      checked={field.value !== false}
+                      onCheckedChange={(v) => field.onChange(v === true)}
+                      aria-label={t('workorder.tax_applied', 'Apply')}
+                    />
+                  )} />
+                  <Label htmlFor="withholding_applied" className="cursor-pointer">
+                    {t('workorder.label_withholding', 'Withholding tax')} ({currency})
+                  </Label>
+                </div>
+                <Input
+                  type="number" step="0.01" placeholder="0.00" className="mt-1.5"
+                  disabled={withholdingApplied === false}
+                  {...register("withholding_amount")}
+                />
+                <p className="text-xs text-muted-foreground mt-1">{t('workorder.withholding_hint', 'Auto-filled as 3.3% of the work cost — overwrite it if the job is taxed differently. Untick to leave it out of the billed amount.')}</p>
               </div>
               <div>
-                <Label>{t('workorder.label_vat', 'VAT')} ({currency})</Label>
-                <Input type="number" step="0.01" placeholder="0.00" {...register("vat_amount")} />
-                <p className="text-xs text-muted-foreground mt-1">{t('workorder.vat_hint', 'Auto-filled as 10% of the work cost — clear it when the vendor charges no VAT.')}</p>
+                <div className="flex items-center gap-2">
+                  <Controller name="vat_applied" control={control} render={({ field }) => (
+                    <Checkbox
+                      id="vat_applied"
+                      checked={field.value !== false}
+                      onCheckedChange={(v) => field.onChange(v === true)}
+                      aria-label={t('workorder.tax_applied', 'Apply')}
+                    />
+                  )} />
+                  <Label htmlFor="vat_applied" className="cursor-pointer">
+                    {t('workorder.label_vat', 'VAT')} ({currency})
+                  </Label>
+                </div>
+                <Input
+                  type="number" step="0.01" placeholder="0.00" className="mt-1.5"
+                  disabled={vatApplied === false}
+                  {...register("vat_amount")}
+                />
+                <p className="text-xs text-muted-foreground mt-1">{t('workorder.vat_hint', 'Auto-filled as 10% of the work cost — untick it when the vendor charges no VAT.')}</p>
               </div>
               <div>
                 <Label>{t('workorder.label_charged_to', 'Charged to')}</Label>
@@ -933,12 +1012,40 @@ export default function WorkOrderDetail() {
               <Input type="number" step="0.01" placeholder="0.00" value={reviewCost} onChange={(e) => setReviewCost(e.target.value)} />
             </div>
             <div>
-              <Label>{t('workorder.label_withholding', 'Withholding tax')} ({currency})</Label>
-              <Input type="number" step="0.01" placeholder="0.00" value={reviewWithholding} onChange={(e) => setReviewWithholding(e.target.value)} />
+              <div className="flex items-center gap-2">
+                <Checkbox
+                  id="review_withholding_applied"
+                  checked={reviewWithholdingOn}
+                  onCheckedChange={(v) => { const on = v === true; setReviewWithholdingOn(on); if (!on) setReviewWithholding(""); }}
+                  aria-label={t('workorder.tax_applied', 'Apply')}
+                />
+                <Label htmlFor="review_withholding_applied" className="cursor-pointer">
+                  {t('workorder.label_withholding', 'Withholding tax')} ({currency})
+                </Label>
+              </div>
+              <Input
+                type="number" step="0.01" placeholder="0.00" className="mt-1.5"
+                disabled={!reviewWithholdingOn}
+                value={reviewWithholding} onChange={(e) => setReviewWithholding(e.target.value)}
+              />
             </div>
             <div>
-              <Label>{t('workorder.label_vat', 'VAT')} ({currency})</Label>
-              <Input type="number" step="0.01" placeholder="0.00" value={reviewVat} onChange={(e) => setReviewVat(e.target.value)} />
+              <div className="flex items-center gap-2">
+                <Checkbox
+                  id="review_vat_applied"
+                  checked={reviewVatOn}
+                  onCheckedChange={(v) => { const on = v === true; setReviewVatOn(on); if (!on) setReviewVat(""); }}
+                  aria-label={t('workorder.tax_applied', 'Apply')}
+                />
+                <Label htmlFor="review_vat_applied" className="cursor-pointer">
+                  {t('workorder.label_vat', 'VAT')} ({currency})
+                </Label>
+              </div>
+              <Input
+                type="number" step="0.01" placeholder="0.00" className="mt-1.5"
+                disabled={!reviewVatOn}
+                value={reviewVat} onChange={(e) => setReviewVat(e.target.value)}
+              />
             </div>
             <div className="sm:col-span-2">
               <Label>{t('workorder.label_net_cost', 'Billed amount')} ({currency})</Label>
