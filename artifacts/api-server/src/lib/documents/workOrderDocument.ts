@@ -60,15 +60,22 @@ function accessLabel(lang: DocLang, value: string | null | undefined): string {
 
 /**
  * 청구비용 — 원장에 적힌 값이 먼저다.
- *   net_cost → cost - withholding_amount → cost × (1 - 원천징수율)
+ *   net_cost → cost - withholding_amount + vat_amount → cost × (1 - 원천징수율)
  */
 export function billedAmountOf(
-  row: { cost?: number | null; net_cost?: number | null; withholding_amount?: number | null },
+  row: {
+    cost?: number | null;
+    net_cost?: number | null;
+    withholding_amount?: number | null;
+    vat_amount?: number | null;
+  },
   withholdingPct = 0,
 ): number {
   const cost = Number(row.cost ?? 0);
   if (row.net_cost != null) return Number(row.net_cost);
-  if (row.withholding_amount != null) return cost - Number(row.withholding_amount);
+  if (row.withholding_amount != null || row.vat_amount != null) {
+    return cost - Number(row.withholding_amount ?? 0) + Number(row.vat_amount ?? 0);
+  }
   if (withholdingPct > 0) return Math.round(cost * (1 - withholdingPct / 100));
   return cost;
 }
@@ -237,6 +244,8 @@ export interface WorkOrderDocInput {
   cost?: number | null;
   /** 작업비용에서 뺀 원천징수액. 원장 컬럼이 붙기 전에는 비율로 계산한 값이다. */
   withholding_amount?: number | null;
+  /** 작업비용에 얹은 부가세 10% (일반과세자 거래에서만 채워진다). */
+  vat_amount?: number | null;
   billed_amount: number;
   photos: WorkOrderDocPhoto[];
   /** 확인 서명이 끝났으면 서명란이 실제 서명 + 인증 정보로 채워진다. */
@@ -314,7 +323,11 @@ export function buildWorkOrderBody(
       <tr>
         <th>${escapeHtml(t(lang, "wo.workCost"))}</th><td class="wo-money">${money(d.cost)}</td>
         <th>${escapeHtml(t(lang, "wo.withholding"))}</th><td class="wo-money">${money(d.withholding_amount)}</td>
-        <th>${escapeHtml(t(lang, "wo.billedCost"))}</th><td class="wo-money"><strong>${money(d.billed_amount)}</strong></td>
+        <th>${escapeHtml(t(lang, "wo.vat"))}</th><td class="wo-money">${money(d.vat_amount)}</td>
+      </tr>
+      <tr>
+        <th>${escapeHtml(t(lang, "wo.billedCost"))}</th>
+        <td class="wo-money" colspan="5"><strong>${money(d.billed_amount)}</strong></td>
       </tr>
     </table>
 

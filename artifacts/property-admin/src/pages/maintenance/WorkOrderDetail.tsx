@@ -1,9 +1,9 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useParams, useLocation } from "wouter";
 import { formatDate } from "@/lib/date";
 import { useBrand } from "@/contexts/ThemeContext";
 import { formatMoney } from "@/lib/currency";
-import { useForm, Controller } from "react-hook-form";
+import { useForm, Controller, useWatch } from "react-hook-form";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import {
@@ -59,6 +59,15 @@ const statusColors: Record<string, string> = {
   Cancelled: "bg-gray-100 text-gray-600",
 };
 
+/**
+ * 작업비용에 붙는 한국 세율.
+ *  - 원천징수 3.3% (프리랜서·개인 사업자에게 지급할 때 떼는 사업소득세+지방소득세)
+ *  - 부가세 10% (일반과세자 거래에서 작업비용에 얹히는 세액)
+ * 실무에서는 둘 중 하나만 발생하므로 자동 계산값은 그대로 지우거나 고칠 수 있다.
+ */
+const WITHHOLDING_RATE_PCT = 3.3;
+const VAT_RATE_PCT = 10;
+
 interface FormData {
   property_id: number | null;
   space_id: number | null;
@@ -85,6 +94,7 @@ interface FormData {
   charged_to: string;
   net_cost: string;
   withholding_amount: string;
+  vat_amount: string;
   billed_on: string;
   settled_on: string;
 }
@@ -121,7 +131,7 @@ export default function WorkOrderDetail() {
       inspection_type: "", scheduled_start_at: "", scheduled_end_at: "",
       assigned_user_id: null, attendee_contact_id: null, location_note: "", access_method: "",
       contract_id: null, settlement_method: "", charged_to: "tenant",
-      net_cost: "", withholding_amount: "", billed_on: "", settled_on: "",
+      net_cost: "", withholding_amount: "", vat_amount: "", billed_on: "", settled_on: "",
     },
   });
 
@@ -157,11 +167,58 @@ export default function WorkOrderDetail() {
         charged_to: (wo as any).charged_to ?? "tenant",
         net_cost: (wo as any).net_cost != null ? String((wo as any).net_cost) : "",
         withholding_amount: (wo as any).withholding_amount != null ? String((wo as any).withholding_amount) : "",
+        vat_amount: (wo as any).vat_amount != null ? String((wo as any).vat_amount) : "",
         billed_on: (wo as any).billed_on ?? "",
         settled_on: (wo as any).settled_on ?? "",
       });
+      // 저장된 세액을 지우지 않도록, 서버에서 읽어온 값은 "사용자가 방금 바꾼
+      // 작업비용"으로 치지 않는다.
+      taxBase.current = {
+        cost: wo.cost != null ? String(wo.cost) : "",
+        withholding: (wo as any).withholding_amount != null ? String((wo as any).withholding_amount) : "",
+        vat: (wo as any).vat_amount != null ? String((wo as any).vat_amount) : "",
+      };
     }
   }, [wo, reset]);
+
+  // 세금 자동 계산 — 작업비용을 고치면 원천징수 3.3%와 부가세 10%를 다시 채우고,
+  // 세액을 손으로 고치면 청구비용만 다시 잡는다. 세 칸 모두 그대로 수기 수정할 수
+  // 있고, 계산은 다음에 입력이 바뀔 때까지 덮어쓰지 않는다.
+  const watchedCost = useWatch({ control, name: "cost" });
+  const watchedWithholding = useWatch({ control, name: "withholding_amount" });
+  const watchedVat = useWatch({ control, name: "vat_amount" });
+  const taxBase = useRef<{ cost: string; withholding: string; vat: string } | null>(null);
+
+  useEffect(() => {
+    const cost = watchedCost ?? "";
+    const withholding = watchedWithholding ?? "";
+    const vat = watchedVat ?? "";
+    const prev = taxBase.current;
+    // 첫 렌더(또는 서버 값 주입 직후)는 기준점만 잡고 아무것도 건드리지 않는다.
+    if (!prev) { taxBase.current = { cost, withholding, vat }; return; }
+    if (prev.cost === cost && prev.withholding === withholding && prev.vat === vat) return;
+
+    const base = Number(cost);
+    const valid = cost.trim() !== "" && Number.isFinite(base) && base > 0;
+
+    if (prev.cost !== cost) {
+      if (!valid) { taxBase.current = { cost, withholding, vat }; return; }
+      const nextWithholding = String(WITHHOLDING_RATE_PCT ? Math.round(base * WITHHOLDING_RATE_PCT / 100) : 0);
+      const nextVat = String(Math.round(base * VAT_RATE_PCT / 100));
+      const nextNet = String(base - Number(nextWithholding) + Number(nextVat));
+      taxBase.current = { cost, withholding: nextWithholding, vat: nextVat };
+      setValue("withholding_amount", nextWithholding, { shouldDirty: true });
+      setValue("vat_amount", nextVat, { shouldDirty: true });
+      setValue("net_cost", nextNet, { shouldDirty: true });
+      return;
+    }
+
+    // 세액만 바뀐 경우 — 청구비용을 다시 잡는다.
+    taxBase.current = { cost, withholding, vat };
+    if (!valid) return;
+    const nextNet = String(base - (Number(withholding) || 0) + (Number(vat) || 0));
+    setValue("net_cost", nextNet, { shouldDirty: true });
+  }, [watchedCost, watchedWithholding, watchedVat, setValue]);
 
   const invalidate = () => {
     qc.invalidateQueries({ queryKey: getListWorkOrdersQueryKey() });
@@ -215,6 +272,7 @@ export default function WorkOrderDetail() {
     charged_to: data.charged_to || "tenant",
     net_cost: data.net_cost ? Number(data.net_cost) : null,
     withholding_amount: data.withholding_amount ? Number(data.withholding_amount) : null,
+    vat_amount: data.vat_amount ? Number(data.vat_amount) : null,
     billed_on: data.billed_on || null,
     settled_on: data.settled_on || null,
   });
@@ -270,6 +328,7 @@ export default function WorkOrderDetail() {
   const [reviewCost, setReviewCost] = useState("");
   const [reviewNetCost, setReviewNetCost] = useState("");
   const [reviewWithholding, setReviewWithholding] = useState("");
+  const [reviewVat, setReviewVat] = useState("");
   const [reviewChargedTo, setReviewChargedTo] = useState("tenant");
 
   const openReviewCosts = () => {
@@ -277,17 +336,24 @@ export default function WorkOrderDetail() {
     setReviewCost(w?.cost != null ? String(w.cost) : "");
     setReviewNetCost(w?.net_cost != null ? String(w.net_cost) : "");
     setReviewWithholding(w?.withholding_amount != null ? String(w.withholding_amount) : "");
+    setReviewVat(w?.vat_amount != null ? String(w.vat_amount) : "");
     setReviewChargedTo(w?.charged_to || "tenant");
     setReviewOpen(true);
   };
 
-  /** 작업비용에서 원천징수 3.3%를 떼어 청구비용을 채운다 (₩100,000 → ₩96,700). */
-  const applyWithholding = () => {
+  /**
+   * 작업비용 기준으로 세 칸을 다시 계산한다 — 원천징수 3.3%, 부가세 10%,
+   * 청구비용 = 작업비용 − 원천징수 + 부가세 (₩100,000 → 원천징수 ₩3,300,
+   * 청구 ₩96,700). 계산 뒤에도 각 칸은 그대로 수기 수정할 수 있다.
+   */
+  const applyTaxes = () => {
     const base = Number(reviewCost);
     if (!Number.isFinite(base) || base <= 0) return;
-    const tax = Math.round(base * 0.033);
-    setReviewWithholding(String(tax));
-    setReviewNetCost(String(base - tax));
+    const withholding = Math.round(base * WITHHOLDING_RATE_PCT / 100);
+    const vat = Math.round(base * VAT_RATE_PCT / 100);
+    setReviewWithholding(String(withholding));
+    setReviewVat(String(vat));
+    setReviewNetCost(String(base - withholding + vat));
   };
 
   const confirmReviewCosts = () => {
@@ -299,6 +365,7 @@ export default function WorkOrderDetail() {
           cost: numOrNull(reviewCost),
           net_cost: numOrNull(reviewNetCost),
           withholding_amount: numOrNull(reviewWithholding),
+          vat_amount: numOrNull(reviewVat),
           charged_to: reviewChargedTo || "tenant",
         } as any,
       },
@@ -308,7 +375,10 @@ export default function WorkOrderDetail() {
           setValue("cost", reviewCost);
           setValue("net_cost", reviewNetCost);
           setValue("withholding_amount", reviewWithholding);
+          setValue("vat_amount", reviewVat);
           setValue("charged_to", reviewChargedTo || "tenant");
+          // 팝업에서 확정한 값이 다시 자동 계산으로 덮이지 않도록 기준점을 옮긴다.
+          taxBase.current = { cost: reviewCost, withholding: reviewWithholding, vat: reviewVat };
           setReviewOpen(false);
         },
       },
@@ -726,11 +796,17 @@ export default function WorkOrderDetail() {
               <div>
                 <Label>{t('workorder.label_net_cost', 'Billed amount')} ({currency})</Label>
                 <Input type="number" step="0.01" placeholder="0.00" {...register("net_cost")} />
-                <p className="text-xs text-muted-foreground mt-1">{t('workorder.net_cost_hint', 'What the billing statement charges for this job. Empty = work cost less withholding.')}</p>
+                <p className="text-xs text-muted-foreground mt-1">{t('workorder.net_cost_hint', 'What the billing statement charges for this job. Recalculated as work cost − withholding + VAT whenever those change; overwrite it freely.')}</p>
               </div>
               <div>
                 <Label>{t('workorder.label_withholding', 'Withholding tax')} ({currency})</Label>
                 <Input type="number" step="0.01" placeholder="0.00" {...register("withholding_amount")} />
+                <p className="text-xs text-muted-foreground mt-1">{t('workorder.withholding_hint', 'Auto-filled as 3.3% of the work cost — overwrite it if the job is taxed differently.')}</p>
+              </div>
+              <div>
+                <Label>{t('workorder.label_vat', 'VAT')} ({currency})</Label>
+                <Input type="number" step="0.01" placeholder="0.00" {...register("vat_amount")} />
+                <p className="text-xs text-muted-foreground mt-1">{t('workorder.vat_hint', 'Auto-filled as 10% of the work cost — clear it when the vendor charges no VAT.')}</p>
               </div>
               <div>
                 <Label>{t('workorder.label_charged_to', 'Charged to')}</Label>
@@ -853,12 +929,16 @@ export default function WorkOrderDetail() {
           </p>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <Label>{t('workorder.label_cost', 'Estimated Cost')} ({currency})</Label>
+              <Label>{t('workorder.label_cost', 'Work Cost')} ({currency})</Label>
               <Input type="number" step="0.01" placeholder="0.00" value={reviewCost} onChange={(e) => setReviewCost(e.target.value)} />
             </div>
             <div>
               <Label>{t('workorder.label_withholding', 'Withholding tax')} ({currency})</Label>
               <Input type="number" step="0.01" placeholder="0.00" value={reviewWithholding} onChange={(e) => setReviewWithholding(e.target.value)} />
+            </div>
+            <div>
+              <Label>{t('workorder.label_vat', 'VAT')} ({currency})</Label>
+              <Input type="number" step="0.01" placeholder="0.00" value={reviewVat} onChange={(e) => setReviewVat(e.target.value)} />
             </div>
             <div className="sm:col-span-2">
               <Label>{t('workorder.label_net_cost', 'Billed amount')} ({currency})</Label>
@@ -867,8 +947,8 @@ export default function WorkOrderDetail() {
                 <p className="text-xs text-muted-foreground">
                   {t('workorder.review_costs_hint', 'This is the amount billed on the statement.')}
                 </p>
-                <Button type="button" size="sm" variant="outline" onClick={applyWithholding}>
-                  {t('workorder.review_apply_withholding', 'Apply 3.3%')}
+                <Button type="button" size="sm" variant="outline" onClick={applyTaxes}>
+                  {t('workorder.review_apply_taxes', 'Recalculate taxes')}
                 </Button>
               </div>
             </div>

@@ -499,6 +499,7 @@ const LABELS: Dict = {
   "wo.costs":           { en: "Costs",               ko: "비용",           zh: "费用",         ja: "費用",           th: "ค่าใช้จ่าย",             vi: "Chi phí" },
   "wo.workCost":        { en: "Work cost",           ko: "작업비용",       zh: "作业费用",     ja: "作業費用",       th: "ค่าดำเนินงาน",           vi: "Chi phí thi công" },
   "wo.withholding":     { en: "Withholding",         ko: "원천징수",       zh: "代扣税",       ja: "源泉徴収",       th: "ภาษีหัก ณ ที่จ่าย",      vi: "Thuế khấu trừ" },
+  "wo.vat":             { en: "VAT",                 ko: "부가세",         zh: "增值税",       ja: "消費税",         th: "ภาษีมูลค่าเพิ่ม",        vi: "Thuế GTGT" },
   "wo.billedCost":      { en: "Billed amount",       ko: "청구비용",       zh: "请款金额",     ja: "請求費用",       th: "ยอดเรียกเก็บ",           vi: "Số tiền yêu cầu" },
   "wo.chargedTo":       { en: "Charged to",          ko: "부담 주체",      zh: "费用承担方",   ja: "費用負担者",     th: "ผู้รับภาระค่าใช้จ่าย",   vi: "Bên chịu chi phí" },
   "wo.chargedTo.tenant":   { en: "Tenant",           ko: "임차인",         zh: "租客",         ja: "借主",           th: "ผู้เช่า",                vi: "Bên thuê" },
