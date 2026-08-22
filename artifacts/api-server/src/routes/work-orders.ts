@@ -142,7 +142,7 @@ async function enrichWorkOrders(rows: (typeof workOrdersTable.$inferSelect)[]) {
 // ride straight off req.body (same pattern as the Korean payment fields on
 // contracts, and as the 방문 약속 fields below).
 type LedgerFields = Partial<Pick<typeof workOrdersTable.$inferInsert,
-  "contract_id" | "net_cost" | "withholding_amount" | "billed_on" | "settled_on"
+  "contract_id" | "net_cost" | "withholding_amount" | "vat_amount" | "billed_on" | "settled_on"
   | "settlement_method" | "charged_to">>;
 
 // 방문 약속 fields — the generated zod bodies strip unknown keys, so these ride
@@ -194,6 +194,7 @@ function ledgerFieldsFrom(body: any, { partial }: { partial: boolean }): LedgerF
   take("contract_id", num(body?.contract_id));
   take("net_cost", num(body?.net_cost));
   take("withholding_amount", num(body?.withholding_amount));
+  take("vat_amount", num(body?.vat_amount));
   take("billed_on", str(body?.billed_on));
   take("settled_on", str(body?.settled_on));
   take("settlement_method", str(body?.settlement_method));
@@ -481,7 +482,7 @@ async function loadBillingRows(f: BillingFilters): Promise<{ rows: RepairBilling
       cost: Number(w.cost ?? 0),
       // 원장에 확정된 청구비용이 먼저다. 없는 건에만 원천징수율로 계산한다.
       billed: billedAmountOf(
-        { cost: Number(w.cost ?? 0), net_cost: w.net_cost, withholding_amount: w.withholding_amount },
+        { cost: Number(w.cost ?? 0), net_cost: w.net_cost, withholding_amount: w.withholding_amount, vat_amount: w.vat_amount },
         f.withholdingPct,
       ),
       photos: f.photosPerUnit > 0 ? pics.slice(0, f.photosPerUnit) : [],
@@ -712,7 +713,10 @@ export async function buildWorkOrderDocInput(
   const photos = (await loadPhotos([id])).get(id) ?? [];
   const pct = Number.isFinite(opts.withholdingPct) && (opts.withholdingPct ?? 0) > 0 ? Number(opts.withholdingPct) : 0;
   const cost = Number(wo.cost ?? 0);
-  const billed = billedAmountOf({ cost, net_cost: wo.net_cost, withholding_amount: wo.withholding_amount }, pct);
+  const billed = billedAmountOf(
+    { cost, net_cost: wo.net_cost, withholding_amount: wo.withholding_amount, vat_amount: wo.vat_amount },
+    pct,
+  );
 
   return {
     order_ref: wo.order_ref,
@@ -736,7 +740,9 @@ export async function buildWorkOrderDocInput(
     access_method: wo.access_method,
     currency: wo.currency ?? DEFAULT_CURRENCY,
     cost: wo.cost,
-    withholding_amount: cost - billed || null,
+    // 원장에 적힌 세액이 먼저다. 둘 다 비어 있는 옛 행에서만 차액을 원천징수로 본다.
+    withholding_amount: wo.withholding_amount ?? (wo.vat_amount != null ? null : cost - billed || null),
+    vat_amount: wo.vat_amount,
     billed_amount: billed,
     photos,
     photo_size: opts.photoSize,

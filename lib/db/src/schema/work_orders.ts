@@ -35,6 +35,9 @@ export const workOrdersTable = pgTable("work_orders", {
   // 청구 명세서 bills.
   net_cost: numeric("net_cost", { precision: 12, scale: 2, mode: "number" }),
   withholding_amount: numeric("withholding_amount", { precision: 12, scale: 2, mode: "number" }),
+  // 부가세 10% — 일반과세자 거래에서 작업비용에 얹히는 세액. 원천징수와
+  // 배타적으로 쓰이지만 칸은 따로 두고 각각 수기 수정할 수 있게 한다.
+  vat_amount: numeric("vat_amount", { precision: 12, scale: 2, mode: "number" }),
   // The job is recharged to the *outgoing tenant*, settled at move-out — either
   // paid directly or taken out of the deposit. billed_on = 청구일,
   // settled_on = 수령일자 (null while outstanding — the sheet's '청구' state).
