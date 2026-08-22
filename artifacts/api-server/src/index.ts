@@ -53,7 +53,9 @@ async function ensureAdminExists() {
       await db.insert(usersTable).values({
         email,
         password_hash,
-        role: "Super Admin",
+        // Canonical name — must match a row in `roles`. "Super Admin" (with a
+    // space) is a different string and silently fails every SuperAdmin gate.
+    role: "SuperAdmin",
         first_name: "Million",
         last_name: "Stay",
         is_active: true,

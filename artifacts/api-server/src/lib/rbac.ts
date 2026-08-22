@@ -119,3 +119,17 @@ export async function isAllowed(roleName: string, method: string, path: string):
   const required: PermLevel = isSafe ? "read" : "write";
   return LEVEL_RANK[have] >= LEVEL_RANK[required];
 }
+
+/**
+ * The role names that actually exist in `roles` — the single source of truth for
+ * what may be written to `admin_users.role`. A near-miss like "Super Admin"
+ * (space) is a different string from "SuperAdmin" and silently loses every
+ * privilege gate, so assignment is validated against this list rather than
+ * being trusted from the client. Falls back to the built-ins when `roles` is
+ * unreadable, so role assignment keeps working on an instance without the table.
+ */
+export async function knownRoleNames(): Promise<string[]> {
+  const roles = await loadRoles();
+  const names = [...roles.keys()];
+  return names.length > 0 ? names : ["SuperAdmin", "Admin", "Viewer"];
+}
