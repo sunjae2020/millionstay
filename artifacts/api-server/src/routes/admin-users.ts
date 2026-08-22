@@ -15,6 +15,7 @@ import { validatePassword } from "../utils/passwordPolicy";
 import { logAction } from "../utils/auditLog";
 import { revokeAllForUser } from "../lib/refreshTokens";
 import { deletedFilter } from "../lib/softDelete";
+import { knownRoleNames } from "../lib/rbac";
 
 const router: IRouter = Router();
 
@@ -22,6 +23,17 @@ router.use(requireAuth);
 
 const SUPER_ADMIN = "SuperAdmin";
 const WRITE_ROLES = [SUPER_ADMIN, "Admin"];
+
+/* A role string that is not exactly one of the canonical names fails every gate
+   below while still looking like a normal role in the UI (a hand-seeded
+   "Super Admin" with a space did exactly that on one tenant). Name the role in
+   the 403 so the cause is visible from the toast instead of guessed. */
+function denied(currentUser: { role?: string } | undefined, action: string): string {
+  const role = currentUser?.role;
+  return role
+    ? `You do not have permission to ${action} (role: "${role}")`
+    : `You do not have permission to ${action}`;
+}
 
 /* Optional profile / HR / emergency-contact fields. They are ordinary personal
    data (not privilege), so any write-capable admin may set them — role, email,
@@ -145,7 +157,7 @@ router.post("/v1/admin/users", async (req, res): Promise<void> => {
     // Admins may create Admin/Viewer accounts; only a SuperAdmin can mint
     // another SuperAdmin (no self-promotion path through this endpoint).
     if (!WRITE_ROLES.includes(currentUser?.role)) {
-      res.status(403).json({ success: false, error: "You do not have permission to create users" });
+      res.status(403).json({ success: false, error: denied(currentUser, "create users") });
       return;
     }
 
@@ -173,7 +185,7 @@ router.post("/v1/admin/users", async (req, res): Promise<void> => {
     }
 
     const newRole = role ?? "Admin";
-    if (!["SuperAdmin", "Admin", "Viewer"].includes(newRole)) {
+    if (!(await knownRoleNames()).includes(newRole)) {
       res.status(400).json({ success: false, error: "Invalid role." });
       return;
     }
@@ -246,7 +258,7 @@ router.post("/v1/admin/users", async (req, res): Promise<void> => {
 router.post("/v1/admin/users/photo", upload.single("image"), async (req, res): Promise<void> => {
   const currentUser = (req as any).user;
   if (!WRITE_ROLES.includes(currentUser?.role)) {
-    res.status(403).json({ success: false, error: "You do not have permission to upload" }); return;
+    res.status(403).json({ success: false, error: denied(currentUser, "upload") }); return;
   }
   const file = (req as unknown as { file?: UploadedFile }).file;
   if (!file) { res.status(400).json({ success: false, error: "No file provided" }); return; }
@@ -278,7 +290,7 @@ router.post("/v1/admin/users/photo", upload.single("image"), async (req, res): P
 router.post("/v1/admin/users/business-card", upload.single("image"), async (req, res): Promise<void> => {
   const currentUser = (req as any).user;
   if (!WRITE_ROLES.includes(currentUser?.role)) {
-    res.status(403).json({ success: false, error: "You do not have permission to upload" }); return;
+    res.status(403).json({ success: false, error: denied(currentUser, "upload") }); return;
   }
   const file = (req as unknown as { file?: UploadedFile }).file;
   if (!file) { res.status(400).json({ success: false, error: "No file provided" }); return; }
@@ -396,7 +408,7 @@ router.patch("/v1/admin/users/:id", async (req, res): Promise<void> => {
     if (wantsPrivileged && !isSuperAdmin) {
       res.status(403).json({
         success: false,
-        error: "Only SuperAdmin can change role, status, activation, or password",
+        error: `Only SuperAdmin can change role, status, activation, or password (role: "${currentUser?.role ?? "unknown"}")`,
       });
       return;
     }
@@ -443,7 +455,15 @@ router.patch("/v1/admin/users/:id", async (req, res): Promise<void> => {
       }
       updates.email = normalized;
     }
-    if (role !== undefined) updates.role = role;
+    if (role !== undefined) {
+      // Must be a real row in `roles` — an off-by-a-space name would strip the
+      // target of every privilege gate without any visible error.
+      if (!(await knownRoleNames()).includes(role)) {
+        res.status(400).json({ success: false, error: "Invalid role." });
+        return;
+      }
+      updates.role = role;
+    }
     if (is_active !== undefined) updates.is_active = is_active;
     if (password) {
       const policy = validatePassword(password);
