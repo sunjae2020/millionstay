@@ -22,6 +22,7 @@ import {
 } from "@workspace/db";
 import { getRateToAud } from "../rateSnapshot.js";
 import { serviceLabel } from "../documents/i18n.js";
+import { insertInvoiceWithRef } from "../billing/invoiceRef";
 
 /** Round to 2 decimal places (cents). */
 function round2(n: number): number {
@@ -29,16 +30,6 @@ function round2(n: number): number {
 }
 
 /** Replicated from routes/invoices.ts (the local helper there is not exported). */
-async function nextInvoiceRef(): Promise<string> {
-  const year = new Date().getFullYear();
-  const rows = await db
-    .select({ id: invoicesTable.id })
-    .from(invoicesTable)
-    .where(ilike(invoicesTable.invoice_ref, `MS-INV-${year}-%`));
-  const count = rows.length + 1;
-  return `MS-INV-${year}-${String(count).padStart(5, "0")}`;
-}
-
 type LineItemInput = {
   label: string;
   quantity: number;
@@ -138,11 +129,7 @@ export async function createPlacementInvoice(
     accountId = booking?.account_id ?? null;
   }
 
-  const invoice_ref = await nextInvoiceRef();
-  const [invoice] = await db
-    .insert(invoicesTable)
-    .values({
-      invoice_ref,
+  const invoice = await insertInvoiceWithRef({
       booking_id: placement.booking_id ?? null,
       account_id: accountId,
       amount: String(amount),
@@ -151,8 +138,7 @@ export async function createPlacementInvoice(
       status: "Draft",
       due_date: null,
       description: marker,
-    })
-    .returning();
+  });
 
   let line_items: (typeof invoiceLineItemsTable.$inferSelect)[] = [];
   if (lines.length > 0) {
@@ -236,11 +222,7 @@ export async function createExtensionInvoice(
     accountId = booking?.account_id ?? null;
   }
 
-  const invoice_ref = await nextInvoiceRef();
-  const [invoice] = await db
-    .insert(invoicesTable)
-    .values({
-      invoice_ref,
+  const invoice = await insertInvoiceWithRef({
       booking_id: placement.booking_id ?? null,
       account_id: accountId,
       amount: String(amount),
@@ -249,8 +231,7 @@ export async function createExtensionInvoice(
       status: "Draft",
       due_date: null,
       description: `Homestay ${placement.placement_ref} — extension (${oldEnd} → ${newMoveOut})`,
-    })
-    .returning();
+  });
 
   const [item] = await db
     .insert(invoiceLineItemsTable)

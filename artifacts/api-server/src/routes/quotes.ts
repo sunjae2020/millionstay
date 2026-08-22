@@ -16,6 +16,8 @@ import { freezeDocument, snapshotDocType } from "../lib/documents/freeze";
 import { sendDocumentEmail } from "../lib/email";
 import { parseRecipients, quotePartyRecipients, toRecipientsResponse } from "../lib/documents/recipients";
 
+import { insertInvoiceWithRef } from "../lib/billing/invoiceRef";
+
 const router = Router();
 
 const LineItemBody = z.object({
@@ -397,20 +399,15 @@ router.post("/v1/quotes/:id/convert", async (req, res): Promise<void> => {
     res.status(409).json({ error: "Quote already converted", invoice_id: quote.converted_invoice_id }); return;
   }
 
-  const year = new Date().getFullYear();
-  const existing = await db.select({ id: invoicesTable.id }).from(invoicesTable)
-    .where(ilike(invoicesTable.invoice_ref, `MS-INV-${year}-%`));
-  const invoiceRef = `MS-INV-${year}-${String(existing.length + 1).padStart(5, "0")}`;
-
-  const [invoice] = await db.insert(invoicesTable).values({
-    invoice_ref: invoiceRef,
+  const invoice = await insertInvoiceWithRef({
     account_id: quote.account_id ?? null,
     quote_id: quote.id,
     amount: quote.total ?? "0",
     currency: quote.currency ?? DEFAULT_CURRENCY,
     status: "Draft",
     description: quote.description ?? `Converted from quote ${quote.quote_ref}`,
-  }).returning();
+  });
+  const invoiceRef = invoice.invoice_ref;
 
   await db.update(quotesTable)
     .set({ converted_invoice_id: invoice.id, status: quote.status === "Draft" ? "Sent" : quote.status, updated_at: new Date() })

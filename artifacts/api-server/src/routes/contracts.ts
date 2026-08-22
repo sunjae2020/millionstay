@@ -57,28 +57,9 @@ import { accountRecipients, contractPartyRecipients, parseRecipients, toRecipien
 import { resolveTemplate, renderString } from "../lib/documents/templateEngine";
 import { createSigningRequest, type SignerSpec } from "../services/contractSigning";
 import { emailLogsTable } from "@workspace/db";
+import { createInvoiceRefSequence } from "../lib/billing/invoiceRef";
 
 // ─── Invoice ref generator (returns a factory that increments safely) ────────
-async function makeInvoiceRefFactory(): Promise<() => string> {
-  const year = new Date().getFullYear();
-  const rows = await db
-    .select({ ref: invoicesTable.invoice_ref })
-    .from(invoicesTable)
-    .where(like(invoicesTable.invoice_ref, `MS-INV-${year}-%`))
-    .orderBy(desc(invoicesTable.id))
-    .limit(1);
-  let counter = 0;
-  if (rows.length > 0) {
-    const last = rows[0].ref;
-    const num = parseInt(last.split("-").pop() ?? "0", 10);
-    counter = isNaN(num) ? 0 : num;
-  }
-  return () => {
-    counter++;
-    return `MS-INV-${year}-${String(counter).padStart(5, "0")}`;
-  };
-}
-
 // ─── Month name helper ────────────────────────────────────────────────────────
 const MONTH_NAMES = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
 
@@ -186,7 +167,7 @@ async function generateContractInvoicesAndSchedules(
   );
 
   // ── Invoice ref factory ────────────────────────────────────────────────────
-  const nextInvoiceRef = await makeInvoiceRefFactory();
+  const nextInvoiceRef = await createInvoiceRefSequence();
 
   const invoicesCreated: number[] = [];
   const schedulesCreated: number[] = [];
