@@ -722,6 +722,7 @@
     "col_name": "名称",
     "col_type": "类型",
     "col_primary_contact": "主要联系人",
+    "phone_from_primary_contact": "主要联系人的号码",
     "col_email": "邮箱",
     "col_status": "状态",
     "delete_title": "删除账户？",

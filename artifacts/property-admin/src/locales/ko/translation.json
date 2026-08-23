@@ -738,6 +738,7 @@
     "col_name": "이름",
     "col_type": "유형",
     "col_primary_contact": "주 연락처",
+    "phone_from_primary_contact": "주 연락처 번호",
     "col_email": "이메일",
     "col_status": "상태",
     "delete_title": "계정 삭제?",

@@ -104,6 +104,27 @@ export default function AccountList() {
         cell: (a) => <span className="text-muted-foreground">{(a as any).primary_contact_name ?? "—"}</span>,
       },
       {
+        // 회사 대표번호. 비어 있으면 주 연락처의 번호로 대체해 보여주고(툴팁으로
+        // 출처를 밝힌다), 편집은 언제나 계정의 phone1 을 쓴다.
+        key: "phone1",
+        header: "account.col_mobile",
+        defaultWidth: 140,
+        editable: { type: "text", getValue: (a) => a.phone1 ?? "" },
+        sortAccessor: (a) => a.phone1 || (a as any).primary_contact_phone || "",
+        cell: (a) => {
+          const own = a.phone1?.trim();
+          if (own) return <span className="text-muted-foreground">{own}</span>;
+          const fallback = (a as any).primary_contact_phone as string | null;
+          if (!fallback) return <span className="text-muted-foreground">—</span>;
+          return (
+            <span className="text-muted-foreground" title={t("account.phone_from_primary_contact")}>
+              {fallback}
+            </span>
+          );
+        },
+        csv: (a) => a.phone1 || (a as any).primary_contact_phone || "",
+      },
+      {
         key: "account_email",
         header: "account.col_email",
         editable: { type: "text", getValue: (a) => a.account_email ?? "" },

@@ -720,6 +720,7 @@
     "col_name": "ชื่อ",
     "col_type": "ประเภท",
     "col_primary_contact": "ผู้ติดต่อหลัก",
+    "phone_from_primary_contact": "เบอร์ของผู้ติดต่อหลัก",
     "col_email": "อีเมล",
     "col_status": "สถานะ",
     "delete_title": "ลบบัญชี?",

@@ -716,6 +716,7 @@
     "col_name": "Tên",
     "col_type": "Loại",
     "col_primary_contact": "Liên hệ chính",
+    "phone_from_primary_contact": "Số của người liên hệ chính",
     "col_status": "Trạng thái",
     "delete_title": "Xóa tài khoản?",
     "section_general": "THÔNG TIN CHUNG",

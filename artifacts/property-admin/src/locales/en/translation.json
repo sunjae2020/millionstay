@@ -738,6 +738,7 @@
     "col_name": "Name",
     "col_type": "Type",
     "col_primary_contact": "Primary Contact",
+    "phone_from_primary_contact": "From the primary contact",
     "col_email": "Email",
     "col_status": "Status",
     "delete_title": "Delete Account?",

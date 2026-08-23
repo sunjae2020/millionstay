@@ -721,6 +721,7 @@
     "col_name": "名前",
     "col_type": "タイプ",
     "col_primary_contact": "主要連絡先",
+    "phone_from_primary_contact": "主要連絡先の番号",
     "col_email": "メール",
     "col_status": "ステータス",
     "delete_title": "アカウントを削除？",

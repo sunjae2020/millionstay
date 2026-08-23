@@ -43,7 +43,12 @@ const router: IRouter = Router();
 
 async function enrichAccount(row: typeof accountsTable.$inferSelect) {
   const [primaryContact] = row.primary_contact_id
-    ? await db.select({ first_name: contactsTable.first_name, last_name: contactsTable.last_name })
+    ? await db.select({
+        first_name: contactsTable.first_name,
+        last_name: contactsTable.last_name,
+        mobile_number: contactsTable.mobile_number,
+        office_number: contactsTable.office_number,
+      })
         .from(contactsTable).where(eq(contactsTable.id, row.primary_contact_id))
     : [null];
   const [secondaryContact] = row.secondary_contact_id
@@ -71,6 +76,11 @@ async function enrichAccount(row: typeof accountsTable.$inferSelect) {
     ...row,
     party_code,
     primary_contact_name: primaryContact ? formatPersonName(primaryContact.first_name, primaryContact.last_name) : null,
+    // 회사 대표번호(phone1)가 비어 있는 계정이 많아 리스트가 빈칸으로 남는다. 주
+    // 연락처의 휴대폰(없으면 사무실 번호)을 함께 실어 화면에서 대체 표시한다.
+    primary_contact_phone: primaryContact
+      ? (primaryContact.mobile_number ?? primaryContact.office_number ?? null)
+      : null,
     secondary_contact_name: secondaryContact ? formatPersonName(secondaryContact.first_name, secondaryContact.last_name) : null,
     default_commission_name: commission?.name ?? null,
     payment_info_name: payInfo?.name ?? null,
