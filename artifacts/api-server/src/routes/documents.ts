@@ -36,9 +36,15 @@ export interface HubDocument {
   party: string | null;
   links: string[];
   date: string | null;
+  /** 원본 레코드의 생성·수정 시각 — 리스트 공통 감사 컬럼용. */
+  created_at: string | null;
+  updated_at: string | null;
   detail_url: string;
   pdf_url: string;
 }
+
+const iso = (value: unknown): string | null =>
+  value instanceof Date ? value.toISOString() : typeof value === "string" ? value : null;
 
 async function accountNameMap(ids: number[]): Promise<Record<number, string>> {
   const map: Record<number, string> = {};
@@ -87,6 +93,7 @@ router.get("/v1/documents", async (req, res): Promise<void> => {
           doc_type: "Invoice", source_id: inv.id, ref: inv.invoice_ref, status: inv.status,
           amount: Number(inv.amount), currency: inv.currency, party, links,
           date: (inv.created_at as Date | null)?.toISOString() ?? null,
+          created_at: iso(inv.created_at), updated_at: iso(inv.updated_at),
           detail_url: `/finance/invoices/${inv.id}`,
           pdf_url: `/api/v1/invoices/${inv.id}/pdf`,
         });
@@ -96,6 +103,7 @@ router.get("/v1/documents", async (req, res): Promise<void> => {
           doc_type: "Receipt", source_id: inv.id, ref: inv.invoice_ref, status: "Paid",
           amount: Number(inv.amount), currency: inv.currency, party, links,
           date: (inv.paid_at as Date | null)?.toISOString() ?? (inv.created_at as Date | null)?.toISOString() ?? null,
+          created_at: iso(inv.created_at), updated_at: iso(inv.updated_at),
           detail_url: `/finance/invoices/${inv.id}`,
           pdf_url: `/api/v1/invoices/${inv.id}/receipt/pdf`,
         });
@@ -123,6 +131,7 @@ router.get("/v1/documents", async (req, res): Promise<void> => {
         amount: c.total_rent != null ? Number(c.total_rent) : null, currency: c.currency,
         party: c.tenant_account_id ? (accMap[c.tenant_account_id] ?? null) : null, links,
         date: (c.created_at as Date | null)?.toISOString() ?? null,
+        created_at: iso(c.created_at), updated_at: iso(c.updated_at),
         detail_url: `/booking/contracts/${c.id}`,
         pdf_url: `/api/v1/contracts/${c.id}/pdf`,
       });
@@ -141,6 +150,7 @@ router.get("/v1/documents", async (req, res): Promise<void> => {
         amount: Number(x.total), currency: x.currency,
         party: x.account_id ? (accMap[x.account_id] ?? null) : null, links: [],
         date: (x.created_at as Date | null)?.toISOString() ?? null,
+        created_at: iso(x.created_at), updated_at: iso(x.updated_at),
         detail_url: `/documents/quotes/${x.id}`,
         pdf_url: `/api/v1/quotes/${x.id}/pdf`,
       });

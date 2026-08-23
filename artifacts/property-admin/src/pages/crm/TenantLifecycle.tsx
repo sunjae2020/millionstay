@@ -34,6 +34,9 @@ interface TenantRecord {
   stage: LifecycleStage;
   daysUntilCheckout: number | null;
   daysOverdue: number | null;
+  /** 원본 예약의 감사 시각 — 리스트 공통 생성일·수정일 컬럼용. */
+  created_at: string | null;
+  updated_at: string | null;
 }
 
 const STAGE_CONFIG: Record<LifecycleStage, {
@@ -231,6 +234,8 @@ export default function TenantLifecycle() {
         stage,
         daysUntilCheckout,
         daysOverdue: daysUntilCheckout !== null && daysUntilCheckout < 0 ? -daysUntilCheckout : null,
+        created_at: (b as any).created_at ?? null,
+        updated_at: (b as any).updated_at ?? null,
       };
     });
 

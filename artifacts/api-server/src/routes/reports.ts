@@ -32,6 +32,8 @@ router.get("/v1/reports/bookings", async (req, res): Promise<void> => {
         space_id: bookingsTable.space_id,
         stay_weeks: bookingsTable.stay_weeks,
         total_rent: bookingsTable.total_rent,
+        created_at: bookingsTable.created_at,
+        updated_at: bookingsTable.updated_at,
       })
       .from(bookingsTable)
       .where(where)

@@ -515,6 +515,8 @@ export type GlEntry = {
   source_type: string | null;
   source_id: number | null;
   currency: string;
+  /** 원장 전기 시각 — 리스트의 생성일 컬럼. 전표는 불변이라 수정일은 없다. */
+  created_at: Date | string | null;
   lines: { account_code: string; account_name: string; debit: number; credit: number }[];
 };
 
@@ -555,6 +557,7 @@ export async function listEntries(opts: { from?: string; to?: string } = {}): Pr
     source_type: e.source_type,
     source_id: e.source_id,
     currency: e.currency,
+    created_at: e.created_at,
     lines: linesByEntry.get(e.id) ?? [],
   }));
 }

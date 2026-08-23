@@ -29,6 +29,7 @@ import { apiFetch } from "@/lib/apiFetch";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { csvFileName, downloadCsv, nodeToText, toCsvString } from "@/lib/csv";
+import { formatDate } from "@/lib/date";
 import { ACTIONS_KEY, type ColumnDef, type DataTableEditing, type EditValue } from "./types";
 import { useTablePrefs } from "./useTablePrefs";
 import { ResizableSortableTh } from "./ResizableSortableTh";
@@ -67,11 +68,53 @@ export interface DataTableProps<T> {
   className?: string;
 }
 
+/**
+ * 감사 컬럼(수정일 · 생성일)은 모든 리스트에서 같은 자리에 같은 모양으로 붙는다.
+ * 페이지가 직접 `created_at` / `updated_at` 컬럼을 정의했다면 그 정의(제목 · 셀)를
+ * 그대로 쓰되 자리는 여기서 맞춘다. 응답 행에 해당 필드가 없는 리스트(집계 뷰 등)
+ * 에는 붙지 않는다. 순서는 `… → 수정일 → 생성일`이고 `__actions`는 prefs 단계에서
+ * 항상 그 뒤로 밀린다. 저장된 컬럼 순서가 있으면 사용자의 선택이 우선한다.
+ */
+const AUDIT_COLUMNS = [
+  { key: "updated_at", header: "common.updated_at" },
+  { key: "created_at", header: "common.created_at" },
+] as const;
+
+function withAuditColumns<T>(columns: ColumnDef<T>[], data: T[] | undefined): ColumnDef<T>[] {
+  const sample = data?.find((row) => row && typeof row === "object") as Record<string, unknown> | undefined;
+  if (!sample) return columns;
+  const byKey = new Map(columns.map((c) => [c.key, c]));
+  const tail: ColumnDef<T>[] = [];
+  for (const { key, header } of AUDIT_COLUMNS) {
+    const existing = byKey.get(key);
+    if (existing) {
+      tail.push(existing);
+      continue;
+    }
+    if (!(key in sample)) continue;
+    tail.push({
+      key,
+      header,
+      defaultWidth: 110,
+      sortAccessor: (row) => (row as Record<string, unknown>)[key] ?? "",
+      cell: (row) => (
+        <span className="text-muted-foreground text-xs whitespace-nowrap">
+          {formatDate((row as Record<string, unknown>)[key] as string | null | undefined)}
+        </span>
+      ),
+      csv: (row) => (row as Record<string, unknown>)[key] ?? "",
+    });
+  }
+  if (tail.length === 0) return columns;
+  const tailKeys = new Set(tail.map((c) => c.key));
+  return [...columns.filter((c) => !tailKeys.has(c.key)), ...tail];
+}
+
 type BulkAction = "archive" | "permanent" | "restore" | null;
 
 export function DataTable<T>({
   tableKey,
-  columns,
+  columns: pageColumns,
   data,
   isLoading,
   rowKey,
@@ -97,6 +140,9 @@ export function DataTable<T>({
   // SuperAdmin-only. Viewers are read-only, matching the server-side gate.
   const canWrite = !!user && role !== "Viewer";
   const { toast } = useToast();
+
+  // 수정일 · 생성일 컬럼을 리스트 공통으로 덧붙인다(페이지 정의가 있으면 그대로 둔다).
+  const columns = useMemo(() => withAuditColumns(pageColumns, data), [pageColumns, data]);
 
   const prefs = useTablePrefs(tableKey, columns);
 

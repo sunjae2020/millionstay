@@ -109,11 +109,18 @@ router.get("/v1/translations", async (req, res): Promise<void> => {
   );
   const keys = new Set<string>();
   const enMap = new Map<string, string>();
-  const langMap = new Map<string, { value: string; id: number; source: string; reviewed_at: Date | null }>();
+  const langMap = new Map<
+    string,
+    { value: string; id: number; source: string; reviewed_at: Date | null; created_at: Date; updated_at: Date }
+  >();
   for (const r of all) {
     keys.add(r.key);
     if (r.lang === "en") enMap.set(r.key, r.value);
-    if (r.lang === lang) langMap.set(r.key, { value: r.value, id: r.id, source: r.source, reviewed_at: r.reviewed_at });
+    if (r.lang === lang)
+      langMap.set(r.key, {
+        value: r.value, id: r.id, source: r.source, reviewed_at: r.reviewed_at,
+        created_at: r.created_at, updated_at: r.updated_at,
+      });
   }
   const data = Array.from(keys)
     .sort()
@@ -126,6 +133,8 @@ router.get("/v1/translations", async (req, res): Promise<void> => {
         id: m?.id ?? null,
         source: m?.source ?? null,
         reviewed_at: m?.reviewed_at ?? null,
+        created_at: m?.created_at ?? null,
+        updated_at: m?.updated_at ?? null,
         // True when the value came from AI and a human hasn't confirmed it yet.
         needs_review: !!m && m.source === "machine" && !m.reviewed_at,
       };
