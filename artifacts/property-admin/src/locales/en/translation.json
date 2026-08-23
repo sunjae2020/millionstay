@@ -6995,5 +6995,13 @@
     "per_day": "/day",
     "min_term": "Min {{count}} {{unit}}",
     "inactive": "Inactive"
+  },
+  "property_photos": {
+    "loading": "Loading photos…",
+    "dropzone": "Drag & drop photos here, or click to select",
+    "formats": "JPG, PNG, WEBP · up to 20 MB each",
+    "ready_count": "{{count}} photo(s) ready to upload",
+    "primary": "Primary",
+    "caption_placeholder": "Add a caption"
   }
 }

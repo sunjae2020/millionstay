@@ -22,7 +22,8 @@ import {
   getGetPropertyQueryKey,
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, Save, CheckCircle, Layers, MapPin, Loader2, Languages } from "lucide-react";
+import { ArrowLeft, Save, CheckCircle, Layers, MapPin, Loader2, Languages, Images } from "lucide-react";
+import { PropertyPhotoManager } from "@/components/PropertyPhotoManager";
 import { ContentTranslationsPanel } from "@/components/ContentTranslationsPanel";
 import { Link } from "wouter";
 import { format } from "date-fns";
@@ -256,8 +257,15 @@ export default function PropertyDetail() {
           <TabsList className="mb-5">
             <TabsTrigger value="details">{t("property.tab_details")}</TabsTrigger>
             {!isNew && <TabsTrigger value="spaces">{t("property.tab_spaces")} ({spaces?.length ?? 0})</TabsTrigger>}
+            {!isNew && <TabsTrigger value="photos" className="gap-1.5"><Images className="h-3.5 w-3.5" /> {t("property.tab_photos")}</TabsTrigger>}
             {!isNew && <TabsTrigger value="translations" className="gap-1.5"><Languages className="h-3.5 w-3.5" /> {t("property.tab_translations")}</TabsTrigger>}
           </TabsList>
+
+          {!isNew && id && (
+            <TabsContent value="photos">
+              <PropertyPhotoManager propertyId={Number(id)} />
+            </TabsContent>
+          )}
 
           <TabsContent value="details">
             <div className="max-w-2xl">

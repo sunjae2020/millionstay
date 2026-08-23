@@ -6919,5 +6919,13 @@
     "per_day": "/วัน",
     "min_term": "ขั้นต่ำ {{count}} {{unit}}",
     "inactive": "ปิดใช้งาน"
+  },
+  "property_photos": {
+    "loading": "กำลังโหลดรูปภาพ…",
+    "dropzone": "ลากและวางรูปภาพที่นี่ หรือคลิกเพื่อเลือก",
+    "formats": "JPG, PNG, WEBP · ไฟล์ละไม่เกิน 20 MB",
+    "ready_count": "มีรูปภาพ {{count}} รูปพร้อมอัปโหลด",
+    "primary": "รูปหลัก",
+    "caption_placeholder": "เพิ่มคำอธิบาย"
   }
 }

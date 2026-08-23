@@ -6943,5 +6943,13 @@
     "per_day": "/日",
     "min_term": "最短 {{count}}{{unit}}",
     "inactive": "停用"
+  },
+  "property_photos": {
+    "loading": "正在加载照片…",
+    "dropzone": "将照片拖放到此处，或点击选择",
+    "formats": "JPG、PNG、WEBP · 每个文件最大 20 MB",
+    "ready_count": "待上传照片 {{count}} 张",
+    "primary": "主图",
+    "caption_placeholder": "添加说明"
   }
 }

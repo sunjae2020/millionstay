@@ -1926,7 +1926,7 @@
     "label_status": "Trạng thái",
     "tab_overview": "Tổng quan",
     "tab_spaces": "Không gian",
-    "tab_photos": "Hình ảnh",
+    "tab_photos": "Ảnh",
     "tab_documents": "Tài liệu",
     "tab_translations": "Bản dịch",
     "btn_autodetect": "Tự động phát hiện",
@@ -6887,5 +6887,13 @@
     "per_day": "/ngày",
     "min_term": "Tối thiểu {{count}} {{unit}}",
     "inactive": "Ngừng hoạt động"
+  },
+  "property_photos": {
+    "loading": "Đang tải ảnh…",
+    "dropzone": "Kéo và thả ảnh vào đây, hoặc nhấp để chọn",
+    "formats": "JPG, PNG, WEBP · tối đa 20 MB mỗi tệp",
+    "ready_count": "{{count}} ảnh sẵn sàng tải lên",
+    "primary": "Ảnh chính",
+    "caption_placeholder": "Thêm chú thích"
   }
 }

@@ -11,6 +11,7 @@ import authRouter from "./routes/auth";
 import healthRouter from "./routes/health";
 import publicRouter from "./routes/public";
 import spaceImagesRouter from "./routes/space-images";
+import propertyImagesRouter from "./routes/property-images";
 import guestAuthRouter from "./routes/guest-auth";
 import guestPortalRouter from "./routes/guest-portal";
 import guestCsRouter from "./routes/guest-cs";
@@ -304,6 +305,7 @@ app.use("/api/v1", requireAuth);
 app.use("/api/v1/admin", dbSyncRouter);
 
 app.use("/api", spaceImagesRouter);
+app.use("/api", propertyImagesRouter);
 app.use("/api", knowledgeRouter);
 app.use("/api", pageContentsRouter);
 app.use("/api", mediaRouter);

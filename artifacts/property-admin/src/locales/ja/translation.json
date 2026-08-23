@@ -6939,5 +6939,13 @@
     "per_day": "/日",
     "min_term": "最短 {{count}}{{unit}}",
     "inactive": "無効"
+  },
+  "property_photos": {
+    "loading": "写真を読み込み中…",
+    "dropzone": "写真をここにドラッグ＆ドロップ、またはクリックして選択",
+    "formats": "JPG, PNG, WEBP · 1ファイル最大20MB",
+    "ready_count": "アップロード待ちの写真 {{count}} 枚",
+    "primary": "メイン",
+    "caption_placeholder": "キャプションを入力"
   }
 }
