@@ -34,6 +34,8 @@ import { apiFetch, apiJson } from "@/lib/apiFetch";
 import { useToast } from "@/hooks/use-toast";
 import { DocumentVersions } from "@/components/DocumentVersions";
 import { HomestaySignatureCard } from "@/components/HomestaySignatureCard";
+import { TenantOnboardingCard } from "@/components/TenantOnboardingCard";
+import { TenantLinkCard } from "@/components/TenantLinkCard";
 import ContractInspections from "@/components/ContractInspections";
 import SettlementBoard from "@/components/SettlementBoard";
 import ContractDocuments from "@/components/ContractDocuments";
@@ -973,6 +975,19 @@ export default function ContractDetail() {
                 entityType="contract"
                 issuePath={signingPolicy?.online_allowed ? `/api/v1/contracts/${id}/issue-signing` : undefined}
                 hideIfEmpty={!signingPolicy?.online_allowed}
+              />
+            )}
+
+            {/* 세입자 온보딩 — 신청부터 퇴거 정산까지 어디까지 갔는지 한 화면에. */}
+            {!isNew && contract && <TenantOnboardingCard contractId={Number(id)} />}
+
+            {/* 서류 제출 요청 — 신분증·통장 사본 등을 무로그인 링크로 받는다. */}
+            {!isNew && contract && (
+              <TenantLinkCard
+                kind="doc_request"
+                issuePath={`/api/v1/contracts/${id}/document-request`}
+                listPath={`/api/v1/contracts/${id}/document-request`}
+                defaultEmail={(contract as any)?.tenant_email ?? null}
               />
             )}
 

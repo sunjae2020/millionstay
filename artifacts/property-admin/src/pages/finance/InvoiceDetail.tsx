@@ -33,6 +33,7 @@ import { useToast } from "@/hooks/use-toast";
 import { DocumentVersions } from "@/components/DocumentVersions";
 import { DocumentPreviewDialog, useDocumentPreview } from "@/components/DocumentPreviewDialog";
 import { InvoiceLineItemsEditor, type InvoiceLineItem } from "@/components/InvoiceLineItemsEditor";
+import { TenantLinkCard } from "@/components/TenantLinkCard";
 
 const statusColors: Record<string, string> = {
   Draft: "bg-gray-100 text-gray-600",
@@ -277,6 +278,18 @@ export default function InvoiceDetail() {
                 </Button>
               )}
             </div>
+          </div>
+        )}
+
+        {/* 세입자 결제 링크 — 로그인 없이 금액·계좌를 확인하고 입금을 알린다. */}
+        {!isNew && (
+          <div className="mb-4">
+            <TenantLinkCard
+              kind="invoice_pay"
+              issuePath={`/api/v1/invoices/${id}/pay-link`}
+              listPath={`/api/v1/invoices/${id}/pay-link`}
+              defaultEmail={(invoice as any)?.account_email ?? null}
+            />
           </div>
         )}
 
