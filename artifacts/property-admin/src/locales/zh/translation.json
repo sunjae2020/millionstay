@@ -136,7 +136,8 @@
     "marketing_dashboard": "营销概览",
     "marketing_lists": "名单",
     "campaigns": "营销活动",
-    "tenant_links": "租客链接"
+    "tenant_links": "租客链接",
+    "help_docs": "内部资料库"
   },
   "dashboard": {
     "title": "仪表板",
@@ -7217,5 +7218,40 @@
     "col_updated": "更新时间",
     "empty": "暂无待处理事项。",
     "docs_count": "已提交 {{submitted}}/{{total}}"
+  },
+  "helpDocs": {
+    "title": "内部资料库",
+    "subtitle": "运营指南、制度与发给租客的链接集中在一处。新同事只需知道这个页面。",
+    "btn_seed": "填入标准资料",
+    "btn_add": "添加资料",
+    "ph_search": "搜索标题、说明或标签",
+    "filter_all": "全部",
+    "filter_staff": "内部",
+    "filter_tenant": "租客链接",
+    "empty_title": "资料库为空",
+    "empty_desc": "先填入标准资料，再按团队需要修改或补充。",
+    "no_match": "没有符合的资料。",
+    "issued_at": "发放位置：",
+    "audience_staff": "内部",
+    "audience_tenant": "租客",
+    "dialog_new": "添加资料",
+    "dialog_edit": "编辑资料",
+    "f_title": "标题",
+    "f_description": "说明",
+    "f_category": "分类",
+    "f_audience": "对象",
+    "f_url": "链接",
+    "hint_url": "在新标签页打开。也可填写 /documents/library 这类后台路径。",
+    "f_route_pattern": "链接形式",
+    "hint_route_pattern": "带令牌的租客链接地址形式。",
+    "f_issue_hint": "发放位置",
+    "ph_issue_hint": "例如：账单详情 → 付款链接卡片",
+    "f_tags": "标签（逗号分隔）",
+    "f_sort": "排序",
+    "confirm_remove": "要从资料库中删除这条资料吗？",
+    "toast_seeded": "已添加 {{count}} 条",
+    "toast_removed": "已删除",
+    "error_seed": "未能填入标准资料",
+    "error_save": "未能保存"
   }
 }

@@ -136,7 +136,8 @@
     "marketing_dashboard": "Marketing Dashboard",
     "marketing_lists": "Lists",
     "campaigns": "Campaigns",
-    "tenant_links": "Tenant links"
+    "tenant_links": "Tenant links",
+    "help_docs": "Internal library"
   },
   "dashboard": {
     "title": "Dashboard",
@@ -7265,5 +7266,40 @@
     "col_updated": "Updated",
     "empty": "Nothing to review.",
     "docs_count": "{{submitted}} of {{total}} submitted"
+  },
+  "helpDocs": {
+    "title": "Internal library",
+    "subtitle": "Operating guides, policies and the links that go out to tenants — one place to send a new colleague.",
+    "btn_seed": "Fill with defaults",
+    "btn_add": "Add material",
+    "ph_search": "Search title, description or tag",
+    "filter_all": "All",
+    "filter_staff": "Internal",
+    "filter_tenant": "Tenant links",
+    "empty_title": "The library is empty",
+    "empty_desc": "Fill it with the standard set, then edit or add your own.",
+    "no_match": "Nothing matches that search.",
+    "issued_at": "Issued at:",
+    "audience_staff": "Internal",
+    "audience_tenant": "Tenant",
+    "dialog_new": "Add material",
+    "dialog_edit": "Edit material",
+    "f_title": "Title",
+    "f_description": "Description",
+    "f_category": "Category",
+    "f_audience": "Audience",
+    "f_url": "Link",
+    "hint_url": "Opens in a new tab. An admin path like /documents/library works too.",
+    "f_route_pattern": "Link pattern",
+    "hint_route_pattern": "For tenant links whose address carries a token.",
+    "f_issue_hint": "Where it is issued",
+    "ph_issue_hint": "e.g. Contract detail → Payment link card",
+    "f_tags": "Tags (comma separated)",
+    "f_sort": "Order",
+    "confirm_remove": "Remove this material from the library?",
+    "toast_seeded": "{{count}} added",
+    "toast_removed": "Removed",
+    "error_seed": "Could not fill the library",
+    "error_save": "Could not save"
   }
 }

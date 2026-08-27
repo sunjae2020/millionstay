@@ -134,7 +134,8 @@
     "marketing_dashboard": "Tổng quan tiếp thị",
     "marketing_lists": "Danh sách",
     "campaigns": "Chiến dịch",
-    "tenant_links": "Liên kết người thuê"
+    "tenant_links": "Liên kết người thuê",
+    "help_docs": "Thư viện nội bộ"
   },
   "dashboard": {
     "title": "Bảng điều khiển",
@@ -7157,5 +7158,40 @@
     "col_updated": "Cập nhật",
     "empty": "Không có mục nào cần xử lý.",
     "docs_count": "Đã nộp {{submitted}}/{{total}}"
+  },
+  "helpDocs": {
+    "title": "Thư viện nội bộ",
+    "subtitle": "Hướng dẫn vận hành, quy định và các liên kết gửi cho người thuê — gom về một chỗ. Chỉ cần chỉ cho người mới trang này.",
+    "btn_seed": "Nạp bộ mặc định",
+    "btn_add": "Thêm tài liệu",
+    "ph_search": "Tìm theo tiêu đề, mô tả hoặc thẻ",
+    "filter_all": "Tất cả",
+    "filter_staff": "Nội bộ",
+    "filter_tenant": "Liên kết người thuê",
+    "empty_title": "Thư viện đang trống",
+    "empty_desc": "Nạp bộ tiêu chuẩn trước, rồi sửa hoặc bổ sung theo nhu cầu của nhóm.",
+    "no_match": "Không có kết quả phù hợp.",
+    "issued_at": "Phát hành tại:",
+    "audience_staff": "Nội bộ",
+    "audience_tenant": "Người thuê",
+    "dialog_new": "Thêm tài liệu",
+    "dialog_edit": "Sửa tài liệu",
+    "f_title": "Tiêu đề",
+    "f_description": "Mô tả",
+    "f_category": "Phân loại",
+    "f_audience": "Đối tượng",
+    "f_url": "Liên kết",
+    "hint_url": "Mở trong tab mới. Cũng dùng được đường dẫn quản trị như /documents/library.",
+    "f_route_pattern": "Dạng liên kết",
+    "hint_route_pattern": "Dành cho liên kết người thuê có token trong địa chỉ.",
+    "f_issue_hint": "Phát hành ở đâu",
+    "ph_issue_hint": "vd: Chi tiết hóa đơn → thẻ Liên kết thanh toán",
+    "f_tags": "Thẻ (cách nhau bằng dấu phẩy)",
+    "f_sort": "Thứ tự",
+    "confirm_remove": "Xóa tài liệu này khỏi thư viện?",
+    "toast_seeded": "Đã thêm {{count}} mục",
+    "toast_removed": "Đã xóa",
+    "error_seed": "Không nạp được bộ mặc định",
+    "error_save": "Không lưu được"
   }
 }

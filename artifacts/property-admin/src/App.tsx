@@ -97,6 +97,7 @@ import DocumentHub from "@/pages/documents/DocumentHub";
 import DocumentIntake from "@/pages/documents/DocumentIntake";
 import DocumentLibrary from "@/pages/documents/DocumentLibrary";
 import TenantLinkQueue from "@/pages/documents/TenantLinkQueue";
+import HelpDocs from "@/pages/help/HelpDocs";
 import DocumentCompliance from "@/pages/documents/DocumentCompliance";
 import QuoteList from "@/pages/documents/QuoteList";
 import QuoteDetail from "@/pages/documents/QuoteDetail";
@@ -358,6 +359,8 @@ function Router() {
       <Route path="/documents/checklist" component={DocumentCompliance} />
       {/* 세입자 링크 대기열 — 입금 통보·서류 제출이 들어온 링크를 한 화면에서. */}
       <Route path="/documents/tenant-links" component={TenantLinkQueue} />
+      {/* 내부 문서함 — 운영 지도·정책·세입자 링크 (직원 교육용). */}
+      <Route path="/help/docs" component={HelpDocs} />
       <Route path="/documents/quotes" component={QuoteList} />
       <Route path="/documents/quotes/new" component={QuoteDetail} />
       <Route path="/documents/quotes/:id" component={QuoteDetail} />

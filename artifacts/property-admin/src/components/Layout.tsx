@@ -183,6 +183,7 @@ function getNav(
         { href: "/documents/library", label: t("nav.document_library"), icon: Search },
         { href: "/documents/checklist", label: t("nav.document_checklist"), icon: ClipboardCheck },
         { href: "/documents/tenant-links", label: t("nav.tenant_links"), icon: Link2 },
+        { href: "/help/docs", label: t("nav.help_docs"), icon: BookOpen },
         { href: "/documents/quotes", label: t("nav.quotes"), icon: FileText },
         { href: "/finance/invoices", label: t("nav.invoice"), icon: Receipt },
         { href: "/finance/receipts", label: t("nav.receipt"), icon: Receipt },
