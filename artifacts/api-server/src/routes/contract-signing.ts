@@ -12,7 +12,7 @@
 import crypto from "node:crypto";
 import { Router, type IRouter } from "express";
 import { and, eq, inArray } from "drizzle-orm";
-import { db, contractSigningRequestsTable, homestayPlacementsTable, contractsTable } from "@workspace/db";
+import { db, contractSigningRequestsTable, homestayPlacementsTable, contractsTable, depositSettlementsTable } from "@workspace/db";
 import { logAction } from "../utils/auditLog.js";
 import {
   appendAuditEvent,
@@ -234,7 +234,9 @@ contractSigningPublicRouter.post("/v1/public/contract-signing/:token/sign", asyn
     );
     const consentText = row.context_type === "work_order"
       ? t(consentLang, "wo.signConsentText")
-      : DEFAULT_CONSENT_TEXT;
+      : row.context_type === "deposit_settlement"
+        ? t(consentLang, "moveout.signConsentText")
+        : DEFAULT_CONSENT_TEXT;
     const consentBlock = { accepted: true, text: consentText, acceptedAt: nowIso };
     const byRole = new Map(signers.map((s) => [s.role, s]));
     const enriched = signatures.map((s) => ({
@@ -303,6 +305,15 @@ contractSigningPublicRouter.post("/v1/public/contract-signing/:token/sign", asyn
         .set({ status: "AwaitingPayment", confirmed_at: now, updated_at: now })
         .where(and(eq(homestayPlacementsTable.id, row.context_id), eq(homestayPlacementsTable.status, "HostAccepted")))
         .catch((e) => console.error("[ContractSign] placement advance failed:", e));
+    }
+
+    // 퇴거 정산 확인서에 서명이 들어오면 제안(proposed) 상태의 정산이 임차인
+    // 동의(tenant_ack)로 넘어간다 — 게스트 포털의 /acknowledge 와 같은 자리다.
+    if (row.context_type === "deposit_settlement") {
+      void db.update(depositSettlementsTable)
+        .set({ status: "tenant_ack", tenant_ack_at: now, updated_at: now })
+        .where(and(eq(depositSettlementsTable.id, row.context_id), eq(depositSettlementsTable.status, "proposed")))
+        .catch((e) => console.error("[ContractSign] settlement ack failed:", e));
     }
 
     // A signed regular contract advances Draft/Sent → Signed (activation stays

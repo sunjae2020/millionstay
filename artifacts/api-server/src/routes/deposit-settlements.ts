@@ -29,6 +29,10 @@ import { formatDocMoney } from "../lib/documents/theme";
 import { normalizeLang, t } from "../lib/documents/i18n";
 import { resolveTemplateBody } from "../lib/documents/templateEngine";
 import { buildMoveOutSettlementHtml, type MoveOutDocInput } from "../lib/documents/moveOutSettlementDocument";
+import { createSigningRequest, signingBaseUrl } from "../services/contractSigning";
+import { sendTenantLinkEmail } from "../lib/email";
+import { contractSigningRequestsTable } from "@workspace/db";
+import { inArray } from "drizzle-orm";
 
 const ENTITY = "deposit_settlement";
 
@@ -599,7 +603,7 @@ adminRouter.post("/v1/deposit-settlements/:id/reopen", async (req, res): Promise
 // Assemble the move-out confirmation document input: settlement totals +
 // deduction lines + the booking's household details (unit, tenant, contract
 // period, rent) resolved from space / account / contract.
-async function buildMoveOutDocInput(id: number): Promise<MoveOutDocInput | null> {
+export async function buildMoveOutDocInput(id: number): Promise<MoveOutDocInput | null> {
   const detail = await loadSettlementDetail(id);
   if (!detail) return null;
 
@@ -866,6 +870,119 @@ adminRouter.get("/v1/deposit-settlements/:id/document.pdf", async (req, res): Pr
     res.status(500).json({ error: "Failed to generate PDF" });
   }
 });
+
+/* ── 임차인 확인 서명 링크 ────────────────────────────────────────────────
+   퇴거 정산은 종이 확인서에 도장을 받아 오는 것이 관행이었다. 세입자는 이미 짐을
+   빼고 떠난 뒤이므로, 그 도장을 받으러 다시 만나는 일이 정산을 몇 주씩 미룬다.
+   계약서·작업 확인서와 같은 전자서명 원장(`contract_signing_requests`)에
+   context_type='deposit_settlement' 로 얹어, 링크 하나로 끝내게 한다. */
+
+adminRouter.post("/v1/deposit-settlements/:id/sign-link", async (req, res): Promise<void> => {
+  try {
+    const id = Number(req.params.id);
+    const [row] = await db.select().from(depositSettlementsTable).where(eq(depositSettlementsTable.id, id)).limit(1);
+    if (!row) { res.status(404).json({ success: false, error: { code: "NOT_FOUND", message: "정산을 찾을 수 없습니다." } }); return; }
+    // 초안 상태로는 보내지 않는다 — 세입자가 확인할 금액이 아직 확정되지 않았다.
+    if (row.status === "draft") {
+      res.status(409).json({ success: false, error: { code: "NOT_PROPOSED", message: "먼저 정산안을 제안(proposed) 상태로 만들어 주세요." } });
+      return;
+    }
+
+    const existing = await db.select().from(contractSigningRequestsTable)
+      .where(and(
+        eq(contractSigningRequestsTable.context_type, "deposit_settlement"),
+        eq(contractSigningRequestsTable.context_id, id),
+      ));
+    if (existing.some((r) => r.status === "signed")) {
+      res.status(409).json({ success: false, error: { code: "ALREADY_SIGNED", message: "이미 임차인 확인이 완료된 정산입니다." } });
+      return;
+    }
+    const stale = existing.filter((r) => r.status === "pending").map((r) => r.id);
+    if (stale.length) {
+      await db.update(contractSigningRequestsTable)
+        .set({ status: "cancelled", updated_at: new Date() })
+        .where(inArray(contractSigningRequestsTable.id, stale));
+    }
+
+    const doc = await buildMoveOutDocInput(id);
+    const tenant = await settlementTenant(row);
+    const name = (typeof req.body?.signer_name === "string" && req.body.signer_name.trim())
+      || doc?.tenant_name || tenant?.name || "임차인";
+    const to = (typeof req.body?.to === "string" && req.body.to.trim()) || tenant?.email || "";
+    const days = Number(req.body?.expiry_days);
+
+    const signing = await createSigningRequest({
+      contextType: "deposit_settlement",
+      contextId: id,
+      signers: [{ role: "tenant", name, email: to, required: true }],
+      expiryDays: Number.isFinite(days) && days > 0 ? days : 14,
+    });
+
+    void logAction({
+      entityType: ENTITY, entityId: id, action: "UPDATE",
+      actorId: (req as any).user?.id ?? null,
+      newValue: { sign_link_issued: signing.id, signer: name, expires_at: signing.expiresAt },
+    });
+
+    const url = `${signingBaseUrl()}/sign/${signing.token}`;
+    let email: { ok: boolean; skipped?: boolean; error?: string } | null = null;
+    if (req.body?.send_email) {
+      email = to
+        ? await sendTenantLinkEmail({
+            kind: "settlement_sign",
+            to, toName: name, url,
+            ref: row.settlement_ref,
+            unit: doc?.unit ?? null,
+            amount: formatDocMoney(row.refund_amount, row.currency),
+            expiresAt: signing.expiresAt,
+            lang: typeof req.body?.lang === "string" ? req.body.lang : undefined,
+          })
+        : { ok: false, error: "NO_RECIPIENT" };
+    }
+
+    res.status(201).json({
+      success: true,
+      data: { id: signing.id, token: signing.token, url, signer_name: name, expires_at: signing.expiresAt },
+      email,
+    });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: { code: "SERVER_ERROR", message: err.message } });
+  }
+});
+
+/** 이 정산에 달린 확인 서명 요청들 — 상세 화면이 상태·서명 정보를 그대로 그린다. */
+adminRouter.get("/v1/deposit-settlements/:id/sign-link", async (req, res): Promise<void> => {
+  const id = Number(req.params.id);
+  const rows = await db.select().from(contractSigningRequestsTable)
+    .where(and(
+      eq(contractSigningRequestsTable.context_type, "deposit_settlement"),
+      eq(contractSigningRequestsTable.context_id, id),
+    ))
+    .orderBy(desc(contractSigningRequestsTable.id));
+  const base = signingBaseUrl();
+  res.json({
+    success: true,
+    data: rows.map(({ signed_snapshot, ...r }) => ({ ...r, url: `${base}/sign/${r.token}` })),
+  });
+});
+
+/** 정산의 임차인 — 계약(장기) 또는 예약(단기) 어느 쪽에 매달렸든 한 명으로 좁힌다. */
+async function settlementTenant(row: { contract_id: number | null; booking_id: number | null }): Promise<{ name: string | null; email: string | null } | null> {
+  let accountId: number | null = null;
+  if (row.contract_id) {
+    const [c] = await db.select({ acc: contractsTable.tenant_account_id }).from(contractsTable)
+      .where(eq(contractsTable.id, row.contract_id)).limit(1);
+    accountId = c?.acc ?? null;
+  } else if (row.booking_id) {
+    const [b] = await db.select({ acc: bookingsTable.account_id }).from(bookingsTable)
+      .where(eq(bookingsTable.id, row.booking_id)).limit(1);
+    accountId = b?.acc ?? null;
+  }
+  if (!accountId) return null;
+  const [acc] = await db.select({ name: accountsTable.name, email: accountsTable.account_email })
+    .from(accountsTable).where(eq(accountsTable.id, accountId)).limit(1);
+  return acc ? { name: acc.name ?? null, email: acc.email ?? null } : null;
+}
 
 /* ═══════════════════════════════════════════════════════════
    GUEST ROUTER

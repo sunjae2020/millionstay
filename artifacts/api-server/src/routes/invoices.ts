@@ -461,7 +461,7 @@ router.post("/v1/invoices/:id/void", async (req, res): Promise<void> => {
  * Build the enriched document input for a single invoice, including the
  * billing account's email + formatted address (needed for the Bill-To block).
  */
-async function buildInvoiceDocInput(invoiceId: number, lang: DocLang): Promise<InvoiceDocInput | null> {
+export async function buildInvoiceDocInput(invoiceId: number, lang: DocLang): Promise<InvoiceDocInput | null> {
   const row = await db.select().from(invoicesTable).where(eq(invoicesTable.id, invoiceId)).then(r => r[0]);
   if (!row) return null;
   const [enriched] = await enrichInvoices([row]);
@@ -565,7 +565,7 @@ router.get("/v1/invoices/:id/receipt/pdf", async (req, res): Promise<void> => {
  * 파일명 규칙(INV-이름_YYYYMMDDA)을 인보이스와 영수증에 적용한다. 청구 대상은
  * 계정명, 발행일은 인보이스 발행일 / 수납일.
  */
-async function invoiceFilename(
+export async function invoiceFilename(
   id: number,
   docInput: InvoiceDocInput,
   kind: "invoice" | "receipt",
@@ -583,7 +583,7 @@ async function invoiceFilename(
 }
 
 /** Render HTML to PDF and stream it, mapping renderer failures to HTTP codes. */
-async function sendPdf(
+export async function sendPdf(
   res: import("express").Response,
   html: string,
   filename: string,

@@ -29,6 +29,7 @@ import partnerCsRouter from "./routes/partner-cs";
 import { homestayPublicRouter, homestayPortalRouter } from "./routes/homestay";
 import { contractSigningPublicRouter, contractSigningAdminRouter } from "./routes/contract-signing";
 import { unitInspectionsAdminRouter, unitInspectionsPublicRouter } from "./routes/unit-inspections";
+import { tenantLinksAdminRouter, tenantLinksPublicRouter } from "./routes/tenant-links";
 import { homestayStudentPublicRouter } from "./routes/homestay-students";
 import { shortTermPublicRouter } from "./routes/short-term";
 import pageContentsRouter from "./routes/page-contents";
@@ -256,6 +257,9 @@ app.use("/api", unitInspectionsPublicRouter);
 app.use("/api", homestayStudentPublicRouter);
 // Public short-term accommodation application intake (no auth).
 app.use("/api", shortTermPublicRouter);
+// 세입자 온보딩 링크 — 청구서 조회·입금 통보 / 서류 제출 (토큰, 로그인 없음).
+// requireAuth 앞에 있어야 한다.
+app.use("/api", tenantLinksPublicRouter);
 app.use("/api", chatRouter);
 app.use("/api", privacyRouter);
 // Resend campaign event webhook — the caller is Resend, not an admin, so it is
@@ -318,6 +322,8 @@ app.use("/api", conditionReportsAdminRouter);
 // 세대점검표 — admin side (self-guards with requireAuth on /v1).
 app.use("/api", unitInspectionsAdminRouter);
 app.use("/api", depositSettlementsAdminRouter);
+// 세입자 온보딩 링크 — 관리자 발급·회수·대기열 (requireAuth 뒤).
+app.use("/api", tenantLinksAdminRouter);
 app.use("/api", router);
 
 // In production, serve the built SPAs so a single Cloud Run process handles everything.
