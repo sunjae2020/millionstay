@@ -32,7 +32,7 @@ import { formatDocMoney } from "../lib/documents/theme";
 import { resolveDocFolder } from "../lib/documents/docFileName";
 import { calcRetentionDate } from "../lib/retention";
 import { decodeUploadFilename } from "../lib/uploadFilename";
-import { isCloudinaryConfigured, uploadPrivateToCloudinary, cldFolder } from "../utils/cloudinary";
+import { isCloudinaryConfigured, uploadPrivateToCloudinary, uploadToCloudinary, cldFolder } from "../utils/cloudinary";
 import { sendTenantLinkEmail } from "../lib/email";
 import { formatPersonName } from "../lib/nameFormat";
 
@@ -349,6 +349,170 @@ adminRouter.get("/v1/contracts/:id/document-request", async (req, res): Promise<
   res.json({ success: true, data: rows.map((r) => serializeTenantLink(r, { withAudit: true })) });
 });
 
+
+/* ── 입주 신청서 ─────────────────────────────────────────────────────────────
+   계약서에는 임대 조건이 다 들어 있다. 정작 입주 당일 관리사무소가 묻는 것들 —
+   차량 등록, 반려동물, 실제 거주 인원, 급할 때 연락할 사람 — 은 계약서에 없고,
+   지금까지 전화·카톡으로 오가다 어디에도 남지 않았다. 세입자가 링크로 직접
+   확인·기입하면 그 값이 연락처와 계약에 앉는다(관리자 승인 후).
+
+   보낸 값을 곧바로 덮어쓰지 않는 이유: 세입자가 급히 적은 한 글자가 이미 검증된
+   연락처를 지울 수 있다. 제출은 그대로 보관하고, 반영은 관리자가 한 번 본 뒤에
+   누른다(명함 OCR 과 같은 규칙). */
+
+/** 입주 신청서가 미리 채워 보여 줄 값 — 세입자는 "고칠 것만" 고치면 된다. */
+async function intakePrefill(contactId: number | null, contract: any) {
+  const base: Record<string, unknown> = {
+    move_in_date: contract?.start_date ?? null,
+    vehicle_no: contract?.vehicle_no ?? null,
+    pet_note: contract?.pet_note ?? null,
+    cohabitants: contract?.cohabitants ?? null,
+  };
+  if (!contactId) return base;
+  const [c] = await db.select().from(contactsTable).where(eq(contactsTable.id, contactId)).limit(1);
+  if (!c) return base;
+  return {
+    ...base,
+    first_name: c.first_name, last_name: c.last_name,
+    email: c.email, mobile_number: c.mobile_number,
+    date_of_birth: c.date_of_birth, nationality: c.nationality,
+    address_line1: c.address_line1, suburb: c.suburb, state: c.state,
+    postcode: c.postcode, country: c.country,
+    emergency_contact_name: c.emergency_contact_name,
+    emergency_contact_relation: c.emergency_contact_relation,
+    emergency_contact_phone: c.emergency_contact_phone,
+    profile_photo_url: c.profile_photo_url,
+  };
+}
+
+adminRouter.post("/v1/contracts/:id/intake-request", async (req, res): Promise<void> => {
+  try {
+    const id = Number(req.params.id);
+    const [contract] = await db.select().from(contractsTable).where(eq(contractsTable.id, id)).limit(1);
+    if (!contract) { fail(res, 404, "NOT_FOUND", "계약을 찾을 수 없습니다."); return; }
+
+    const contactId = Number.isFinite(Number(req.body?.contact_id))
+      ? Number(req.body.contact_id)
+      : await tenantContactId(contract);
+    if (!contactId) {
+      // 신청서가 돌아올 자리가 없으면 받아 봐야 둘 데가 없다.
+      fail(res, 400, "NO_CONTACT", "입주 신청서를 보내려면 계약에 임차인 연락처가 연결되어 있어야 합니다.");
+      return;
+    }
+
+    const lang = normalizeLang(typeof req.body?.lang === "string" ? req.body.lang : undefined);
+    const tenant = await contactBrief(contactId);
+    const days = Number(req.body?.expiry_days);
+
+    const link = await createTenantLink({
+      kind: "intake",
+      contextType: "contract",
+      contextId: id,
+      contactId,
+      accountId: contract.tenant_account_id ?? null,
+      lang,
+      sentTo: (typeof req.body?.to === "string" && req.body.to.trim()) || tenant?.email || null,
+      expiryDays: Number.isFinite(days) && days > 0 ? days : 14,
+      payload: {
+        contract_ref: contract.contract_ref,
+        tenant_name: tenant?.name ?? null,
+        note: typeof req.body?.note === "string" ? req.body.note.slice(0, 1000) : null,
+        prefill: await intakePrefill(contactId, contract),
+      },
+    });
+
+    void logAction({
+      entityType: "contract", entityId: id, action: "UPDATE",
+      actorId: (req as any).user?.id ?? null,
+      newValue: { intake_request_issued: link.id },
+    });
+
+    let email: { ok: boolean; skipped?: boolean; error?: string } | null = null;
+    const to = (typeof req.body?.to === "string" && req.body.to.trim()) || tenant?.email || null;
+    if (req.body?.send_email) {
+      email = to ? await emailForLink(link, to, lang) : { ok: false, error: "NO_RECIPIENT" };
+      if (email.ok) void appendLinkAudit(link.id, { event: "emailed", to });
+    }
+
+    res.status(201).json({ success: true, data: serializeTenantLink(link), email });
+  } catch (err: any) {
+    fail(res, 500, "SERVER_ERROR", err.message);
+  }
+});
+
+adminRouter.get("/v1/contracts/:id/intake-request", async (req, res): Promise<void> => {
+  const rows = await listTenantLinks("intake", "contract", Number(req.params.id));
+  res.json({ success: true, data: rows.map((r) => serializeTenantLink(r, { withAudit: true })) });
+});
+
+/** 연락처에 그대로 앉는 칸들. 나머지(차량·반려동물·동거인)는 계약에 앉는다. */
+const INTAKE_CONTACT_FIELDS = [
+  "first_name", "last_name", "email", "mobile_number", "date_of_birth", "nationality",
+  "address_line1", "suburb", "state", "postcode", "country",
+  "emergency_contact_name", "emergency_contact_relation", "emergency_contact_phone",
+  "profile_photo_url",
+] as const;
+const INTAKE_CONTRACT_FIELDS = ["vehicle_no", "pet_note", "cohabitants"] as const;
+
+/**
+ * 제출된 입주 신청서를 실제 레코드에 반영한다. 관리자가 내용을 보고 누르는
+ * 버튼이며, 반영 후에도 제출 원본은 링크에 남는다(무엇을 언제 받았는지가 증거다).
+ */
+adminRouter.post("/v1/tenant-links/:id/apply", async (req, res): Promise<void> => {
+  try {
+    const [link] = await db.select().from(tenantAccessLinksTable)
+      .where(eq(tenantAccessLinksTable.id, Number(req.params.id))).limit(1);
+    if (!link || link.kind !== "intake") { fail(res, 404, "NOT_FOUND", "입주 신청서를 찾을 수 없습니다."); return; }
+
+    const subs = Array.isArray(link.submissions) ? link.submissions : [];
+    const latest = [...subs].reverse().find((s: any) => s?.event === "intake") as any;
+    if (!latest) { fail(res, 409, "NO_SUBMISSION", "아직 제출된 내용이 없습니다."); return; }
+    const answers = (latest.answers ?? {}) as Record<string, unknown>;
+
+    const contactPatch: Record<string, unknown> = {};
+    for (const f of INTAKE_CONTACT_FIELDS) {
+      const v = answers[f];
+      if (typeof v === "string" && v.trim()) contactPatch[f] = v.trim();
+    }
+    const contractPatch: Record<string, unknown> = {};
+    for (const f of INTAKE_CONTRACT_FIELDS) {
+      const v = answers[f];
+      if (typeof v === "string") contractPatch[f] = v.trim() || null;
+    }
+
+    if (link.contact_id && Object.keys(contactPatch).length) {
+      await db.update(contactsTable)
+        .set({ ...contactPatch, updated_at: new Date() } as never)
+        .where(eq(contactsTable.id, link.contact_id));
+      void logAction({
+        entityType: "contact", entityId: link.contact_id, action: "UPDATE",
+        actorId: (req as any).user?.id ?? null,
+        newValue: { intake_applied: Object.keys(contactPatch) },
+      });
+    }
+    if (Object.keys(contractPatch).length) {
+      await db.update(contractsTable)
+        .set({ ...contractPatch, updated_at: new Date() } as never)
+        .where(eq(contractsTable.id, link.context_id));
+      void logAction({
+        entityType: "contract", entityId: link.context_id, action: "UPDATE",
+        actorId: (req as any).user?.id ?? null,
+        newValue: { intake_applied: Object.keys(contractPatch) },
+      });
+    }
+
+    void appendLinkAudit(link.id, {
+      event: "applied",
+      actor: (req as any).user?.id ?? null,
+      fields: [...Object.keys(contactPatch), ...Object.keys(contractPatch)],
+    });
+
+    res.json({ success: true, data: { contact: Object.keys(contactPatch), contract: Object.keys(contractPatch) } });
+  } catch (err: any) {
+    fail(res, 500, "SERVER_ERROR", err.message);
+  }
+});
+
 /* ── 계약 온보딩 현황 ────────────────────────────────────────────────────── */
 
 /**
@@ -363,7 +527,7 @@ adminRouter.get("/v1/contracts/:id/onboarding", async (req, res): Promise<void> 
     const [contract] = await db.select().from(contractsTable).where(eq(contractsTable.id, id)).limit(1);
     if (!contract) { fail(res, 404, "NOT_FOUND", "계약을 찾을 수 없습니다."); return; }
 
-    const [signings, docLinks, inspections, invoices, settlements] = await Promise.all([
+    const [signings, docLinks, intakeLinks, inspections, invoices, settlements] = await Promise.all([
       db.select().from(contractSigningRequestsTable)
         .where(and(
           eq(contractSigningRequestsTable.context_type, "contract"),
@@ -371,6 +535,7 @@ adminRouter.get("/v1/contracts/:id/onboarding", async (req, res): Promise<void> 
         ))
         .orderBy(desc(contractSigningRequestsTable.id)),
       listTenantLinks("doc_request", "contract", id),
+      listTenantLinks("intake", "contract", id),
       db.select().from(conditionReportsTable)
         .where(eq(conditionReportsTable.contract_id, id))
         .orderBy(desc(conditionReportsTable.id)),
@@ -406,6 +571,7 @@ adminRouter.get("/v1/contracts/:id/onboarding", async (req, res): Promise<void> 
     const moveIn = inspections.find((r) => r.phase === "move_in") ?? null;
     const moveOut = inspections.find((r) => r.phase === "move_out") ?? null;
     const docLink = docLinks[0] ?? null;
+    const intakeLink = intakeLinks[0] ?? null;
     const unpaid = invoices.filter((i) => i.status !== "Paid" && i.status !== "Void");
     const settlement = settlements[0] ?? null;
     const settlementSigned = settlementSignings.find((s) => s.status === "signed") ?? null;
@@ -419,6 +585,14 @@ adminRouter.get("/v1/contracts/:id/onboarding", async (req, res): Promise<void> 
         at: signed?.signed_at ?? null,
         link: pendingSign ? `${tenantLinkBase()}/sign/${pendingSign.token}` : null,
         detail: contract.contract_ref,
+      },
+      {
+        key: "intake",
+        label: "입주 신청서",
+        state: intakeLink?.status === "completed" ? "done" : intakeLink ? "sent" : "todo",
+        at: intakeLink?.completed_at ?? null,
+        link: intakeLink ? tenantLinkUrl(intakeLink.kind, intakeLink.token) : null,
+        detail: null,
       },
       {
         key: "documents",
@@ -544,6 +718,17 @@ async function emailForLink(
       ref: payload.invoice_ref ?? `INV-${link.context_id}`,
       amount: formatDocMoney(payload.amount ?? null, payload.currency ?? null),
       dueDate: payload.due_date ?? null,
+      expiresAt: link.expires_at,
+      lang: docLang,
+    });
+  }
+  if (link.kind === "intake") {
+    return sendTenantLinkEmail({
+      kind: "intake",
+      to,
+      toName: payload.tenant_name ?? null,
+      url,
+      ref: payload.contract_ref ?? `CTR-${link.context_id}`,
       expiresAt: link.expires_at,
       lang: docLang,
     });
@@ -789,6 +974,98 @@ publicRouter.post("/v1/public/doc-requests/:token/submit", async (req, res): Pro
       ipAddress: clientIp(req), newValue: { tenant_documents_submitted: link.id },
     });
     res.json({ success: true, message: "서류 제출이 완료되었습니다. 감사합니다." });
+  } catch (err: any) {
+    fail(res, 500, "SERVER_ERROR", err.message);
+  }
+});
+
+/* ── 입주 신청서 (세입자 기입) ───────────────────────────────────────────── */
+
+function intakeView(link: any) {
+  const payload = (link.payload ?? {}) as Record<string, any>;
+  const subs = Array.isArray(link.submissions) ? link.submissions : [];
+  const latest = [...subs].reverse().find((s: any) => s?.event === "intake");
+  return {
+    status: link.status,
+    contract_ref: payload.contract_ref ?? null,
+    tenant_name: payload.tenant_name ?? null,
+    note: payload.note ?? null,
+    // 이미 제출했다면 그때 낸 값을 그대로 다시 보여 준다 — 무엇을 냈는지 확인할
+    // 수 없으면 세입자는 같은 것을 또 낸다.
+    values: { ...(payload.prefill ?? {}), ...((latest as any)?.answers ?? {}) },
+    submitted: !!latest,
+  };
+}
+
+publicRouter.get("/v1/public/intake/:token", async (req, res): Promise<void> => {
+  try {
+    const found = await resolveTenantLink(String(req.params.token), "intake", {
+      ip: clientIp(req), userAgent: String(req.headers["user-agent"] ?? "").slice(0, 500),
+    });
+    if ("failure" in found) { failLink(res, found.failure); return; }
+    res.json({ success: true, data: intakeView(found.link) });
+  } catch (err: any) {
+    fail(res, 500, "SERVER_ERROR", err.message);
+  }
+});
+
+/**
+ * 증명사진. 연락처 프로필 사진과 같은 저장 규칙(공개 CDN URL) — 목록·상세가
+ * 그대로 그리는 이미지라 서명 URL 로 두면 화면마다 다시 서명해야 한다.
+ * 신분증 사본과는 다른 물건이다(그쪽은 비공개 + 30일 보존).
+ */
+publicRouter.post("/v1/public/intake/:token/photo", upload.single("image"), async (req, res): Promise<void> => {
+  try {
+    const found = await resolveTenantLink(String(req.params.token), "intake", { markViewed: false });
+    if ("failure" in found) { failLink(res, found.failure); return; }
+    const file = req.file;
+    if (!file) { fail(res, 400, "NO_FILE", "사진이 없습니다."); return; }
+    if (!file.mimetype.startsWith("image/")) { fail(res, 400, "NOT_IMAGE", "이미지 파일만 올릴 수 있습니다."); return; }
+    if (!isCloudinaryConfigured()) { fail(res, 503, "NOT_CONFIGURED", "이미지 업로드가 설정되지 않았습니다."); return; }
+
+    const result = await uploadToCloudinary(file.buffer, {
+      folder: cldFolder("avatars"),
+      transformation: [{ quality: "auto:good", fetch_format: "auto" }],
+    });
+    void appendLinkAudit(found.link.id, { event: "photo_uploaded", ip: clientIp(req) });
+    res.status(201).json({ success: true, data: { url: result.secure_url, thumbnail_url: result.thumbnail_url } });
+  } catch (err: any) {
+    console.error("[tenant-links] intake photo failed:", err);
+    fail(res, 500, "UPLOAD_FAILED", err.message ?? "업로드에 실패했습니다.");
+  }
+});
+
+/** 세입자가 적어 보낸 값. 레코드 반영은 관리자가 확인 후 누른다. */
+publicRouter.post("/v1/public/intake/:token/submit", async (req, res): Promise<void> => {
+  try {
+    const found = await resolveTenantLink(String(req.params.token), "intake", { markViewed: false });
+    if ("failure" in found) { failLink(res, found.failure); return; }
+    const { link } = found;
+
+    const body = (req.body ?? {}) as Record<string, unknown>;
+    const answers: Record<string, string> = {};
+    for (const f of [...INTAKE_CONTACT_FIELDS, ...INTAKE_CONTRACT_FIELDS, "move_in_date", "note"] as string[]) {
+      const v = body[f];
+      if (typeof v === "string") answers[f] = v.slice(0, 500);
+    }
+    if (!answers["first_name"] && !answers["last_name"]) {
+      fail(res, 400, "NO_NAME", "이름을 입력해 주세요."); return;
+    }
+    if (!answers["mobile_number"]) { fail(res, 400, "NO_PHONE", "연락처를 입력해 주세요."); return; }
+    if (!answers["emergency_contact_name"] || !answers["emergency_contact_phone"]) {
+      fail(res, 400, "NO_EMERGENCY", "비상 연락처를 입력해 주세요."); return;
+    }
+
+    const ip = clientIp(req);
+    await appendLinkSubmission(link.id, { event: "intake", answers, ip });
+    await markTenantLinkCompleted(link.id);
+    void appendLinkAudit(link.id, { event: "intake_submitted", ip });
+    void logAction({
+      entityType: "contract", entityId: link.context_id, action: "UPDATE",
+      ipAddress: ip, newValue: { tenant_intake_submitted: link.id },
+    });
+
+    res.json({ success: true, message: "입주 신청서가 제출되었습니다. 감사합니다." });
   } catch (err: any) {
     fail(res, 500, "SERVER_ERROR", err.message);
   }

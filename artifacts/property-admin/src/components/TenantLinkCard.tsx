@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Link2, Copy, Send, Ban, CheckCircle2, Clock, Upload, Banknote } from "lucide-react";
+import { Link2, Copy, Send, Ban, CheckCircle2, Clock, Upload, Banknote, ClipboardList, UserCheck } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiFetch } from "@/lib/apiFetch";
 import { formatDateTime, formatDate } from "@/lib/date";
@@ -31,9 +31,10 @@ export interface TenantLink {
 interface DocPreset { key: string; doc_type: string; label: string; required: boolean }
 
 /**
- * 세입자에게 보내는 무로그인 링크 카드 — 청구서 결제(`invoice_pay`)와 서류
- * 제출(`doc_request`)이 같은 카드를 쓴다. 발급·복사·재발송·회수, 그리고
- * 세입자가 남긴 것(입금 통보 · 제출 서류)까지 한자리에서 본다.
+ * 세입자에게 보내는 무로그인 링크 카드 — 청구서 결제(`invoice_pay`), 서류
+ * 제출(`doc_request`), 입주 신청서(`intake`)가 같은 카드를 쓴다. 발급·복사·
+ * 재발송·회수, 그리고 세입자가 남긴 것(입금 통보 · 제출 서류 · 기입한 인적사항)
+ * 까지 한자리에서 본다.
  *
  * 링크는 대상당 하나만 살아 있다(재발급하면 이전 것이 취소된다). 그래서 카드는
  * 최신 링크 하나를 크게 보여 주고 지난 것은 이력으로만 남긴다 — 화면에 링크가
@@ -45,7 +46,7 @@ export function TenantLinkCard({
   listPath,
   defaultEmail,
 }: {
-  kind: "invoice_pay" | "doc_request";
+  kind: "invoice_pay" | "doc_request" | "intake";
   /** POST — 링크 발급 (예: /api/v1/invoices/12/pay-link) */
   issuePath: string;
   /** GET — 이 대상에 달린 링크들 */
@@ -94,7 +95,7 @@ export function TenantLinkCard({
           to: to.trim() || undefined,
           send_email: sendEmail,
           ...(items ? { items } : {}),
-          ...(kind === "doc_request" && note.trim() ? { note: note.trim() } : {}),
+          ...(kind !== "invoice_pay" && note.trim() ? { note: note.trim() } : {}),
         }),
       });
       const body = await res.json().catch(() => ({}));
@@ -139,7 +140,7 @@ export function TenantLinkCard({
     toast({ title: t("tenantLink.toast_copied") });
   }
 
-  const Icon = kind === "invoice_pay" ? Banknote : Upload;
+  const Icon = kind === "invoice_pay" ? Banknote : kind === "intake" ? ClipboardList : Upload;
 
   return (
     <div className="border rounded-lg overflow-hidden">
@@ -186,6 +187,7 @@ export function TenantLinkCard({
 
             {kind === "doc_request" && <RequestedDocs link={live} />}
             {kind === "invoice_pay" && <PaidNotices link={live} />}
+            {kind === "intake" && <IntakeAnswers link={live} onApplied={() => refetch()} />}
           </>
         )}
 
@@ -226,7 +228,7 @@ export function TenantLinkCard({
               <Label>{t("tenantLink.label_to")}</Label>
               <Input value={to} onChange={(e) => setTo(e.target.value)} placeholder="tenant@example.com" />
             </div>
-            {kind === "doc_request" && (
+            {kind !== "invoice_pay" && (
               <div className="grid gap-1.5">
                 <Label>{t("tenantLink.label_note")}</Label>
                 <Textarea value={note} onChange={(e) => setNote(e.target.value)} rows={2}
@@ -303,6 +305,71 @@ function PaidNotices({ link }: { link: TenantLink }) {
         </div>
       ))}
       <p className="mt-1 text-xs text-green-700">{t("tenantLink.notice_hint")}</p>
+    </div>
+  );
+}
+
+/** 입주 신청서에 세입자가 적어 보낸 값 + 반영 버튼. */
+const INTAKE_GROUPS: Array<{ title: string; fields: string[] }> = [
+  { title: "본인 정보", fields: ["first_name", "last_name", "mobile_number", "email", "date_of_birth", "nationality"] },
+  { title: "주소", fields: ["address_line1", "suburb", "state", "postcode", "country"] },
+  { title: "비상 연락처", fields: ["emergency_contact_name", "emergency_contact_relation", "emergency_contact_phone"] },
+  { title: "입주 정보", fields: ["move_in_date", "cohabitants", "vehicle_no", "pet_note"] },
+];
+
+function IntakeAnswers({ link, onApplied }: { link: TenantLink; onApplied: () => void }) {
+  const { t } = useTranslation();
+  const { toast } = useToast();
+  const subs = Array.isArray(link.submissions) ? link.submissions : [];
+  const latest = [...subs].reverse().find((s: any) => s?.event === "intake") as any;
+
+  const apply = useMutation({
+    mutationFn: async () => {
+      const res = await apiFetch(`${API}/${link.id}/apply`, { method: "POST", body: "{}" });
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(body?.error?.message ?? t("tenantLink.error_apply"));
+      return body;
+    },
+    onSuccess: () => { onApplied(); toast({ title: t("tenantLink.toast_applied") }); },
+    onError: (e: any) => toast({ title: t("tenantLink.error_apply"), description: e.message, variant: "destructive" }),
+  });
+
+  if (!latest) return <p className="text-sm text-muted-foreground">{t("tenantLink.intake_waiting")}</p>;
+  const a = (latest.answers ?? {}) as Record<string, string>;
+
+  return (
+    <div className="space-y-3">
+      <div className="flex items-start gap-4">
+        {a["profile_photo_url"] && (
+          <img src={a["profile_photo_url"]} alt="" className="h-20 w-16 rounded object-cover border" />
+        )}
+        <div className="grid flex-1 gap-3 sm:grid-cols-2">
+          {INTAKE_GROUPS.map((g) => {
+            const rows = g.fields.filter((f) => a[f]);
+            if (!rows.length) return null;
+            return (
+              <div key={g.title}>
+                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">{t(`tenantLink.intake_group_${g.title}`, g.title)}</p>
+                <dl className="mt-1 space-y-0.5 text-sm">
+                  {rows.map((f) => (
+                    <div key={f} className="flex gap-2">
+                      <dt className="w-24 shrink-0 text-muted-foreground">{t(`tenantLink.intake_f_${f}`, f)}</dt>
+                      <dd className="min-w-0 break-words">{a[f]}</dd>
+                    </div>
+                  ))}
+                </dl>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+      {a["note"] && <p className="rounded-md bg-muted/50 p-2 text-sm whitespace-pre-line">{a["note"]}</p>}
+      <div className="flex items-center gap-3">
+        <Button size="sm" className="gap-1.5" onClick={() => apply.mutate()} disabled={apply.isPending}>
+          <UserCheck className="h-3.5 w-3.5" /> {apply.isPending ? t("common.saving") : t("tenantLink.btn_apply")}
+        </Button>
+        <span className="text-xs text-muted-foreground">{t("tenantLink.apply_hint")}</span>
+      </div>
     </div>
   );
 }

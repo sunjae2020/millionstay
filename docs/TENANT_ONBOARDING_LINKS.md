@@ -16,7 +16,7 @@ last_verified: 2026-08-27
 남는 증거가 없다.
 
 입주 **전** 단계(신청 → 계약 서명 → 세대점검)는 이미 토큰 링크로 끝나 있었다.
-2026-08 작업으로 입주 **후** 단계(청구·서류 제출·퇴거 정산)도 같은 모양이 됐다.
+2026-08 작업으로 입주 신청서와 입주 **후** 단계(청구·서류 제출·퇴거 정산)도 같은 모양이 됐다.
 
 ## 전체 단계
 
@@ -24,6 +24,7 @@ last_verified: 2026-08-27
 |---|---|---|---|
 | 신청·문의 | 공개 폼 (`/v1/public/*-inquiries`, `short-term-applications` …) | 방문자 스스로 | leads / applications |
 | 계약서 서명 | `/sign/:token` | `POST /v1/contracts/:id/issue-signing` | `contract_signing_requests` |
+| 입주 신청서 | `/intake/:token` | `POST /v1/contracts/:id/intake-request` | `tenant_access_links` |
 | 서류 제출 | `/documents/:token` | `POST /v1/contracts/:id/document-request` | `tenant_access_links` |
 | 입주 세대점검 | `/inspection/:token` | `POST /v1/inspections/:id/sign-link` | `condition_reports` |
 | 청구 · 입금 통보 | `/pay/:token` | `POST /v1/invoices/:id/pay-link` | `tenant_access_links` |
@@ -38,12 +39,32 @@ last_verified: 2026-08-27
   문서 HTML이 `signed_snapshot` 으로 동결된다. 계약서·작업 확인서·퇴거 정산이
   `context_type` 으로 갈린다.
 - **`tenant_access_links`** — 서명이 **아닌** 단계. 청구서를 열어 계좌를 확인하고
-  입금을 알리는 것, 서류를 올리는 것. 서명 원장에 섞으면 그 표의 의미(= 서명된
-  문서의 증거)가 흐려지므로 따로 둔다.
+  입금을 알리는 것, 서류를 올리는 것, 입주 신청서를 채우는 것. 서명 원장에 섞으면
+  그 표의 의미(= 서명된 문서의 증거)가 흐려지므로 따로 둔다.
 
 두 표 모두 (kind|context_type, context_id) 로 대상을 가리키고, 대상당 살아 있는
 링크는 하나다 — 재발급하면 이전 링크가 취소된다. 링크를 두 개 뿌려 놓고 어느
 쪽으로 들어왔는지 모르는 상황이 실무에서 가장 성가시다.
+
+## 입주 신청서가 받는 것
+
+계약서에는 임대 조건이 다 들어 있다. 정작 입주 당일 관리사무소가 묻는 것들은
+계약서에 없다 — 급할 때 연락할 사람과의 **관계**, 차량 번호, 반려동물, 실제 거주
+인원, 그리고 증명사진. 지금까지 전화·카톡으로 오가다 어디에도 남지 않던 값이다.
+
+알고 있는 값은 미리 채워 보내고 세입자는 **고칠 것만** 고친다. 빈 양식을 처음부터
+다 적게 하면 계약서에 이미 있는 정보를 두 번 묻는 꼴이고, 그 순간 사람들은 대충
+적는다.
+
+제출된 값은 **곧바로 덮어쓰지 않는다.** 세입자가 급히 적은 한 글자가 이미 검증된
+연락처를 지울 수 있으므로, 제출은 그대로 보관하고 반영은 관리자가 한 번 본 뒤에
+누른다(`POST /v1/tenant-links/:id/apply` — 명함 OCR 과 같은 규칙). 반영 후에도
+제출 원본은 링크에 남는다: 무엇을 언제 받았는지가 증거다.
+
+앉는 자리는 `contacts`(인적사항·비상연락처·프로필 사진)와 `contracts`(차량·반려
+동물·동거인)로 갈린다. 증명사진은 연락처 프로필 사진과 같은 저장 규칙(공개 CDN
+URL)을 따른다 — 목록·상세가 그대로 그리는 이미지라 서명 URL 로 두면 화면마다 다시
+서명해야 한다. **신분증 사본과는 다른 물건이다**(그쪽은 비공개 + 30일 보존).
 
 ## 설계상 일부러 하지 않은 것
 
@@ -60,14 +81,14 @@ last_verified: 2026-08-27
 
 ## 화면
 
-- **관리자** — 청구서 상세(결제 링크), 계약 상세(온보딩 현황 6단계 + 서류 요청),
+- **관리자** — 청구서 상세(결제 링크), 계약 상세(온보딩 현황 7단계 + 입주 신청서 + 서류 요청),
   퇴거 정산 카드(확인 서명), 문서 → **세입자 링크** 대기열.
-- **세입자** — `/pay/:token`, `/documents/:token`, `/sign/:token`,
+- **세입자** — `/pay/:token`, `/documents/:token`, `/intake/:token`, `/sign/:token`,
   `/inspection/:token`. 포털에 로그인하면 홈 맨 위 "해야 할 일"에 미완료 링크가
   다시 뜬다(`GET /v1/guest/onboarding`) — 메일을 못 찾는 사람을 위한 자리이며,
   화면을 복제하지 않고 같은 토큰 주소로 보낸다.
-- **메일** — `sendTenantLinkEmail` 한 함수가 3종(청구·서류·정산 서명) 문안을 6개
-  로케일로 낸다.
+- **메일** — `sendTenantLinkEmail` 한 함수가 4종(청구·서류·입주 신청서·정산 서명)
+  문안을 6개 로케일로 낸다.
 
 ## 토큰·만료
 
@@ -77,6 +98,9 @@ last_verified: 2026-08-27
 
 ## 마이그레이션
 
-`lib/db/drizzle/0072_tenant_access_links.sql` — 신규 테이블 하나(additive-only).
-롤백은 `DROP TABLE tenant_access_links`. 두 인스턴스(MillionStay·Metheim)에 각각
-적용해야 한다([DATA_MIGRATION 관행](DB_MIGRATION_CONVENTION.md)).
+- `0072_tenant_access_links.sql` — 신규 테이블 하나. 롤백은 `DROP TABLE`.
+- `0073_intake_fields.sql` — `contacts.emergency_contact_relation`,
+  `contracts.vehicle_no|pet_note|cohabitants`. 전부 nullable, 롤백은 컬럼 DROP.
+
+둘 다 additive-only이며 **두 인스턴스(MillionStay·Metheim)에 2026-08-27 적용 완료**
+([마이그레이션 관행](DB_MIGRATION_CONVENTION.md)).

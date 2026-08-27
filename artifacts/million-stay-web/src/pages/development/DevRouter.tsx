@@ -42,6 +42,7 @@ import InspectionSign from "@/pages/inspection-sign";
 import WorkOrderSign from "@/pages/work-order-sign";
 import InvoicePay from "@/pages/invoice-pay";
 import DocumentSubmit from "@/pages/document-submit";
+import IntakeForm from "@/pages/intake-form";
 import PaymentResult from "@/pages/payment-result";
 import NotFound from "@/pages/not-found";
 
@@ -128,6 +129,7 @@ export default function DevRouter() {
           서명·점검 링크와 마찬가지로 두 라우터에 **모두** 걸어야 한다. */}
       <Route path="/pay/:token" component={InvoicePay} />
       <Route path="/documents/:token" component={DocumentSubmit} />
+      <Route path="/intake/:token" component={IntakeForm} />
       <Route path="/payment-result" component={PaymentResult} />
 
       <Route component={NotFound} />

@@ -1,11 +1,14 @@
-// 세입자 온보딩 링크 API — 로그인 없이 토큰으로만 열리는 두 화면.
+// 세입자 온보딩 링크 API — 로그인 없이 토큰으로만 열리는 화면들.
 //
 // signing-api.ts / inspection-api.ts 와 같은 자급자족 구조: 이 링크를 여는
 // 사람은 계정도 게스트 JWT 도 없이 문자·메일로 받은 주소를 누른 세입자다.
+//
+// 세 화면: 청구서(/pay), 서류 제출(/documents), 입주 신청서(/intake).
 import { getApiBase } from "./api-base";
 
 const PAY = `${getApiBase()}/api/v1/public/invoice-pay`;
 const DOCS = `${getApiBase()}/api/v1/public/doc-requests`;
+const INTAKE = `${getApiBase()}/api/v1/public/intake`;
 
 export interface InvoiceLine {
   label: string;
@@ -128,5 +131,37 @@ export async function submitDocuments(token: string): Promise<{ message: string 
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: "{}",
+  });
+}
+
+/* ── 입주 신청서 ─────────────────────────────────────────────────────────── */
+
+export interface IntakeView {
+  status: string;
+  contract_ref: string | null;
+  tenant_name: string | null;
+  note: string | null;
+  /** 미리 채워진 값 + 이미 제출한 값(제출본이 위에 덮인다). */
+  values: Record<string, string | null>;
+  submitted: boolean;
+}
+
+export async function getIntake(token: string): Promise<IntakeView> {
+  const body = await request(`${INTAKE}/${encodeURIComponent(token)}`);
+  return body.data as IntakeView;
+}
+
+export async function uploadIntakePhoto(token: string, file: File): Promise<{ url: string }> {
+  const form = new FormData();
+  form.append("image", file);
+  const body = await request(`${INTAKE}/${encodeURIComponent(token)}/photo`, { method: "POST", body: form });
+  return body.data as { url: string };
+}
+
+export async function submitIntake(token: string, answers: Record<string, string>): Promise<{ message: string }> {
+  return request(`${INTAKE}/${encodeURIComponent(token)}/submit`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(answers),
   });
 }

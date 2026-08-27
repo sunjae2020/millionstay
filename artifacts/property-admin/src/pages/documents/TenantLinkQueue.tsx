@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
 import { Layout } from "@/components/Layout";
 import { Button } from "@/components/ui/button";
-import { Banknote, CheckCircle2, Clock, Copy, ExternalLink, Upload } from "lucide-react";
+import { Banknote, CheckCircle2, ClipboardList, Clock, Copy, ExternalLink, Upload } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiFetch } from "@/lib/apiFetch";
 import { formatDateTime } from "@/lib/date";
@@ -12,7 +12,7 @@ import type { TenantLink } from "@/components/TenantLinkCard";
 
 interface QueueRow extends TenantLink { context_type: string; context_id: number; context_ref: string | null }
 
-const KINDS = ["", "invoice_pay", "doc_request"] as const;
+const KINDS = ["", "invoice_pay", "doc_request", "intake"] as const;
 const STATUSES = ["", "completed", "viewed", "pending", "expired", "cancelled"] as const;
 
 /**
@@ -79,7 +79,7 @@ export default function TenantLinkQueue() {
                 <tr key={r.id} className="hover:bg-muted/30">
                   <td className="px-3 py-2 whitespace-nowrap">
                     <span className="inline-flex items-center gap-1.5">
-                      {r.kind === "invoice_pay" ? <Banknote className="h-3.5 w-3.5 text-primary" /> : <Upload className="h-3.5 w-3.5 text-primary" />}
+                      {r.kind === "invoice_pay" ? <Banknote className="h-3.5 w-3.5 text-primary" /> : r.kind === "intake" ? <ClipboardList className="h-3.5 w-3.5 text-primary" /> : <Upload className="h-3.5 w-3.5 text-primary" />}
                       {t(`tenantLink.title_${r.kind}`, r.kind)}
                     </span>
                   </td>
@@ -127,6 +127,10 @@ function summarise(r: QueueRow, t: (k: string, o?: any) => string): string {
   if (r.kind === "invoice_pay") {
     const n = subs.filter((s: any) => s?.event === "paid_notice").slice(-1)[0];
     return n ? `${n.payer_name} · ${n.paid_on}` : "—";
+  }
+  if (r.kind === "intake") {
+    const a = ([...subs].reverse().find((s: any) => s?.event === "intake") as any)?.answers;
+    return a ? [a.last_name, a.first_name].filter(Boolean).join("") + (a.mobile_number ? ` · ${a.mobile_number}` : "") : "—";
   }
   const items = (r.payload?.items ?? []).length;
   const submitted = new Set(subs.filter((s: any) => s?.doc_key).map((s: any) => s.doc_key)).size;

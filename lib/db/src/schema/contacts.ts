@@ -46,6 +46,9 @@ export const contactsTable = pgTable("contacts", {
   emergency_contact_name: text("emergency_contact_name"),
   emergency_contact_phone: text("emergency_contact_phone"),
   emergency_contact_email: text("emergency_contact_email"),
+  // 관계(모/배우자/지인 …). 입주 신청서에서 세입자가 직접 적는 칸이라, 이름·연락처만
+  // 있고 관계가 없으면 급할 때 누구에게 무슨 말을 해야 할지 판단할 근거가 없다.
+  emergency_contact_relation: text("emergency_contact_relation"),
   portal_enabled: boolean("portal_enabled").notNull().default(false),
   portal_user_id: text("portal_user_id"),
   profile_photo_url: text("profile_photo_url"),

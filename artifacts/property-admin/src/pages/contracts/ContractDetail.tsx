@@ -981,6 +981,16 @@ export default function ContractDetail() {
             {/* 세입자 온보딩 — 신청부터 퇴거 정산까지 어디까지 갔는지 한 화면에. */}
             {!isNew && contract && <TenantOnboardingCard contractId={Number(id)} />}
 
+            {/* 입주 신청서 — 인적사항 재확인 · 비상연락처 · 증명사진을 세입자가 직접. */}
+            {!isNew && contract && (
+              <TenantLinkCard
+                kind="intake"
+                issuePath={`/api/v1/contracts/${id}/intake-request`}
+                listPath={`/api/v1/contracts/${id}/intake-request`}
+                defaultEmail={(contract as any)?.tenant_email ?? null}
+              />
+            )}
+
             {/* 서류 제출 요청 — 신분증·통장 사본 등을 무로그인 링크로 받는다. */}
             {!isNew && contract && (
               <TenantLinkCard
