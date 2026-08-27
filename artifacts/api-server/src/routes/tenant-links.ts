@@ -9,7 +9,7 @@
 // 원장)가 정본이고, 퇴거 정산 확인서도 그 경로를 탄다.
 import { Router, type IRouter } from "express";
 import multer from "multer";
-import { and, desc, eq, inArray, isNull, or, sql } from "drizzle-orm";
+import { and, desc, eq, inArray, isNull, or } from "drizzle-orm";
 import {
   db, invoicesTable, contractsTable, contactsTable, accountsTable, documentsTable,
   accountContactsTable, tenantAccessLinksTable, contractSigningRequestsTable,

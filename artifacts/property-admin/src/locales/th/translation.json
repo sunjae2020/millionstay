@@ -134,7 +134,8 @@
     "prospects": "ผู้มุ่งหวัง",
     "marketing_dashboard": "ภาพรวมการตลาด",
     "marketing_lists": "รายชื่อ",
-    "campaigns": "แคมเปญ"
+    "campaigns": "แคมเปญ",
+    "tenant_links": "ลิงก์ผู้เช่า"
   },
   "dashboard": {
     "title": "แดชบอร์ด",
@@ -7120,5 +7121,19 @@
     "hint": "ผู้เช่าเปิดลิงก์ ตรวจแต่ละรายการ แล้วลงลายเซ็น ไม่ต้องเข้าสู่ระบบ",
     "preview": "ดูตัวอย่าง",
     "error_issue": "สร้างลิงก์ลงลายเซ็นไม่สำเร็จ"
+  },
+  "tenantLinkQueue": {
+    "title": "ลิงก์ผู้เช่า",
+    "subtitle": "รวมการแจ้งชำระเงินและเอกสารที่ส่งผ่านลิงก์ผู้เช่า",
+    "filter_kind": "ประเภท",
+    "filter_status": "สถานะ",
+    "all": "ทั้งหมด",
+    "col_kind": "ประเภท",
+    "col_target": "รายการ",
+    "col_status": "สถานะ",
+    "col_submitted": "สิ่งที่ส่งเข้ามา",
+    "col_updated": "อัปเดต",
+    "empty": "ไม่มีรายการที่ต้องดำเนินการ",
+    "docs_count": "ส่งแล้ว {{submitted}} จาก {{total}}"
   }
 }

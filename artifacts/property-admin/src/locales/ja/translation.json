@@ -134,7 +134,8 @@
     "prospects": "見込み取引先",
     "marketing_dashboard": "マーケティング状況",
     "marketing_lists": "リスト",
-    "campaigns": "キャンペーン"
+    "campaigns": "キャンペーン",
+    "tenant_links": "入居者リンク"
   },
   "dashboard": {
     "title": "ダッシュボード",
@@ -7140,5 +7141,19 @@
     "hint": "入居者がリンクを開き、各項目を確認して署名します。ログインは不要です。",
     "preview": "プレビュー",
     "error_issue": "確認署名リンクを発行できませんでした"
+  },
+  "tenantLinkQueue": {
+    "title": "入居者リンク",
+    "subtitle": "入居者リンクから届いた入金連絡と書類提出の一覧です。",
+    "filter_kind": "種類",
+    "filter_status": "ステータス",
+    "all": "すべて",
+    "col_kind": "種類",
+    "col_target": "対象",
+    "col_status": "ステータス",
+    "col_submitted": "届いた内容",
+    "col_updated": "更新",
+    "empty": "対応が必要な項目はありません。",
+    "docs_count": "{{total}}件中 {{submitted}}件提出"
   }
 }

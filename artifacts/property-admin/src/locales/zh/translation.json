@@ -134,7 +134,8 @@
     "prospects": "潜在客户",
     "marketing_dashboard": "营销概览",
     "marketing_lists": "名单",
-    "campaigns": "营销活动"
+    "campaigns": "营销活动",
+    "tenant_links": "租客链接"
   },
   "dashboard": {
     "title": "仪表板",
@@ -7144,5 +7145,19 @@
     "hint": "租客打开链接，核对每一项后签名。无需登录。",
     "preview": "预览",
     "error_issue": "无法生成确认签名链接"
+  },
+  "tenantLinkQueue": {
+    "title": "租客链接",
+    "subtitle": "汇总通过租客链接提交的付款通知与材料。",
+    "filter_kind": "类型",
+    "filter_status": "状态",
+    "all": "全部",
+    "col_kind": "类型",
+    "col_target": "对象",
+    "col_status": "状态",
+    "col_submitted": "提交内容",
+    "col_updated": "更新时间",
+    "empty": "暂无待处理事项。",
+    "docs_count": "已提交 {{submitted}}/{{total}}"
   }
 }

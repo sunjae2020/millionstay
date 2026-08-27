@@ -135,7 +135,8 @@
     "prospects": "Prospects",
     "marketing_dashboard": "Marketing Dashboard",
     "marketing_lists": "Lists",
-    "campaigns": "Campaigns"
+    "campaigns": "Campaigns",
+    "tenant_links": "Tenant links"
   },
   "dashboard": {
     "title": "Dashboard",
@@ -7196,5 +7197,19 @@
     "hint": "The tenant opens the link, reviews each line and signs. No login required.",
     "preview": "Preview",
     "error_issue": "Could not issue the signature link"
+  },
+  "tenantLinkQueue": {
+    "title": "Tenant links",
+    "subtitle": "Payment notices and document submissions that came in through tenant links.",
+    "filter_kind": "Type",
+    "filter_status": "Status",
+    "all": "All",
+    "col_kind": "Type",
+    "col_target": "Record",
+    "col_status": "Status",
+    "col_submitted": "What came in",
+    "col_updated": "Updated",
+    "empty": "Nothing to review.",
+    "docs_count": "{{submitted}} of {{total}} submitted"
   }
 }

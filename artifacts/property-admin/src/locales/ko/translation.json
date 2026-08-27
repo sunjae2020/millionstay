@@ -135,7 +135,8 @@
     "prospects": "잠재 거래처",
     "marketing_dashboard": "마케팅 현황",
     "marketing_lists": "리스트",
-    "campaigns": "캠페인"
+    "campaigns": "캠페인",
+    "tenant_links": "세입자 링크"
   },
   "dashboard": {
     "title": "대시보드",
@@ -7196,5 +7197,19 @@
     "hint": "세입자가 링크를 열어 항목을 확인하고 서명합니다. 로그인은 필요 없습니다.",
     "preview": "미리보기",
     "error_issue": "확인 서명 링크를 발급하지 못했습니다"
+  },
+  "tenantLinkQueue": {
+    "title": "세입자 링크",
+    "subtitle": "세입자 링크로 들어온 입금 통보와 서류 제출을 모아 봅니다.",
+    "filter_kind": "종류",
+    "filter_status": "상태",
+    "all": "전체",
+    "col_kind": "종류",
+    "col_target": "대상",
+    "col_status": "상태",
+    "col_submitted": "들어온 내용",
+    "col_updated": "갱신",
+    "empty": "처리할 항목이 없습니다.",
+    "docs_count": "{{total}}건 중 {{submitted}}건 제출"
   }
 }

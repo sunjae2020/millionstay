@@ -133,7 +133,8 @@
     "prospects": "Khách hàng tiềm năng",
     "marketing_dashboard": "Tổng quan tiếp thị",
     "marketing_lists": "Danh sách",
-    "campaigns": "Chiến dịch"
+    "campaigns": "Chiến dịch",
+    "tenant_links": "Liên kết người thuê"
   },
   "dashboard": {
     "title": "Bảng điều khiển",
@@ -7088,5 +7089,19 @@
     "hint": "Người thuê mở liên kết, kiểm tra từng khoản rồi ký. Không cần đăng nhập.",
     "preview": "Xem trước",
     "error_issue": "Không tạo được liên kết ký xác nhận"
+  },
+  "tenantLinkQueue": {
+    "title": "Liên kết người thuê",
+    "subtitle": "Tổng hợp thông báo thanh toán và giấy tờ nộp qua liên kết người thuê.",
+    "filter_kind": "Loại",
+    "filter_status": "Trạng thái",
+    "all": "Tất cả",
+    "col_kind": "Loại",
+    "col_target": "Đối tượng",
+    "col_status": "Trạng thái",
+    "col_submitted": "Nội dung nhận được",
+    "col_updated": "Cập nhật",
+    "empty": "Không có mục nào cần xử lý.",
+    "docs_count": "Đã nộp {{submitted}}/{{total}}"
   }
 }
