@@ -68,6 +68,10 @@ export const depositDeductionItemsTable = pgTable("deposit_deduction_items", {
   // to the tenant (환급(+)). The move-out settlement form derives each line's
   // 구분 column from this sign, and recomputeTotals() nets both directions.
   amount: numeric("amount", { precision: 10, scale: 2 }).notNull().default("0"),
+  // 확인서 2번 표의 "구분" 칸 — 'deduct'(차감(−)) | 'refund'(환급(+)).
+  // 금액 부호가 합계의 정본이고(음수 = 환급) kind 는 그 부호를 문장으로 적어 둔 것이다.
+  // 0원 라인(표준 서식 뼈대·견적 전 하자)은 부호가 없으므로 kind 만이 의도를 남긴다.
+  kind: text("kind").notNull().default("deduct"),
   // "비고 및 처리 안내" — free-text handling note printed next to the line on the
   // 퇴거 세대 정산 확인서.
   remark: text("remark"),

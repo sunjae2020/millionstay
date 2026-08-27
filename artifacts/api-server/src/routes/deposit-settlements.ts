@@ -14,6 +14,8 @@ import {
   depositDeductionItemsTable,
   spacesTable,
   accountsTable,
+  journalEntriesTable,
+  journalLinesTable,
 } from "@workspace/db";
 import { getRateToAud } from "../lib/rateSnapshot";
 import { requireAuth } from "../middlewares/requireAuth";
@@ -29,6 +31,41 @@ import { resolveTemplateBody } from "../lib/documents/templateEngine";
 import { buildMoveOutSettlementHtml, type MoveOutDocInput } from "../lib/documents/moveOutSettlementDocument";
 
 const ENTITY = "deposit_settlement";
+
+/* ── 표준 서식 뼈대 ─────────────────────────────────────────────────────────
+   종이 "퇴거 세대 정산 확인서" 2번 표는 항목이 정해져 있다. 확인서를 새로 뜨면
+   그 여섯 줄을 0원으로 먼저 깔아 두고, 운영자가 금액만 채우거나 해당 없는 줄을
+   지운다. 자동 추출 라인(보증금 차감 인보이스 등)은 그 뒤에 붙으므로 서식 순서가
+   흐트러지지 않는다. */
+const STANDARD_FORM_LINES: Array<{ description: string; kind: "deduct" | "refund"; remark: string }> = [
+  { description: "미납 임대료", kind: "deduct", remark: "완납" },
+  { description: "미납 관리비", kind: "deduct", remark: "당월 관리비 미납액 차감" },
+  { description: "미납 가스비", kind: "deduct", remark: "가스회사 해지 신청 후 별도 납부 예정" },
+  { description: "세대 내 하자복구비", kind: "deduct", remark: "퇴거 점검 완료 (하자 없음)" },
+  { description: "입주/퇴거 청소비", kind: "deduct", remark: "보증금에서 차감" },
+  { description: "장기수선충당금", kind: "refund", remark: "거주기간 적립금 임차인 환급(+)" },
+];
+
+async function seedStandardFormLines(settlementId: number): Promise<number> {
+  await db.insert(depositDeductionItemsTable).values(
+    STANDARD_FORM_LINES.map((l) => ({
+      deposit_settlement_id: settlementId,
+      description: l.description,
+      amount: "0",
+      kind: l.kind,
+      remark: l.remark,
+    })),
+  );
+  return STANDARD_FORM_LINES.length;
+}
+
+/** 라인의 구분 — 금액 부호가 정본이고, 0원일 때만 저장된 kind 가 의도를 말한다. */
+function lineKind(row: { amount: string | number | null; kind?: string | null }): "deduct" | "refund" {
+  const amount = Number(row.amount ?? 0);
+  if (amount < 0) return "refund";
+  if (amount > 0) return "deduct";
+  return row.kind === "refund" ? "refund" : "deduct";
+}
 
 async function generateSettlementRef(): Promise<string> {
   const year = new Date().getFullYear();
@@ -147,7 +184,12 @@ async function loadSettlementDetail(id: number) {
   // 환급액(음수가 되면 GL 상계가 뒤집히므로)이고, 확인서가 찍는 값은 net_amount,
   // 차감이 보증금을 넘은 부족분은 shortfall — 인보이스로 회수할 금액이다.
   const net = round2(Number(s.deposit_held ?? 0) - Number(s.total_deducted ?? 0));
-  return { ...s, deductions, net_amount: net, shortfall: net < 0 ? Math.abs(net) : 0 };
+  return {
+    ...s,
+    deductions: deductions.map((d) => ({ ...d, kind: lineKind(d) })),
+    net_amount: net,
+    shortfall: net < 0 ? Math.abs(net) : 0,
+  };
 }
 
 // Recompute total_deducted / refund_amount from the current deduction rows.
@@ -217,6 +259,8 @@ adminRouter.post("/v1/bookings/:bookingId/deposit-settlements", async (req, res)
         audit_trail: [{ event: "created", at: new Date().toISOString(), actor: (req as any).user?.id ?? null, deposit_held: depositHeld }],
       })
       .returning();
+    await seedStandardFormLines(row!.id);
+    await recomputeTotals(row!.id);
     void logAction({ entityType: ENTITY, entityId: row!.id, action: "CREATE", actorId: (req as any).user?.id ?? null, newValue: { settlement_ref, deposit_held: depositHeld } });
     res.status(201).json({ success: true, data: await loadSettlementDetail(row!.id) });
   } catch (err: any) {
@@ -275,6 +319,8 @@ adminRouter.post("/v1/contracts/:contractId/deposit-settlements", async (req, re
       audit_trail: [{ event: "created", at: new Date().toISOString(), actor: (req as any).user?.id ?? null, deposit_held: depositHeld, deposit_source: depositSource, source: "contract" }],
     }).returning();
 
+    await seedStandardFormLines(row!.id);
+
     // Rent months already settled out of the deposit become deduction lines.
     const deducted = await db.select({
       id: invoicesTable.id,
@@ -308,9 +354,22 @@ adminRouter.post("/v1/contracts/:contractId/deposit-settlements", async (req, re
 
 adminRouter.get("/v1/deposit-settlements/:id", async (req, res): Promise<void> => {
   try {
-    const detail = await loadSettlementDetail(Number(req.params.id));
+    const id = Number(req.params.id);
+    const detail = await loadSettlementDetail(id);
     if (!detail) { res.status(404).json({ success: false, error: { code: "NOT_FOUND", message: "Settlement not found" } }); return; }
-    res.json({ success: true, data: detail });
+    // 확인서 1번 표(기본 임대차 정보)를 화면에서도 그대로 보여주려면 세대·임차인·
+    // 계약기간이 필요하다. PDF 가 쓰는 조립기를 그대로 재사용해 두 출력이 갈라지지 않게 한다.
+    const doc = await buildMoveOutDocInput(id);
+    const form = doc && {
+      unit: doc.unit,
+      tenant_name: doc.tenant_name,
+      contract_start: doc.contract_start,
+      contract_end: doc.contract_end,
+      monthly_rent: doc.monthly_rent,
+      settlement_type: doc.settlement_type ?? null,
+      as_of_date: doc.as_of_date,
+    };
+    res.json({ success: true, data: { ...detail, form: form ?? null } });
   } catch (err: any) {
     res.status(500).json({ success: false, error: { code: "SERVER_ERROR", message: err.message } });
   }
@@ -332,6 +391,8 @@ adminRouter.post("/v1/deposit-settlements/:id/deductions", async (req, res): Pro
     const amount = kind ? (kind === "refund" ? -Math.abs(rawAmount) : Math.abs(rawAmount)) : rawAmount;
     await db.insert(depositDeductionItemsTable).values({
       deposit_settlement_id: id,
+      // 0원 라인은 부호가 없으므로 구분을 따로 남겨야 서식에 차감/환급이 찍힌다.
+      kind: kind ?? (amount < 0 ? "refund" : "deduct"),
       condition_item_id: Number.isFinite(Number(req.body?.condition_item_id)) && req.body?.condition_item_id ? Number(req.body.condition_item_id) : null,
       description: typeof req.body?.description === "string" && req.body.description.trim() ? req.body.description.trim() : "Deduction",
       amount: String(round2(amount)),
@@ -355,14 +416,25 @@ adminRouter.patch("/v1/deposit-settlements/:id/deductions/:did", async (req, res
     if (!s) { res.status(404).json({ success: false, error: { code: "NOT_FOUND", message: "Settlement not found" } }); return; }
     if (!["draft", "proposed"].includes(s.status)) { res.status(409).json({ success: false, error: { code: "LOCKED", message: "Settlement is finalized" } }); return; }
 
+    const [current] = await db.select().from(depositDeductionItemsTable)
+      .where(and(eq(depositDeductionItemsTable.id, did), eq(depositDeductionItemsTable.deposit_settlement_id, id)))
+      .limit(1);
+    if (!current) { res.status(404).json({ success: false, error: { code: "NOT_FOUND", message: "Deduction not found" } }); return; }
+
     const patch: Record<string, unknown> = {};
     if (typeof req.body?.description === "string" && req.body.description.trim()) patch.description = req.body.description.trim();
     if (req.body?.remark !== undefined) patch.remark = typeof req.body.remark === "string" && req.body.remark.trim() ? req.body.remark.trim() : null;
-    if (req.body?.amount !== undefined) {
-      const raw = Number(req.body.amount);
+    // 구분과 금액은 한 몸이다: 저장되는 금액의 부호를 구분이 정하고(환급 = 음수),
+    // 구분만 바뀌어도 기존 금액의 부호를 뒤집어야 합계 A 가 맞는다.
+    if (req.body?.amount !== undefined || req.body?.kind !== undefined) {
+      const raw = req.body?.amount !== undefined ? Number(req.body.amount) : Number(current.amount ?? 0);
       if (!Number.isFinite(raw)) { res.status(400).json({ success: false, error: { code: "BAD_AMOUNT", message: "amount must be a number" } }); return; }
-      const kind = req.body?.kind === "refund" ? "refund" : req.body?.kind === "deduct" ? "deduct" : null;
-      patch.amount = String(round2(kind ? (kind === "refund" ? -Math.abs(raw) : Math.abs(raw)) : raw));
+      const kind: "deduct" | "refund" =
+        req.body?.kind === "refund" ? "refund"
+        : req.body?.kind === "deduct" ? "deduct"
+        : lineKind(current);
+      patch.amount = String(round2(kind === "refund" ? -Math.abs(raw) : Math.abs(raw)));
+      patch.kind = kind;
     }
     if (!Object.keys(patch).length) { res.status(400).json({ success: false, error: { code: "NO_FIELDS", message: "Nothing to update" } }); return; }
 
@@ -415,7 +487,12 @@ adminRouter.post("/v1/deposit-settlements/:id/finalize", async (req, res): Promi
     if (s.status === "finalized") { res.status(409).json({ success: false, error: { code: "LOCKED", message: "Already finalized" } }); return; }
 
     const totals = await recomputeTotals(id);
-    const postingKey = `deposit_settlement:${id}`;
+    // 재수정(reopen)을 거친 확인서는 새 전표로 다시 전기되어야 한다. 첫 전기의 키는
+    // 그대로 두고(기존 전표와의 멱등성 유지), 되돌린 횟수만큼 버전을 붙여 이전 키의
+    // 멱등 반환에 걸려 "전기했다고 말하지만 전표는 없는" 상태가 되는 것을 막는다.
+    const reopenCount = (Array.isArray(s.audit_trail) ? s.audit_trail : [])
+      .filter((e: any) => e?.event === "reopened").length;
+    const postingKey = reopenCount === 0 ? `deposit_settlement:${id}` : `deposit_settlement:${id}:v${reopenCount + 1}`;
     // Only the GL-backed portion is actually sitting in Deposits Held (2100), so
     // only that release may be posted — otherwise we'd create a phantom negative
     // liability. In this system deposits are usually recorded on contracts.bond_amount
@@ -459,6 +536,60 @@ adminRouter.post("/v1/deposit-settlements/:id/finalize", async (req, res): Promi
       audit_trail: [...audit, { event: "finalized", at: new Date().toISOString(), actor: (req as any).user?.id ?? null, refund: totals.refund_amount, deducted: totals.total_deducted, gl_posted: glPosted, gl_backed: glBacked }],
     }).where(eq(depositSettlementsTable.id, id));
     void logAction({ entityType: ENTITY, entityId: id, action: "PAYMENT", actorId: (req as any).user?.id ?? null, newValue: { status: "finalized", refund: totals.refund_amount, deducted: totals.total_deducted, gl_posted: glPosted } });
+    res.json({ success: true, data: await loadSettlementDetail(id) });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: { code: "SERVER_ERROR", message: err.message } });
+  }
+});
+
+/* ── 확정 취소(재수정) ───────────────────────────────────────────────────────
+   확정된 확인서도 고쳐야 할 때가 있다 — 견적이 늦게 오거나 관리비 정산이 뒤에
+   확정되는 일이 흔하다. 지우고 다시 만들면 확인서 번호가 바뀌므로, 상태만 draft 로
+   되돌려 같은 번호로 이어 쓴다.
+
+   전기된 전표가 있으면 지우지 않고 역분개를 하나 더 쌓는다(회계 원장은 append-only).
+   재확정 때는 버전이 붙은 새 키로 다시 전기되므로 원장은 원전표 + 역분개 + 재전기가
+   되어 최종 잔액이 맞는다. */
+adminRouter.post("/v1/deposit-settlements/:id/reopen", async (req, res): Promise<void> => {
+  try {
+    const id = Number(req.params.id);
+    const [s] = await db.select().from(depositSettlementsTable).where(eq(depositSettlementsTable.id, id)).limit(1);
+    if (!s) { res.status(404).json({ success: false, error: { code: "NOT_FOUND", message: "Settlement not found" } }); return; }
+    if (s.status !== "finalized") { res.status(409).json({ success: false, error: { code: "NOT_FINALIZED", message: "Only a finalized settlement can be reopened" } }); return; }
+
+    let glReversed = false;
+    if (s.posting_key) {
+      const [entry] = await db.select().from(journalEntriesTable)
+        .where(eq(journalEntriesTable.posting_key, s.posting_key)).limit(1);
+      if (entry) {
+        const lines = await db.select().from(journalLinesTable).where(eq(journalLinesTable.entry_id, entry.id));
+        const reversal = await postEntry({
+          postingKey: `${s.posting_key}:reversal`,
+          entryDate: new Date().toISOString().slice(0, 10),
+          description: `Deposit settlement ${s.settlement_ref} reopened (reversal)`,
+          sourceType: ENTITY,
+          sourceId: id,
+          currency: entry.currency,
+          // 차·대를 맞바꾼 역분개.
+          lines: lines.map((l) => ({
+            account_code: l.account_code,
+            account_name: l.account_name,
+            debit: Number(l.credit ?? 0),
+            credit: Number(l.debit ?? 0),
+          })),
+        });
+        glReversed = !!reversal;
+      }
+    }
+
+    const audit = Array.isArray(s.audit_trail) ? s.audit_trail : [];
+    await db.update(depositSettlementsTable).set({
+      status: "draft",
+      finalized_at: null,
+      posting_key: null,
+      audit_trail: [...audit, { event: "reopened", at: new Date().toISOString(), actor: (req as any).user?.id ?? null, gl_reversed: glReversed, reversed_key: s.posting_key ?? null }],
+    }).where(eq(depositSettlementsTable.id, id));
+    void logAction({ entityType: ENTITY, entityId: id, action: "STATUS_CHANGE", actorId: (req as any).user?.id ?? null, oldValue: { status: "finalized" }, newValue: { status: "draft", gl_reversed: glReversed } });
     res.json({ success: true, data: await loadSettlementDetail(id) });
   } catch (err: any) {
     res.status(500).json({ success: false, error: { code: "SERVER_ERROR", message: err.message } });
@@ -576,7 +707,13 @@ async function buildMoveOutDocInput(id: number): Promise<MoveOutDocInput | null>
     settlement_type: settlementType,
     door_password: doorPassword,
     // A negative amount is a refund line (환급(+)); positive is a deduction (차감(−)).
-    deductions: detail.deductions.map((d) => ({ description: d.description, amount: Number(d.amount ?? 0), remark: d.remark ?? null })),
+    deductions: detail.deductions.map((d) => ({
+      description: d.description,
+      amount: Number(d.amount ?? 0),
+      remark: d.remark ?? null,
+      // 0원 라인은 부호가 없으므로 구분을 그대로 넘겨야 서식에 차감/환급이 찍힌다.
+      kind: d.kind,
+    })),
   };
 }
 

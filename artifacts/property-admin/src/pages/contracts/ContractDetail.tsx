@@ -29,7 +29,7 @@ import { LookupSelect } from "@/components/LookupSelect";
 import { ProductLookupSelect } from "@/components/ProductLookupSelect";
 import { ContractPartyCard } from "@/components/ContractPartyCard";
 import { ContractChannelCard, type ChannelValue } from "@/components/ContractChannelCard";
-import { ArrowLeft, Save, Loader2, Trash2, CalendarDays, Plus, Pencil, List, FileDown, Eye, Mail, Receipt, ClipboardList, Wallet, Check, FileSignature, FileText, Scale, CopyPlus } from "lucide-react";
+import { ArrowLeft, Save, Loader2, Trash2, CalendarDays, Plus, Pencil, List, FileDown, Eye, Mail, Receipt, ClipboardList, Wallet, Check, FileSignature, FileText, Scale, CopyPlus, LogOut } from "lucide-react";
 import { apiFetch, apiJson } from "@/lib/apiFetch";
 import { useToast } from "@/hooks/use-toast";
 import { DocumentVersions } from "@/components/DocumentVersions";
@@ -1528,6 +1528,7 @@ export default function ContractDetail() {
               { id: "schedule", label: `${t('contract.tab_schedule')}${schedules.length ? ` (${schedules.length})` : ""}`, icon: <CalendarDays className="w-3.5 h-3.5" /> },
               { id: "inspections", label: t('inspection.tab_title'), icon: <ClipboardList className="w-3.5 h-3.5" /> },
               { id: "documents", label: t('entity_docs.tab_title'), icon: <FileText className="w-3.5 h-3.5" /> },
+              { id: "move-out", label: t('deposit_settlement.tab_title'), icon: <LogOut className="w-3.5 h-3.5" /> },
             ].map((tab) => (
               <button
                 key={tab.id}
@@ -1716,9 +1717,6 @@ export default function ContractDetail() {
                 </ExportableTable>
               </div>
 
-              {/* 퇴거 세대 정산 확인서 — 보증금(B)·차감(A)·최종 반환 차액(C).
-                  확인서가 정본이고, C가 마이너스일 때만 회수 인보이스를 붙인다. */}
-              <DepositSettlementPanel scope="contract" id={id} />
             </div>
           )}
 
@@ -1868,6 +1866,10 @@ export default function ContractDetail() {
               신분증·비자는 여기 올리지 않는다: 30일 파기(APP 11) 대상이라
               7년 보관하는 계약에 붙이면 보존기간이 어긋난다. */}
           {activeTab === "documents" && contract && <ContractDocuments contractId={Number(id)} />}
+
+          {/* 퇴거세대 정산 — 확인서가 정본이다. 보증금(B) − 차감/환급 합계(A) = 최종
+              반환 차액(C)이고, C가 마이너스일 때만 회수 인보이스를 따로 붙인다. */}
+          {activeTab === "move-out" && <DepositSettlementPanel scope="contract" id={id} />}
 
           </div>
         </div>
