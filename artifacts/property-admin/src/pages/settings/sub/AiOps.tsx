@@ -535,7 +535,7 @@ function TaskModelCell({ task, onSaved }: { task: TaskRow; onSaved: () => void }
             autoFocus
             value={val}
             onChange={(e) => { setVal(e.target.value); setError(null); }}
-            placeholder="kimi/kimi-k2-0905-preview"
+            placeholder="kimi/kimi-k3"
             className="h-7 text-[11px] font-mono flex-1"
             onKeyDown={(e) => e.key === "Enter" && save(val.trim())}
           />

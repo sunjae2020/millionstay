@@ -7053,7 +7053,7 @@
     "advanced": "Advanced",
     "base_url_hint": "Override only for a regional or self-hosted endpoint. Leave blank to use the vendor default.",
     "test": "Test",
-    "test_model_ph": "Model to test (e.g. kimi-k2-0905-preview)",
+    "test_model_ph": "Model to test (e.g. kimi-k3)",
     "test_ok": "Connected — {{model}} in {{ms}}ms",
     "test_failed": "Test failed",
     "save_failed": "Save failed",

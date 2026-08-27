@@ -101,14 +101,21 @@ const BUILTIN_PROVIDERS: Record<string, AiProvider> = {
     wire: "anthropic",
     consoleUrl: "https://platform.moonshot.ai/console/api-keys",
     modelPrefixes: ["kimi-", "moonshot-"],
-    // UNVERIFIED against the live endpoint as of 2026-08-27. Text in / text out
-    // is the only thing assumed. Widen with AI_CAPABILITY_OVERRIDES once a real
-    // round-trip confirms tool_use / image blocks / streaming.
-    supports: { ...NO_CAPABILITIES },
+    // VERIFIED 2026-08-27 by live round-trip against kimi-k3: tool_use blocks,
+    // image blocks, SSE streaming and prefix caching (a repeated 1,226-token
+    // system prompt came back as 202 input + 1,024 cache_read) all work. PDF is
+    // the one confirmed NO — the endpoint rejects `document` outright, naming
+    // the tags it accepts (image / text / thinking / tool_use / video / …).
+    //
+    // These flags are PER PROVIDER, not per model. An older or smaller Kimi
+    // model may lack vision; narrow it for that instance with
+    // AI_CAPABILITY_OVERRIDES rather than editing this row.
+    supports: { vision: true, pdf: false, tools: true, streaming: true, promptCache: true },
     note:
       "Anthropic-compatible wire format, so text tasks need no code change — only a key. " +
-      "Vision / tool-use / streaming are gated off until verified against the live endpoint; " +
-      "widen them with AI_CAPABILITY_OVERRIDES after testing.",
+      "Model ids are lowercase and hyphenated (kimi-k3), and current models emit `thinking` " +
+      "blocks that spend the output budget — leave max_tokens generous. PDF document blocks " +
+      "are rejected by the endpoint.",
     custom: false,
   },
   gemini: {

@@ -7001,7 +7001,7 @@
     "advanced": "高级设置",
     "base_url_hint": "仅在使用区域专用或自托管接口时填写。留空则使用供应商默认地址。",
     "test": "测试",
-    "test_model_ph": "要测试的模型（如 kimi-k2-0905-preview）",
+    "test_model_ph": "要测试的模型（如 kimi-k3）",
     "test_ok": "连接成功 — {{model}}，{{ms}}ms",
     "test_failed": "测试失败",
     "save_failed": "保存失败",

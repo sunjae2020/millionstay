@@ -95,15 +95,18 @@ Settings → AI · 사용량 → **엔진 추가**.
 | | Anthropic | Kimi (Moonshot) | Gemini |
 | --- | --- | --- | --- |
 | 와이어 포맷 | 네이티브 | Anthropic 호환 | OpenAI 호환(어댑터) |
-| 이미지 | ✅ | ❌ 미검증 | ✅ |
+| 이미지 | ✅ | ✅ | ✅ |
 | PDF `document` 블록 | ✅ | ❌ | ❌ |
-| 툴 호출 | ✅ | ❌ 미검증 | ❌ |
-| 스트리밍 | ✅ | ❌ 미검증 | ❌ |
-| 프롬프트 캐시 | ✅ | ❌ | ❌ |
+| 툴 호출 | ✅ | ✅ | ❌ |
+| 스트리밍 | ✅ | ✅ | ❌ |
+| 프롬프트 캐시 | ✅ | ✅ | ❌ |
 
-Kimi/Gemini 열은 **보수적으로 시작**한다. 확인되지 않은 기능은 전부 `false`인데,
-거짓 음성은 env 한 줄 비용이고 거짓 양성은 서류 오분류 비용이기 때문이다.
-실제 엔드포인트로 왕복 확인한 뒤 아래로 넓힌다(재배포 불필요):
+Kimi 열은 **2026-08-27 `kimi-k3` 실측**이다(툴 호출·이미지·SSE 스트리밍·접두 캐시 확인,
+PDF는 엔드포인트가 `document` 태그 자체를 거부). Gemini 열은 어댑터 구현 기준이다.
+
+미확인 기능은 계속 `false`로 둔다 — 거짓 음성은 env 한 줄 비용이고, 거짓 양성은
+서류 오분류 비용이다. 플래그는 **모델별이 아니라 프로바이더별**이므로, 비전이 없는
+구형 Kimi 모델을 쓰는 인스턴스는 아래로 **좁힌다**. 넓힐 때도 같은 레버다(재배포 불필요):
 
 ```
 AI_CAPABILITY_OVERRIDES={"kimi":{"tools":true,"streaming":true,"vision":true}}
@@ -111,6 +114,21 @@ AI_CAPABILITY_OVERRIDES={"kimi":{"tools":true,"streaming":true,"vision":true}}
 
 Gemini의 PDF는 어댑터가 번역하지 않으므로 override 대상이 아니다 —
 `document` 블록을 받으면 어댑터가 명시적으로 던진다.
+
+### Kimi 실측 메모 (2026-08-27, `kimi-k3`)
+
+- **모델 ID는 소문자·하이픈.** `kimi-k3` 가 맞고 `Kimi k-3` 는 404
+  (`resource_not_found_error`). 계정에서 쓸 수 있는 목록은
+  `GET https://api.moonshot.ai/v1/models` 로 확인한다.
+- **thinking 블록을 낸다.** CS번역 형태(JSON in/out) 1회에서 출력 324토큰 중
+  **265가 thinking**이었다. 출력 토큰이 비싼 쪽이므로 단가표만 보고 비교하면 안 되고,
+  `max_tokens`도 넉넉히 줘야 한다 — 20으로 주면 예산 전부를 thinking이 먹고
+  본문이 빈 채 `stop_reason: max_tokens` 로 끝난다. 우리 호출부는 `text` 블록만
+  모으므로 thinking이 결과에 섞이지는 않는다.
+- **접두 캐시가 동작한다.** 동일한 1,226토큰 시스템 프롬프트 2회차가
+  input 202 + cache_read 1,024 로 잡혔다. 미터의 `cache_read_tokens` 로 추적된다.
+- **지연**은 1토큰 핑 기준 1.2~1.3초(Haiku 0.6초). 첫 호출은 콜드 스타트로
+  70초가 나온 적이 있으니 단발 측정으로 판단하지 말 것.
 
 ## 사용량 미터
 

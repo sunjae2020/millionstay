@@ -6997,7 +6997,7 @@
     "advanced": "詳細設定",
     "base_url_hint": "リージョン専用またはセルフホストのエンドポイントの場合のみ指定してください。空欄ならベンダー既定値を使います。",
     "test": "テスト",
-    "test_model_ph": "テストするモデル (例: kimi-k2-0905-preview)",
+    "test_model_ph": "テストするモデル (例: kimi-k3)",
     "test_ok": "接続成功 — {{model}}、{{ms}}ms",
     "test_failed": "テストに失敗しました",
     "save_failed": "保存に失敗しました",

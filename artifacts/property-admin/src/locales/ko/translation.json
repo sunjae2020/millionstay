@@ -7053,7 +7053,7 @@
     "advanced": "고급 설정",
     "base_url_hint": "리전 전용·자체 호스팅 엔드포인트일 때만 지정하세요. 비워 두면 벤더 기본값을 씁니다.",
     "test": "테스트",
-    "test_model_ph": "테스트할 모델 (예: kimi-k2-0905-preview)",
+    "test_model_ph": "테스트할 모델 (예: kimi-k3)",
     "test_ok": "연결됨 — {{model}}, {{ms}}ms",
     "test_failed": "테스트 실패",
     "save_failed": "저장 실패",

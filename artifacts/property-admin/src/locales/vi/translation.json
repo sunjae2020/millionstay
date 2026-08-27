@@ -6945,7 +6945,7 @@
     "advanced": "Nâng cao",
     "base_url_hint": "Chỉ ghi đè khi dùng endpoint theo vùng hoặc tự lưu trữ. Để trống để dùng mặc định của nhà cung cấp.",
     "test": "Kiểm tra",
-    "test_model_ph": "Mô hình cần kiểm tra (vd: kimi-k2-0905-preview)",
+    "test_model_ph": "Mô hình cần kiểm tra (vd: kimi-k3)",
     "test_ok": "Đã kết nối — {{model}} trong {{ms}}ms",
     "test_failed": "Kiểm tra thất bại",
     "save_failed": "Lưu thất bại",
