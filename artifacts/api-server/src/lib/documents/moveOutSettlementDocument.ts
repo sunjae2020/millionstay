@@ -72,6 +72,23 @@ export interface MoveOutDocInput {
   contact_phone?: string | null;
   /** Door PIN the unit must be reset to before handover; omitted when unset. */
   door_password?: string | null;
+
+  /**
+   * 임차인 확인 서명. 무로그인 서명 링크로 받은 결과이며, 필드가 **있으면**
+   * 확인란이 문서에 찍힌다 — `null` 이면 서명 대기 상태의 빈 칸, 값이 있으면
+   * 서명 이미지와 인증 정보(서명 일시·IP·기기·동의문). 아예 생략하면 확인란
+   * 없는 기존 발행본 그대로다.
+   */
+  signature?: MoveOutSignature | null;
+}
+
+export interface MoveOutSignature {
+  signer_name?: string | null;
+  signature_image?: string | null;
+  signed_at?: string | Date | null;
+  ip?: string | null;
+  user_agent?: string | null;
+  consent_text?: string | null;
 }
 
 function money(amount: string | number | null, currency: string | null): string {
@@ -257,6 +274,43 @@ function renderIssuerBlock(d: MoveOutDocInput, company: CompanyInfo, lang: DocLa
     </div>`;
 }
 
+/**
+ * 임차인 확인란. 종이 서식에는 임대인 날인만 있었지만, 링크로 받은 확인은
+ * 서명 이미지 하나로 끝나지 않는다 — 언제·어디서·무엇에 동의했는지가 함께
+ * 남아야 확인서로서 의미가 있으므로 인증 정보를 같은 표에 적는다.
+ */
+function renderTenantConfirmBlock(sig: MoveOutSignature | null, lang: DocLang): string {
+  if (!sig) {
+    return `<div class="mo-sec mo-confirm">
+      <div class="mo-sec-title">${t(lang, "moveout.tenantConfirm")}</div>
+      <table class="mo-sign"><tr>
+        <th>${t(lang, "wo.signerName")}</th><td></td>
+        <th>${t(lang, "wo.signature")}</th><td class="mo-sign-pad"></td>
+      </tr></table>
+      <div class="mo-await">${t(lang, "moveout.awaitingSign")}</div>
+    </div>`;
+  }
+  const img = sig.signature_image
+    ? `<img class="mo-sign-img" src="${escapeHtml(sig.signature_image)}" alt="" />`
+    : "";
+  const rows = [
+    sig.signed_at ? `<tr><th>${t(lang, "wo.signedAt")}</th><td colspan="3">${escapeHtml(formatDocDate(sig.signed_at, lang))}</td></tr>` : "",
+    sig.ip ? `<tr><th>${t(lang, "wo.signIp")}</th><td colspan="3">${escapeHtml(sig.ip)}</td></tr>` : "",
+    sig.user_agent ? `<tr><th>${t(lang, "wo.signDevice")}</th><td colspan="3">${escapeHtml(sig.user_agent.slice(0, 160))}</td></tr>` : "",
+    sig.consent_text ? `<tr><th>${t(lang, "wo.signConsent")}</th><td colspan="3">${escapeHtml(sig.consent_text)}</td></tr>` : "",
+  ].join("");
+  return `<div class="mo-sec mo-confirm">
+    <div class="mo-sec-title">${t(lang, "moveout.tenantConfirm")}</div>
+    <table class="mo-sign">
+      <tr>
+        <th>${t(lang, "wo.signerName")}</th><td>${escapeHtml(sig.signer_name ?? "")}</td>
+        <th>${t(lang, "wo.signature")}</th><td class="mo-sign-pad">${img}</td>
+      </tr>
+      ${rows}
+    </table>
+  </div>`;
+}
+
 /** Scoped CSS for the move-out statement (injected into the doc body). */
 const MOVE_OUT_STYLE = `<style>
   /* Sized to land the whole statement on ONE A4 page: the settlement table and
@@ -288,6 +342,12 @@ const MOVE_OUT_STYLE = `<style>
   .mo-guide-title { font-size:10.5px; font-weight:800; color:${DOC_TOKENS.brand}; margin:0 0 2px; }
   .mo-guide-lead { font-weight:800; }
   .mo-guide-item { font-size:9.5px; color:#333; line-height:1.5; padding-left:11px; }
+  table.mo-sign { width:100%; border-collapse:collapse; font-size:11px; }
+  table.mo-sign th, table.mo-sign td { border:1px solid #bfbfbf; padding:5px 8px; }
+  table.mo-sign th { width:15%; background:#f2f2f4; text-align:center; font-weight:700; white-space:nowrap; }
+  table.mo-sign td.mo-sign-pad { width:30%; height:46px; text-align:center; }
+  .mo-sign-img { max-height:40px; max-width:150px; object-fit:contain; }
+  .mo-await { font-size:10px; color:#8a8a8a; margin-top:4px; }
   .mo-issuer { text-align:center; margin-top:18px; }
   .mo-date { font-size:13px; color:#222; margin-bottom:10px; }
   .mo-signer { position:relative; display:inline-block; padding:2px 8px; }
@@ -296,7 +356,7 @@ const MOVE_OUT_STYLE = `<style>
   .mo-signer-seal { font-size:13px; margin-left:8px; color:#555; }
   .mo-seal { position:absolute; right:-10px; top:50%; transform:translateY(-50%); width:54px; height:54px; object-fit:contain; opacity:0.9; }
   /* One page, always: never let a block split across a page break. */
-  .mo-sec, .mo-issuer, .mo-guide-group { page-break-inside:avoid; break-inside:avoid; }
+  .mo-sec, .mo-issuer, .mo-guide-group, .mo-confirm { page-break-inside:avoid; break-inside:avoid; }
 
   /* Long settlements (10+ lines) shrink one more step rather than spilling onto
      a second sheet — the form is meant to be handed over as a single page. */
@@ -348,6 +408,7 @@ export function buildMoveOutSettlementBody(
     </div>
 
     ${renderIssuerBlock(d, company, lang)}
+    ${d.signature !== undefined ? renderTenantConfirmBlock(d.signature, lang) : ""}
     </div>
   `;
 }

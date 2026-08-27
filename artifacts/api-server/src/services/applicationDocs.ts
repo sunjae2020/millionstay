@@ -20,6 +20,7 @@ import {
   emailLogsTable,
   integrationSettings,
   workOrdersTable,
+  depositSettlementsTable,
 } from "@workspace/db";
 import { buildServiceBriefHtml } from "../lib/documents/serviceBrief.js";
 import { htmlToPdf, PdfUnavailableError } from "../lib/documents/pdf.js";
@@ -37,6 +38,10 @@ import { type ContractSignature } from "../lib/documents/contractDocument.js";
 import { resolveCompanyInfo } from "../lib/documents/companyInfo.js";
 import { buildContractDocInput, renderContractHtml } from "../routes/contracts.js";
 import { buildWorkOrderDocInput } from "../routes/work-orders.js";
+import { buildMoveOutDocInput } from "../routes/deposit-settlements.js";
+import { buildMoveOutSettlementHtml } from "../lib/documents/moveOutSettlementDocument.js";
+import { resolveTemplateBody } from "../lib/documents/templateEngine.js";
+import { formatDocMoney } from "../lib/documents/theme.js";
 import { buildWorkOrderHtml, type WorkOrderDocSignature } from "../lib/documents/workOrderDocument.js";
 import { isCloudinaryConfigured, uploadPrivateToCloudinary, cldFolder } from "../utils/cloudinary.js";
 import { sendDocumentEmail, sendApplicationAckEmail } from "../lib/email.js";
@@ -254,6 +259,30 @@ export async function buildSignedDocumentHtml(
       confirmation: true,
     });
   }
+  if (signing.context_type === "deposit_settlement") {
+    // 퇴거 세대 정산 확인서 — 관리자 발행본과 같은 본문에 임차인 확인란만 얹는다.
+    // 서명 전에는 빈 칸(null)이 찍혀, 세입자가 무엇에 서명하는지 그 자리에서 보인다.
+    const data = await buildMoveOutDocInput(signing.context_id);
+    if (!data) return null;
+    const signed = opts.signed ?? signing.status === "signed";
+    const company = await resolveCompanyInfo(lang);
+    const note = await resolveTemplateBody("pdf", "pdf.move_out_confirmation", lang, {
+      ref: data.settlement_ref,
+      refund_amount: formatDocMoney(data.refund_amount, data.currency),
+      deposit_amount: formatDocMoney(data.deposit_held, data.currency),
+      contact_phone: (data.contact_phone || company.phone || "").trim(),
+      door_password: (data.door_password || "").trim() || "____",
+      unit: data.unit ?? "",
+      tenant_name: data.tenant_name ?? "",
+    });
+    return buildMoveOutSettlementHtml(
+      { ...data, signature: signed ? firstSignature(signing.signatures) : null },
+      company,
+      opts.forPrint ?? true,
+      lang,
+      note,
+    );
+  }
   if (signing.context_type === "contract") {
     const built = await buildContractDocInput(signing.context_id, lang);
     if (!built) return null;
@@ -399,6 +428,7 @@ function logMeta(contextType: string): { entityType: string; templateCode: strin
   if (contextType === "placement_contract") return { entityType: "homestay_placement", templateCode: "document.homestay_placement_contract" };
   if (contextType === "contract") return { entityType: "contract", templateCode: "document.contract" };
   if (contextType === "work_order") return { entityType: "work_order", templateCode: "document.work_order" };
+  if (contextType === "deposit_settlement") return { entityType: "deposit_settlement", templateCode: "document.move_out_settlement" };
   return { entityType: "homestay_student_request", templateCode: "document.homestay_student_application" };
 }
 
@@ -642,6 +672,11 @@ export async function refForSigning(signing: Pick<SigningRow, "context_type" | "
       const [row] = await db.select({ ref: contractsTable.contract_ref })
         .from(contractsTable)
         .where(eq(contractsTable.id, signing.context_id)).limit(1);
+      if (row?.ref) return row.ref;
+    } else if (signing.context_type === "deposit_settlement") {
+      const [row] = await db.select({ ref: depositSettlementsTable.settlement_ref })
+        .from(depositSettlementsTable)
+        .where(eq(depositSettlementsTable.id, signing.context_id)).limit(1);
       if (row?.ref) return row.ref;
     }
   } catch { /* fall through */ }

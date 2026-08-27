@@ -96,6 +96,7 @@ import CsTicketDetail from "@/pages/cs/CsTicketDetail";
 import DocumentHub from "@/pages/documents/DocumentHub";
 import DocumentIntake from "@/pages/documents/DocumentIntake";
 import DocumentLibrary from "@/pages/documents/DocumentLibrary";
+import TenantLinkQueue from "@/pages/documents/TenantLinkQueue";
 import DocumentCompliance from "@/pages/documents/DocumentCompliance";
 import QuoteList from "@/pages/documents/QuoteList";
 import QuoteDetail from "@/pages/documents/QuoteDetail";
@@ -355,6 +356,8 @@ function Router() {
       <Route path="/documents/intake" component={DocumentIntake} />
       <Route path="/documents/library" component={DocumentLibrary} />
       <Route path="/documents/checklist" component={DocumentCompliance} />
+      {/* 세입자 링크 대기열 — 입금 통보·서류 제출이 들어온 링크를 한 화면에서. */}
+      <Route path="/documents/tenant-links" component={TenantLinkQueue} />
       <Route path="/documents/quotes" component={QuoteList} />
       <Route path="/documents/quotes/new" component={QuoteDetail} />
       <Route path="/documents/quotes/:id" component={QuoteDetail} />

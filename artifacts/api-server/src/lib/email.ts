@@ -1517,3 +1517,359 @@ export async function sendAppointmentConfirmationEmail(
     return { ok: false, error: err instanceof Error ? err.message : "Send failed" };
   }
 }
+
+// ── 세입자 온보딩 링크 메일 (청구·서류제출·퇴거정산 서명) ─────────────────────
+//
+// 세 링크의 문안이 한 함수에 있는 이유는, 세입자가 받는 것이 결국 같은 물건이기
+// 때문이다 — "이걸 열어서 하나만 해 주세요"라는 카드 한 장. 종류마다 다른 것은
+// 제목·설명·버튼 문구와 요약 상자에 들어갈 줄뿐이라, 그 셋만 kind 로 갈라 둔다.
+
+export type TenantLinkEmailKind = "invoice_pay" | "doc_request" | "settlement_sign" | "intake";
+
+export interface TenantLinkEmailOptions {
+  kind: TenantLinkEmailKind;
+  to: string;
+  toName?: string | null;
+  /** 세입자가 열 링크(공개 토큰 주소). */
+  url: string;
+  /** 청구번호 · 계약번호 · 정산번호 — 종류에 따라 라벨이 바뀐다. */
+  ref: string;
+  unit?: string | null;
+  /** 이미 통화까지 붙여 포맷된 금액 문자열. */
+  amount?: string | null;
+  dueDate?: string | null;
+  /** 서류 제출 요청일 때 보여 줄 목록(사람이 읽는 라벨). */
+  items?: string[] | null;
+  expiresAt?: Date | string | null;
+  lang?: string;
+}
+
+interface TenantLinkCopy {
+  subject: Record<TenantLinkEmailKind, (brand: string, ref: string) => string>;
+  tag: Record<TenantLinkEmailKind, string>;
+  greeting: (name: string) => string;
+  intro: Record<TenantLinkEmailKind, string>;
+  refLabel: Record<TenantLinkEmailKind, string>;
+  unitLabel: string;
+  amountLabel: string;
+  dueLabel: string;
+  itemsLabel: string;
+  cta: Record<TenantLinkEmailKind, string>;
+  expiry: (date: string) => string;
+  fallback: string;
+  questions: (email: string) => string;
+}
+
+const TENANT_LINK_COPY: Record<DocLang, TenantLinkCopy> = {
+  en: {
+    subject: {
+      invoice_pay: (brand, ref) => `[${brand}] Invoice ${ref} — view and pay`,
+      doc_request: (brand, ref) => `[${brand}] Documents needed for ${ref}`,
+      intake: (brand, ref) => `[${brand}] Move-in form for ${ref}`,
+      settlement_sign: (brand, ref) => `[${brand}] Move-out settlement ${ref} — please confirm`,
+    },
+    tag: {
+      intake: "Move-in form",
+      invoice_pay: "Invoice",
+      doc_request: "Document request",
+      settlement_sign: "Move-out settlement",
+    },
+    greeting: (name) => (name ? `Dear ${name},` : "Hello,"),
+    intro: {
+      intake: "Before you move in, please confirm your details and fill in what we still need — your emergency contact and a photo. It takes a couple of minutes and needs no login.",
+      invoice_pay: "Your invoice is ready. Open the link below to see the amount, the bank details, and to let us know once you have transferred the payment. No login is required.",
+      doc_request: "To finish setting up your tenancy we still need the documents listed below. You can photograph or upload them straight from your phone — no login required.",
+      settlement_sign: "Your move-out settlement is ready for review. Please open the link, check each line, and sign to confirm. No login is required.",
+    },
+    refLabel: {
+      intake: "Contract no.",
+      invoice_pay: "Invoice no.",
+      doc_request: "Contract no.",
+      settlement_sign: "Settlement no.",
+    },
+    unitLabel: "Unit",
+    amountLabel: "Amount due",
+    dueLabel: "Due date",
+    itemsLabel: "What we need",
+    cta: {
+      intake: "Fill in the form",
+      invoice_pay: "Open the invoice",
+      doc_request: "Submit documents",
+      settlement_sign: "Review and sign",
+    },
+    expiry: (date) => `This link is valid until ${date}.`,
+    fallback: "If the button does not work, paste this address into your browser:",
+    questions: (email) => `Any questions? Just reply to this email or contact ${email}.`,
+  },
+  ko: {
+    subject: {
+      invoice_pay: (brand, ref) => `[${brand}] 청구서 ${ref} 안내`,
+      doc_request: (brand, ref) => `[${brand}] 제출 서류 안내 (${ref})`,
+      intake: (brand, ref) => `[${brand}] 입주 신청서 작성 안내 (${ref})`,
+      settlement_sign: (brand, ref) => `[${brand}] 퇴거 정산 확인 요청 (${ref})`,
+    },
+    tag: {
+      intake: "입주 신청서",
+      invoice_pay: "청구서",
+      doc_request: "서류 제출",
+      settlement_sign: "퇴거 정산",
+    },
+    greeting: (name) => (name ? `${name}님 안녕하세요,` : "안녕하세요,"),
+    intro: {
+      intake: "입주 전에 인적사항을 한 번 확인해 주시고, 아직 없는 정보(비상 연락처, 증명사진)를 채워 주세요. 몇 분이면 되고 로그인은 필요 없습니다.",
+      invoice_pay: "이번 청구서가 발행되었습니다. 아래 링크를 열면 금액과 입금 계좌를 확인하고, 입금하신 뒤에는 그 사실을 바로 알려주실 수 있습니다. 로그인은 필요 없습니다.",
+      doc_request: "입주 준비를 마치려면 아래 서류가 필요합니다. 링크를 열어 휴대폰으로 찍은 사진이나 파일을 그대로 올려주시면 됩니다. 로그인은 필요 없습니다.",
+      settlement_sign: "퇴거 정산 내역이 준비되었습니다. 링크를 열어 항목을 확인하시고 서명해 주세요. 로그인은 필요 없습니다.",
+    },
+    refLabel: {
+      intake: "계약번호",
+      invoice_pay: "청구번호",
+      doc_request: "계약번호",
+      settlement_sign: "정산번호",
+    },
+    unitLabel: "대상 세대",
+    amountLabel: "청구 금액",
+    dueLabel: "납부 기한",
+    itemsLabel: "필요한 서류",
+    cta: {
+      intake: "신청서 작성하기",
+      invoice_pay: "청구서 열기",
+      doc_request: "서류 제출하기",
+      settlement_sign: "확인하고 서명하기",
+    },
+    expiry: (date) => `이 링크는 ${date}까지 사용하실 수 있습니다.`,
+    fallback: "버튼이 열리지 않으면 아래 주소를 브라우저에 붙여넣어 주세요.",
+    questions: (email) => `문의사항은 본 메일에 회신하시거나 ${email} 으로 연락 주세요.`,
+  },
+  ja: {
+    subject: {
+      invoice_pay: (brand, ref) => `[${brand}] 請求書 ${ref} のご案内`,
+      doc_request: (brand, ref) => `[${brand}] ご提出書類のお願い (${ref})`,
+      intake: (brand, ref) => `[${brand}] 入居申込書のご記入のお願い (${ref})`,
+      settlement_sign: (brand, ref) => `[${brand}] 退去精算のご確認 (${ref})`,
+    },
+    tag: {
+      intake: "入居申込書",
+      invoice_pay: "請求書",
+      doc_request: "書類のご提出",
+      settlement_sign: "退去精算",
+    },
+    greeting: (name) => (name ? `${name} 様` : "こんにちは、"),
+    intro: {
+      intake: "ご入居前に、お客様情報のご確認と、まだ頂いていない項目（緊急連絡先・お写真）のご記入をお願いいたします。数分で終わり、ログインは不要です。",
+      invoice_pay: "今回の請求書を発行いたしました。下のリンクから金額とお振込先をご確認いただけます。お振込み後はそのままご連絡いただけます。ログインは不要です。",
+      doc_request: "ご入居の手続きを完了するため、下記の書類が必要です。リンクを開き、スマートフォンで撮影した画像やファイルをそのままアップロードしてください。ログインは不要です。",
+      settlement_sign: "退去精算の内容をご確認いただける状態になりました。リンクを開き、各項目をご確認のうえご署名ください。ログインは不要です。",
+    },
+    refLabel: {
+      intake: "契約番号",
+      invoice_pay: "請求番号",
+      doc_request: "契約番号",
+      settlement_sign: "精算番号",
+    },
+    unitLabel: "対象住戸",
+    amountLabel: "ご請求金額",
+    dueLabel: "お支払期限",
+    itemsLabel: "必要書類",
+    cta: {
+      intake: "申込書を記入する",
+      invoice_pay: "請求書を開く",
+      doc_request: "書類を提出する",
+      settlement_sign: "確認して署名する",
+    },
+    expiry: (date) => `このリンクは ${date} までご利用いただけます。`,
+    fallback: "ボタンが開かない場合は、下記のアドレスをブラウザに貼り付けてください。",
+    questions: (email) => `ご不明な点は本メールにご返信いただくか、${email} までご連絡ください。`,
+  },
+  zh: {
+    subject: {
+      invoice_pay: (brand, ref) => `[${brand}] 账单 ${ref} 通知`,
+      doc_request: (brand, ref) => `[${brand}] 需要提交的材料 (${ref})`,
+      intake: (brand, ref) => `[${brand}] 请填写入住申请表 (${ref})`,
+      settlement_sign: (brand, ref) => `[${brand}] 退租结算确认 (${ref})`,
+    },
+    tag: {
+      intake: "入住申请表",
+      invoice_pay: "账单",
+      doc_request: "材料提交",
+      settlement_sign: "退租结算",
+    },
+    greeting: (name) => (name ? `${name} 您好，` : "您好，"),
+    intro: {
+      intake: "入住前请确认您的个人信息，并补充我们尚未获得的内容（紧急联系人、证件照）。只需几分钟，无需登录。",
+      invoice_pay: "本期账单已开具。打开下面的链接即可查看金额与收款账户，转账后也可以直接告知我们。无需登录。",
+      doc_request: "为完成入住手续，还需要以下材料。打开链接后，用手机拍照或直接上传文件即可。无需登录。",
+      settlement_sign: "退租结算明细已准备好。请打开链接核对各项内容并签名确认。无需登录。",
+    },
+    refLabel: {
+      intake: "合同编号",
+      invoice_pay: "账单编号",
+      doc_request: "合同编号",
+      settlement_sign: "结算编号",
+    },
+    unitLabel: "房屋",
+    amountLabel: "应付金额",
+    dueLabel: "付款期限",
+    itemsLabel: "所需材料",
+    cta: {
+      intake: "填写申请表",
+      invoice_pay: "查看账单",
+      doc_request: "提交材料",
+      settlement_sign: "核对并签名",
+    },
+    expiry: (date) => `此链接有效期至 ${date}。`,
+    fallback: "如果按钮无法打开，请将以下地址复制到浏览器中：",
+    questions: (email) => `如有疑问，请回复本邮件或联系 ${email}。`,
+  },
+  th: {
+    subject: {
+      invoice_pay: (brand, ref) => `[${brand}] ใบแจ้งหนี้ ${ref}`,
+      doc_request: (brand, ref) => `[${brand}] เอกสารที่ต้องส่ง (${ref})`,
+      intake: (brand, ref) => `[${brand}] กรุณากรอกแบบฟอร์มเข้าอยู่ (${ref})`,
+      settlement_sign: (brand, ref) => `[${brand}] ยืนยันการคืนเงินประกัน (${ref})`,
+    },
+    tag: {
+      intake: "แบบฟอร์มเข้าอยู่",
+      invoice_pay: "ใบแจ้งหนี้",
+      doc_request: "ส่งเอกสาร",
+      settlement_sign: "สรุปยอดย้ายออก",
+    },
+    greeting: (name) => (name ? `เรียน คุณ${name}` : "สวัสดีค่ะ"),
+    intro: {
+      intake: "ก่อนเข้าอยู่ กรุณาตรวจสอบข้อมูลส่วนตัวและกรอกส่วนที่ยังขาด (ผู้ติดต่อฉุกเฉินและรูปถ่าย) ใช้เวลาเพียงไม่กี่นาที และไม่ต้องเข้าสู่ระบบ",
+      invoice_pay: "ใบแจ้งหนี้ของคุณพร้อมแล้ว เปิดลิงก์ด้านล่างเพื่อดูยอดเงินและเลขบัญชี และแจ้งให้เราทราบได้ทันทีหลังโอนเงิน ไม่ต้องเข้าสู่ระบบ",
+      doc_request: "เพื่อให้การเข้าอยู่เสร็จสมบูรณ์ เรายังต้องการเอกสารตามรายการด้านล่าง เปิดลิงก์แล้วถ่ายรูปหรืออัปโหลดไฟล์จากมือถือได้เลย ไม่ต้องเข้าสู่ระบบ",
+      settlement_sign: "สรุปยอดเมื่อย้ายออกพร้อมให้ตรวจสอบแล้ว กรุณาเปิดลิงก์ ตรวจแต่ละรายการ แล้วลงลายเซ็นยืนยัน ไม่ต้องเข้าสู่ระบบ",
+    },
+    refLabel: {
+      intake: "เลขที่สัญญา",
+      invoice_pay: "เลขที่ใบแจ้งหนี้",
+      doc_request: "เลขที่สัญญา",
+      settlement_sign: "เลขที่สรุปยอด",
+    },
+    unitLabel: "ห้องพัก",
+    amountLabel: "ยอดที่ต้องชำระ",
+    dueLabel: "กำหนดชำระ",
+    itemsLabel: "เอกสารที่ต้องใช้",
+    cta: {
+      intake: "กรอกแบบฟอร์ม",
+      invoice_pay: "เปิดใบแจ้งหนี้",
+      doc_request: "ส่งเอกสาร",
+      settlement_sign: "ตรวจสอบและลงลายเซ็น",
+    },
+    expiry: (date) => `ลิงก์นี้ใช้ได้ถึงวันที่ ${date}`,
+    fallback: "หากปุ่มใช้งานไม่ได้ กรุณาคัดลอกที่อยู่นี้ไปวางในเบราว์เซอร์:",
+    questions: (email) => `หากมีคำถาม กรุณาตอบกลับอีเมลนี้หรือติดต่อ ${email}`,
+  },
+  vi: {
+    subject: {
+      invoice_pay: (brand, ref) => `[${brand}] Hóa đơn ${ref}`,
+      doc_request: (brand, ref) => `[${brand}] Giấy tờ cần nộp (${ref})`,
+      intake: (brand, ref) => `[${brand}] Phiếu thông tin nhận nhà (${ref})`,
+      settlement_sign: (brand, ref) => `[${brand}] Xác nhận quyết toán trả phòng (${ref})`,
+    },
+    tag: {
+      intake: "Phiếu nhận nhà",
+      invoice_pay: "Hóa đơn",
+      doc_request: "Nộp giấy tờ",
+      settlement_sign: "Quyết toán trả phòng",
+    },
+    greeting: (name) => (name ? `Kính gửi ${name},` : "Xin chào,"),
+    intro: {
+      intake: "Trước khi nhận nhà, vui lòng xác nhận thông tin cá nhân và bổ sung những mục còn thiếu (người liên hệ khẩn cấp và ảnh chân dung). Chỉ mất vài phút và không cần đăng nhập.",
+      invoice_pay: "Hóa đơn của bạn đã sẵn sàng. Mở liên kết bên dưới để xem số tiền, thông tin tài khoản ngân hàng và báo cho chúng tôi ngay sau khi bạn chuyển khoản. Không cần đăng nhập.",
+      doc_request: "Để hoàn tất thủ tục thuê nhà, chúng tôi còn cần các giấy tờ dưới đây. Mở liên kết rồi chụp ảnh hoặc tải tệp lên trực tiếp từ điện thoại. Không cần đăng nhập.",
+      settlement_sign: "Bảng quyết toán khi trả phòng đã sẵn sàng. Vui lòng mở liên kết, kiểm tra từng khoản và ký xác nhận. Không cần đăng nhập.",
+    },
+    refLabel: {
+      intake: "Số hợp đồng",
+      invoice_pay: "Số hóa đơn",
+      doc_request: "Số hợp đồng",
+      settlement_sign: "Số quyết toán",
+    },
+    unitLabel: "Căn hộ",
+    amountLabel: "Số tiền phải trả",
+    dueLabel: "Hạn thanh toán",
+    itemsLabel: "Giấy tờ cần nộp",
+    cta: {
+      intake: "Điền phiếu",
+      invoice_pay: "Mở hóa đơn",
+      doc_request: "Nộp giấy tờ",
+      settlement_sign: "Kiểm tra và ký",
+    },
+    expiry: (date) => `Liên kết này có hiệu lực đến ngày ${date}.`,
+    fallback: "Nếu nút không hoạt động, hãy dán địa chỉ sau vào trình duyệt:",
+    questions: (email) => `Nếu có thắc mắc, vui lòng trả lời email này hoặc liên hệ ${email}.`,
+  },
+};
+
+/**
+ * 세입자에게 무로그인 링크 한 장을 보낸다(청구·서류제출·퇴거정산 확인).
+ *
+ * 다른 트랜잭션 메일과 같은 best-effort 규칙 — 발송이 실패해도 링크 발급 자체는
+ * 이미 끝났고, 관리자는 화면에서 주소를 복사해 카톡으로 보낼 수 있다.
+ */
+export async function sendTenantLinkEmail(
+  opts: TenantLinkEmailOptions,
+): Promise<{ ok: boolean; skipped?: boolean; error?: string }> {
+  const client = getResend();
+  if (!client) {
+    console.log(`[email] RESEND_API_KEY not set — tenant link (${opts.kind}): ${opts.url}`);
+    return { ok: false, skipped: true, error: "Email service not configured" };
+  }
+
+  const lang = normalizeLang(opts.lang ?? process.env["DEFAULT_DOC_LANG"] ?? "en");
+  const brand = await resolveEmailBrand();
+  const copy = TENANT_LINK_COPY[lang] ?? TENANT_LINK_COPY.en!;
+  const safeUrl = escapeHtml(opts.url);
+  const expiry = opts.expiresAt
+    ? copy.expiry(new Date(opts.expiresAt).toISOString().slice(0, 10))
+    : null;
+
+  const rows: string[] = [];
+  if (opts.unit) rows.push(`<tr><td class="k">${escapeHtml(copy.unitLabel)}</td><td>${escapeHtml(opts.unit)}</td></tr>`);
+  if (opts.amount) rows.push(`<tr><td class="k">${escapeHtml(copy.amountLabel)}</td><td><strong>${escapeHtml(opts.amount)}</strong></td></tr>`);
+  if (opts.dueDate) rows.push(`<tr><td class="k">${escapeHtml(copy.dueLabel)}</td><td>${escapeHtml(opts.dueDate)}</td></tr>`);
+  if (opts.items?.length) {
+    rows.push(`<tr><td class="k">${escapeHtml(copy.itemsLabel)}</td><td>${opts.items.map((i) => escapeHtml(i)).join("<br/>")}</td></tr>`);
+  }
+
+  const html = renderEmailShell({
+    brand,
+    tag: copy.tag[opts.kind],
+    footerLines: [escapeHtml(opts.to)],
+    body: `
+    <p class="lead">${escapeHtml(copy.greeting(safeName(opts.toName)))}</p>
+    <p>${escapeHtml(copy.intro[opts.kind])}</p>
+    <div class="box">
+      <div class="label">${escapeHtml(copy.refLabel[opts.kind])}</div>
+      <div class="ref">${escapeHtml(opts.ref)}</div>
+    </div>
+    ${rows.length ? `<table class="kv">${rows.join("")}</table>` : ""}
+    <a href="${safeUrl}" class="btn">${escapeHtml(copy.cta[opts.kind])} →</a>
+    ${expiry ? `<p class="muted">${escapeHtml(expiry)}</p>` : ""}
+    <p class="muted">${escapeHtml(copy.fallback)}<br>
+      <span style="color:${brand.color};word-break:break-all;">${safeUrl}</span>
+    </p>
+    <p class="muted">${escapeHtml(copy.questions(brand.supportEmail))}</p>`,
+  });
+
+  try {
+    const { data, error } = await client.emails.send({
+      ...emailSender(brand.name),
+      to: [opts.to],
+      subject: copy.subject[opts.kind](brand.name, opts.ref),
+      html,
+    });
+    if (error || !data?.id) {
+      const message = (error as { message?: string } | null)?.message ?? "Send returned no message id";
+      console.error(`[email] Tenant link (${opts.kind}) to ${opts.to} rejected:`, message);
+      return { ok: false, error: message };
+    }
+    console.log(`[email] Tenant link ${opts.kind} ${opts.ref} sent to ${opts.to} (${data.id})`);
+    return { ok: true };
+  } catch (err) {
+    console.error(`[email] Failed to send tenant link (${opts.kind}) to ${opts.to}:`, err);
+    return { ok: false, error: err instanceof Error ? err.message : "Send failed" };
+  }
+}

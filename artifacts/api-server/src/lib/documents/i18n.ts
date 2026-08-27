@@ -289,6 +289,18 @@ const LABELS: Dict = {
   "moveout.issuer":       { en: "Landlord",               ko: "임 대 인",        zh: "出租人",       ja: "賃 貸 人",        th: "ผู้ให้เช่า",            vi: "Bên cho thuê" },
   "moveout.sealMark":     { en: "(seal)",                 ko: "(인)",            zh: "(印)",         ja: "(印)",            th: "(ตราประทับ)",           vi: "(dấu)" },
 
+  // 임차인 확인 서명 — 무로그인 링크로 받은 확인이 확인서 본문에 그대로 찍힌다.
+  "moveout.tenantConfirm":  { en: "Tenant confirmation", ko: "임차인 확인", zh: "承租人确认", ja: "賃借人確認", th: "การยืนยันของผู้เช่า", vi: "Xác nhận của bên thuê" },
+  "moveout.awaitingSign":   { en: "Awaiting the tenant's signature", ko: "임차인 서명 대기", zh: "等待承租人签名", ja: "賃借人の署名待ち", th: "รอลายเซ็นผู้เช่า", vi: "Chờ bên thuê ký" },
+  "moveout.signConsentText": {
+    en: "I have reviewed the settlement above and agree to the final amount to be returned.",
+    ko: "위 정산 내역을 확인하였으며, 최종 반환 차액에 동의합니다.",
+    zh: "本人已核对上述结算明细，并同意最终返还金额。",
+    ja: "上記の精算内訳を確認し、最終返還額に同意します。",
+    th: "ข้าพเจ้าได้ตรวจสอบรายการชำระบัญชีข้างต้นแล้ว และยินยอมตามยอดคืนสุทธิ",
+    vi: "Tôi đã kiểm tra bảng quyết toán nêu trên và đồng ý với số tiền hoàn cuối cùng.",
+  },
+
   // Section 3 default guidance (editable via the pdf.move_out_confirmation template).
   "moveout.guide.refund.title": { en: "Submitting your refund account", ko: "보증금 반환 계좌 제출 안내", zh: "退还账户提交须知", ja: "保証金返還口座のご提出案内", th: "การส่งบัญชีรับเงินคืน", vi: "Nộp tài khoản nhận hoàn tiền" },
   "moveout.guide.refund.lead":  {

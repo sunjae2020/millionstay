@@ -54,6 +54,9 @@ import DevRouter from "@/pages/development/DevRouter";
 import Sign from "@/pages/sign";
 import InspectionSign from "@/pages/inspection-sign";
 import WorkOrderSign from "@/pages/work-order-sign";
+import InvoicePay from "@/pages/invoice-pay";
+import DocumentSubmit from "@/pages/document-submit";
+import IntakeForm from "@/pages/intake-form";
 import PaymentResult from "@/pages/payment-result";
 import { getApiBase } from "@/lib/api-base";
 import { getOwnerSiteSlug } from "@/lib/owner-site";
@@ -89,6 +92,11 @@ function Router() {
       {/* 세대점검표 — tenant review & signature (token link, no login). */}
       <Route path="/inspection/:token" component={InspectionSign} />
       <Route path="/work-order/:token" component={WorkOrderSign} />
+      {/* 청구서 조회·입금 통보 / 서류 제출 — 토큰 링크(로그인 없음).
+          서명·점검 링크와 마찬가지로 두 라우터에 **모두** 걸어야 한다. */}
+      <Route path="/pay/:token" component={InvoicePay} />
+      <Route path="/documents/:token" component={DocumentSubmit} />
+      <Route path="/intake/:token" component={IntakeForm} />
       <Route path="/search" component={Search} />
       <Route path="/spaces/:id" component={SpaceDetail} />
       <Route path="/booking/new" component={BookingNew} />

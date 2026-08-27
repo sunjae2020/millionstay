@@ -4,11 +4,12 @@ import { useTranslation } from "react-i18next";
 import { format, differenceInCalendarDays, startOfMonth, subMonths, isSameMonth } from "date-fns";
 import {
   CalendarClock, FileSignature, Wallet, FileClock,
-  ChevronRight, MapPin, CalendarRange, PieChart, BarChart3,
+  ChevronRight, MapPin, CalendarRange, PieChart, BarChart3, ArrowUpRight,
 } from "lucide-react";
 import {
-  useListMyBookings, useListMyInvoices, useListMyDocuments,
+  useListMyBookings, useListMyInvoices, useListMyDocuments, useMyOnboarding,
   getListMyBookingsQueryKey, type MyBooking, type MyInvoice, type MyDocument,
+  type OnboardingTask,
 } from "@/lib/guest-api";
 import { useAuthStore } from "@/lib/store";
 import { PortalLayout } from "@/components/portal-layout";
@@ -260,6 +261,9 @@ export default function Portal() {
           <p className="text-sm text-muted-foreground mt-0.5">{t("portal.home.subtitle_contracts", "Your contracts, payments and documents at a glance.")}</p>
         </header>
 
+        {/* 해야 할 일 — 메일로 받은 링크를 포털에서 다시 찾는 자리. */}
+        <OnboardingTasks />
+
         {/* KPI grid */}
         {loading ? (
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
@@ -405,5 +409,39 @@ export default function Portal() {
         </section>
       </div>
     </PortalLayout>
+  );
+}
+
+/**
+ * 아직 끝나지 않은 세입자 링크 — 청구서 결제, 서류 제출, 서명 대기.
+ *
+ * 링크는 메일·문자로 먼저 가지만 그 메일을 못 찾는 사람이 반드시 있다. 여기서는
+ * 화면을 새로 그리지 않고 같은 토큰 주소로 보낸다 — 기록이 한 곳에만 남는다.
+ */
+function OnboardingTasks() {
+  const { t } = useTranslation();
+  const { data } = useMyOnboarding();
+  const tasks: OnboardingTask[] = data?.data?.tasks ?? [];
+  if (!tasks.length) return null;
+
+  return (
+    <section className="mb-4 rounded-2xl border border-primary/30 bg-primary/5 p-4 sm:p-5">
+      <h2 className="text-sm font-semibold text-card-foreground">{t("portal.home.todo_title", "Action needed")}</h2>
+      <ul className="mt-3 space-y-2">
+        {tasks.map((task, i) => (
+          <li key={i}>
+            <a href={task.url} target="_blank" rel="noreferrer"
+               className="flex items-center gap-3 rounded-xl border border-card-border bg-card px-4 py-3 text-sm hover:bg-muted/40 transition-colors">
+              <span className="font-medium">{t(`portal.home.todo_${task.kind}`)}</span>
+              {task.ref && <span className="text-xs text-muted-foreground">{task.ref}</span>}
+              {task.due_date && (
+                <span className="text-xs text-muted-foreground">· {t("portal.home.todo_due", { date: task.due_date })}</span>
+              )}
+              <ArrowUpRight className="ml-auto h-4 w-4 text-muted-foreground" />
+            </a>
+          </li>
+        ))}
+      </ul>
+    </section>
   );
 }

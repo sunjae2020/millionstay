@@ -5,6 +5,7 @@ import { apiJson } from "@/lib/apiFetch";
 import { Button } from "@/components/ui/button";
 import { Plus, Wallet, Lock, Unlock, Trash2, Send, FileText, Receipt, TriangleAlert } from "lucide-react";
 import { DocumentPreviewDialog, useDocumentPreview } from "@/components/DocumentPreviewDialog";
+import { SettlementSignLinkCard } from "@/components/SettlementSignLinkCard";
 import { useBrand } from "@/contexts/ThemeContext";
 import { formatMoney } from "@/lib/currency";
 
@@ -195,6 +196,9 @@ function SettlementCard({ s, onChanged }: { s: Settlement; onChanged: () => void
       </div>
 
       <div className="p-4 space-y-5">
+        {/* 임차인 확인 서명 링크 — 정산안이 제안된 뒤에 보낸다. */}
+        <SettlementSignLinkCard settlementId={s.id} status={s.status} defaultEmail={(s as any).tenant_email ?? null} />
+
         {/* 1. 기본 임대차 정보 — 서식 1번 표 그대로. */}
         <section className="space-y-1.5">
           <h5 className="text-xs font-bold text-primary">1. {t("deposit_settlement.sec_basic")}</h5>

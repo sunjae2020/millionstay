@@ -104,6 +104,12 @@ export const contractsTable = pgTable("contracts", {
   special_terms: text("special_terms"),
   terms_text: text("terms_text"),
   notes: text("notes"),
+  // ── 입주 정보 (세입자가 입주 신청서로 직접 적어 보내는 값) ─────────────────
+  // 관리사무소가 실제로 물어보는 것들 — 주차 등록, 반려동물 동의, 실제 거주 인원.
+  // 계약 조건이 아니라 "이 세대에 누가 어떻게 사는가"라서 계약에 붙여 둔다.
+  vehicle_no: text("vehicle_no"),
+  pet_note: text("pet_note"),
+  cohabitants: text("cohabitants"),
   created_at: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updated_at: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),
 });

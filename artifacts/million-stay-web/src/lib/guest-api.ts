@@ -429,6 +429,32 @@ export function useListMyDocuments(
   });
 }
 
+// ─── Guest Portal: 해야 할 일 (온보딩 링크) ──────────────────────────────────
+//
+// 청구서 결제·서류 제출·서명 링크는 메일과 문자로 먼저 나간다. 그 메일을 지웠거나
+// 못 찾는 사람이 반드시 있어서, 포털에 들어온 세입자에게 같은 링크를 다시 보여
+// 준다. 포털이 그 화면들을 복제하지는 않는다 — 토큰 주소로 그대로 보낸다.
+
+export interface OnboardingTask {
+  kind: "invoice_pay" | "doc_request" | "contract_sign" | "settlement_sign";
+  url: string;
+  ref: string | null;
+  due_date: string | null;
+  expires_at: string | null;
+}
+
+export function getMyOnboardingQueryKey() {
+  return ["guest", "onboarding"] as const;
+}
+
+export function useMyOnboarding(options?: { query?: { enabled?: boolean } }) {
+  return useQuery({
+    queryKey: getMyOnboardingQueryKey(),
+    queryFn: () => apiFetch<{ success: boolean; data: { tasks: OnboardingTask[] } }>("/guest/onboarding"),
+    enabled: options?.query?.enabled ?? true,
+  });
+}
+
 // ─── Guest Portal: Profile ────────────────────────────────────────────────────
 
 export interface GuestProfile {
