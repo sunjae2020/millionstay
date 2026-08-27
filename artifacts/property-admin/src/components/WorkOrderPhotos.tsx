@@ -14,6 +14,7 @@ import { apiFetch, getStoredToken } from "@/lib/apiFetch";
 import { formatDateTime } from "@/lib/date";
 import { cn } from "@/lib/utils";
 import { Camera, ImagePlus, Loader2, Trash2, Upload, X } from "lucide-react";
+import { ImagePreviewDialog, useImagePreview, type PreviewImage } from "@/components/ImagePreviewDialog";
 
 export type PhotoKind = "before" | "after";
 const KINDS: PhotoKind[] = ["before", "after"];
@@ -87,8 +88,13 @@ export function WorkOrderPhotos({ workOrderId, staged, onStagedChange }: Props) 
   useEffect(() => { void fetchPhotos(); }, [workOrderId]);
 
   async function handleDelete(photoId: number) {
-    if (!workOrderId) return;
     if (!confirm(t("workorder.photos_delete_confirm", "Delete this photo?"))) return;
+    await deletePhoto(photoId);
+  }
+
+  /** Delete without confirming — the caller already asked. */
+  async function deletePhoto(photoId: number) {
+    if (!workOrderId) return;
     setDeletingId(photoId);
     try {
       await apiFetch(`/api/v1/work-orders/${workOrderId}/photos/${photoId}`, { method: "DELETE" });
@@ -123,6 +129,7 @@ export function WorkOrderPhotos({ workOrderId, staged, onStagedChange }: Props) 
             onStagedChange={onStagedChange}
             onUploaded={fetchPhotos}
             onDelete={handleDelete}
+            onDeleteConfirmed={deletePhoto}
             deletingId={deletingId}
           />
         ))}
@@ -133,7 +140,7 @@ export function WorkOrderPhotos({ workOrderId, staged, onStagedChange }: Props) 
 
 /** 한 구역(작업 전 또는 작업 후) — 자체 업로드 영역 + 회차별 갤러리. */
 function PhotoKindSection({
-  kind, workOrderId, photos, loading, staged, onStagedChange, onUploaded, onDelete, deletingId,
+  kind, workOrderId, photos, loading, staged, onStagedChange, onUploaded, onDelete, onDeleteConfirmed, deletingId,
 }: {
   kind: PhotoKind;
   workOrderId?: number;
@@ -143,10 +150,13 @@ function PhotoKindSection({
   onStagedChange?: (next: StagedPhoto[]) => void;
   onUploaded: () => Promise<void>;
   onDelete: (photoId: number) => void;
+  /** Delete without a confirm prompt — the image preview dialog asks its own. */
+  onDeleteConfirmed: (photoId: number) => Promise<void> | void;
   deletingId: number | null;
 }) {
   const { t } = useTranslation();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const { imagePreview, openImagePreview, closeImagePreview } = useImagePreview();
   const isNew = !workOrderId;
 
   const [caption, setCaption] = useState("");
@@ -171,6 +181,23 @@ function PhotoKindSection({
     }
     return [...map.entries()].sort((a, b) => a[0] - b[0]);
   }, [photos]);
+
+  /** Every photo in this section, session order — so the viewer can page through. */
+  function previewPhotos(): PreviewImage[] {
+    return sessions.flatMap(([, group]) =>
+      group.map((p) => ({
+        url: p.url,
+        name: p.caption?.trim() || undefined,
+        createdAt: p.created_at,
+        onDelete: () => onDeleteConfirmed(p.id),
+      })),
+    );
+  }
+
+  /** Index of a photo inside the flattened session order. */
+  function previewIndex(photo: WorkOrderPhoto): number {
+    return sessions.flatMap(([, group]) => group).findIndex((p) => p.id === photo.id);
+  }
 
   function addFiles(files: File[]) {
     const images = files.filter((f) => f.type.startsWith("image/"));
@@ -365,9 +392,13 @@ function PhotoKindSection({
                 <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
                   {group.map((p) => (
                     <div key={p.id} className="rounded-lg border overflow-hidden bg-card">
-                      <a href={p.url} target="_blank" rel="noreferrer" className="block relative aspect-[4/3] bg-slate-100">
+                      <button
+                        type="button"
+                        onClick={() => openImagePreview(previewPhotos(), previewIndex(p))}
+                        className="block w-full relative aspect-[4/3] bg-slate-100 cursor-zoom-in"
+                      >
                         <img src={p.url} alt={p.caption ?? title} className="w-full h-full object-cover" />
-                      </a>
+                      </button>
                       <div className="p-2 flex items-center gap-2">
                         <p className="text-xs text-muted-foreground truncate flex-1">{p.caption ?? ""}</p>
                         <Button
@@ -387,6 +418,8 @@ function PhotoKindSection({
           </div>
         )
       )}
+
+      <ImagePreviewDialog config={imagePreview} onClose={closeImagePreview} />
     </section>
   );
 }

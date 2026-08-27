@@ -1070,6 +1070,7 @@
     "delete_title": "タスクを削除？",
     "complete_success": "タスク完了",
     "complete_fail": "タスクの更新に失敗しました",
+    "status_todo": "未着手",
     "status_in_progress": "進行中",
     "status_done": "完了",
     "status_cancelled": "キャンセル",
@@ -1422,6 +1423,7 @@
     "party_tenant": "賃借人（乙）",
     "party_address": "住所",
     "party_phone": "連絡先",
+    "party_email": "メールアドレス",
     "party_missing": "未入力",
     "party_none_selected": "アカウントを選択すると、契約書に載る情報がここに表示されます。",
     "party_edit_account": "アカウント情報を編集",
@@ -3346,7 +3348,19 @@
     "toast_deleted": "画像を削除しました",
     "toast_delete_failed_title": "削除失敗",
     "toast_delete_failed_desc": "画像を削除できませんでした。もう一度お試しください。",
-    "toast_copy_failed": "URLをコピーできませんでした"
+    "toast_copy_failed": "URLをコピーできませんでした",
+    "select_all": "すべて選択",
+    "selected_count": "{{count}} 件選択中",
+    "clear_selection": "クリア",
+    "bulk_download": "ダウンロード",
+    "bulk_move": "フォルダへ移動",
+    "bulk_delete": "削除",
+    "confirm_bulk_delete": "{{count}} 件の画像を削除しますか？この操作は元に戻せません。",
+    "toast_bulk_deleted": "{{count}} 件の画像を削除しました",
+    "toast_bulk_partial": "{{count}} 件の項目を処理できませんでした。",
+    "toast_moved": "{{count}} 件の画像を {{folder}} に移動しました",
+    "toast_move_failed": "画像を移動できませんでした",
+    "toast_download_failed": "画像をダウンロードできませんでした"
   },
   "website_content": {
     "page_title": "ウェブサイトページ",
@@ -3432,6 +3446,7 @@
     "field_home_stat_rooms": "統計 — 部屋",
     "field_home_stat_universities": "統計 — 大学",
     "field_home_stat_support": "統計 — サポート",
+    "ph_home_stat_support": "24時間365日",
     "field_home_cta_title": "CTAセクションタイトル",
     "field_home_cta_subtitle": "CTAセクションサブタイトル",
     "field_home_cta_button": "CTAボタンテキスト",
@@ -4038,6 +4053,8 @@
     "basic_info_subtitle": "法人名と事業の詳細",
     "company_name_legal_label": "会社名（法人）",
     "trading_name_label": "屋号",
+    "leasing_contact_phone_label": "賃貸事務所 担当者連絡先",
+    "leasing_contact_phone_helper": "退去精算確認書に記載される担当者の番号です。空欄の場合は会社の代表番号が使われます。",
     "website_label": "ウェブサイト",
     "logo_url_label": "ロゴURL",
     "logo_url_helper": "すべての書類（請求書、領収書、見積書、契約書）およびメールのヘッダーに表示されます。",
@@ -4074,9 +4091,7 @@
     "biz_no_label": "事業者登録番号",
     "privacy_officer_label": "個人情報保護責任者",
     "privacy_officer_placeholder": "氏名（メール）",
-    "corp_no_label": "法人登録番号",
-    "leasing_contact_phone_label": "賃貸事務所 担当者連絡先",
-    "leasing_contact_phone_helper": "退去精算確認書に記載される担当者の番号です。空欄の場合は会社の代表番号が使われます。"
+    "corp_no_label": "法人登録番号"
   },
   "settings_dbsync": {
     "page_title": "DB 同期",
@@ -7004,7 +7019,6 @@
     "test_failed": "テストに失敗しました",
     "save_failed": "保存に失敗しました",
     "cap_vision": "画像",
-    "cap_pdf": "PDF",
     "cap_tools": "ツール呼び出し",
     "cap_streaming": "ストリーミング",
     "cap_promptCache": "プロンプトキャッシュ",
@@ -7079,7 +7093,19 @@
     "field_prefixes_hint": "カンマ区切り。接頭辞で始まるモデル名はこのエンジンに解決されます。そうでなければ エンジンID/モデル 形式で書きます。",
     "field_supports": "対応機能",
     "field_supports_hint": "実際に確認したものだけを有効にしてください。無効な機能を必要とする作業はこのエンジンを拒否します。",
-    "no_price": "料金未登録 — トークンのみ表示"
+    "no_price": "料金未登録 — トークンのみ表示",
+    "cap_pdf": "PDF"
+  },
+  "image_preview": {
+    "copy_link": "リンクをコピー",
+    "copied": "コピーしました",
+    "open_new_tab": "新しいタブで開く",
+    "download": "ダウンロード",
+    "delete": "削除",
+    "confirm_delete": "この画像を削除しますか?この操作は元に戻せません。",
+    "load_error": "この画像を読み込めませんでした。",
+    "prev": "前の画像",
+    "next": "次の画像"
   },
   "tenantLink": {
     "title_invoice_pay": "入居者向け支払いリンク",

@@ -12,6 +12,7 @@ import { apiFetch, getStoredToken } from "@/lib/apiFetch";
 import { useToast } from "@/hooks/use-toast";
 import { formatDate } from "@/lib/date";
 import { Plus, Pencil, Trash2, ImagePlus, Loader2, X } from "lucide-react";
+import { ImagePreviewDialog, useImagePreview, type PreviewImage } from "@/components/ImagePreviewDialog";
 import { cn } from "@/lib/utils";
 
 import { ExportableTable } from "@/components/ui/ExportCsvButton";
@@ -103,7 +104,7 @@ export function SpaceDefectsPanel({ spaceId }: { spaceId: number }) {
   const [form, setForm] = useState<DefectForm>(EMPTY_FORM);
   const [uploadingFor, setUploadingFor] = useState<number | null>(null);
   const [pendingPhotoFor, setPendingPhotoFor] = useState<number | null>(null);
-  const [preview, setPreview] = useState<string | null>(null);
+  const { imagePreview, openImagePreview, closeImagePreview } = useImagePreview();
 
   const queryKey = ["space-defects", spaceId];
   const { data, isLoading } = useQuery({
@@ -298,7 +299,15 @@ export function SpaceDefectsPanel({ spaceId }: { spaceId: number }) {
                         <button
                           key={url}
                           type="button"
-                          onClick={() => setPreview(url)}
+                          onClick={() =>
+                            openImagePreview(
+                              photos.map<PreviewImage>((u) => ({
+                                url: u,
+                                onDelete: () => removePhotoMutation.mutateAsync({ id: d.id, url: u }),
+                              })),
+                              photos.indexOf(url),
+                            )
+                          }
                           className="h-10 w-10 rounded border overflow-hidden hover:ring-2 hover:ring-primary/40"
                         >
                           <img src={url} alt="" className="h-full w-full object-cover" />
@@ -446,15 +455,8 @@ export function SpaceDefectsPanel({ spaceId }: { spaceId: number }) {
         </DialogContent>
       </Dialog>
 
-      {/* Photo lightbox */}
-      <Dialog open={!!preview} onOpenChange={(o) => !o && setPreview(null)}>
-        <DialogContent className="max-w-3xl">
-          <DialogHeader>
-            <DialogTitle>{t("defect.col_photos")}</DialogTitle>
-          </DialogHeader>
-          {preview && <img src={preview} alt="" className="w-full h-auto rounded" />}
-        </DialogContent>
-      </Dialog>
+      {/* Photo lightbox — shared viewer (name / size / dimensions + copy, download, delete). */}
+      <ImagePreviewDialog config={imagePreview} onClose={closeImagePreview} />
     </div>
   );
 }

@@ -1,9 +1,10 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Loader2, Upload, Copy, Trash2, ImageOff, Check } from "lucide-react";
+import { Loader2, Upload, Copy, Trash2, ImageOff, Check, Download, FolderInput, X } from "lucide-react";
 import { FileDropZone } from "@/components/FileDropZone";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -14,7 +15,22 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { apiFetch, apiJson } from "@/lib/apiFetch";
+import {
+  ImagePreviewDialog,
+  useImagePreview,
+  downloadImage,
+  fileNameFromUrl,
+  formatBytes,
+  type PreviewImage,
+} from "@/components/ImagePreviewDialog";
 
 // Folders exposed in the library — must match the api-server ALLOWED_FOLDERS.
 export const MEDIA_FOLDERS = ["content", "spaces", "listings", "branding"] as const;
@@ -36,6 +52,15 @@ export type ContentSubfolder = (typeof CONTENT_SUBFOLDERS)[number];
 /** A browsable folder path, e.g. "spaces" or "content/hero". */
 export type MediaFolder = MediaTopFolder | `content/${ContentSubfolder}`;
 
+/** Every folder an asset may be moved into — the same list the API allows. */
+export const ALL_MEDIA_FOLDERS: MediaFolder[] = [
+  "content",
+  ...CONTENT_SUBFOLDERS.map((s) => `content/${s}` as MediaFolder),
+  "spaces",
+  "listings",
+  "branding",
+];
+
 export interface MediaResource {
   public_id: string;
   secure_url: string;
@@ -45,13 +70,6 @@ export interface MediaResource {
   width: number;
   height: number;
   created_at: string;
-}
-
-function formatBytes(bytes: number): string {
-  if (!bytes) return "";
-  if (bytes < 1024) return `${bytes} B`;
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)} KB`;
-  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
 /**
@@ -76,7 +94,10 @@ export function MediaGrid({
   const subFolder = folder.startsWith("content/") ? (folder.slice("content/".length) as ContentSubfolder) : null;
   const [uploading, setUploading] = useState(false);
   const [copied, setCopied] = useState<string | null>(null);
+  const [selected, setSelected] = useState<string[]>([]);
+  const [bulkBusy, setBulkBusy] = useState<null | "delete" | "download" | "move">(null);
   const fileRef = useRef<HTMLInputElement>(null);
+  const { imagePreview, openImagePreview, closeImagePreview } = useImagePreview();
 
   const queryKey = ["media", folder];
   const { data, isLoading, isError } = useQuery({
@@ -86,6 +107,9 @@ export function MediaGrid({
         `/api/v1/media?folder=${encodeURIComponent(folder)}`,
       ),
   });
+
+  // Folder switch clears the selection — the ids no longer belong to the list.
+  useEffect(() => setSelected([]), [folder]);
 
   const deleteMutation = useMutation({
     mutationFn: (publicId: string) =>
@@ -134,6 +158,92 @@ export function MediaGrid({
   };
 
   const resources = data?.resources ?? [];
+  const selectedSet = new Set(selected);
+  const allSelected = resources.length > 0 && selected.length === resources.length;
+
+  const toggleOne = (publicId: string) =>
+    setSelected((prev) => (prev.includes(publicId) ? prev.filter((id) => id !== publicId) : [...prev, publicId]));
+  const toggleAll = () => setSelected(allSelected ? [] : resources.map((r) => r.public_id));
+
+  const folderLabel = (f: MediaFolder) =>
+    f.startsWith("content/")
+      ? `${t("media.folder_content")} / ${t(`media.subfolder_${f.slice("content/".length)}`)}`
+      : t(`media.folder_${f}`);
+
+  const previewList = (): PreviewImage[] =>
+    resources.map((r) => ({
+      url: r.secure_url,
+      thumbnailUrl: r.thumbnail_url,
+      name: fileNameFromUrl(r.public_id) + (r.format ? `.${r.format}` : ""),
+      bytes: r.bytes,
+      width: r.width,
+      height: r.height,
+      createdAt: r.created_at,
+      onDelete: async () => {
+        await deleteMutation.mutateAsync(r.public_id);
+        setSelected((prev) => prev.filter((id) => id !== r.public_id));
+      },
+    }));
+
+  const bulkDelete = async () => {
+    if (!window.confirm(t("media.confirm_bulk_delete", { count: selected.length }))) return;
+    setBulkBusy("delete");
+    try {
+      const res = await apiFetch("/api/v1/media/bulk-delete", {
+        method: "POST",
+        body: JSON.stringify({ public_ids: selected }),
+      });
+      if (!res.ok) throw new Error("bulk delete failed");
+      const out = (await res.json()) as { deleted: number; failed: string[] };
+      setSelected([]);
+      qc.invalidateQueries({ queryKey });
+      toast({
+        title: t("media.toast_bulk_deleted", { count: out.deleted }),
+        ...(out.failed?.length ? { description: t("media.toast_bulk_partial", { count: out.failed.length }) } : {}),
+      });
+    } catch {
+      toast({ variant: "destructive", title: t("media.toast_delete_failed_title"), description: t("media.toast_delete_failed_desc") });
+    } finally {
+      setBulkBusy(null);
+    }
+  };
+
+  const bulkDownload = async () => {
+    setBulkBusy("download");
+    try {
+      for (const r of resources.filter((x) => selectedSet.has(x.public_id))) {
+        await downloadImage(r.secure_url, `${fileNameFromUrl(r.public_id)}.${r.format}`);
+        // Browsers throttle a burst of downloads; a short gap keeps them all.
+        await new Promise((resolve) => window.setTimeout(resolve, 350));
+      }
+    } catch {
+      toast({ variant: "destructive", title: t("media.toast_download_failed") });
+    } finally {
+      setBulkBusy(null);
+    }
+  };
+
+  const bulkMove = async (target: string) => {
+    setBulkBusy("move");
+    try {
+      const res = await apiFetch("/api/v1/media/move", {
+        method: "POST",
+        body: JSON.stringify({ public_ids: selected, folder: target }),
+      });
+      if (!res.ok) throw new Error("move failed");
+      const out = (await res.json()) as { moved: unknown[]; failed: string[] };
+      setSelected([]);
+      qc.invalidateQueries({ queryKey: ["media"] });
+      toast({
+        title: t("media.toast_moved", { count: out.moved.length, folder: folderLabel(target as MediaFolder) }),
+        ...(out.failed?.length ? { description: t("media.toast_bulk_partial", { count: out.failed.length }) } : {}),
+      });
+    } catch {
+      toast({ variant: "destructive", title: t("media.toast_move_failed") });
+    } finally {
+      setBulkBusy(null);
+    }
+  };
 
   return (
     <div className="space-y-4">
@@ -197,6 +307,49 @@ export function MediaGrid({
         </div>
       )}
 
+      {mode === "manage" && resources.length > 0 && (
+        <div className="flex flex-wrap items-center gap-2 rounded-lg border bg-muted/40 px-3 py-2">
+          <label className="flex cursor-pointer items-center gap-2 text-xs text-muted-foreground">
+            <Checkbox checked={allSelected} onCheckedChange={toggleAll} aria-label={t("media.select_all")} />
+            {t("media.select_all")}
+          </label>
+          {selected.length > 0 && (
+            <>
+              <span className="text-xs font-medium">{t("media.selected_count", { count: selected.length })}</span>
+              <div className="ml-auto flex flex-wrap items-center gap-2">
+                <Button size="sm" variant="outline" className="gap-1.5" onClick={bulkDownload} disabled={!!bulkBusy}>
+                  {bulkBusy === "download" ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Download className="h-3.5 w-3.5" />}
+                  {t("media.bulk_download")}
+                </Button>
+                <Select value="" onValueChange={bulkMove} disabled={!!bulkBusy}>
+                  <SelectTrigger className="h-8 w-[190px] text-xs">
+                    <span className="flex items-center gap-1.5">
+                      {bulkBusy === "move" ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <FolderInput className="h-3.5 w-3.5" />}
+                      <SelectValue placeholder={t("media.bulk_move")} />
+                    </span>
+                  </SelectTrigger>
+                  <SelectContent>
+                    {ALL_MEDIA_FOLDERS.filter((f) => f !== folder).map((f) => (
+                      <SelectItem key={f} value={f} className="text-xs">
+                        {folderLabel(f)}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Button size="sm" variant="destructive" className="gap-1.5" onClick={bulkDelete} disabled={!!bulkBusy}>
+                  {bulkBusy === "delete" ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Trash2 className="h-3.5 w-3.5" />}
+                  {t("media.bulk_delete")}
+                </Button>
+                <Button size="sm" variant="ghost" className="gap-1.5" onClick={() => setSelected([])} disabled={!!bulkBusy}>
+                  <X className="h-3.5 w-3.5" />
+                  {t("media.clear_selection")}
+                </Button>
+              </div>
+            </>
+          )}
+        </div>
+      )}
+
       <FileDropZone onFiles={(files) => void handleUpload(files)} busy={uploading}>
       {isLoading ? (
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
@@ -213,18 +366,36 @@ export function MediaGrid({
         </div>
       ) : (
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
-          {resources.map((r) => (
+          {resources.map((r, i) => (
             <div
               key={r.public_id}
-              className={`group relative overflow-hidden rounded-lg border bg-muted ${
-                mode === "pick" ? "cursor-pointer hover:ring-2 hover:ring-primary" : ""
-              }`}
-              onClick={mode === "pick" ? () => onPick?.(r.secure_url) : undefined}
+              className={`group relative overflow-hidden rounded-lg border bg-muted cursor-pointer ${
+                mode === "pick" ? "hover:ring-2 hover:ring-primary" : ""
+              } ${selectedSet.has(r.public_id) ? "ring-2 ring-primary" : ""}`}
+              onClick={
+                mode === "pick"
+                  ? () => onPick?.(r.secure_url)
+                  : () => openImagePreview(previewList(), i)
+              }
             >
               <img src={r.thumbnail_url} alt="" loading="lazy" className="aspect-[4/3] w-full object-cover" />
               <div className="absolute inset-x-0 bottom-0 bg-black/55 px-2 py-1 text-[10px] text-white opacity-0 transition-opacity group-hover:opacity-100">
-                {r.width}×{r.height} · {r.format.toUpperCase()} · {formatBytes(r.bytes)}
+                {[`${r.width}×${r.height}`, r.format.toUpperCase(), formatBytes(r.bytes)].filter(Boolean).join(" · ")}
               </div>
+              {mode === "manage" && (
+                <div
+                  className={`absolute left-1.5 top-1.5 rounded bg-white/90 p-0.5 shadow-sm transition-opacity ${
+                    selectedSet.has(r.public_id) ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+                  }`}
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <Checkbox
+                    checked={selectedSet.has(r.public_id)}
+                    onCheckedChange={() => toggleOne(r.public_id)}
+                    aria-label={t("media.select")}
+                  />
+                </div>
+              )}
               {mode === "manage" && (
                 <div className="absolute right-1.5 top-1.5 flex gap-1 opacity-0 transition-opacity group-hover:opacity-100">
                   <Button
@@ -232,7 +403,10 @@ export function MediaGrid({
                     variant="secondary"
                     className="h-7 w-7"
                     title={t("media.copy_url")}
-                    onClick={() => copyUrl(r.secure_url)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      copyUrl(r.secure_url);
+                    }}
                   >
                     {copied === r.secure_url ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
                   </Button>
@@ -242,7 +416,8 @@ export function MediaGrid({
                     className="h-7 w-7"
                     title={t("media.delete")}
                     disabled={deleteMutation.isPending}
-                    onClick={() => {
+                    onClick={(e) => {
+                      e.stopPropagation();
                       if (window.confirm(t("media.confirm_delete"))) deleteMutation.mutate(r.public_id);
                     }}
                   >
@@ -262,6 +437,8 @@ export function MediaGrid({
         </div>
       )}
       </FileDropZone>
+
+      <ImagePreviewDialog config={imagePreview} onClose={closeImagePreview} />
     </div>
   );
 }

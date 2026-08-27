@@ -4,6 +4,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiFetch, apiJson } from "@/lib/apiFetch";
 import { Button } from "@/components/ui/button";
 import { Plus, ShieldCheck, Upload, CheckCircle2, AlertTriangle, Lock, Trash2 } from "lucide-react";
+import { ImagePreviewDialog, useImagePreview } from "@/components/ImagePreviewDialog";
 
 // Admin management of booking condition reports (move-in / interim / move-out):
 // build the item set, attach hashed evidence photos, publish (freezes a
@@ -152,6 +153,7 @@ function ReportEditor({ report, onChanged }: { report: Report; onChanged: () => 
 
 function ItemEditor({ item, reportId, editable, onChanged }: { item: Item; reportId: number; editable: boolean; onChanged: () => void }) {
   const { t } = useTranslation();
+  const { imagePreview, openImagePreview, closeImagePreview } = useImagePreview();
   const [uploading, setUploading] = useState(false);
   const decision = item.responses[0]?.decision ?? null;
 
@@ -171,6 +173,8 @@ function ItemEditor({ item, reportId, editable, onChanged }: { item: Item; repor
 
   const adminPhotos = item.photos.filter((p) => p.uploaded_by_type === "admin");
   const tenantPhotos = item.photos.filter((p) => p.uploaded_by_type === "tenant");
+  // Evidence is tamper-evident — the viewer offers no delete here.
+  const allPhotos = [...adminPhotos, ...tenantPhotos];
 
   return (
     <div className="border rounded-lg p-3">
@@ -189,10 +193,20 @@ function ItemEditor({ item, reportId, editable, onChanged }: { item: Item; repor
 
       {(adminPhotos.length > 0 || tenantPhotos.length > 0) && (
         <div className="flex gap-2 mt-2 flex-wrap">
-          {adminPhotos.map((p) => <a key={p.id} href={p.file_url} target="_blank" rel="noreferrer"><img src={p.thumbnail_url ?? p.file_url} className="h-14 w-14 object-cover rounded border" alt="" /></a>)}
-          {tenantPhotos.map((p) => <a key={p.id} href={p.file_url} target="_blank" rel="noreferrer"><img src={p.thumbnail_url ?? p.file_url} className="h-14 w-14 object-cover rounded border border-red-300" alt="" title={t("condition_report.tenant_evidence")} /></a>)}
+          {allPhotos.map((p, i) => (
+            <button key={p.id} type="button" onClick={() => openImagePreview(allPhotos.map((q) => ({ url: q.file_url, thumbnailUrl: q.thumbnail_url })), i)}>
+              <img
+                src={p.thumbnail_url ?? p.file_url}
+                className={`h-14 w-14 object-cover rounded border cursor-zoom-in ${p.uploaded_by_type === "tenant" ? "border-red-300" : ""}`}
+                alt=""
+                {...(p.uploaded_by_type === "tenant" ? { title: t("condition_report.tenant_evidence") } : {})}
+              />
+            </button>
+          ))}
         </div>
       )}
+
+      <ImagePreviewDialog config={imagePreview} onClose={closeImagePreview} />
 
       {item.responses[0]?.comment && <p className="mt-2 text-sm bg-red-50 border border-red-100 rounded px-2 py-1 text-red-800">{item.responses[0].comment}</p>}
 

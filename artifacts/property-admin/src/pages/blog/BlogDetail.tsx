@@ -20,6 +20,7 @@ import {
 
 import { useToast } from "@/hooks/use-toast";
 import { apiFetch } from "@/lib/apiFetch";
+import { ImagePreviewDialog, useImagePreview } from "@/components/ImagePreviewDialog";
 import { useCmsSites } from "@/pages/cms/useCmsSites";
 import { PostBlockEditor } from "@/pages/cms/PostBlockEditor";
 
@@ -187,6 +188,7 @@ const EMPTY_FORM = {
 
 export default function BlogDetail() {
   const { t } = useTranslation();
+  const { imagePreview, openImagePreview, closeImagePreview } = useImagePreview();
   const params = useParams<{ id: string }>();
   const [, navigate] = useLocation();
   const { toast } = useToast();
@@ -422,7 +424,7 @@ export default function BlogDetail() {
                 />
                 {form.cover_image_url && (
                   <div className="w-24 h-16 rounded-lg overflow-hidden border flex-shrink-0">
-                    <img src={form.cover_image_url} alt={t("blog.cover_alt")} className="w-full h-full object-cover" onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
+                    <img src={form.cover_image_url} alt={t("blog.cover_alt")} className="w-full h-full object-cover cursor-zoom-in" onClick={() => openImagePreview([{ url: form.cover_image_url }])} onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
                   </div>
                 )}
               </div>
@@ -701,6 +703,8 @@ export default function BlogDetail() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <ImagePreviewDialog config={imagePreview} onClose={closeImagePreview} />
     </Layout>
   );
 }

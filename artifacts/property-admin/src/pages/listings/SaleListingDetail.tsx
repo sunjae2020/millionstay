@@ -19,6 +19,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { FileDropZone } from "@/components/FileDropZone";
 import { apiFetch } from "@/lib/apiFetch";
+import { ImagePreviewDialog, useImagePreview } from "@/components/ImagePreviewDialog";
 
 // Non-English locales the guest site (million-stay-web) ships. English is the
 // source of truth, edited in the Content tab; these are the Translations tab.
@@ -84,6 +85,7 @@ function CopyFields({
 
 export default function SaleListingDetail() {
   const { t } = useTranslation();
+  const { imagePreview, openImagePreview, closeImagePreview } = useImagePreview();
   const params = useParams<{ id: string }>();
   const [, navigate] = useLocation();
   const { toast } = useToast();
@@ -291,7 +293,12 @@ export default function SaleListingDetail() {
               <div className="flex items-center gap-4">
                 <div className="w-40 h-28 rounded-lg border bg-muted overflow-hidden flex items-center justify-center">
                   {struct.cover_image
-                    ? <img src={struct.cover_image} alt="" className="w-full h-full object-cover" />
+                    ? <img
+                        src={struct.cover_image}
+                        alt=""
+                        className="w-full h-full object-cover cursor-zoom-in"
+                        onClick={() => openImagePreview([{ url: struct.cover_image }])}
+                      />
                     : <ImagePlus className="h-6 w-6 text-muted-foreground/40" />}
                 </div>
                 <div className="space-y-2">
@@ -315,8 +322,13 @@ export default function SaleListingDetail() {
               <div className="grid grid-cols-3 sm:grid-cols-4 gap-3">
                 {struct.gallery.map((url, i) => (
                   <div key={`${url}-${i}`} className="relative group aspect-[4/3] rounded-lg border overflow-hidden bg-muted">
-                    <img src={url} alt="" className="w-full h-full object-cover" />
-                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1.5">
+                    <img
+                      src={url}
+                      alt=""
+                      className="w-full h-full object-cover cursor-zoom-in"
+                      onClick={() => openImagePreview(struct.gallery.map((u) => ({ url: u })), i)}
+                    />
+                    <div className="pointer-events-none absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1.5 [&>*]:pointer-events-auto">
                       <Button type="button" size="icon" variant="secondary" className="h-7 w-7" title={t("listings.set_cover")}
                         onClick={() => setStructField("cover_image", url)}>
                         <Star className="h-3.5 w-3.5" />
@@ -443,6 +455,8 @@ export default function SaleListingDetail() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <ImagePreviewDialog config={imagePreview} onClose={closeImagePreview} />
     </Layout>
   );
 }

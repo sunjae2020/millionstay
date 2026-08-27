@@ -9,6 +9,7 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
 } from "@/components/ui/dialog";
 import { apiFetch, apiPost } from "@/lib/apiFetch";
+import { ImagePreviewDialog, useImagePreview } from "@/components/ImagePreviewDialog";
 import { formatPersonName } from "@/lib/nameFormat";
 import { ExportableTable } from "@/components/ui/ExportCsvButton";
 import { formatDate } from "@/lib/date";
@@ -114,6 +115,7 @@ export function AccountIdentityPanel({
   primaryContactId, websiteUrl, bizNo, bizVerify, onBizVerified, fieldSources,
 }: Props) {
   const { t } = useTranslation();
+  const { imagePreview, openImagePreview, closeImagePreview } = useImagePreview();
   const logoInputRef = useRef<HTMLInputElement>(null);
 
   const [uploadingLogo, setUploadingLogo] = useState(false);
@@ -322,7 +324,12 @@ export function AccountIdentityPanel({
             isIndividual ? "rounded-full" : "rounded-lg"
           }`}>
             {logoUrl
-              ? <img src={logoUrl} alt="" className={`h-full w-full ${isIndividual ? "object-cover" : "object-contain"}`} />
+              ? <img
+                  src={logoUrl}
+                  alt=""
+                  className={`h-full w-full cursor-zoom-in ${isIndividual ? "object-cover" : "object-contain"}`}
+                  onClick={() => openImagePreview([{ url: logoUrl }])}
+                />
               : isIndividual
                 ? <User className="h-8 w-8 text-muted-foreground" />
                 : <Building2 className="h-8 w-8 text-muted-foreground" />}
@@ -534,6 +541,8 @@ export function AccountIdentityPanel({
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <ImagePreviewDialog config={imagePreview} onClose={closeImagePreview} />
     </>
   );
 }

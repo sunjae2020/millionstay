@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { apiFetch, getStoredToken } from "@/lib/apiFetch";
 import { ImagePlus, Star, Trash2, Upload, Loader2, CheckCircle2 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { ImagePreviewDialog, useImagePreview, type PreviewImage } from "@/components/ImagePreviewDialog";
 import { filesFromDataTransfer } from "@/components/FileDropZone";
 
 function apiFetchMultipart(path: string, body: FormData): Promise<Response> {
@@ -35,6 +36,7 @@ interface SpacePhotoManagerProps {
 export function SpacePhotoManager({ spaceId }: SpacePhotoManagerProps) {
   const { t } = useTranslation();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const { imagePreview, openImagePreview, closeImagePreview } = useImagePreview();
   const pasteArmed = useRef(false);
 
   const [images, setImages] = useState<SpaceImage[]>([]);
@@ -145,6 +147,11 @@ export function SpacePhotoManager({ spaceId }: SpacePhotoManagerProps) {
 
   async function handleDelete(imageId: number) {
     if (!confirm("Delete this photo? This cannot be undone.")) return;
+    await deleteImage(imageId);
+  }
+
+  /** Delete without confirming — the caller already asked. */
+  async function deleteImage(imageId: number) {
     setDeletingId(imageId);
     try {
       await apiFetch(`/api/v1/spaces/${spaceId}/images/${imageId}`, { method: "DELETE" });
@@ -165,6 +172,18 @@ export function SpacePhotoManager({ spaceId }: SpacePhotoManagerProps) {
     } finally {
       setSavingCaption(null);
     }
+  }
+
+  /** The whole album, so the preview dialog can page through it. */
+  function previewImages(): PreviewImage[] {
+    return images.map((img) => ({
+      url: img.file_url,
+      thumbnailUrl: img.thumbnail_url,
+      name: img.caption?.trim() || undefined,
+      bytes: img.file_size_bytes,
+      createdAt: img.created_at,
+      ...(isFallback ? {} : { onDelete: () => deleteImage(img.id) }),
+    }));
   }
 
   if (loading) {
@@ -264,7 +283,8 @@ export function SpacePhotoManager({ spaceId }: SpacePhotoManagerProps) {
                 <img
                   src={image.thumbnail_url ?? image.file_url}
                   alt={image.caption ?? "Space photo"}
-                  className="w-full h-full object-cover"
+                  className="w-full h-full object-cover cursor-zoom-in transition-opacity hover:opacity-90"
+                  onClick={() => openImagePreview(previewImages(), images.indexOf(image))}
                   onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
                 />
                 {image.is_primary && (
@@ -335,6 +355,8 @@ export function SpacePhotoManager({ spaceId }: SpacePhotoManagerProps) {
           ))}
         </div>
       )}
+
+      <ImagePreviewDialog config={imagePreview} onClose={closeImagePreview} />
     </div>
   );
 }

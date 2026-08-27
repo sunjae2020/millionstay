@@ -17,6 +17,7 @@ import {
   ArrowLeft, Camera, Check, ChevronDown, ChevronRight, Copy, FileText, Link2,
   Eye, EyeOff, Loader2, Mail, Minus, Plus, Trash2, TriangleAlert, Wallet, X,
 } from "lucide-react";
+import { ImagePreviewDialog, useImagePreview } from "@/components/ImagePreviewDialog";
 import { Layout } from "@/components/Layout";
 import { DocumentPreviewDialog, useDocumentPreview } from "@/components/DocumentPreviewDialog";
 import { Button } from "@/components/ui/button";
@@ -74,6 +75,7 @@ const STATUS_CYCLE: Array<{ value: ItemStatus; icon: typeof Check; className: st
 
 export default function InspectionDetail() {
   const { t, i18n } = useTranslation();
+  const { imagePreview, openImagePreview, closeImagePreview } = useImagePreview();
   const { id } = useParams<{ id: string }>();
   const [, navigate] = useLocation();
   const qc = useQueryClient();
@@ -495,9 +497,21 @@ export default function InspectionDetail() {
                             <div className="flex items-center gap-2 flex-wrap">
                               {photos.map((p) => (
                                 <div key={p.id} className="relative">
-                                  <a href={p.file_url} target="_blank" rel="noopener noreferrer">
-                                    <img src={p.thumbnail_url || p.file_url} alt="" className="h-16 w-16 rounded-md object-cover border" />
-                                  </a>
+                                  <button
+                                    type="button"
+                                    onClick={() =>
+                                      openImagePreview(
+                                        photos.map((q) => ({
+                                          url: q.file_url,
+                                          thumbnailUrl: q.thumbnail_url,
+                                          ...(locked ? {} : { onDelete: () => removePhoto.mutateAsync(q.id) }),
+                                        })),
+                                        photos.indexOf(p),
+                                      )
+                                    }
+                                  >
+                                    <img src={p.thumbnail_url || p.file_url} alt="" className="h-16 w-16 rounded-md object-cover border cursor-zoom-in" />
+                                  </button>
                                   {!locked && (
                                     <button
                                       onClick={() => removePhoto.mutate(p.id)}
@@ -692,6 +706,7 @@ export default function InspectionDetail() {
       </Dialog>
 
       <DocumentPreviewDialog config={previewConfig} onClose={closePreview} />
+      <ImagePreviewDialog config={imagePreview} onClose={closeImagePreview} />
     </Layout>
   );
 }

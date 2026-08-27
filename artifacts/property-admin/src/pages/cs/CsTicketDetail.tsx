@@ -15,6 +15,7 @@ import {
   AlertCircle, User, Calendar, Tag, Flag, RefreshCw, Shield, Eye, EyeOff, Wrench
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { ImagePreviewDialog, useImagePreview } from "@/components/ImagePreviewDialog";
 
 const STATUS_CONFIG: Record<string, { label: string; color: string; icon: React.ReactNode }> = {
   Open:       { label: "Open",        color: "bg-blue-100 text-blue-700",   icon: <Clock className="h-3 w-3" /> },
@@ -113,6 +114,7 @@ export default function CsTicketDetail() {
   const adminLang = (i18n.language || "en").slice(0, 2);
   const fileRef = useRef<HTMLInputElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
+  const { imagePreview, openImagePreview, closeImagePreview } = useImagePreview();
 
   const [reply, setReply] = useState("");
   const [images, setImages] = useState<{ url: string }[]>([]);
@@ -378,9 +380,13 @@ export default function CsTicketDetail() {
                     {parsedImgs.length > 0 && (
                       <div className={`flex gap-2 mt-2 flex-wrap ${isAdmin ? "justify-end" : "justify-start"}`}>
                         {parsedImgs.map((url, i) => (
-                          <a key={i} href={url} target="_blank" rel="noopener noreferrer">
-                            <img src={url} alt={`attachment ${i + 1}`} className="h-24 w-24 object-cover rounded-lg border border-gray-200 hover:opacity-90 transition-opacity" />
-                          </a>
+                          <button
+                            key={i}
+                            type="button"
+                            onClick={() => openImagePreview(parsedImgs.map((u) => ({ url: u })), i)}
+                          >
+                            <img src={url} alt={`attachment ${i + 1}`} className="h-24 w-24 object-cover rounded-lg border border-gray-200 cursor-zoom-in hover:opacity-90 transition-opacity" />
+                          </button>
                         ))}
                       </div>
                     )}
@@ -545,6 +551,7 @@ export default function CsTicketDetail() {
         </div>
       </div>
     </div>
+    <ImagePreviewDialog config={imagePreview} onClose={closeImagePreview} />
     </Layout>
   );
 }

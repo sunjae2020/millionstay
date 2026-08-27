@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiFetch } from "@/lib/apiFetch";
+import { ImagePreviewDialog, useImagePreview } from "@/components/ImagePreviewDialog";
 import { MediaPickerDialog } from "@/components/MediaLibrary";
 import { Images } from "lucide-react";
 import { WEBSITE_PAGES, getSiteForPage, SITES } from "./WebsiteContentList";
@@ -658,6 +659,7 @@ function LanguageTab({
   previewHost: string;
 }) {
   const { t } = useTranslation();
+  const { imagePreview, openImagePreview, closeImagePreview } = useImagePreview();
   const { toast } = useToast();
   const [form, setForm] = useState<LangContent>(initial);
   const [activeTab, setActiveTab] = useState<"content" | "seo">("content");
@@ -776,7 +778,8 @@ function LanguageTab({
                     <img
                       src={form.content[field.key]}
                       alt={fieldLabel}
-                      className="h-32 w-full object-cover rounded-lg border"
+                      className="h-32 w-full object-cover rounded-lg border cursor-zoom-in"
+                      onClick={() => openImagePreview([{ url: form.content[field.key]!, name: fieldLabel }])}
                     />
                   )}
                 </div>
@@ -847,6 +850,8 @@ function LanguageTab({
           {t("website_content.save_language", { language: t(`website_content.lang_${lang.code}`, { defaultValue: lang.label }) })}
         </Button>
       </div>
+
+      <ImagePreviewDialog config={imagePreview} onClose={closeImagePreview} />
     </div>
   );
 }

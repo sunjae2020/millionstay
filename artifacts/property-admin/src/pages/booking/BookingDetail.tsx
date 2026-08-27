@@ -28,6 +28,7 @@ import { LookupSelect } from "@/components/LookupSelect";
 import { ProductLookupSelect } from "@/components/ProductLookupSelect";
 import { AccountLookupSelect } from "@/components/AccountLookupSelect";
 import { apiFetch } from "@/lib/apiFetch";
+import { ImagePreviewDialog, useImagePreview } from "@/components/ImagePreviewDialog";
 import { useBrand } from "@/contexts/ThemeContext";
 import { SUPPORTED_CURRENCIES, formatMoney } from "@/lib/currency";
 import { productRates } from "@/lib/productRates";
@@ -194,7 +195,7 @@ export default function BookingDetail() {
   const [editSvcStatus, setEditSvcStatus] = useState("Active");
   const [editSvcNotes, setEditSvcNotes] = useState("");
   const [photosSvcId, setPhotosSvcId] = useState<number | null>(null);
-  const [previewPhotoUrl, setPreviewPhotoUrl] = useState<string | null>(null);
+  const { imagePreview, openImagePreview, closeImagePreview } = useImagePreview();
   const { data: photosData } = useQuery({
     queryKey: ["booking-service-photos", id, photosSvcId],
     queryFn: async () => {
@@ -1353,7 +1354,16 @@ export default function BookingDetail() {
                     alt={p.caption ?? "Job photo"}
                     loading="lazy"
                     className="w-full h-full object-cover cursor-pointer hover:opacity-90"
-                    onClick={() => setPreviewPhotoUrl(p.file_url)}
+                    onClick={() =>
+                      openImagePreview(
+                        photos.map((q) => ({
+                          url: q.file_url,
+                          thumbnailUrl: q.thumbnail_url,
+                          name: q.caption || undefined,
+                        })),
+                        photos.indexOf(p),
+                      )
+                    }
                   />
                 </div>
               ))}
@@ -1362,14 +1372,8 @@ export default function BookingDetail() {
         </DialogContent>
       </Dialog>
 
-      {previewPhotoUrl && (
-        <div
-          className="fixed inset-0 z-[60] bg-black/80 flex items-center justify-center p-4"
-          onClick={() => setPreviewPhotoUrl(null)}
-        >
-          <img src={previewPhotoUrl} alt={t("common.preview")} className="max-w-full max-h-full rounded-lg" />
-        </div>
-      )}
+      {/* Shared image viewer — name / size / dimensions + copy, new tab, download. */}
+      <ImagePreviewDialog config={imagePreview} onClose={closeImagePreview} />
 
       <Dialog open={rejectDocId !== null} onOpenChange={() => setRejectDocId(null)}>
         <DialogContent>
