@@ -24,9 +24,18 @@
 const REQUEST_TIMEOUT_MS = 120_000;
 
 export class GeminiAdapterError extends Error {
-  constructor(message: string) {
+  /**
+   * HTTP status when the vendor answered, undefined for a local translation
+   * failure or a timeout. The fallback logic in `client.ts` reads this to tell a
+   * retryable outage (429 / 5xx) from a request this adapter can never satisfy
+   * (a PDF block), which must fail loudly rather than be retried elsewhere.
+   */
+  readonly status?: number;
+
+  constructor(message: string, status?: number) {
     super(message);
     this.name = "GeminiAdapterError";
+    this.status = status;
   }
 }
 
@@ -153,6 +162,8 @@ export function createGeminiClient(opts: GeminiClientOptions) {
       });
     } catch (err) {
       if (err instanceof Error && err.name === "AbortError") {
+        // No status: a timeout is retryable, and `isRetryable` treats a missing
+        // status on a transport failure as such.
         throw new GeminiAdapterError("The Gemini request timed out.");
       }
       throw err;
@@ -164,7 +175,7 @@ export function createGeminiClient(opts: GeminiClientOptions) {
       const body = await res.text().catch(() => "");
       // Surface the vendor's own message — it is what tells an admin whether the
       // key is wrong, the model name is wrong, or the quota is exhausted.
-      throw new GeminiAdapterError(`Gemini API error ${res.status}: ${body.slice(0, 500)}`);
+      throw new GeminiAdapterError(`Gemini API error ${res.status}: ${body.slice(0, 500)}`, res.status);
     }
 
     const json = (await res.json()) as any;
