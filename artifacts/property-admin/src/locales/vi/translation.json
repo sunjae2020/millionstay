@@ -3321,7 +3321,19 @@
     "toast_deleted": "Đã xóa hình ảnh",
     "toast_delete_failed_title": "Xóa thất bại",
     "toast_delete_failed_desc": "Không thể xóa hình ảnh. Vui lòng thử lại.",
-    "toast_copy_failed": "Không thể sao chép URL"
+    "toast_copy_failed": "Không thể sao chép URL",
+    "select_all": "Chọn tất cả",
+    "selected_count": "Đã chọn {{count}}",
+    "clear_selection": "Xóa lựa chọn",
+    "bulk_download": "Tải xuống",
+    "bulk_move": "Di chuyển đến thư mục",
+    "bulk_delete": "Xóa",
+    "confirm_bulk_delete": "Xóa {{count}} hình ảnh? Không thể hoàn tác.",
+    "toast_bulk_deleted": "Đã xóa {{count}} hình ảnh",
+    "toast_bulk_partial": "Không thể xử lý {{count}} mục.",
+    "toast_moved": "Đã di chuyển {{count}} hình ảnh đến {{folder}}",
+    "toast_move_failed": "Không thể di chuyển hình ảnh",
+    "toast_download_failed": "Không thể tải xuống hình ảnh"
   },
   "website_content": {
     "page_title": "Trang Website",
@@ -4008,6 +4020,8 @@
     "basic_info_subtitle": "Tên pháp nhân và thông tin doanh nghiệp",
     "company_name_legal_label": "Tên công ty (pháp lý)",
     "trading_name_label": "Tên giao dịch",
+    "leasing_contact_phone_label": "Liên hệ văn phòng cho thuê",
+    "leasing_contact_phone_helper": "Số của người phụ trách được ghi trên xác nhận quyết toán trả phòng. Để trống sẽ dùng số điện thoại công ty.",
     "logo_url_label": "URL logo",
     "logo_url_helper": "Hiển thị ở phần đầu của mọi tài liệu (hóa đơn, biên nhận, báo giá, hợp đồng) và email.",
     "stamp_label": "Con dấu công ty",
@@ -4042,9 +4056,7 @@
     "biz_no_label": "Số đăng ký kinh doanh",
     "privacy_officer_label": "Cán bộ phụ trách bảo mật",
     "privacy_officer_placeholder": "Tên (email)",
-    "corp_no_label": "Số đăng ký pháp nhân",
-    "leasing_contact_phone_label": "Liên hệ văn phòng cho thuê",
-    "leasing_contact_phone_helper": "Số của người phụ trách được ghi trên xác nhận quyết toán trả phòng. Để trống sẽ dùng số điện thoại công ty."
+    "corp_no_label": "Số đăng ký pháp nhân"
   },
   "settings_dbsync": {
     "page_title": "Đồng bộ DB",
@@ -4402,7 +4414,6 @@
     "restore_selected": "Khôi phục mục đã chọn",
     "toast_users_restored": "Đã khôi phục {{count}} người dùng",
     "toast_restore_failed": "Khôi phục thất bại",
-    "field_email": "Email",
     "edit_user_title": "Sửa người dùng",
     "edit_user_desc": "Cập nhật hồ sơ, vai trò và quyền truy cập của tài khoản này.",
     "edit_user_desc_admin": "Bạn chỉ có thể sửa tên. Vai trò, email và trạng thái kích hoạt dành riêng cho SuperAdmin.",
@@ -6951,7 +6962,6 @@
     "test_failed": "Kiểm tra thất bại",
     "save_failed": "Lưu thất bại",
     "cap_vision": "Hình ảnh",
-    "cap_pdf": "PDF",
     "cap_tools": "Gọi công cụ",
     "cap_streaming": "Truyền phát",
     "cap_promptCache": "Bộ nhớ đệm prompt",
@@ -7018,7 +7028,6 @@
     "wire_anthropic": "Tương thích Anthropic",
     "wire_openai": "Tương thích OpenAI",
     "field_wire_hint": "Tương thích Anthropic dùng cho Claude và các nhà cung cấp có endpoint kiểu Anthropic. Còn lại thường là tương thích OpenAI.",
-    "field_base_url": "Base URL",
     "field_base_url_required": "Bắt buộc — engine tương thích OpenAI không có endpoint mặc định.",
     "field_base_url_optional": "Để trống để dùng endpoint mặc định của Anthropic (cho tài khoản Claude thứ hai).",
     "field_api_key": "Khoá API",
@@ -7027,5 +7036,16 @@
     "field_supports": "Năng lực",
     "field_supports_hint": "Chỉ bật những gì bạn đã thực sự kiểm chứng. Tác vụ cần năng lực đang tắt sẽ từ chối engine này.",
     "no_price": "Chưa có bảng giá — chỉ hiện token"
+  },
+  "image_preview": {
+    "copy_link": "Sao chép liên kết",
+    "copied": "Đã sao chép",
+    "open_new_tab": "Mở trong tab mới",
+    "download": "Tải xuống",
+    "delete": "Xóa",
+    "confirm_delete": "Xóa hình ảnh này? Không thể hoàn tác.",
+    "load_error": "Không thể tải hình ảnh này.",
+    "prev": "Hình ảnh trước",
+    "next": "Hình ảnh tiếp theo"
   }
 }

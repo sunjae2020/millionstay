@@ -9,6 +9,7 @@ import { useBrand } from "@/contexts/ThemeContext";
 import { formatMoney } from "@/lib/currency";
 
 import { ExportableTable } from "@/components/ui/ExportCsvButton";
+import { ImagePreviewDialog, useImagePreview } from "@/components/ImagePreviewDialog";
 // Admin service-host detail tabs (#4): jobs & payouts (GL-backed accounting),
 // photos, and CS tickets — all scoped to one service host by id.
 
@@ -179,6 +180,7 @@ function Stat({ label, value, accent }: { label: string; value: string; accent?:
 /* ── Photos ──────────────────────────────────────────────────────────────── */
 export function ServiceHostPhotos({ hostId }: { hostId: string }) {
   const { t } = useTranslation();
+  const { imagePreview, openImagePreview, closeImagePreview } = useImagePreview();
   const qc = useQueryClient();
   const fileRef = useRef<HTMLInputElement>(null);
   const [error, setError] = useState<string | null>(null);
@@ -228,10 +230,24 @@ export function ServiceHostPhotos({ hostId }: { hostId: string }) {
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           {photos.map((p) => (
             <div key={`${p.source ?? "job"}-${p.id}`} className="relative group">
-              <a href={p.file_url} target="_blank" rel="noreferrer" className="block">
-                <img src={p.thumbnail_url ?? p.file_url} alt={p.caption ?? ""} className="w-full aspect-square object-cover rounded-lg border" />
+              <button
+                type="button"
+                className="block w-full text-left"
+                onClick={() =>
+                  openImagePreview(
+                    photos.map((q) => ({
+                      url: q.file_url,
+                      thumbnailUrl: q.thumbnail_url,
+                      name: q.caption || undefined,
+                      ...(q.source === "host" ? { onDelete: () => remove.mutateAsync(q.id) } : {}),
+                    })),
+                    photos.indexOf(p),
+                  )
+                }
+              >
+                <img src={p.thumbnail_url ?? p.file_url} alt={p.caption ?? ""} className="w-full aspect-square object-cover rounded-lg border cursor-zoom-in" />
                 {p.caption && <p className="text-xs text-muted-foreground mt-1 truncate">{p.caption}</p>}
-              </a>
+              </button>
               {/* Job photos are booking evidence — only host-owned uploads are removable. */}
               {p.source === "host" && (
                 <button
@@ -246,6 +262,7 @@ export function ServiceHostPhotos({ hostId }: { hostId: string }) {
           ))}
         </div>
       )}
+      <ImagePreviewDialog config={imagePreview} onClose={closeImagePreview} />
     </div>
   );
 }

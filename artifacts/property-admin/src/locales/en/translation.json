@@ -3378,7 +3378,19 @@
     "toast_deleted": "Image deleted",
     "toast_delete_failed_title": "Delete failed",
     "toast_delete_failed_desc": "Could not delete the image. Please try again.",
-    "toast_copy_failed": "Could not copy the URL"
+    "toast_copy_failed": "Could not copy the URL",
+    "select_all": "Select all",
+    "selected_count": "{{count}} selected",
+    "clear_selection": "Clear",
+    "bulk_download": "Download",
+    "bulk_move": "Move to folder",
+    "bulk_delete": "Delete",
+    "confirm_bulk_delete": "Delete {{count}} image(s)? This cannot be undone.",
+    "toast_bulk_deleted": "{{count}} image(s) deleted",
+    "toast_bulk_partial": "{{count}} item(s) could not be processed.",
+    "toast_moved": "{{count}} image(s) moved to {{folder}}",
+    "toast_move_failed": "Could not move the images",
+    "toast_download_failed": "Could not download the images"
   },
   "website_content": {
     "page_title": "Website Pages",
@@ -7135,5 +7147,16 @@
     "field_supports": "Capabilities",
     "field_supports_hint": "Turn on only what you have actually verified. Tasks needing a capability that is off will refuse this engine.",
     "no_price": "No price entry — tokens only"
+  },
+  "image_preview": {
+    "copy_link": "Copy link",
+    "copied": "Copied",
+    "open_new_tab": "Open in new tab",
+    "download": "Download",
+    "delete": "Delete",
+    "confirm_delete": "Delete this image? This cannot be undone.",
+    "load_error": "Could not load this image.",
+    "prev": "Previous image",
+    "next": "Next image"
   }
 }

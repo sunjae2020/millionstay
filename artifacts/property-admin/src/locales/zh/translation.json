@@ -122,6 +122,7 @@
     "document_intake": "批量导入",
     "document_library": "文件索引",
     "document_checklist": "文件检查",
+    "cms": "内容管理",
     "cms_pages": "页面",
     "cms_blog": "博客",
     "cms_company": "公司信息",
@@ -1097,6 +1098,7 @@
     "ph_subject": "简要描述",
     "ph_category": "选择类别",
     "opt_none": "— 无 —",
+    "cat_cs": "客服",
     "cat_maintenance": "维护",
     "cat_followup": "跟进",
     "cat_admin": "管理",
@@ -1423,6 +1425,7 @@
     "party_tenant": "承租人（乙方）",
     "party_address": "地址",
     "party_phone": "联系方式",
+    "party_email": "电子邮箱",
     "party_missing": "未填写",
     "party_none_selected": "选择账户后，将在此显示合同上会出现的信息。",
     "party_edit_account": "编辑账户信息",
@@ -3348,7 +3351,19 @@
     "toast_deleted": "图片已删除",
     "toast_delete_failed_title": "删除失败",
     "toast_delete_failed_desc": "无法删除图片，请重试。",
-    "toast_copy_failed": "无法复制链接"
+    "toast_copy_failed": "无法复制链接",
+    "select_all": "全选",
+    "selected_count": "已选择 {{count}} 项",
+    "clear_selection": "清除",
+    "bulk_download": "下载",
+    "bulk_move": "移动到文件夹",
+    "bulk_delete": "删除",
+    "confirm_bulk_delete": "确定要删除 {{count}} 张图片吗？此操作无法撤销。",
+    "toast_bulk_deleted": "已删除 {{count}} 张图片",
+    "toast_bulk_partial": "{{count}} 个项目无法处理。",
+    "toast_moved": "已将 {{count}} 张图片移动到 {{folder}}",
+    "toast_move_failed": "无法移动图片",
+    "toast_download_failed": "无法下载图片"
   },
   "website_content": {
     "page_title": "网站页面",
@@ -4040,6 +4055,8 @@
     "basic_info_subtitle": "法律实体名称及业务详情",
     "company_name_legal_label": "公司名称（法定）",
     "trading_name_label": "商号",
+    "leasing_contact_phone_label": "租赁办公室负责人联系电话",
+    "leasing_contact_phone_helper": "退租结算确认书上显示的负责人号码。留空时使用公司代表电话。",
     "website_label": "网站",
     "logo_url_label": "徽标 URL",
     "logo_url_helper": "显示在每份文档（发票、收据、报价单、合同）和电子邮件的页眉中。",
@@ -4076,9 +4093,7 @@
     "biz_no_label": "营业执照号",
     "privacy_officer_label": "个人信息保护负责人",
     "privacy_officer_placeholder": "姓名（邮箱）",
-    "corp_no_label": "法人登记号",
-    "leasing_contact_phone_label": "租赁办公室负责人联系电话",
-    "leasing_contact_phone_helper": "退租结算确认书上显示的负责人号码。留空时使用公司代表电话。"
+    "corp_no_label": "法人登记号"
   },
   "settings_dbsync": {
     "page_title": "数据库同步",
@@ -4919,6 +4934,7 @@
     "invite_sent": "已向学生发送门户邀请邮件",
     "invite_provisioned": "已创建门户登录（邮件未发送 — 请检查邮件配置）",
     "minor": "未满 18 岁",
+    "minor_short": "未成年",
     "error": "出现错误",
     "create_placement": "创建安置",
     "placement_created": "安置已创建",
@@ -7007,7 +7023,6 @@
     "test_failed": "测试失败",
     "save_failed": "保存失败",
     "cap_vision": "图像",
-    "cap_pdf": "PDF",
     "cap_tools": "工具调用",
     "cap_streaming": "流式输出",
     "cap_promptCache": "提示缓存",
@@ -7083,5 +7098,16 @@
     "field_supports": "支持的能力",
     "field_supports_hint": "只开启你已实际验证过的项。需要未开启能力的任务会拒绝该引擎。",
     "no_price": "未登记价格——仅显示 token"
+  },
+  "image_preview": {
+    "copy_link": "复制链接",
+    "copied": "已复制",
+    "open_new_tab": "在新标签页中打开",
+    "download": "下载",
+    "delete": "删除",
+    "confirm_delete": "删除此图片？此操作无法撤销。",
+    "load_error": "无法加载此图片。",
+    "prev": "上一张图片",
+    "next": "下一张图片"
   }
 }

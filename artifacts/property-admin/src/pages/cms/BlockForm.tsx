@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Images, Plus, Trash2, ChevronUp, ChevronDown } from "lucide-react";
+import { ImagePreviewDialog, useImagePreview } from "@/components/ImagePreviewDialog";
 import { MediaPickerDialog } from "@/components/MediaLibrary";
 import {
   getBlockSpec,
@@ -222,6 +223,7 @@ function ImageField({
   onChange: (value: BlockImage) => void;
 }) {
   const { t } = useTranslation();
+  const { imagePreview, openImagePreview, closeImagePreview } = useImagePreview();
   const [pickerOpen, setPickerOpen] = useState(false);
   const image: BlockImage = value ?? { url: "" };
 
@@ -231,7 +233,7 @@ function ImageField({
       <div className="flex items-start gap-3">
         <div className="h-16 w-24 shrink-0 rounded-md border bg-muted/30 overflow-hidden flex items-center justify-center">
           {image.url ? (
-            <img src={image.url} alt="" className="h-full w-full object-cover" />
+            <img src={image.url} alt="" className="h-full w-full object-cover cursor-zoom-in" onClick={() => openImagePreview([{ url: image.url }])} />
           ) : (
             <Images className="h-5 w-5 text-muted-foreground/40" />
           )}
@@ -260,6 +262,7 @@ function ImageField({
         onOpenChange={setPickerOpen}
         onPick={(url: string) => onChange({ ...image, url })}
       />
+      <ImagePreviewDialog config={imagePreview} onClose={closeImagePreview} />
     </div>
   );
 }

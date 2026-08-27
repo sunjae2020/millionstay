@@ -5,6 +5,7 @@ import {
   uploadToCloudinary,
   deleteFromCloudinary,
   listCloudinaryResources,
+  moveCloudinaryAsset,
   cldFolder,
   CLOUDINARY_ROOT_FOLDER,
 } from "../utils/cloudinary";
@@ -125,6 +126,84 @@ router.delete("/v1/media", async (req, res): Promise<void> => {
     console.error("[media] delete failed:", message);
     res.status(500).json({ error: "Failed to delete media" });
   }
+});
+
+// Shared guard for the bulk endpoints: every id must live under an allowed
+// folder inside this instance's root, so a crafted public_id can't reach
+// private/CS/ID assets.
+function assertOwnedIds(publicIds: string[]): string | null {
+  const allowedPrefixes = ALLOWED_FOLDERS.map((f) => `${CLOUDINARY_ROOT_FOLDER}/${f}/`);
+  for (const id of publicIds) {
+    if (!allowedPrefixes.some((p) => id.startsWith(p))) {
+      return `Refusing to touch asset outside allowed media folders: ${id}`;
+    }
+  }
+  return null;
+}
+
+function parseIds(body: unknown): string[] {
+  const raw = (body as { public_ids?: unknown })?.public_ids;
+  if (!Array.isArray(raw)) return [];
+  return raw.map((v) => String(v)).filter(Boolean).slice(0, 100);
+}
+
+// POST /api/v1/media/bulk-delete  { public_ids: [] } — delete many at once.
+router.post("/v1/media/bulk-delete", async (req, res): Promise<void> => {
+  const publicIds = parseIds(req.body);
+  if (publicIds.length === 0) {
+    res.status(400).json({ error: "public_ids is required" });
+    return;
+  }
+  const bad = assertOwnedIds(publicIds);
+  if (bad) {
+    res.status(400).json({ error: bad });
+    return;
+  }
+  const failed: string[] = [];
+  for (const id of publicIds) {
+    try {
+      await deleteFromCloudinary(id);
+    } catch {
+      failed.push(id);
+    }
+  }
+  res.json({ success: failed.length === 0, deleted: publicIds.length - failed.length, failed });
+});
+
+// POST /api/v1/media/move  { public_ids: [], folder } — move assets to another
+// library folder. The public_id (and therefore the URL) changes.
+router.post("/v1/media/move", async (req, res): Promise<void> => {
+  const publicIds = parseIds(req.body);
+  const folder = String((req.body as { folder?: string })?.folder ?? "");
+  if (publicIds.length === 0) {
+    res.status(400).json({ error: "public_ids is required" });
+    return;
+  }
+  if (!isAllowedFolder(folder)) {
+    res.status(400).json({ error: "Invalid folder" });
+    return;
+  }
+  const bad = assertOwnedIds(publicIds);
+  if (bad) {
+    res.status(400).json({ error: bad });
+    return;
+  }
+  if (!isCloudinaryConfigured()) {
+    res.status(503).json({ error: "Media storage is not configured" });
+    return;
+  }
+  const moved: { from: string; to: string; url: string }[] = [];
+  const failed: string[] = [];
+  for (const id of publicIds) {
+    try {
+      const out = await moveCloudinaryAsset(id, folder);
+      moved.push({ from: id, to: out.public_id, url: out.secure_url });
+    } catch (err) {
+      console.error("[media] move failed:", id, err instanceof Error ? err.message : err);
+      failed.push(id);
+    }
+  }
+  res.json({ success: failed.length === 0, moved, failed });
 });
 
 export default router;

@@ -261,6 +261,35 @@ export async function createCloudinaryFolder(subFolder: string): Promise<void> {
   await cloudinary.api.create_folder(cldFolder(subFolder));
 }
 
+/**
+ * Move a public asset into another folder under the instance root.
+ *
+ * Cloudinary has no "move" — the folder is part of the public_id, so a move is
+ * a rename. The delivery URL therefore changes; callers that persist URLs must
+ * update them (the media library reads live from Cloudinary, so it doesn't).
+ * A name collision in the target folder is resolved by suffixing rather than
+ * overwriting an existing asset.
+ */
+export async function moveCloudinaryAsset(
+  publicId: string,
+  targetSubFolder: string,
+): Promise<{ public_id: string; secure_url: string }> {
+  const base = publicId.split("/").pop() ?? publicId;
+  const target = `${cldFolder(targetSubFolder)}/${base}`;
+  if (target === publicId) {
+    return { public_id: publicId, secure_url: cloudinary.url(publicId, { secure: true }) };
+  }
+  try {
+    const res = await cloudinary.uploader.rename(publicId, target, { overwrite: false, invalidate: true });
+    return { public_id: res.public_id, secure_url: res.secure_url };
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    if (!/already exists/i.test(message)) throw err;
+    const res = await cloudinary.uploader.rename(publicId, `${target}_${Date.now()}`, { invalidate: true });
+    return { public_id: res.public_id, secure_url: res.secure_url };
+  }
+}
+
 export async function deleteFromCloudinary(publicId: string, resourceType = "image"): Promise<void> {
   if (!publicId) return;
   try {
