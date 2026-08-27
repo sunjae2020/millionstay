@@ -747,7 +747,13 @@
       "view_contract": "View contract",
       "days_elapsed": "Day {{n}}",
       "days_left": "{{n}} days left",
-      "recent_contracts_title": "My contracts"
+      "recent_contracts_title": "My contracts",
+      "todo_title": "Action needed",
+      "todo_invoice_pay": "Pay your invoice",
+      "todo_doc_request": "Submit documents",
+      "todo_contract_sign": "Sign your contract",
+      "todo_settlement_sign": "Confirm your move-out settlement",
+      "todo_due": "due {{date}}"
     },
     "my_data": {
       "title": "My Data",

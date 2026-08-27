@@ -29,7 +29,7 @@ import partnerCsRouter from "./routes/partner-cs";
 import { homestayPublicRouter, homestayPortalRouter } from "./routes/homestay";
 import { contractSigningPublicRouter, contractSigningAdminRouter } from "./routes/contract-signing";
 import { unitInspectionsAdminRouter, unitInspectionsPublicRouter } from "./routes/unit-inspections";
-import { tenantLinksAdminRouter, tenantLinksPublicRouter } from "./routes/tenant-links";
+import { tenantLinksAdminRouter, tenantLinksPublicRouter, tenantLinksGuestRouter } from "./routes/tenant-links";
 import { homestayStudentPublicRouter } from "./routes/homestay-students";
 import { shortTermPublicRouter } from "./routes/short-term";
 import pageContentsRouter from "./routes/page-contents";
@@ -276,6 +276,8 @@ app.use("/api", guestCsRouter);
 // Condition reports — tenant side (self-guards with requireGuestAuth on /v1/guest).
 app.use("/api", conditionReportsGuestRouter);
 app.use("/api", depositSettlementsGuestRouter);
+// 세입자 포털 — 로그인한 세입자의 "해야 할 일"(자기 링크 다시 찾기).
+app.use("/api", tenantLinksGuestRouter);
 app.use("/api", stripeRouter);
 // dev-migration: NEVER mount in production. CF-004 hard block.
 if (process.env["NODE_ENV"] !== "production") {

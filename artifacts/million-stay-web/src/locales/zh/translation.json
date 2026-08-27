@@ -706,7 +706,13 @@
       "view_contract": "查看合同",
       "days_elapsed": "第{{n}}天",
       "days_left": "剩余{{n}}天",
-      "recent_contracts_title": "我的合同"
+      "recent_contracts_title": "我的合同",
+      "todo_title": "待办事项",
+      "todo_invoice_pay": "支付账单",
+      "todo_doc_request": "提交材料",
+      "todo_contract_sign": "签署合同",
+      "todo_settlement_sign": "确认退租结算",
+      "todo_due": "{{date}} 到期"
     },
     "my_data": {
       "title": "我的数据",

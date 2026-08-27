@@ -831,7 +831,13 @@
       "view_contract": "契約詳細",
       "days_elapsed": "{{n}}日目",
       "days_left": "残り{{n}}日",
-      "recent_contracts_title": "マイ契約"
+      "recent_contracts_title": "マイ契約",
+      "todo_title": "お手続きのお願い",
+      "todo_invoice_pay": "請求書のお支払い",
+      "todo_doc_request": "書類のご提出",
+      "todo_contract_sign": "契約書のご署名",
+      "todo_settlement_sign": "退去精算のご確認",
+      "todo_due": "{{date}} まで"
     },
     "my_data": {
       "title": "マイデータ",

@@ -830,7 +830,13 @@
       "view_contract": "ดูสัญญา",
       "days_elapsed": "วันที่ {{n}}",
       "days_left": "เหลืออีก {{n}} วัน",
-      "recent_contracts_title": "สัญญาของฉัน"
+      "recent_contracts_title": "สัญญาของฉัน",
+      "todo_title": "สิ่งที่ต้องดำเนินการ",
+      "todo_invoice_pay": "ชำระใบแจ้งหนี้",
+      "todo_doc_request": "ส่งเอกสาร",
+      "todo_contract_sign": "ลงลายเซ็นสัญญา",
+      "todo_settlement_sign": "ยืนยันการชำระบัญชีย้ายออก",
+      "todo_due": "ภายใน {{date}}"
     },
     "my_data": {
       "title": "ข้อมูลของฉัน",

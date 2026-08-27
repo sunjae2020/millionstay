@@ -16,6 +16,7 @@ import {
   conditionReportsTable, depositSettlementsTable,
 } from "@workspace/db";
 import { logAction } from "../utils/auditLog";
+import { requireGuestAuth } from "../middlewares/requireGuestAuth";
 import { clientIp } from "../services/contractSigning.js";
 import {
   appendLinkAudit, appendLinkSubmission, cancelTenantLink, createTenantLink,
@@ -39,6 +40,8 @@ const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 20 
 
 const adminRouter: IRouter = Router();
 const publicRouter: IRouter = Router();
+const guestRouter: IRouter = Router();
+guestRouter.use("/v1/guest", requireGuestAuth);
 
 function fail(res: any, code: number, error: string, message: string): void {
   res.status(code).json({ success: false, error: { code: error, message } });
@@ -791,4 +794,82 @@ publicRouter.post("/v1/public/doc-requests/:token/submit", async (req, res): Pro
   }
 });
 
-export { adminRouter as tenantLinksAdminRouter, publicRouter as tenantLinksPublicRouter };
+/* ═══════════════════════════════════════════════════════════════════════════
+   GUEST — 포털에 로그인한 세입자의 "해야 할 일"
+   ═══════════════════════════════════════════════════════════════════════════
+   링크는 메일·문자로 먼저 나가지만, 그 메일을 지웠거나 못 찾는 사람이 반드시
+   있다. 포털에 들어온 세입자에게 같은 링크를 다시 보여 주는 자리 — 포털이 링크
+   화면을 따로 복제하지 않고, 토큰 주소로 그대로 보낸다(기록이 한 곳에 남는다). */
+
+guestRouter.get("/v1/guest/onboarding", async (req, res): Promise<void> => {
+  try {
+    const accountId = (req as any).guest?.account_id ?? null;
+    if (!accountId) { res.json({ success: true, data: { tasks: [] } }); return; }
+
+    const links = await db
+      .select()
+      .from(tenantAccessLinksTable)
+      .where(and(
+        eq(tenantAccessLinksTable.account_id, accountId),
+        inArray(tenantAccessLinksTable.status, ["pending", "viewed"]),
+      ))
+      .orderBy(desc(tenantAccessLinksTable.id));
+
+    // 서명 대기 — 계약서와 퇴거 정산 확인서. 둘 다 전자서명 원장에 있다.
+    const contracts = await db
+      .select({ id: contractsTable.id, ref: contractsTable.contract_ref })
+      .from(contractsTable)
+      .where(eq(contractsTable.tenant_account_id, accountId));
+    const settlements = contracts.length
+      ? await db.select({ id: depositSettlementsTable.id, ref: depositSettlementsTable.settlement_ref })
+          .from(depositSettlementsTable)
+          .where(inArray(depositSettlementsTable.contract_id, contracts.map((c) => c.id)))
+      : [];
+
+    const signings = (contracts.length || settlements.length)
+      ? await db.select().from(contractSigningRequestsTable)
+          .where(and(
+            eq(contractSigningRequestsTable.status, "pending"),
+            or(
+              contracts.length
+                ? and(eq(contractSigningRequestsTable.context_type, "contract"),
+                      inArray(contractSigningRequestsTable.context_id, contracts.map((c) => c.id)))
+                : undefined,
+              settlements.length
+                ? and(eq(contractSigningRequestsTable.context_type, "deposit_settlement"),
+                      inArray(contractSigningRequestsTable.context_id, settlements.map((s) => s.id)))
+                : undefined,
+            ),
+          ))
+      : [];
+
+    const refFor = (ctx: string, id: number) =>
+      (ctx === "contract" ? contracts.find((c) => c.id === id)?.ref : settlements.find((s) => s.id === id)?.ref) ?? null;
+
+    res.json({
+      success: true,
+      data: {
+        tasks: [
+          ...links.map((l) => ({
+            kind: l.kind,
+            url: tenantLinkUrl(l.kind, l.token),
+            ref: (l.payload as any)?.invoice_ref ?? (l.payload as any)?.contract_ref ?? null,
+            due_date: (l.payload as any)?.due_date ?? null,
+            expires_at: l.expires_at,
+          })),
+          ...signings.map((s) => ({
+            kind: s.context_type === "deposit_settlement" ? "settlement_sign" : "contract_sign",
+            url: `${tenantLinkBase()}/sign/${s.token}`,
+            ref: refFor(s.context_type, s.context_id),
+            due_date: null,
+            expires_at: s.expires_at,
+          })),
+        ],
+      },
+    });
+  } catch (err: any) {
+    fail(res, 500, "SERVER_ERROR", err.message);
+  }
+});
+
+export { adminRouter as tenantLinksAdminRouter, publicRouter as tenantLinksPublicRouter, guestRouter as tenantLinksGuestRouter };

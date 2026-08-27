@@ -747,7 +747,13 @@
       "view_contract": "계약 상세",
       "days_elapsed": "{{n}}일차",
       "days_left": "{{n}}일 남음",
-      "recent_contracts_title": "내 계약"
+      "recent_contracts_title": "내 계약",
+      "todo_title": "해야 할 일",
+      "todo_invoice_pay": "청구서 납부",
+      "todo_doc_request": "서류 제출",
+      "todo_contract_sign": "계약서 서명",
+      "todo_settlement_sign": "퇴거 정산 확인",
+      "todo_due": "{{date}}까지"
     },
     "my_data": {
       "title": "내 개인정보",

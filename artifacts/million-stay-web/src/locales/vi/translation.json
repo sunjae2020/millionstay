@@ -738,7 +738,13 @@
       "view_contract": "Xem hợp đồng",
       "days_elapsed": "Ngày {{n}}",
       "days_left": "Còn {{n}} ngày",
-      "recent_contracts_title": "Hợp đồng của tôi"
+      "recent_contracts_title": "Hợp đồng của tôi",
+      "todo_title": "Việc cần làm",
+      "todo_invoice_pay": "Thanh toán hóa đơn",
+      "todo_doc_request": "Nộp giấy tờ",
+      "todo_contract_sign": "Ký hợp đồng",
+      "todo_settlement_sign": "Xác nhận quyết toán trả phòng",
+      "todo_due": "hạn {{date}}"
     },
     "my_data": {
       "title": "Dữ liệu của tôi",
