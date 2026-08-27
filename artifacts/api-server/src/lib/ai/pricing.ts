@@ -38,12 +38,20 @@ const PRICES: Record<string, ModelPrice> = {
   "claude-sonnet-5": { input: 3, output: 15, cachedInput: 0.3 },
   "claude-sonnet-4-6": { input: 3, output: 15, cachedInput: 0.3 },
   "claude-haiku-4-5": { input: 1, output: 5, cachedInput: 0.1 },
-  // ── Kimi / Moonshot ──
-  "kimi/": { input: 0.6, output: 2.5 },
+  // ── Kimi / Moonshot (published rate card, checked 2026-08-27) ──
+  // K3 is NOT a discount tier: it lists at the same $3/$15 as Sonnet, and it
+  // spends most of its output budget on `thinking`, so its cost per finished
+  // job runs well above Sonnet's. Measured comparison in
+  // docs/AI_PROVIDERS_AND_TASKS.md → 엔진 벤치마크.
+  "kimi/kimi-k3": { input: 3, output: 15, cachedInput: 0.3 },
+  "kimi/kimi-k2.6": { input: 0.95, output: 4, cachedInput: 0.15 },
+  // Unknown Kimi model: bill at the flagship rate. Over-reporting is the safe
+  // direction — under-reporting would hide a cost regression.
+  "kimi/": { input: 3, output: 15, cachedInput: 0.3 },
   // ── Google Gemini ──
-  "gemini/gemini-2.5-pro": { input: 1.25, output: 10 },
-  "gemini/gemini-2.5-flash": { input: 0.3, output: 2.5 },
-  "gemini/": { input: 0.3, output: 2.5 },
+  "gemini/gemini-2.5-pro": { input: 1.25, output: 10, cachedInput: 0.125 },
+  "gemini/gemini-2.5-flash": { input: 0.3, output: 2.5, cachedInput: 0.03 },
+  "gemini/": { input: 0.3, output: 2.5, cachedInput: 0.03 },
 };
 
 function overrides(): Record<string, ModelPrice> {
