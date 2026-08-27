@@ -79,7 +79,8 @@ export const AI_TASKS: Record<AiTaskId, AiTask> = {
     label: "cs_translate",
     area: "translation",
     envKey: "CS_TRANSLATE_MODEL",
-    defaultModel: "claude-haiku-4-5-20251001",
+    // Undated id: Anthropic model ids are complete without a date suffix.
+    defaultModel: "claude-haiku-4-5",
     needs: {},
     volume: "high",
     movable: "yes",

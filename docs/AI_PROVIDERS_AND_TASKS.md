@@ -35,7 +35,7 @@ Anthropic SDK 모양(`messages.create` / `messages.stream`)을 그대로 유지�
 | 작업 ID | 하는 일 | 기본 모델 | env 레버 | 필요 기능 | 이전 |
 | --- | --- | --- | --- | --- | --- |
 | `chat` | 공개 챗 어시스턴트 | `claude-sonnet-4-6` | `CHAT_MODEL` | 툴 호출, 스트리밍 | 검증 후 |
-| `cs_translate` | CS 메시지 자동번역 | `claude-haiku-4-5-20251001` | `CS_TRANSLATE_MODEL` | — | 가능 |
+| `cs_translate` | CS 메시지 자동번역 | `claude-haiku-4-5` | `CS_TRANSLATE_MODEL` | — | 가능 |
 | `i18n_translate` | 어드민 UI 문자열 번역·검수 | `claude-sonnet-4-6` | `I18N_TRANSLATE_MODEL` | — | 가능 |
 | `cms_translate` | CMS 페이지 블록 번역 | `claude-sonnet-4-6` | `CMS_TRANSLATE_MODEL` | — | 가능 |
 | `content_translate` | 매물·공간 콘텐츠 번역 | `claude-sonnet-4-6` | `CONTENT_TRANSLATE_MODEL` | — | 가능 |
@@ -138,6 +138,10 @@ Gemini의 PDF는 어댑터가 번역하지 않으므로 override 대상이 아�
 - 프롬프트·응답 **본문은 저장하지 않는다.** 본문은 각 기능 테이블에 각자의 보존기간
   규칙 아래 이미 있고, 여기 복사하면 관리되지 않는 고객정보 사본이 하나 더 생긴다.
 - `cost_usd`는 `lib/ai/pricing.ts` 단가표 기준 **추정치**다. 청구액 정본은 벤더 청구서.
+  Anthropic 행은 2026-08-27 공표 단가로 검증했다 — Opus 5 / Opus 4.8 는 $5/$25,
+  Sonnet 5 / Sonnet 4.6 은 $3/$15, Haiku 4.5 는 $1/$5 (Mtok). Sonnet 5 는
+  2026-08-31 까지 도입가 $2/$10 이 적용되나, 이후 과소집계를 피하려고 정상가를 쓴다.
+  모델 ID에 **날짜 접미사를 붙이지 않는다** — `claude-haiku-4-5` 가 완전한 ID다.
   단가가 바뀌면 `AI_PRICE_OVERRIDES={"kimi/kimi-k2":{"input":0.6,"output":2.5}}`로 즉시 교정.
 - 기록 실패는 삼킨다. 미터가 번역을 실패시키는 일은 없어야 한다.
 

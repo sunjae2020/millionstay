@@ -4686,7 +4686,8 @@
       "model_haiku": "Claude Haiku 4.5 — nhanh & chi phí thấp (khuyến nghị)",
       "model_sonnet": "Claude Sonnet 4.6 — chất lượng cao hơn, đắt hơn",
       "saved_toast": "Đã cập nhật mô hình dịch",
-      "needs_key": "Thiết lập khóa API Anthropic ở trên để bật tính năng dịch."
+      "needs_key": "Thiết lập khóa API Anthropic ở trên để bật tính năng dịch.",
+      "managed_elsewhere": "Tác vụ này đang dùng mô hình ngoài danh sách rút gọn. Đổi tại Cài đặt → AI & mức sử dụng."
     }
   },
   "accommodation_options": {

@@ -4713,7 +4713,8 @@
       "model_haiku": "Claude Haiku 4.5 — เร็วและประหยัด (แนะนำ)",
       "model_sonnet": "Claude Sonnet 4.6 — คุณภาพสูงกว่า แพงกว่า",
       "saved_toast": "อัปเดตโมเดลการแปลแล้ว",
-      "needs_key": "ตั้งค่า Anthropic API key ด้านบนเพื่อเปิดใช้งานการแปล"
+      "needs_key": "ตั้งค่า Anthropic API key ด้านบนเพื่อเปิดใช้งานการแปล",
+      "managed_elsewhere": "งานนี้ตั้งค่าเป็นโมเดลที่ไม่อยู่ในรายการลัดนี้ เปลี่ยนได้ที่ ตั้งค่า → AI และการใช้งาน"
     }
   },
   "accommodation_options": {

@@ -4723,7 +4723,8 @@
       "model_haiku": "Claude Haiku 4.5 — 快速、低成本（推荐）",
       "model_sonnet": "Claude Sonnet 4.6 — 质量更高、更昂贵",
       "saved_toast": "翻译模型已更新",
-      "needs_key": "请先在上方设置 Anthropic API 密钥以启用翻译。"
+      "needs_key": "请先在上方设置 Anthropic API 密钥以启用翻译。",
+      "managed_elsewhere": "该任务使用的模型不在此快捷列表中。请在 设置 → AI 与用量 中更改。"
     }
   },
   "accommodation_options": {

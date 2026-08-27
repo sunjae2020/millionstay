@@ -4766,7 +4766,8 @@
       "model_haiku": "Claude Haiku 4.5 — fast & low-cost (recommended)",
       "model_sonnet": "Claude Sonnet 4.6 — higher quality, more expensive",
       "saved_toast": "Translation model updated",
-      "needs_key": "Set the Anthropic API key above to enable translation."
+      "needs_key": "Set the Anthropic API key above to enable translation.",
+      "managed_elsewhere": "This task is set to a model outside this shortcut list. Change it in Settings → AI & usage."
     }
   },
   "accommodation_options": {

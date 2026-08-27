@@ -21,10 +21,20 @@ export interface ModelPrice {
   cachedInput?: number;
 }
 
-/** Keyed by bare model name OR `provider/model`. Longest match wins. */
+/**
+ * Keyed by bare model name OR `provider/model`. Longest match wins.
+ *
+ * Anthropic rows verified against the published rate card on 2026-08-27.
+ * `cachedInput` is the ~0.1x cache-read rate. Cache WRITES are billed above the
+ * input rate (~1.25x) and `estimateCostUsd` charges them at 1x, so a
+ * cache-heavy workload reads slightly low — see the note there.
+ */
 const PRICES: Record<string, ModelPrice> = {
   // ── Anthropic ──
-  "claude-opus-5": { input: 15, output: 75, cachedInput: 1.5 },
+  "claude-opus-5": { input: 5, output: 25, cachedInput: 0.5 },
+  "claude-opus-4-8": { input: 5, output: 25, cachedInput: 0.5 },
+  // Sonnet 5 carries introductory pricing ($2/$10) through 2026-08-31; the
+  // standard rate is used here so the meter does not under-report from 09-01.
   "claude-sonnet-5": { input: 3, output: 15, cachedInput: 0.3 },
   "claude-sonnet-4-6": { input: 3, output: 15, cachedInput: 0.3 },
   "claude-haiku-4-5": { input: 1, output: 5, cachedInput: 0.1 },

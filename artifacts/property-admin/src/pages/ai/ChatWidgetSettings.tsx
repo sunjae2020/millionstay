@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { useTranslation } from "react-i18next";
+import { Link } from "wouter";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Layout, PageHeader } from "@/components/Layout";
 import { Card } from "@/components/ui/card";
@@ -18,10 +19,15 @@ interface IntegrationStatus {
   ai: { configured: boolean; masked_key: string; model: string | null; cs_translate_model?: string | null; widget_enabled: boolean; error: string | null };
 }
 
-// Options offered for the CS auto-translation model. Haiku is the cost-effective
-// default; Sonnet is available for higher-quality (more expensive) translation.
+// Shortcut options for the CS auto-translation model. Haiku is the
+// cost-effective default; Sonnet is higher quality and more expensive.
+//
+// This is a convenience picker over the same CS_TRANSLATE_MODEL setting that
+// Settings → AI · 사용량 edits. That page is the full surface — it can point the
+// task at any provider — so anything not in this short list is shown read-only
+// here with a link there, rather than being silently reset by this dropdown.
 const CS_TRANSLATE_MODELS = [
-  { value: "claude-haiku-4-5-20251001", labelKey: "ai.cs_translate.model_haiku" },
+  { value: "claude-haiku-4-5", labelKey: "ai.cs_translate.model_haiku" },
   { value: "claude-sonnet-4-6", labelKey: "ai.cs_translate.model_sonnet" },
 ];
 
@@ -38,7 +44,11 @@ export default function ChatWidgetSettings() {
   const status: IntegrationStatus | undefined = data?.data;
   const enabled = status?.ai.widget_enabled ?? true;
   const configured = status?.ai.configured ?? false;
-  const csModel = status?.ai.cs_translate_model ?? "claude-haiku-4-5-20251001";
+  // The status endpoint reports a canonical `provider/model` ref; this picker
+  // only ever offered bare Anthropic names, so strip the prefix to compare.
+  const csModelRef = status?.ai.cs_translate_model ?? "anthropic/claude-haiku-4-5";
+  const csModel = csModelRef.includes("/") ? csModelRef.slice(csModelRef.indexOf("/") + 1) : csModelRef;
+  const csModelIsListed = CS_TRANSLATE_MODELS.some((m) => m.value === csModel);
 
   async function setCsModel(next: string) {
     setSaving(true);
@@ -133,16 +143,28 @@ export default function ChatWidgetSettings() {
             <p className="mt-1 mb-3 text-xs text-muted-foreground">
               {t("ai.cs_translate.help", "Model used to translate customer-support messages between the customer's language and English. Haiku is fast and low-cost; Sonnet is higher quality but more expensive.")}
             </p>
-            <select
-              value={csModel}
-              disabled={saving || !configured}
-              onChange={(e) => void setCsModel(e.target.value)}
-              className="w-full rounded-lg border bg-background px-3 py-2 text-sm outline-none disabled:opacity-50"
-            >
-              {CS_TRANSLATE_MODELS.map((m) => (
-                <option key={m.value} value={m.value}>{t(m.labelKey)}</option>
-              ))}
-            </select>
+            {csModelIsListed ? (
+              <select
+                value={csModel}
+                disabled={saving || !configured}
+                onChange={(e) => void setCsModel(e.target.value)}
+                className="w-full rounded-lg border bg-background px-3 py-2 text-sm outline-none disabled:opacity-50"
+              >
+                {CS_TRANSLATE_MODELS.map((m) => (
+                  <option key={m.value} value={m.value}>{t(m.labelKey)}</option>
+                ))}
+              </select>
+            ) : (
+              <div className="space-y-1.5">
+                <code className="block w-full rounded-lg border bg-muted px-3 py-2 text-sm font-mono">
+                  {csModelRef}
+                </code>
+                <p className="text-xs text-muted-foreground">
+                  {t("ai.cs_translate.managed_elsewhere", "This task is set to a model outside this shortcut list. Change it in Settings → AI & usage.")}{" "}
+                  <Link href="/settings/ai" className="text-primary hover:underline">/settings/ai</Link>
+                </p>
+              </div>
+            )}
             {!configured && (
               <p className="mt-2 text-xs text-amber-600">{t("ai.cs_translate.needs_key", "Set the Anthropic API key above to enable translation.")}</p>
             )}

@@ -4766,7 +4766,8 @@
       "model_haiku": "Claude Haiku 4.5 — 빠르고 저렴 (권장)",
       "model_sonnet": "Claude Sonnet 4.6 — 더 높은 품질, 더 비쌈",
       "saved_toast": "번역 모델이 업데이트되었습니다",
-      "needs_key": "번역을 사용하려면 위에서 Anthropic API 키를 설정하세요."
+      "needs_key": "번역을 사용하려면 위에서 Anthropic API 키를 설정하세요.",
+      "managed_elsewhere": "이 작업은 단축 목록 밖의 모델로 설정돼 있습니다. 설정 → AI · 사용량에서 변경하세요."
     }
   },
   "accommodation_options": {
