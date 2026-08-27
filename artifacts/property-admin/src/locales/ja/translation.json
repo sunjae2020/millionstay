@@ -135,7 +135,8 @@
     "marketing_dashboard": "マーケティング状況",
     "marketing_lists": "リスト",
     "campaigns": "キャンペーン",
-    "tenant_links": "入居者リンク"
+    "tenant_links": "入居者リンク",
+    "help_docs": "社内資料室"
   },
   "dashboard": {
     "title": "ダッシュボード",
@@ -7212,5 +7213,40 @@
     "col_updated": "更新",
     "empty": "対応が必要な項目はありません。",
     "docs_count": "{{total}}件中 {{submitted}}件提出"
+  },
+  "helpDocs": {
+    "title": "社内資料室",
+    "subtitle": "運用ガイド・規程・入居者に送るリンクを一か所に。新任者にはこの画面だけ伝えれば足ります。",
+    "btn_seed": "標準資料を取り込む",
+    "btn_add": "資料を追加",
+    "ph_search": "タイトル・説明・タグで検索",
+    "filter_all": "すべて",
+    "filter_staff": "社内",
+    "filter_tenant": "入居者リンク",
+    "empty_title": "資料室が空です",
+    "empty_desc": "標準セットを取り込んでから、チームに合わせて編集・追加してください。",
+    "no_match": "該当する資料がありません。",
+    "issued_at": "発行場所:",
+    "audience_staff": "社内",
+    "audience_tenant": "入居者",
+    "dialog_new": "資料を追加",
+    "dialog_edit": "資料を編集",
+    "f_title": "タイトル",
+    "f_description": "説明",
+    "f_category": "分類",
+    "f_audience": "対象",
+    "f_url": "リンク",
+    "hint_url": "新しいタブで開きます。/documents/library のような管理画面のパスも使えます。",
+    "f_route_pattern": "リンクの形",
+    "hint_route_pattern": "トークンが付く入居者向けリンクのアドレス形式。",
+    "f_issue_hint": "発行場所",
+    "ph_issue_hint": "例：請求書詳細 → 支払いリンクカード",
+    "f_tags": "タグ（カンマ区切り）",
+    "f_sort": "並び順",
+    "confirm_remove": "この資料を資料室から削除しますか？",
+    "toast_seeded": "{{count}}件追加しました",
+    "toast_removed": "削除しました",
+    "error_seed": "標準資料を取り込めませんでした",
+    "error_save": "保存できませんでした"
   }
 }

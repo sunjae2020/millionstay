@@ -106,3 +106,4 @@ export * from "./campaign_events";
 export * from "./email_suppressions";
 export * from "./party_codes";
 export * from "./tenant_access_links";
+export * from "./help_documents";

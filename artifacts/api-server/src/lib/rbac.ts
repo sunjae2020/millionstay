@@ -36,6 +36,7 @@ const PREFIX_MAP: Array<[string, Resource]> = [
   ["/v1/recurring-schedules", "finance"],
   ["/v1/quotes", "documents"],
   ["/v1/document", "documents"],
+  ["/v1/help-docs", "documents"],
   ["/v1/contract-types", "contracts"],
   ["/v1/contract-products", "contracts"],
   ["/v1/contracts", "contracts"],

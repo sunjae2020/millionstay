@@ -30,6 +30,7 @@ import { homestayPublicRouter, homestayPortalRouter } from "./routes/homestay";
 import { contractSigningPublicRouter, contractSigningAdminRouter } from "./routes/contract-signing";
 import { unitInspectionsAdminRouter, unitInspectionsPublicRouter } from "./routes/unit-inspections";
 import { tenantLinksAdminRouter, tenantLinksPublicRouter, tenantLinksGuestRouter } from "./routes/tenant-links";
+import helpDocsRouter from "./routes/help-docs";
 import { homestayStudentPublicRouter } from "./routes/homestay-students";
 import { shortTermPublicRouter } from "./routes/short-term";
 import pageContentsRouter from "./routes/page-contents";
@@ -326,6 +327,8 @@ app.use("/api", unitInspectionsAdminRouter);
 app.use("/api", depositSettlementsAdminRouter);
 // 세입자 온보딩 링크 — 관리자 발급·회수·대기열 (requireAuth 뒤).
 app.use("/api", tenantLinksAdminRouter);
+// 내부 문서함 — 운영 지도·정책 문서·세입자 링크 목록(직원 교육용).
+app.use("/api", helpDocsRouter);
 app.use("/api", router);
 
 // In production, serve the built SPAs so a single Cloud Run process handles everything.
