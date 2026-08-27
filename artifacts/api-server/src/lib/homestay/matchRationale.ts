@@ -4,7 +4,7 @@
 // human-readable "why this host" line per candidate using Claude. It is strictly
 // best-effort: if the key is missing or the call fails, suggestions are returned
 // unchanged (no rationale). It never throws to the caller.
-import { getAnthropic, isChatConfigured, CHAT_MODEL } from "../chat/anthropic.js";
+import { getAiClient, isTaskConfigured } from "../ai/client.js";
 import type { HomestayStudentRequest } from "@workspace/db";
 import type { HostSuggestion } from "./matching.js";
 
@@ -39,11 +39,11 @@ export async function attachRationales(
   student: HomestayStudentRequest,
   suggestions: HostSuggestion[],
 ): Promise<{ suggestions: HostSuggestion[]; ai_used: boolean }> {
-  if (!isChatConfigured() || suggestions.length === 0) {
+  if (!isTaskConfigured("match_rationale") || suggestions.length === 0) {
     return { suggestions, ai_used: false };
   }
   try {
-    const anthropic = getAnthropic();
+    const ai = getAiClient("match_rationale");
     const payload = {
       student: studentSummary(student),
       hosts: suggestions.map((s) => ({
@@ -55,8 +55,7 @@ export async function attachRationales(
         concerns: s.concerns,
       })),
     };
-    const msg = await anthropic.messages.create({
-      model: CHAT_MODEL,
+    const msg = await ai.messages.create({
       max_tokens: 1024,
       // Static instructions are cache-friendly; the per-request data goes in the user turn.
       system: [{ type: "text", text: SYSTEM, cache_control: { type: "ephemeral" } }],

@@ -26,7 +26,7 @@ import {
 import { legacyContentToBlocks } from "../lib/cms/legacyImport.js";
 import { makeBulkDelete, makeBulkRestore, deletedFilter } from "../lib/softDelete.js";
 import { syncSiteDomain, getSiteDomainStatus, normaliseHostname } from "../lib/vercelDomains.js";
-import { getAnthropic, isChatConfigured, CHAT_MODEL, ChatConfigError } from "../lib/chat/anthropic.js";
+import { getAiClient, isTaskConfigured, AiConfigError } from "../lib/ai/client.js";
 
 // ---------------------------------------------------------------------------
 // Website CMS — pages, per-locale block bodies, the UI Blocks registry and
@@ -553,10 +553,9 @@ const LANG_NAMES: Record<string, string> = {
  */
 async function translateRefs(refs: TextRef[], from: string, to: string): Promise<TextRef[]> {
   if (refs.length === 0) return [];
-  const anthropic = getAnthropic();
+  const ai = getAiClient("cms_translate");
   const payload = refs.map((r, i) => ({ i, text: r.value }));
-  const response = await anthropic.messages.create({
-    model: CHAT_MODEL,
+  const response = await ai.messages.create({
     max_tokens: 8000,
     system:
       `You translate website copy from ${LANG_NAMES[from] ?? from} to ${LANG_NAMES[to] ?? to}. ` +
@@ -579,7 +578,7 @@ async function translateRefs(refs: TextRef[], from: string, to: string): Promise
 }
 
 router.post("/v1/cms/pages/:id/translate", async (req, res): Promise<void> => {
-  if (!isChatConfigured()) {
+  if (!isTaskConfigured("cms_translate")) {
     res.status(503).json({ error: "AI translation is not configured (ANTHROPIC_API_KEY missing)" });
     return;
   }
@@ -632,7 +631,7 @@ router.post("/v1/cms/pages/:id/translate", async (req, res): Promise<void> => {
         });
       results.push({ locale, ok: true });
     } catch (err) {
-      const message = err instanceof ChatConfigError ? err.message : err instanceof Error ? err.message : "failed";
+      const message = err instanceof AiConfigError ? err.message : err instanceof Error ? err.message : "failed";
       console.error(`[cms/translate] ${locale} failed:`, message);
       results.push({ locale, ok: false, error: message });
     }
@@ -679,7 +678,7 @@ router.put("/v1/cms/posts/:id/translations/:locale", async (req, res): Promise<v
 });
 
 router.post("/v1/cms/posts/:id/translate", async (req, res): Promise<void> => {
-  if (!isChatConfigured()) {
+  if (!isTaskConfigured("cms_translate")) {
     res.status(503).json({ error: "AI translation is not configured (ANTHROPIC_API_KEY missing)" });
     return;
   }

@@ -141,6 +141,7 @@ import InspectionTemplatePage from "@/pages/settings/sub/InspectionTemplate";
 import TranslationsPage from "@/pages/settings/sub/Translations";
 import BookingReportPage from "@/pages/settings/sub/BookingReport";
 import IntegrationsPage from "@/pages/settings/sub/Integrations";
+import AiOpsPage from "@/pages/settings/sub/AiOps";
 import AddonServicesPage from "@/pages/settings/sub/AddonServices";
 import ApiKeysPage from "@/pages/settings/sub/ApiKeys";
 import ApplicationEmailsPage from "@/pages/settings/sub/ApplicationEmails";
@@ -382,6 +383,7 @@ function Router() {
       <Route path="/settings" component={Settings} />
 
       <Route path="/settings/translations" component={TranslationsPage} />
+      <Route path="/settings/ai" component={AiOpsPage} />
       <Route path="/settings/organisation" component={OrganisationPage} />
       <Route path="/settings/users" component={UsersPage} />
       <Route path="/settings/roles" component={RolesPage} />

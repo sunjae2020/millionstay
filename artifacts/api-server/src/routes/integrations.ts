@@ -6,33 +6,55 @@ import { db, integrationSettings } from "@workspace/db";
 import { eq } from "drizzle-orm";
 import { emailSender, resendClient, escapeHtml } from "../lib/email.js";
 import { resolveEmailBrand } from "../lib/emailBrand.js";
+import { allProviders, apiKeyOf, capabilitiesOf, isProviderConfigured, providerEnvKeys } from "../lib/ai/providers.js";
+import { taskModelEnvKeys } from "../lib/ai/tasks.js";
+import { resetAiClients, resolveAllTasks } from "../lib/ai/client.js";
 
 const router: IRouter = Router();
 
-const ALLOWED_KEYS = [
-  "STRIPE_SECRET_KEY",
-  "STRIPE_PUBLISHABLE_KEY",
-  "STRIPE_WEBHOOK_SECRET",
-  "CLOUDINARY_CLOUD_NAME",
-  "CLOUDINARY_API_KEY",
-  "CLOUDINARY_API_SECRET",
-  "RESEND_API_KEY",
-  "EMAIL_FROM",
-  "LEAD_NOTIFICATION_EMAIL",
-  "ANTHROPIC_API_KEY",
-  "CHAT_WIDGET_ENABLED",
-  "RECURRING_INVOICES_ENABLED",
-  // Korean monthly-lease rent automation (contract-driven, no booking needed):
-  // generates each Active lease's monthly rent invoice and flags overdue ones.
-  "LEASE_RENT_INVOICES_ENABLED",
-  // Per-tenant module toggle. When "false", the admin hides the Homestay
-  // intake workflow (applications / student requests / placements). Each
-  // tenant has its own DB, so this row is inherently per-instance. Defaults
-  // to enabled when unset, so homestay tenants are unaffected.
-  "HOMESTAY_MODULE_ENABLED",
-  // Model for CS message auto-translation (defaults to Haiku 4.5 when unset).
-  "CS_TRANSLATE_MODEL",
-];
+/**
+ * Keys an admin may set from the Integrations page.
+ *
+ * A FUNCTION, not a constant: the AI provider list is partly runtime data
+ * (custom engines live in AI_CUSTOM_PROVIDERS), so a whitelist frozen at import
+ * time would reject the key of any engine registered after boot.
+ */
+function allowedKeys(): string[] {
+  return [
+    "STRIPE_SECRET_KEY",
+    "STRIPE_PUBLISHABLE_KEY",
+    "STRIPE_WEBHOOK_SECRET",
+    "CLOUDINARY_CLOUD_NAME",
+    "CLOUDINARY_API_KEY",
+    "CLOUDINARY_API_SECRET",
+    "RESEND_API_KEY",
+    "EMAIL_FROM",
+    "LEAD_NOTIFICATION_EMAIL",
+    "ANTHROPIC_API_KEY",
+    "CHAT_WIDGET_ENABLED",
+    "RECURRING_INVOICES_ENABLED",
+    // Korean monthly-lease rent automation (contract-driven, no booking needed):
+    // generates each Active lease's monthly rent invoice and flags overdue ones.
+    "LEASE_RENT_INVOICES_ENABLED",
+    // Per-tenant module toggle. When "false", the admin hides the Homestay
+    // intake workflow (applications / student requests / placements). Each
+    // tenant has its own DB, so this row is inherently per-instance. Defaults
+    // to enabled when unset, so homestay tenants are unaffected.
+    "HOMESTAY_MODULE_ENABLED",
+    // ── AI vendors ──────────────────────────────────────────────────────────
+    // One key (and optional base URL) per provider in lib/ai/providers.ts, plus
+    // one model override per task in lib/ai/tasks.ts. Derived from those two
+    // registries rather than listed by hand, so adding a provider or a task
+    // cannot leave its key un-settable from the admin.
+    ...providerEnvKeys(),
+    // The custom-engine roster itself, so an admin can register a new engine.
+    "AI_CUSTOM_PROVIDERS",
+    ...taskModelEnvKeys(),
+    // Per-instance capability widening + price-table corrections (JSON blobs).
+    "AI_CAPABILITY_OVERRIDES",
+    "AI_PRICE_OVERRIDES",
+  ];
+}
 
 function maskKey(key: string | undefined): string {
   if (!key) return "";
@@ -72,6 +94,31 @@ async function getEnvVar(key: string): Promise<string | undefined> {
 
 export { loadSettingsFromDb };
 
+/**
+ * Persist one setting to `integration_settings` AND apply it to this process.
+ *
+ * Shared with the AI operations router so that both paths update process.env and
+ * the DB in the same order. Callers are responsible for authorising the key —
+ * the allowedKeys() guard lives on the HTTP route, not here.
+ */
+export async function setIntegrationSetting(key: string, value: string): Promise<void> {
+  const trimmed = value.trim();
+  if (trimmed) {
+    process.env[key] = trimmed;
+  } else {
+    delete process.env[key];
+  }
+  await db
+    .insert(integrationSettings)
+    .values({ key, value: trimmed, updated_at: new Date() })
+    .onConflictDoUpdate({
+      target: integrationSettings.key,
+      set: { value: trimmed, updated_at: new Date() },
+    });
+  // A changed key or base URL must not keep hitting the old endpoint.
+  resetAiClients();
+}
+
 router.get("/v1/integrations/status", async (_req: Request, res: Response): Promise<void> => {
   res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate");
   res.setHeader("Pragma", "no-cache");
@@ -96,6 +143,12 @@ router.get("/v1/integrations/status", async (_req: Request, res: Response): Prom
   const aiConfigured = !!anthropicKey;
   // Default to enabled when the toggle has never been saved.
   const widgetEnabled = widgetEnabledRaw !== "false";
+
+  // Resolved once: the status payload reports each task's provider and model,
+  // and both the AI block and the broken-task list read from the same snapshot.
+  const taskResolutions = resolveAllTasks();
+  const chatResolution = taskResolutions.find((t) => t.task === "chat")!;
+  const csResolution = taskResolutions.find((t) => t.task === "cs_translate")!;
 
   const maskedCloudApiKey = maskKey(cloudApiKey);
   const maskedCloudApiSecret = maskKey(cloudApiSecret);
@@ -130,12 +183,38 @@ router.get("/v1/integrations/status", async (_req: Request, res: Response): Prom
         error: null,
       },
       ai: {
+        // `configured` stays Anthropic-specific: it is the fallback every task
+        // resolves to, so losing that key breaks AI regardless of the others.
         configured: aiConfigured,
         masked_key: maskKey(anthropicKey),
-        model: aiConfigured ? (process.env["CHAT_MODEL"] || "claude-sonnet-4-6") : null,
-        // Model used for CS message auto-translation (separate, cheaper model).
-        cs_translate_model: process.env["CS_TRANSLATE_MODEL"] || "claude-haiku-4-5-20251001",
+        model: chatResolution.modelRef,
+        cs_translate_model: csResolution.modelRef,
         widget_enabled: widgetEnabled,
+        // One row per vendor for the Integrations card. Values are masked; the
+        // full roster + capabilities + task assignments come from /v1/ai/overview.
+        providers: allProviders().map(({ id, label, keyEnv, consoleUrl, custom }) => ({
+          id,
+          label,
+          key_env: keyEnv,
+          console_url: consoleUrl,
+          custom,
+          configured: isProviderConfigured(id),
+          masked_key: maskKey(apiKeyOf(id)),
+          supports: capabilitiesOf(id),
+          // Tasks currently pointed at this vendor — the "who uses what" answer
+          // an admin needs before rotating or removing a key.
+          task_count: taskResolutions.filter((t) => t.provider === id).length,
+        })),
+        // Any task whose provider is missing a key or a required capability.
+        broken_tasks: taskResolutions
+          .filter((t) => !t.provider_configured || t.missing_capabilities.length > 0)
+          .map((t) => ({
+            task: t.task,
+            provider: t.provider,
+            model: t.model,
+            provider_configured: t.provider_configured,
+            missing_capabilities: t.missing_capabilities,
+          })),
         error: null,
       },
       maps: {
@@ -243,6 +322,10 @@ router.post("/v1/integrations/resend/test", async (req: Request, res: Response):
   }
 });
 
+/**
+ * Legacy single-vendor test, kept because the Integrations card's "Test" button
+ * posts here. Per-provider testing lives at POST /v1/ai/providers/:id/test.
+ */
 router.post("/v1/integrations/anthropic/test", async (_req: Request, res: Response): Promise<void> => {
   const key = await getEnvVar("ANTHROPIC_API_KEY");
   if (!key) {
@@ -250,15 +333,11 @@ router.post("/v1/integrations/anthropic/test", async (_req: Request, res: Respon
     return;
   }
   try {
-    const { getAnthropic, CHAT_MODEL } = await import("../lib/chat/anthropic");
-    const client = getAnthropic();
+    const { getAiClient } = await import("../lib/ai/client.js");
+    const ai = getAiClient("chat");
     // Minimal 1-token round-trip to validate the key + model.
-    await client.messages.create({
-      model: CHAT_MODEL,
-      max_tokens: 1,
-      messages: [{ role: "user", content: "ping" }],
-    });
-    res.json({ success: true, model: CHAT_MODEL });
+    await ai.messages.create({ max_tokens: 1, messages: [{ role: "user", content: "ping" }] });
+    res.json({ success: true, model: ai.model });
   } catch (e: any) {
     res.status(400).json({ success: false, error: e?.message ?? "Anthropic connection failed" });
   }
@@ -267,29 +346,16 @@ router.post("/v1/integrations/anthropic/test", async (_req: Request, res: Respon
 router.post("/v1/integrations/update-env", async (req: Request, res: Response): Promise<void> => {
   const { key, value } = req.body as { key?: string; value?: string };
 
-  if (!key || !ALLOWED_KEYS.includes(key)) {
+  if (!key || !allowedKeys().includes(key)) {
     res.status(400).json({ success: false, error: "Invalid environment key" });
     return;
   }
 
   const trimmedValue = (value ?? "").trim();
 
-  // Update process.env immediately for this server process
-  if (trimmedValue) {
-    process.env[key] = trimmedValue;
-  } else {
-    delete process.env[key];
-  }
-
-  // Persist to DB so it survives server restarts
+  // Applies to this process AND persists, so the change survives a restart.
   try {
-    await db
-      .insert(integrationSettings)
-      .values({ key, value: trimmedValue, updated_at: new Date() })
-      .onConflictDoUpdate({
-        target: integrationSettings.key,
-        set: { value: trimmedValue, updated_at: new Date() },
-      });
+    await setIntegrationSetting(key, trimmedValue);
   } catch (e: any) {
     res.status(500).json({ success: false, error: `DB save failed: ${e?.message}` });
     return;

@@ -1,5 +1,5 @@
 import { lookup } from "node:dns/promises";
-import { getAnthropic, isChatConfigured } from "../chat/anthropic.js";
+import { getAiClient, isTaskConfigured } from "../ai/client.js";
 
 /**
  * Website enrichment — Account detail/new → "웹사이트에서 가져오기".
@@ -54,10 +54,6 @@ const MAX_BYTES = 2 * 1024 * 1024;
 const MAX_REDIRECTS = 3;
 /** Characters of page text handed to the model. Enough for a footer + about. */
 const MAX_TEXT_CHARS = 18_000;
-
-export function getEnrichModel(): string {
-  return process.env["WEBSITE_ENRICH_MODEL"] || process.env["CHAT_MODEL"] || "claude-sonnet-4-6";
-}
 
 /** Adds a scheme when the admin typed a bare domain, and strips whitespace. */
 export function normaliseUrl(input: string): string {
@@ -303,7 +299,7 @@ const SYSTEM_PROMPT =
  * fetched, or when the model returns something unparseable.
  */
 export async function enrichFromWebsite(inputUrl: string): Promise<EnrichResult> {
-  if (!isChatConfigured()) {
+  if (!isTaskConfigured("website_enrich")) {
     throw new Error("AI is not configured: set the Anthropic API key in Admin → Settings → Integrations.");
   }
   const { html, finalUrl } = await fetchHtml(normaliseUrl(inputUrl));
@@ -317,9 +313,8 @@ export async function enrichFromWebsite(inputUrl: string): Promise<EnrichResult>
     .filter(Boolean)
     .join("\n");
 
-  const anthropic = getAnthropic();
-  const msg = await anthropic.messages.create({
-    model: getEnrichModel(),
+  const ai = getAiClient("website_enrich");
+  const msg = await ai.messages.create({
     max_tokens: 1024,
     system: [{ type: "text", text: SYSTEM_PROMPT, cache_control: { type: "ephemeral" } }],
     messages: [

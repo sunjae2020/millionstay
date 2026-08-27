@@ -26,6 +26,7 @@ import {
   Package,
   MailCheck,
   ClipboardList,
+  Bot,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -90,6 +91,12 @@ const ADMIN_CARDS: CardDef[] = [
     description: "settings_hub.integrations_desc",
     icon: Plug,
     href: "/settings/integrations",
+  },
+  {
+    title: "settings_hub.ai_ops_title",
+    description: "settings_hub.ai_ops_desc",
+    icon: Bot,
+    href: "/settings/ai",
   },
   {
     title: "settings_hub.api_keys_title",

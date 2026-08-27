@@ -1,4 +1,4 @@
-import { getAnthropic, isChatConfigured } from "../chat/anthropic.js";
+import { getAiClient, isTaskConfigured } from "../ai/client.js";
 import { COUNTRY_PROMPT_LIST, normaliseCountry } from "../countries.js";
 
 /**
@@ -12,11 +12,6 @@ import { COUNTRY_PROMPT_LIST, normaliseCountry } from "../countries.js";
  * The result is a SUGGESTION only. Nothing is written to the database here —
  * the admin reviews every field in the approval dialog and picks what to apply.
  */
-
-/** Model used for card OCR. Vision-capable; override with BUSINESS_CARD_OCR_MODEL. */
-export function getOcrModel(): string {
-  return process.env["BUSINESS_CARD_OCR_MODEL"] || process.env["CHAT_MODEL"] || "claude-sonnet-4-6";
-}
 
 /** Fields the OCR may fill. Keys are `contacts` column names. */
 export const OCR_FIELDS = [
@@ -98,10 +93,10 @@ export async function scanBusinessCard(
   front: BusinessCardImage,
   back?: BusinessCardImage,
 ): Promise<BusinessCardOcrResult> {
-  if (!isChatConfigured()) {
+  if (!isTaskConfigured("business_card_ocr")) {
     throw new Error("AI is not configured: set the Anthropic API key in Admin → Settings → Integrations.");
   }
-  const anthropic = getAnthropic();
+  const ai = getAiClient("business_card_ocr");
 
   const content: Array<Record<string, unknown>> = [
     { type: "text", text: "FRONT of the card:" },
@@ -121,8 +116,7 @@ export async function scanBusinessCard(
   }
   content.push({ type: "text", text: "Extract the contact details as specified." });
 
-  const msg = await anthropic.messages.create({
-    model: getOcrModel(),
+  const msg = await ai.messages.create({
     max_tokens: 1024,
     system: [{ type: "text", text: SYSTEM_PROMPT, cache_control: { type: "ephemeral" } }],
     messages: [{ role: "user", content: content as never }],

@@ -1,4 +1,4 @@
-import { getAnthropic, isChatConfigured } from "../chat/anthropic.js";
+import { getAiClient, isTaskConfigured } from "../ai/client.js";
 import { COUNTRY_PROMPT_LIST, normaliseCountry } from "../countries.js";
 
 /**
@@ -21,11 +21,6 @@ import { COUNTRY_PROMPT_LIST, normaliseCountry } from "../countries.js";
  * The ID image itself is never stored: it lives in memory for this call and the
  * portrait crop, and only the cropped portrait is persisted.
  */
-
-/** Model used for ID reading. Vision-capable; override with ID_DOC_OCR_MODEL. */
-export function getIdOcrModel(): string {
-  return process.env["ID_DOC_OCR_MODEL"] || process.env["CHAT_MODEL"] || "claude-sonnet-4-6";
-}
 
 /** General (non-identifying) fields the reader may fill. Keys are `contacts` columns. */
 export const ID_FIELDS = [
@@ -147,13 +142,12 @@ const SYSTEM_PROMPT =
  * 503) or when the model returns something unparseable.
  */
 export async function scanIdDocument(image: { buffer: Buffer; mimetype: string }): Promise<IdDocumentOcrResult> {
-  if (!isChatConfigured()) {
-    throw new Error("AI is not configured: set the Anthropic API key in Admin → Settings → Integrations.");
+  if (!isTaskConfigured("id_document_ocr")) {
+    throw new Error("AI is not configured: set a vision-capable provider in Admin → Settings → Integrations.");
   }
-  const anthropic = getAnthropic();
+  const ai = getAiClient("id_document_ocr");
 
-  const msg = await anthropic.messages.create({
-    model: getIdOcrModel(),
+  const msg = await ai.messages.create({
     max_tokens: 1024,
     system: [{ type: "text", text: SYSTEM_PROMPT, cache_control: { type: "ephemeral" } }],
     messages: [{

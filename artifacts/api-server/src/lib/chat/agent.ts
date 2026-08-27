@@ -1,7 +1,7 @@
 import type Anthropic from "@anthropic-ai/sdk";
 import { db, chatMessagesTable, chatConversationsTable } from "@workspace/db";
 import { eq, asc, and, ne } from "drizzle-orm";
-import { getAnthropic, CHAT_MODEL } from "./anthropic";
+import { getAiClient } from "../ai/client.js";
 import { buildSystemBlocks } from "./systemPrompt";
 import { TOOLS, executeTool, type ToolContext } from "./tools";
 
@@ -49,7 +49,7 @@ function textFromBlocks(blocks: Anthropic.ContentBlock[]): string {
  */
 export async function runChatTurn(params: RunTurnParams): Promise<string> {
   const { conversationId, sessionId, userMessage, emit } = params;
-  const anthropic = getAnthropic();
+  const ai = getAiClient("chat");
   const ctx: ToolContext = { conversationId, sessionId };
 
   const messages = await loadHistory(conversationId);
@@ -62,8 +62,9 @@ export async function runChatTurn(params: RunTurnParams): Promise<string> {
   let finalText = "";
 
   for (let iter = 0; iter < MAX_ITERATIONS; iter++) {
-    const stream = anthropic.messages.stream({
-      model: CHAT_MODEL,
+    // The model comes from the "chat" task registry entry, so re-pointing the
+    // assistant at another vendor is an env change, not an edit here.
+    const stream = ai.messages.stream({
       max_tokens: MAX_TOKENS,
       system,
       tools: TOOLS,

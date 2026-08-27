@@ -211,6 +211,17 @@ gates it, so keep it green. Two notable classes were fixed:
   wherever customer IDs are used — the ID prefix already names the issuer. Names issued before 2026-08 keep the old
   `CTR-김용식_20260803A` form and are still parsed — nothing is renamed.
   See [docs/DOCUMENT_NAMING_RULE.md](docs/DOCUMENT_NAMING_RULE.md).
+- **AI calls go through the task registry.** Never `new Anthropic()` or
+  `messages.create({ model: ... })` at a call site. Add a row to
+  `lib/ai/tasks.ts` (declaring the capabilities the call actually uses), then
+  call `getAiClient("<task_id>")` — it resolves the provider + model from env,
+  refuses a provider that lacks a required capability, and meters the call into
+  `ai_usage_events`. Three vendors ship wired (Anthropic / Kimi / Gemini);
+  Anthropic is the fallback and the only one with PDF + tool use. Admins manage
+  keys, per-task models and the usage meter at Settings → AI · 사용량, and can
+  register additional engines there at runtime (a second Claude account, another
+  Gemini key, any Anthropic- or OpenAI-compatible endpoint) with no deploy.
+  See [docs/AI_PROVIDERS_AND_TASKS.md](docs/AI_PROVIDERS_AND_TASKS.md).
 - **Money columns** (`invoices.amount`, `promotions.discount_amount`) are
   `numeric(10,2)` → Drizzle returns **strings**; wrap with `Number()` before math.
 - **Lookup endpoints** return `{ id, display, ...extra }` consistently.

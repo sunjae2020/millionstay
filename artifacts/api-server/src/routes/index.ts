@@ -39,6 +39,7 @@ import emailLogsRouter from "./email-logs";
 import recurringSchedulesRouter from "./recurring-schedules";
 import stripeRouter from "./stripe";
 import integrationsRouter from "./integrations";
+import aiOpsRouter from "./ai-ops";
 import spaceImagesRouter from "./space-images";
 import promotionsRouter from "./promotions";
 import beneficiariesRouter from "./beneficiaries";
@@ -109,6 +110,8 @@ router.use(emailLogsRouter);
 router.use(recurringSchedulesRouter);
 router.use(stripeRouter);
 router.use(integrationsRouter);
+// AI provider roster, per-task model assignment and the usage meter.
+router.use(aiOpsRouter);
 router.use(spaceImagesRouter);
 router.use(promotionsRouter);
 router.use(beneficiariesRouter);

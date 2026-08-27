@@ -18,7 +18,24 @@ interface IntegrationStatus {
   stripe: { configured: boolean; mode: string | null; masked_key: string; error: string | null };
   cloudinary: { configured: boolean; cloud_name: string | null; masked_api_key: string; masked_api_secret: string; plan: string | null; storage_mb: string | null; error: string | null };
   resend: { configured: boolean; from_email: string | null; ops_email: string | null; masked_key: string; error: string | null };
-  ai: { configured: boolean; masked_key: string; model: string | null; error: string | null };
+  ai: {
+    configured: boolean;
+    masked_key: string;
+    model: string | null;
+    cs_translate_model?: string | null;
+    error: string | null;
+    providers?: Array<{
+      id: string;
+      label: string;
+      key_env: string;
+      console_url: string;
+      custom?: boolean;
+      configured: boolean;
+      masked_key: string;
+      task_count: number;
+    }>;
+    broken_tasks?: Array<{ task: string; provider: string; missing_capabilities: string[]; provider_configured: boolean }>;
+  };
   maps: { provider: string; configured: boolean; note: string };
   ical: { provider: string; configured: boolean; note: string };
   billing?: { recurring_invoices_enabled: boolean; lease_rent_invoices_enabled?: boolean };
@@ -273,21 +290,56 @@ const ICalFields = () => {
 
 const AiFields = ({ status, onRefresh }: { status: IntegrationStatus | null; onRefresh: () => void }) => {
   const { t } = useTranslation();
+  // Falls back to a single Anthropic row on an api-server that predates the
+  // multi-provider roster, so the card never renders empty during a rollout.
+  const providers = status?.ai.providers ?? [
+    {
+      id: "anthropic",
+      label: "Anthropic (Claude)",
+      key_env: "ANTHROPIC_API_KEY",
+      console_url: "https://console.anthropic.com",
+      configured: status?.ai.configured ?? false,
+      masked_key: status?.ai.masked_key ?? "",
+      task_count: 0,
+    },
+  ];
+  const broken = status?.ai.broken_tasks ?? [];
+
   return (
-  <div className="space-y-3">
-    <div className="flex flex-col gap-1">
-      <Label className="text-xs text-muted-foreground">{t("integrations.anthropic_api_key")}</Label>
-      <MaskedKeyInput value={status?.ai.masked_key ?? ""} envKey="ANTHROPIC_API_KEY" onSaved={onRefresh} />
+    <div className="space-y-3">
+      {providers.map((p) => (
+        <div key={p.id} className="flex flex-col gap-1">
+          <Label className="text-xs text-muted-foreground flex items-center gap-1.5">
+            {p.label}
+            {p.task_count > 0 && (
+              <span className="text-[10px] text-muted-foreground/70">
+                {t("integrations.ai_task_count", { count: p.task_count })}
+              </span>
+            )}
+          </Label>
+          <MaskedKeyInput value={p.masked_key} envKey={p.key_env} onSaved={onRefresh} />
+        </div>
+      ))}
+
+      {broken.length > 0 && (
+        <p className="text-xs text-amber-600">
+          {t("integrations.ai_broken_tasks", { count: broken.length })}
+        </p>
+      )}
+
+      <p className="text-xs text-muted-foreground">
+        {t("integrations.ai_key_hint")}
+        {status?.ai.model && <> · {t("integrations.ai_model", { model: status.ai.model })}</>}
+      </p>
+
+      <div className="pt-1">
+        <Link href="/settings/ai">
+          <Button size="sm" className="h-8 text-xs">{t("integrations.open_ai_ops")}</Button>
+        </Link>
+      </div>
+
+      {status?.ai.error && <p className="text-xs text-red-600">{status.ai.error}</p>}
     </div>
-    <p className="text-xs text-muted-foreground">
-      {t("integrations.ai_key_hint")}{" "}
-      <a href="https://console.anthropic.com" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
-        console.anthropic.com
-      </a>
-      {status?.ai.model && <> · {t("integrations.ai_model", { model: status.ai.model })}</>}.
-    </p>
-    {status?.ai.error && <p className="text-xs text-red-600">{status.ai.error}</p>}
-  </div>
   );
 };
 

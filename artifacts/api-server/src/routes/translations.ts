@@ -2,7 +2,7 @@ import { Router, type IRouter } from "express";
 import { db, translationsTable, languagesTable } from "@workspace/db";
 import { eq, asc } from "drizzle-orm";
 import * as z from "zod/v4";
-import { getAnthropic, isChatConfigured, CHAT_MODEL, ChatConfigError } from "../lib/chat/anthropic.js";
+import { getAiClient, isTaskConfigured, AiConfigError } from "../lib/ai/client.js";
 
 const router: IRouter = Router();
 
@@ -199,7 +199,7 @@ async function translateBatch(
   langName: string,
   style: string,
 ): Promise<Record<string, string>> {
-  const anthropic = getAnthropic();
+  const ai = getAiClient("i18n_translate");
   const system =
     `You are a professional translator for MillionStay / Million Homestay, a student accommodation and homestay platform for international students in Melbourne, Australia. ${style} ` +
     `Keep the brand names "MillionStay" and "Million Homestay" in English. Keep Australian suburb, city and university names in English. ` +
@@ -207,8 +207,7 @@ async function translateBatch(
     `You will receive a JSON object mapping i18n keys to English source strings. Respond with ONLY a JSON object using the SAME keys, each value translated to ${langName}. Do not add, drop, or rename keys.`;
   const payload: Record<string, string> = {};
   for (const e of entries) payload[e.key] = e.en;
-  const msg = await anthropic.messages.create({
-    model: CHAT_MODEL,
+  const msg = await ai.messages.create({
     max_tokens: 8192,
     system: [{ type: "text", text: system, cache_control: { type: "ephemeral" } }],
     messages: [{ role: "user", content: JSON.stringify(payload) }],
@@ -225,12 +224,11 @@ const PRESERVE_RULES =
 // Translate ONE string and return plain text (no JSON). Used as a robust fallback
 // when a batch's JSON output truncates or contains unescaped quotes.
 async function translateOnePlain(en: string, langName: string, style: string): Promise<string> {
-  const anthropic = getAnthropic();
+  const ai = getAiClient("i18n_translate");
   const system =
     `You are a professional translator for MillionStay / Million Homestay (student accommodation & homestay, Melbourne, Australia). ${style} ${PRESERVE_RULES} ` +
     `Translate the user's message into ${langName}. Respond with ONLY the translation as plain text — no quotes, no JSON, no commentary.`;
-  const msg = await anthropic.messages.create({
-    model: CHAT_MODEL,
+  const msg = await ai.messages.create({
     max_tokens: 4096,
     system: [{ type: "text", text: system, cache_control: { type: "ephemeral" } }],
     messages: [{ role: "user", content: en }],
@@ -245,7 +243,7 @@ async function reviewBatch(
   langName: string,
   style: string,
 ): Promise<Record<string, string>> {
-  const anthropic = getAnthropic();
+  const ai = getAiClient("i18n_translate");
   const system =
     `You are a senior bilingual editor reviewing machine translations for the MillionStay / Million Homestay marketing site (Melbourne, Australia). ${style} ${PRESERVE_RULES} ` +
     `You receive a JSON object mapping i18n keys to {"en": <English source>, "current": <candidate ${langName} translation, possibly empty>}. ` +
@@ -253,8 +251,7 @@ async function reviewBatch(
     `Respond with ONLY a JSON object using the SAME keys mapping to the final string. Escape any quotes inside values. Do not add, drop, or rename keys.`;
   const payload: Record<string, { en: string; current: string }> = {};
   for (const e of entries) payload[e.key] = { en: e.en, current: e.current };
-  const msg = await anthropic.messages.create({
-    model: CHAT_MODEL,
+  const msg = await ai.messages.create({
     max_tokens: 8192,
     system: [{ type: "text", text: system, cache_control: { type: "ephemeral" } }],
     messages: [{ role: "user", content: JSON.stringify(payload) }],
@@ -267,13 +264,12 @@ async function reviewBatch(
 // Review ONE candidate and return plain text — robust per-key fallback.
 async function reviewOnePlain(en: string, current: string, langName: string, style: string): Promise<string> {
   if (!current.trim()) return translateOnePlain(en, langName, style);
-  const anthropic = getAnthropic();
+  const ai = getAiClient("i18n_translate");
   const system =
     `You are a senior bilingual editor for MillionStay / Million Homestay (Melbourne, Australia). ${style} ${PRESERVE_RULES} ` +
     `The user gives an English source and a candidate ${langName} translation. Return the FINAL ${langName} translation: keep the candidate if it is accurate, natural and complete; otherwise correct it. ` +
     `Respond with ONLY the final translation as plain text — no quotes, no JSON, no commentary.`;
-  const msg = await anthropic.messages.create({
-    model: CHAT_MODEL,
+  const msg = await ai.messages.create({
     max_tokens: 4096,
     system: [{ type: "text", text: system, cache_control: { type: "ephemeral" } }],
     messages: [{ role: "user", content: `English: ${en}\n\nCandidate (${langName}): ${current}` }],
@@ -289,7 +285,7 @@ router.post("/v1/translations/ai-translate", async (req, res): Promise<void> => 
     res.status(400).json({ success: false, error: { code: "INVALID_BODY", issues: parsed.error.issues } });
     return;
   }
-  if (!isChatConfigured()) {
+  if (!isTaskConfigured("i18n_translate")) {
     res.status(503).json({ success: false, error: { code: "AI_NOT_CONFIGURED", message: "Set the Anthropic API key in Admin → Settings → Integrations." } });
     return;
   }
@@ -342,7 +338,7 @@ router.post("/v1/translations/ai-translate", async (req, res): Promise<void> => 
         try {
           map = await translateBatch(chunk, info.name, info.style);
         } catch (be) {
-          if (be instanceof ChatConfigError) throw be;
+          if (be instanceof AiConfigError) throw be;
           // A batch can fail when long strings (e.g. legal clauses) overflow the
           // output-token limit and truncate the JSON. Retry key-by-key so each
           // long string gets its own full response budget.
@@ -352,7 +348,7 @@ router.post("/v1/translations/ai-translate", async (req, res): Promise<void> => 
               const one = await translateBatch([item], info.name, info.style);
               if (typeof one[item.key] === "string") map[item.key] = one[item.key];
             } catch (one_e) {
-              if (one_e instanceof ChatConfigError) throw one_e;
+              if (one_e instanceof AiConfigError) throw one_e;
               errors.push({ lang, message: `key ${item.key}: ${one_e instanceof Error ? one_e.message : String(one_e)}` });
             }
           }
@@ -373,7 +369,7 @@ router.post("/v1/translations/ai-translate", async (req, res): Promise<void> => 
       summary[lang] = { translated, skipped };
     }
   } catch (e) {
-    if (e instanceof ChatConfigError) {
+    if (e instanceof AiConfigError) {
       res.status(503).json({ success: false, error: { code: "AI_NOT_CONFIGURED", message: e.message } });
       return;
     }
@@ -405,7 +401,7 @@ router.post("/v1/translations/ai-review", async (req, res): Promise<void> => {
     res.status(400).json({ success: false, error: { code: "INVALID_BODY", issues: parsed.error.issues } });
     return;
   }
-  if (!isChatConfigured()) {
+  if (!isTaskConfigured("i18n_translate")) {
     res.status(503).json({ success: false, error: { code: "AI_NOT_CONFIGURED", message: "Set the Anthropic API key in Admin → Settings → Integrations." } });
     return;
   }
@@ -459,7 +455,7 @@ router.post("/v1/translations/ai-review", async (req, res): Promise<void> => {
         try {
           map = await reviewBatch(chunk, info.name, info.style);
         } catch (be) {
-          if (be instanceof ChatConfigError) throw be;
+          if (be instanceof AiConfigError) throw be;
           map = null; // fall through to per-key
         }
         for (const item of chunk) {
@@ -468,7 +464,7 @@ router.post("/v1/translations/ai-review", async (req, res): Promise<void> => {
             try {
               final = await reviewOnePlain(item.en, item.current, info.name, info.style);
             } catch (one_e) {
-              if (one_e instanceof ChatConfigError) throw one_e;
+              if (one_e instanceof AiConfigError) throw one_e;
               errors.push({ lang, message: `key ${item.key}: ${one_e instanceof Error ? one_e.message : String(one_e)}` });
               continue;
             }
@@ -483,7 +479,7 @@ router.post("/v1/translations/ai-review", async (req, res): Promise<void> => {
       summary[lang] = { reviewed, changed, filled };
     }
   } catch (e) {
-    if (e instanceof ChatConfigError) {
+    if (e instanceof AiConfigError) {
       res.status(503).json({ success: false, error: { code: "AI_NOT_CONFIGURED", message: e.message } });
       return;
     }

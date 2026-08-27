@@ -8,7 +8,7 @@ import {
   languagesTable,
 } from "@workspace/db";
 import * as z from "zod/v4";
-import { getAnthropic, isChatConfigured, CHAT_MODEL, ChatConfigError } from "../lib/chat/anthropic.js";
+import { getAiClient, isTaskConfigured, AiConfigError } from "../lib/ai/client.js";
 
 // Admin content translation for guest-facing entities (spaces, properties,
 // amenity catalog). Admins author the original in the base columns; per-locale
@@ -103,14 +103,13 @@ async function translateFields(
   targetName: string,
   style: string,
 ): Promise<Record<string, string>> {
-  const anthropic = getAnthropic();
+  const ai = getAiClient("content_translate");
   const system =
     `You are a professional translator for a property-management platform. ${style} ` +
     `Keep brand names, proper nouns and place names sensible for the target language. ` +
     `Preserve any HTML tags, {{placeholders}}, line breaks and punctuation. Translate naturally for a customer-facing listing. ` +
     `You will receive a JSON object mapping field names to source text. Respond with ONLY a JSON object using the SAME keys, each value translated to ${targetName}. Do not add, drop, or rename keys.`;
-  const msg = await anthropic.messages.create({
-    model: CHAT_MODEL,
+  const msg = await ai.messages.create({
     max_tokens: 4096,
     system: [{ type: "text", text: system, cache_control: { type: "ephemeral" } }],
     messages: [{ role: "user", content: JSON.stringify(fields) }],
@@ -133,7 +132,7 @@ router.post("/v1/content-translations/:entity/:id/ai-translate", async (req, res
   if (!ent) { res.status(404).json({ success: false, error: "Unknown entity" }); return; }
   const body = AiBody.safeParse(req.body);
   if (!body.success) { res.status(400).json({ success: false, error: body.error.message }); return; }
-  if (!isChatConfigured()) {
+  if (!isTaskConfigured("content_translate")) {
     res.status(503).json({ success: false, error: { code: "AI_NOT_CONFIGURED", message: "Set the Anthropic API key in Admin → Settings → Integrations." } });
     return;
   }
@@ -186,12 +185,12 @@ router.post("/v1/content-translations/:entity/:id/ai-translate", async (req, res
         merged[lang] = next;
         summary[lang] = { translated: n };
       } catch (be) {
-        if (be instanceof ChatConfigError) throw be;
+        if (be instanceof AiConfigError) throw be;
         errors.push({ lang, message: be instanceof Error ? be.message : String(be) });
       }
     }
   } catch (e) {
-    if (e instanceof ChatConfigError) {
+    if (e instanceof AiConfigError) {
       res.status(503).json({ success: false, error: { code: "AI_NOT_CONFIGURED", message: e.message } });
       return;
     }

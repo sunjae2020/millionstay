@@ -1,5 +1,6 @@
 export * from "./suburbs";
 export * from "./integration_settings";
+export * from "./ai_usage_events";
 export * from "./properties";
 export * from "./space_options";
 export * from "./space_policies";

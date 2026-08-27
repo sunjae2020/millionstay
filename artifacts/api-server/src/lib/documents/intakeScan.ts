@@ -1,4 +1,4 @@
-import { getAnthropic, isChatConfigured } from "../chat/anthropic.js";
+import { getAiClient, isTaskConfigured } from "../ai/client.js";
 import { parseDocFileName, UNNAMED_PARTY } from "./docFileName";
 
 /**
@@ -20,11 +20,6 @@ import { parseDocFileName, UNNAMED_PARTY } from "./docFileName";
  * and for the same reason: a wrong guess acted on automatically would put a
  * 30-day identity scan on a 7-year contract.
  */
-
-/** Model used to read intake documents. Override with DOCUMENT_INTAKE_MODEL. */
-export function getIntakeModel(): string {
-  return process.env["DOCUMENT_INTAKE_MODEL"] || "claude-opus-5";
-}
 
 /**
  * Document types the classifier may choose. Deliberately the same keys as
@@ -308,13 +303,13 @@ export interface IntakeFile {
  * the file stays parked in intake for a manual read.
  */
 export async function scanDocument(file: IntakeFile): Promise<IntakeScanResult> {
-  if (!isChatConfigured()) {
-    throw new Error("AI is not configured: set the Anthropic API key in Admin → Settings → Integrations.");
+  if (!isTaskConfigured("document_intake")) {
+    throw new Error("AI is not configured: set a capable provider for document intake in Admin → Settings → Integrations.");
   }
   if (!isScannableMime(file.mimetype)) {
     throw new Error(`Cannot read ${file.mimetype} — only PDFs and photos can be classified automatically.`);
   }
-  const anthropic = getAnthropic();
+  const ai = getAiClient("document_intake");
   const mime = file.mimetype.toLowerCase();
   const data = file.buffer.toString("base64");
 
@@ -333,8 +328,7 @@ export async function scanDocument(file: IntakeFile): Promise<IntakeScanResult> 
       `the document itself always wins where the two disagree. Classify the document and extract the fields.`,
   });
 
-  const msg = await anthropic.messages.create({
-    model: getIntakeModel(),
+  const msg = await ai.messages.create({
     max_tokens: 1024,
     system: [{ type: "text", text: SYSTEM_PROMPT, cache_control: { type: "ephemeral" } }],
     messages: [{ role: "user", content: content as never }],

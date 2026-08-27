@@ -1,6 +1,6 @@
 import { eq } from "drizzle-orm";
 import { db, csMessagesTable } from "@workspace/db";
-import { getAnthropic, getCsTranslateModel, isChatConfigured } from "./anthropic.js";
+import { getAiClient, isTaskConfigured } from "../ai/client.js";
 
 /**
  * CS message auto-translation.
@@ -13,7 +13,7 @@ import { getAnthropic, getCsTranslateModel, isChatConfigured } from "./anthropic
  * `cs_messages.translations` (keyed by language code) — they are NOT re-computed
  * on read.
  *
- * This runs on a cheap model (Haiku by default, see getCsTranslateModel) because
+ * This runs on a cheap model (Haiku by default; see the "cs_translate" task in lib/ai/tasks.ts) because
  * the workload is high-volume and simple. The whole job is a single API call:
  * one source string → a JSON object of { lang: translation } for every target.
  */
@@ -65,11 +65,11 @@ export async function translateMessage(
   if (targetLangs.length === 0 || !text.trim()) {
     return { translations: {}, inputTokens: null, outputTokens: null };
   }
-  if (!isChatConfigured()) {
-    throw new Error("AI translation is not configured: set ANTHROPIC_API_KEY.");
+  if (!isTaskConfigured("cs_translate")) {
+    throw new Error("AI translation is not configured: set a provider key in Admin → Settings → Integrations.");
   }
 
-  const anthropic = getAnthropic();
+  const ai = getAiClient("cs_translate");
   const sourceName = langDisplayName(originalLang);
   const targetSpec = targetLangs
     .map((l) => `"${l}" (${LANG_INFO[l]?.name ?? l}${LANG_INFO[l]?.style ? ` — ${LANG_INFO[l]?.style}` : ""})`)
@@ -86,8 +86,7 @@ export async function translateMessage(
     `Respond with ONLY a JSON object whose keys are the target language codes (${targetLangs.map((l) => `"${l}"`).join(", ")}) ` +
     `and whose values are the translated message text. Do not add, drop or rename keys.`;
 
-  const msg = await anthropic.messages.create({
-    model: getCsTranslateModel(),
+  const msg = await ai.messages.create({
     max_tokens: 4096,
     system: [{ type: "text", text: system, cache_control: { type: "ephemeral" } }],
     messages: [{ role: "user", content: text }],
@@ -138,11 +137,11 @@ export async function translateMessageAuto(
   if (!text.trim()) {
     return { detectedLang: "en", translations: {}, inputTokens: null, outputTokens: null };
   }
-  if (!isChatConfigured()) {
-    throw new Error("AI translation is not configured: set ANTHROPIC_API_KEY.");
+  if (!isTaskConfigured("cs_translate")) {
+    throw new Error("AI translation is not configured: set a provider key in Admin → Settings → Integrations.");
   }
 
-  const anthropic = getAnthropic();
+  const ai = getAiClient("cs_translate");
   const supportedCodes = Object.keys(LANG_INFO);
   const codeList = supportedCodes.join(", ");
   const targetSpec = needed
@@ -160,8 +159,7 @@ export async function translateMessageAuto(
     `Respond with ONLY a JSON object of the form {"detected":"<code>","translations":{"<code>":"<translated text>"}}. ` +
     `The "detected" value must be one of ${codeList}. The "translations" keys must be a subset of [${needed.map((l) => `"${l}"`).join(", ")}] and must omit the detected source language. Do not add other keys.`;
 
-  const msg = await anthropic.messages.create({
-    model: getCsTranslateModel(),
+  const msg = await ai.messages.create({
     max_tokens: 4096,
     system: [{ type: "text", text: system, cache_control: { type: "ephemeral" } }],
     messages: [{ role: "user", content: text }],
