@@ -5641,6 +5641,8 @@
     "f_settle_type": "结算类型",
     "type_early": "提前退租",
     "type_expiry": "到期退租",
+    "type_auto": "自动",
+    "reset_auto": "恢复自动",
     "col_no": "序号",
     "col_item": "项目",
     "col_kind": "类别",

@@ -5687,6 +5687,8 @@
     "f_settle_type": "정산구분",
     "type_early": "중도퇴거",
     "type_expiry": "만기퇴거",
+    "type_auto": "자동",
+    "reset_auto": "자동으로",
     "col_no": "순번",
     "col_item": "항목",
     "col_kind": "구분",

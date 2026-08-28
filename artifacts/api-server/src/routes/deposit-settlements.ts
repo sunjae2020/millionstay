@@ -210,6 +210,25 @@ async function recomputeTotals(id: number): Promise<{ deposit_held: number; tota
   return { deposit_held: depositHeld, total_deducted: totalDeducted, refund_amount: refund };
 }
 
+// 상세 응답 한 벌 — 확인서 1번 표(기본 임대차 정보)를 화면에서도 그대로 보여주려면
+// 세대·임차인·계약기간이 필요하다. PDF 가 쓰는 조립기를 재사용해 두 출력이 갈라지지
+// 않게 하고, GET 과 PATCH 가 같은 모양을 돌려주도록 여기 모아 둔다.
+async function loadSettlementResponse(id: number) {
+  const detail = await loadSettlementDetail(id);
+  if (!detail) return null;
+  const doc = await buildMoveOutDocInput(id);
+  const form = doc && {
+    unit: doc.unit,
+    tenant_name: doc.tenant_name,
+    contract_start: doc.contract_start,
+    contract_end: doc.contract_end,
+    monthly_rent: doc.monthly_rent,
+    settlement_type: doc.settlement_type ?? null,
+    as_of_date: doc.as_of_date,
+  };
+  return { ...detail, form: form ?? null };
+}
+
 /* ═══════════════════════════════════════════════════════════
    ADMIN ROUTER
 ═══════════════════════════════════════════════════════════ */
@@ -359,21 +378,56 @@ adminRouter.post("/v1/contracts/:contractId/deposit-settlements", async (req, re
 adminRouter.get("/v1/deposit-settlements/:id", async (req, res): Promise<void> => {
   try {
     const id = Number(req.params.id);
-    const detail = await loadSettlementDetail(id);
-    if (!detail) { res.status(404).json({ success: false, error: { code: "NOT_FOUND", message: "Settlement not found" } }); return; }
-    // 확인서 1번 표(기본 임대차 정보)를 화면에서도 그대로 보여주려면 세대·임차인·
-    // 계약기간이 필요하다. PDF 가 쓰는 조립기를 그대로 재사용해 두 출력이 갈라지지 않게 한다.
-    const doc = await buildMoveOutDocInput(id);
-    const form = doc && {
-      unit: doc.unit,
-      tenant_name: doc.tenant_name,
-      contract_start: doc.contract_start,
-      contract_end: doc.contract_end,
-      monthly_rent: doc.monthly_rent,
-      settlement_type: doc.settlement_type ?? null,
-      as_of_date: doc.as_of_date,
-    };
-    res.json({ success: true, data: { ...detail, form: form ?? null } });
+    const data = await loadSettlementResponse(id);
+    if (!data) { res.status(404).json({ success: false, error: { code: "NOT_FOUND", message: "Settlement not found" } }); return; }
+    res.json({ success: true, data });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: { code: "SERVER_ERROR", message: err.message } });
+  }
+});
+
+// 확인서 헤더 편집 — 기준일자 / 정산구분 / 메모.
+// 기준일자는 확인서가 "어느 날짜로 정산을 끊었는가"이지 서류를 만든 날이 아니고,
+// 정산구분은 그 날짜와 계약 종료일의 자동 비교로 다 갈리지 않는다(합의해지 등).
+// 그래서 둘 다 비워 두면 종전 자동 규칙, 값을 넣으면 그 값이 이긴다.
+adminRouter.patch("/v1/deposit-settlements/:id", async (req, res): Promise<void> => {
+  try {
+    const id = Number(req.params.id);
+    const [s] = await db.select().from(depositSettlementsTable).where(eq(depositSettlementsTable.id, id)).limit(1);
+    if (!s) { res.status(404).json({ success: false, error: { code: "NOT_FOUND", message: "Settlement not found" } }); return; }
+    if (s.status === "finalized") { res.status(409).json({ success: false, error: { code: "LOCKED", message: "Settlement is finalized" } }); return; }
+
+    const patch: Record<string, unknown> = {};
+    if (req.body?.as_of_date !== undefined) {
+      const raw = req.body.as_of_date;
+      if (raw === null || raw === "") {
+        patch.as_of_date = null; // 자동 규칙으로 되돌린다.
+      } else {
+        const day = String(raw).slice(0, 10);
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(day) || Number.isNaN(new Date(`${day}T00:00:00Z`).getTime())) {
+          res.status(400).json({ success: false, error: { code: "BAD_DATE", message: "as_of_date must be YYYY-MM-DD" } }); return;
+        }
+        patch.as_of_date = day;
+      }
+    }
+    if (req.body?.settlement_type !== undefined) {
+      const raw = req.body.settlement_type;
+      if (raw === null || raw === "" || raw === "auto") {
+        patch.settlement_type = null;
+      } else if (raw === "early" || raw === "expiry") {
+        patch.settlement_type = raw;
+      } else {
+        res.status(400).json({ success: false, error: { code: "BAD_TYPE", message: "settlement_type must be early | expiry | null" } }); return;
+      }
+    }
+    if (req.body?.notes !== undefined) {
+      patch.notes = typeof req.body.notes === "string" && req.body.notes.trim() ? req.body.notes.trim() : null;
+    }
+    if (Object.keys(patch).length) {
+      await db.update(depositSettlementsTable).set(patch).where(eq(depositSettlementsTable.id, id));
+      void logAction({ entityType: ENTITY, entityId: id, action: "UPDATE", actorId: (req as any).user?.id ?? null, newValue: patch });
+    }
+    res.json({ success: true, data: await loadSettlementResponse(id) });
   } catch (err: any) {
     res.status(500).json({ success: false, error: { code: "SERVER_ERROR", message: err.message } });
   }
@@ -663,7 +717,15 @@ export async function buildMoveOutDocInput(id: number): Promise<MoveOutDocInput 
     tenantName = account?.name ?? null;
   }
 
-  const asOf = detail.finalized_at ?? detail.proposed_at ?? detail.created_at;
+  // 기준일자: 운영자가 직접 잡은 as_of_date 가 있으면 그것이 정본이고, 없을 때만
+  // finalized_at ?? proposed_at ?? created_at 으로 폴백한다. 확인서를 만든 날과
+  // 정산을 끊은 날은 같지 않다.
+  const asOfRaw = detail.as_of_date ?? detail.finalized_at ?? detail.proposed_at ?? detail.created_at;
+  // as_of_date 는 date 컬럼(문자열), 나머지는 timestamp(Date) — 어느 쪽이 와도
+  // 달력 하루(YYYY-MM-DD)로 눌러 두면 이후 비교·출력이 갈라지지 않는다.
+  const asOf = asOfRaw
+    ? (typeof asOfRaw === "string" ? asOfRaw.slice(0, 10) : new Date(asOfRaw).toISOString().slice(0, 10))
+    : null;
 
   // 현관 비밀번호: recorded on the linked 퇴거 점검표 (condition_reports.meta.
   // door_password) — the checklist is where the handover details are captured,
@@ -685,16 +747,21 @@ export async function buildMoveOutDocInput(id: number): Promise<MoveOutDocInput 
   let settlementType: "early" | "expiry" | null = null;
   if (contractEnd && asOf) {
     const endDay = new Date(`${String(contractEnd).slice(0, 10)}T00:00:00Z`).getTime();
-    const asOfDay = new Date(`${new Date(asOf).toISOString().slice(0, 10)}T00:00:00Z`).getTime();
+    const asOfDay = new Date(`${asOf}T00:00:00Z`).getTime();
     if (Number.isFinite(endDay) && Number.isFinite(asOfDay)) {
       settlementType = asOfDay < endDay ? "early" : "expiry";
     }
+  }
+  // 수동 지정이 자동 판정을 이긴다 — 계약 종료일이 비어 있거나 조기 합의해지처럼
+  // 날짜만으로는 갈리지 않는 건이 있다.
+  if (detail.settlement_type === "early" || detail.settlement_type === "expiry") {
+    settlementType = detail.settlement_type;
   }
 
   return {
     settlement_ref: detail.settlement_ref,
     status: detail.status,
-    as_of_date: asOf ? new Date(asOf).toISOString() : null,
+    as_of_date: asOf ? new Date(`${asOf}T00:00:00Z`).toISOString() : null,
     currency: detail.currency,
     unit,
     tenant_name: tenantName,

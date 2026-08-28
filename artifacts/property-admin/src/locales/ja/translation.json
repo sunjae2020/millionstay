@@ -5636,6 +5636,8 @@
     "f_settle_type": "精算区分",
     "type_early": "中途退去",
     "type_expiry": "満了退去",
+    "type_auto": "自動",
+    "reset_auto": "自動に戻す",
     "col_no": "番号",
     "col_item": "項目",
     "col_kind": "区分",
