@@ -148,7 +148,7 @@ export function TenantLinkCard({
         <span className="text-xs font-semibold text-primary uppercase tracking-wider inline-flex items-center gap-1.5">
           <Icon className="h-3.5 w-3.5" /> {t(`tenantLink.title_${kind}`)}
         </span>
-        <Button size="sm" variant="outline" className="h-7 gap-1.5" onClick={() => { setTo(defaultEmail ?? ""); setOpen(true); }}>
+        <Button type="button" size="sm" variant="outline" className="h-7 gap-1.5" onClick={() => { setTo(defaultEmail ?? ""); setOpen(true); }}>
           <Link2 className="h-3.5 w-3.5" /> {live ? t("tenantLink.btn_reissue") : t("tenantLink.btn_issue")}
         </Button>
       </div>
@@ -173,14 +173,14 @@ export function TenantLinkCard({
 
             <div className="flex items-center gap-2">
               <code className="flex-1 truncate rounded bg-muted px-2 py-1.5 text-xs">{live.url}</code>
-              <Button size="sm" variant="outline" className="gap-1.5" onClick={() => copy(live.url)}>
+              <Button type="button" size="sm" variant="outline" className="gap-1.5" onClick={() => copy(live.url)}>
                 <Copy className="h-3.5 w-3.5" /> {t("tenantLink.btn_copy")}
               </Button>
-              <Button size="sm" variant="outline" className="gap-1.5" disabled={resend.isPending || !live.sent_to}
+              <Button type="button" size="sm" variant="outline" className="gap-1.5" disabled={resend.isPending || !live.sent_to}
                 onClick={() => resend.mutate(live.id)}>
                 <Send className="h-3.5 w-3.5" /> {t("tenantLink.btn_resend")}
               </Button>
-              <Button size="sm" variant="ghost" className="text-red-600 gap-1.5" onClick={() => revoke.mutate(live.id)}>
+              <Button type="button" size="sm" variant="ghost" className="text-red-600 gap-1.5" onClick={() => revoke.mutate(live.id)}>
                 <Ban className="h-3.5 w-3.5" /> {t("tenantLink.btn_revoke")}
               </Button>
             </div>
@@ -242,8 +242,8 @@ export function TenantLinkCard({
             <p className="text-xs text-muted-foreground">{t("tenantLink.hint_reissue")}</p>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setOpen(false)}>{t("common.cancel")}</Button>
-            <Button onClick={() => issue.mutate()} disabled={issue.isPending || (kind === "doc_request" && !Object.values(picked).some(Boolean))}>
+            <Button type="button" variant="outline" onClick={() => setOpen(false)}>{t("common.cancel")}</Button>
+            <Button type="button" onClick={() => issue.mutate()} disabled={issue.isPending || (kind === "doc_request" && !Object.values(picked).some(Boolean))}>
               {issue.isPending ? t("common.saving") : t("tenantLink.btn_issue")}
             </Button>
           </DialogFooter>
@@ -365,7 +365,7 @@ function IntakeAnswers({ link, onApplied }: { link: TenantLink; onApplied: () =>
       </div>
       {a["note"] && <p className="rounded-md bg-muted/50 p-2 text-sm whitespace-pre-line">{a["note"]}</p>}
       <div className="flex items-center gap-3">
-        <Button size="sm" className="gap-1.5" onClick={() => apply.mutate()} disabled={apply.isPending}>
+        <Button type="button" size="sm" className="gap-1.5" onClick={() => apply.mutate()} disabled={apply.isPending}>
           <UserCheck className="h-3.5 w-3.5" /> {apply.isPending ? t("common.saving") : t("tenantLink.btn_apply")}
         </Button>
         <span className="text-xs text-muted-foreground">{t("tenantLink.apply_hint")}</span>

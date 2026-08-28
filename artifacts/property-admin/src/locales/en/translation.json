@@ -7239,7 +7239,16 @@
     "step_billing": "Billing & payment",
     "step_move_out_inspection": "Move-out inspection",
     "step_settlement": "Move-out settlement",
-    "step_intake": "Move-in form"
+    "step_intake": "Move-in form",
+    "btn_manage": "Steps",
+    "next_up": "Next:",
+    "state_todo": "Not started",
+    "state_sent": "Sent",
+    "state_done": "Done",
+    "progress_aria": "{{done}} of {{total}} steps complete",
+    "btn_collapse": "Collapse",
+    "detail_documents": "{{submitted}}/{{total}} submitted",
+    "detail_billing": "{{unpaid}} unpaid of {{total}}"
   },
   "settlementSign": {
     "title": "Tenant confirmation",

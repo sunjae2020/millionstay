@@ -96,11 +96,11 @@ export function SettlementSignLinkCard({
         <div className="ml-auto flex gap-2">
           {live && (
             <>
-              <Button size="sm" variant="outline" className="h-7 gap-1.5"
+              <Button type="button" size="sm" variant="outline" className="h-7 gap-1.5"
                 onClick={() => { navigator.clipboard?.writeText(live.url); toast({ title: t("tenantLink.toast_copied") }); }}>
                 <Copy className="h-3.5 w-3.5" /> {t("tenantLink.btn_copy")}
               </Button>
-              <Button size="sm" variant="outline" className="h-7"
+              <Button type="button" size="sm" variant="outline" className="h-7"
                 onClick={() => openPreview({
                   title: t("settlementSign.preview"),
                   filename: `settlement-${settlementId}.pdf`,
@@ -111,7 +111,7 @@ export function SettlementSignLinkCard({
             </>
           )}
           {!signed && (
-            <Button size="sm" className="h-7" disabled={status === "draft"}
+            <Button type="button" size="sm" className="h-7" disabled={status === "draft"}
               title={status === "draft" ? t("settlementSign.draft_blocked") : undefined}
               onClick={() => { setTo(defaultEmail ?? ""); setOpen(true); }}>
               {live ? t("tenantLink.btn_reissue") : t("settlementSign.btn_issue")}
@@ -140,8 +140,8 @@ export function SettlementSignLinkCard({
             <p className="text-xs text-muted-foreground">{t("settlementSign.hint")}</p>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setOpen(false)}>{t("common.cancel")}</Button>
-            <Button onClick={() => issue.mutate()} disabled={issue.isPending}>
+            <Button type="button" variant="outline" onClick={() => setOpen(false)}>{t("common.cancel")}</Button>
+            <Button type="button" onClick={() => issue.mutate()} disabled={issue.isPending}>
               {issue.isPending ? t("common.saving") : t("settlementSign.btn_issue")}
             </Button>
           </DialogFooter>

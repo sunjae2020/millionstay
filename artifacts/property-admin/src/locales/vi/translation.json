@@ -7131,7 +7131,16 @@
     "step_billing": "Hóa đơn & thanh toán",
     "step_move_out_inspection": "Kiểm tra khi trả nhà",
     "step_settlement": "Xác nhận quyết toán",
-    "step_intake": "Phiếu nhận nhà"
+    "step_intake": "Phiếu nhận nhà",
+    "btn_manage": "Xem các bước",
+    "next_up": "Tiếp theo:",
+    "state_todo": "Chưa bắt đầu",
+    "state_sent": "Đã gửi",
+    "state_done": "Hoàn tất",
+    "progress_aria": "Hoàn tất {{done}}/{{total}} bước",
+    "btn_collapse": "Thu gọn",
+    "detail_documents": "Đã nộp {{submitted}}/{{total}}",
+    "detail_billing": "Chưa trả {{unpaid}}/{{total}}"
   },
   "settlementSign": {
     "title": "Xác nhận của người thuê",

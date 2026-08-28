@@ -7186,7 +7186,16 @@
     "step_billing": "請求・入金",
     "step_move_out_inspection": "退去時点検",
     "step_settlement": "退去精算の確認",
-    "step_intake": "入居申込書"
+    "step_intake": "入居申込書",
+    "btn_manage": "段階を見る",
+    "next_up": "次:",
+    "state_todo": "未着手",
+    "state_sent": "送信済み",
+    "state_done": "完了",
+    "progress_aria": "{{total}}段階中 {{done}}段階完了",
+    "btn_collapse": "閉じる",
+    "detail_documents": "{{total}}件中 {{submitted}}件提出",
+    "detail_billing": "未納 {{unpaid}} / 全{{total}}件"
   },
   "settlementSign": {
     "title": "賃借人の確認",

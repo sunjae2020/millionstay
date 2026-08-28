@@ -7171,7 +7171,16 @@
     "step_billing": "การเรียกเก็บและชำระเงิน",
     "step_move_out_inspection": "ตรวจสภาพห้องตอนย้ายออก",
     "step_settlement": "ยืนยันการชำระบัญชีย้ายออก",
-    "step_intake": "แบบฟอร์มเข้าอยู่"
+    "step_intake": "แบบฟอร์มเข้าอยู่",
+    "btn_manage": "ดูขั้นตอน",
+    "next_up": "ถัดไป:",
+    "state_todo": "ยังไม่เริ่ม",
+    "state_sent": "ส่งแล้ว",
+    "state_done": "เสร็จแล้ว",
+    "progress_aria": "เสร็จ {{done}} จาก {{total}} ขั้นตอน",
+    "btn_collapse": "ย่อ",
+    "detail_documents": "ส่งแล้ว {{submitted}}/{{total}}",
+    "detail_billing": "ค้างชำระ {{unpaid}} จาก {{total}}"
   },
   "settlementSign": {
     "title": "การยืนยันของผู้เช่า",
