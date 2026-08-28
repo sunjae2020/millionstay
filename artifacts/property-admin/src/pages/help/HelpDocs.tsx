@@ -123,11 +123,11 @@ export default function HelpDocs() {
             <p className="text-sm text-muted-foreground mt-0.5 max-w-2xl">{t("helpDocs.subtitle")}</p>
           </div>
           <div className="flex gap-2">
-            <Button variant="outline" size="sm" className="gap-1.5" disabled={seed.isPending}
+            <Button type="button" variant="outline" size="sm" className="gap-1.5" disabled={seed.isPending}
               onClick={() => seed.mutate()}>
               <Sparkles className="h-4 w-4" /> {t("helpDocs.btn_seed")}
             </Button>
-            <Button size="sm" className="gap-1.5" onClick={() => setEditing({ ...EMPTY })}>
+            <Button type="button" size="sm" className="gap-1.5" onClick={() => setEditing({ ...EMPTY })}>
               <Plus className="h-4 w-4" /> {t("helpDocs.btn_add")}
             </Button>
           </div>
@@ -141,7 +141,7 @@ export default function HelpDocs() {
           </div>
           <div className="flex gap-1">
             {([["", "all"], ["staff", "staff"], ["tenant", "tenant"]] as const).map(([v, k]) => (
-              <button key={k}
+              <button type="button" key={k}
                 onClick={() => setAudience(v as any)}
                 className={`rounded-md border px-3 py-1.5 text-sm ${audience === v ? "bg-primary text-primary-foreground border-primary" : "hover:bg-muted/50"}`}>
                 {t(`helpDocs.filter_${k}`)}
@@ -157,7 +157,7 @@ export default function HelpDocs() {
             <BookOpen className="mx-auto h-10 w-10 text-muted-foreground/40" />
             <p className="mt-3 font-medium">{t("helpDocs.empty_title")}</p>
             <p className="mt-1 text-sm text-muted-foreground">{t("helpDocs.empty_desc")}</p>
-            <Button className="mt-4 gap-1.5" onClick={() => seed.mutate()} disabled={seed.isPending}>
+            <Button type="button" className="mt-4 gap-1.5" onClick={() => seed.mutate()} disabled={seed.isPending}>
               <Sparkles className="h-4 w-4" /> {t("helpDocs.btn_seed")}
             </Button>
           </div>
@@ -238,14 +238,14 @@ export default function HelpDocs() {
           )}
           <DialogFooter className="gap-2 sm:justify-between">
             {editing?.id ? (
-              <Button variant="ghost" className="text-red-600 gap-1.5"
+              <Button type="button" variant="ghost" className="text-red-600 gap-1.5"
                 onClick={() => { if (window.confirm(t("helpDocs.confirm_remove"))) remove.mutate(editing.id!); }}>
                 <Trash2 className="h-4 w-4" /> {t("common.delete")}
               </Button>
             ) : <span />}
             <div className="flex gap-2">
-              <Button variant="outline" onClick={() => setEditing(null)}>{t("common.cancel")}</Button>
-              <Button onClick={() => editing && save.mutate(editing)} disabled={save.isPending || !editing?.title?.trim()}>
+              <Button type="button" variant="outline" onClick={() => setEditing(null)}>{t("common.cancel")}</Button>
+              <Button type="button" onClick={() => editing && save.mutate(editing)} disabled={save.isPending || !editing?.title?.trim()}>
                 {save.isPending ? t("common.saving") : t("common.save")}
               </Button>
             </div>
@@ -277,7 +277,7 @@ function DocCard({ doc, onEdit }: { doc: HelpDoc; onEdit: () => void }) {
 
   return (
     <div className="group relative rounded-lg border bg-white p-4 hover:border-primary/50 hover:shadow-sm transition-colors">
-      <button
+      <button type="button"
         onClick={onEdit}
         className="absolute right-2 top-2 rounded p-1.5 text-muted-foreground opacity-0 group-hover:opacity-100 hover:bg-muted focus:opacity-100"
         title={t("helpDocs.dialog_edit")}

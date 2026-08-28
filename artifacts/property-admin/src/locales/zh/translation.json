@@ -7191,7 +7191,16 @@
     "step_billing": "账单与付款",
     "step_move_out_inspection": "退租验房",
     "step_settlement": "退租结算确认",
-    "step_intake": "入住申请表"
+    "step_intake": "入住申请表",
+    "btn_manage": "查看步骤",
+    "next_up": "下一步：",
+    "state_todo": "未开始",
+    "state_sent": "已发送",
+    "state_done": "已完成",
+    "progress_aria": "{{total}} 步中已完成 {{done}} 步",
+    "btn_collapse": "收起",
+    "detail_documents": "已提交 {{submitted}}/{{total}}",
+    "detail_billing": "未付 {{unpaid}} / 共 {{total}} 笔"
   },
   "settlementSign": {
     "title": "承租人确认",

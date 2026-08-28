@@ -600,8 +600,11 @@ adminRouter.get("/v1/contracts/:id/onboarding", async (req, res): Promise<void> 
         state: docLink?.status === "completed" ? "done" : docLink ? "sent" : "todo",
         at: docLink?.completed_at ?? null,
         link: docLink ? tenantLinkUrl(docLink.kind, docLink.token) : null,
-        detail: docLink
-          ? `${submittedCount(docLink)}/${(docLink.payload as any)?.items?.length ?? 0}건 제출`
+        // 숫자만 돌려주고 문장은 화면이 만든다 — 어드민은 6개 언어로 도는데
+        // 서버가 한국어 문장을 박아 보내면 영어 화면에 한국어가 섞인다.
+        detail: null,
+        counts: docLink
+          ? { submitted: submittedCount(docLink), total: (docLink.payload as any)?.items?.length ?? 0 }
           : null,
       },
       {
@@ -620,7 +623,8 @@ adminRouter.get("/v1/contracts/:id/onboarding", async (req, res): Promise<void> 
         state: invoices.length === 0 ? "todo" : unpaid.length === 0 ? "done" : payLinks.length ? "sent" : "todo",
         at: null,
         link: payLinks[0] ? tenantLinkUrl(payLinks[0].kind, payLinks[0].token) : null,
-        detail: invoices.length ? `미납 ${unpaid.length} / 전체 ${invoices.length}건` : null,
+        detail: null,
+        counts: invoices.length ? { unpaid: unpaid.length, total: invoices.length } : null,
       },
       {
         key: "move_out_inspection",

@@ -103,7 +103,7 @@ export default function TenantLinkQueue() {
                     {formatDateTime((r as any).updated_at ?? r.created_at)}
                   </td>
                   <td className="px-3 py-2 whitespace-nowrap text-right">
-                    <Button size="sm" variant="ghost" className="h-7 gap-1.5"
+                    <Button type="button" size="sm" variant="ghost" className="h-7 gap-1.5"
                       onClick={() => { navigator.clipboard?.writeText(r.url); toast({ title: t("tenantLink.toast_copied") }); }}>
                       <Copy className="h-3.5 w-3.5" />
                     </Button>

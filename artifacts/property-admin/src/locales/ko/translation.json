@@ -7239,7 +7239,16 @@
     "step_billing": "청구 · 납부",
     "step_move_out_inspection": "퇴거 세대점검",
     "step_settlement": "퇴거 정산 확인",
-    "step_intake": "입주 신청서"
+    "step_intake": "입주 신청서",
+    "btn_manage": "단계 보기",
+    "next_up": "다음:",
+    "state_todo": "미진행",
+    "state_sent": "발송됨",
+    "state_done": "완료",
+    "progress_aria": "{{total}}단계 중 {{done}}단계 완료",
+    "btn_collapse": "접기",
+    "detail_documents": "{{total}}건 중 {{submitted}}건 제출",
+    "detail_billing": "미납 {{unpaid}} / 전체 {{total}}건"
   },
   "settlementSign": {
     "title": "임차인 확인",
