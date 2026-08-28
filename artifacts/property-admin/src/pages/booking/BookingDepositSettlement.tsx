@@ -43,6 +43,10 @@ type Settlement = {
   /** 보증금(B)을 어디서 읽었는지: invoice/placement 만 GL(2100) 뒷받침. */
   deposit_source: string | null;
   invoice_id: number | null;
+  /** 운영자가 직접 잡은 기준일자. null 이면 서버가 finalized/proposed/created 로 폴백한다. */
+  as_of_date: string | null;
+  /** 운영자가 직접 지정한 정산구분. null 이면 기준일자 vs 계약 종료일 자동 판정. */
+  settlement_type: "early" | "expiry" | null;
   notes: string | null; deductions: Deduction[];
   form: SettlementForm | null;
 };
@@ -144,6 +148,11 @@ function SettlementCard({ s, onChanged }: { s: Settlement; onChanged: () => void
     const invoiceId = r?.data?.invoice?.id;
     if (invoiceId) window.location.assign(`/finance/invoices/${invoiceId}`);
   }
+  // 확인서 헤더 — 기준일자·정산구분. 비우면(null) 서버의 자동 규칙으로 되돌아간다.
+  async function patchSettlement(patch: { as_of_date?: string | null; settlement_type?: "early" | "expiry" | null }) {
+    await apiJson(`/api/v1/deposit-settlements/${s.id}`, { method: "PATCH", body: JSON.stringify(patch) });
+    onChanged();
+  }
   async function propose() { await apiJson(`/api/v1/deposit-settlements/${s.id}/propose`, { method: "POST", body: "{}" }); onChanged(); }
   async function finalize() { await apiJson(`/api/v1/deposit-settlements/${s.id}/finalize`, { method: "POST", body: "{}" }); onChanged(); }
   // 확정 취소 — 확인서 번호는 그대로 두고 상태만 draft 로 되돌린다. 전기된 전표가
@@ -180,7 +189,24 @@ function SettlementCard({ s, onChanged }: { s: Settlement; onChanged: () => void
           <span className="text-xs font-mono text-muted-foreground">{s.settlement_ref}</span>
           <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${STATUS_STYLE[s.status] ?? "bg-gray-100"}`}>{s.status}</span>
           {form?.as_of_date && (
-            <span className="text-xs text-muted-foreground">{t("deposit_settlement.as_of")}: {String(form.as_of_date).slice(0, 10)}</span>
+            <span className="text-xs text-muted-foreground flex items-center gap-1.5">
+              {t("deposit_settlement.as_of")}:
+              {editable ? (
+                <>
+                  <input
+                    type="date"
+                    className="border rounded px-1.5 py-0.5 text-xs"
+                    value={String(s.as_of_date ?? form.as_of_date).slice(0, 10)}
+                    onChange={(e) => patchSettlement({ as_of_date: e.target.value || null })}
+                  />
+                  {s.as_of_date && (
+                    <button type="button" className="underline hover:text-foreground" onClick={() => patchSettlement({ as_of_date: null })}>
+                      {t("deposit_settlement.reset_auto")}
+                    </button>
+                  )}
+                </>
+              ) : String(form.as_of_date).slice(0, 10)}
+            </span>
           )}
         </div>
         <div className="flex gap-2">
@@ -221,9 +247,28 @@ function SettlementCard({ s, onChanged }: { s: Settlement; onChanged: () => void
                 <td className={`${td} text-center`}>{money(depositB, cur)}</td>
                 <th className={`${th} bg-gray-50`}>{t("deposit_settlement.f_settle_type")}</th>
                 <td className={`${td} text-center`}>
-                  {t("deposit_settlement.type_early")}({form?.settlement_type === "early" ? "O" : "X"})
-                  {" / "}
-                  {t("deposit_settlement.type_expiry")}({form?.settlement_type === "expiry" ? "O" : "X"})
+                  {editable ? (
+                    // 자동(빈 값)이면 기준일자 vs 계약 종료일 비교 결과가 그대로 찍히고,
+                    // 골라 두면 그 값이 이긴다 — 합의해지처럼 날짜만으로 안 갈리는 건 때문에.
+                    <select
+                      className="border rounded px-2 py-1 text-sm"
+                      value={s.settlement_type ?? ""}
+                      onChange={(e) => patchSettlement({ settlement_type: (e.target.value || null) as "early" | "expiry" | null })}
+                    >
+                      <option value="">
+                        {t("deposit_settlement.type_auto")}
+                        {form?.settlement_type ? ` — ${t(`deposit_settlement.type_${form.settlement_type === "early" ? "early" : "expiry"}`)}` : ""}
+                      </option>
+                      <option value="early">{t("deposit_settlement.type_early")}</option>
+                      <option value="expiry">{t("deposit_settlement.type_expiry")}</option>
+                    </select>
+                  ) : (
+                    <>
+                      {t("deposit_settlement.type_early")}({form?.settlement_type === "early" ? "O" : "X"})
+                      {" / "}
+                      {t("deposit_settlement.type_expiry")}({form?.settlement_type === "expiry" ? "O" : "X"})
+                    </>
+                  )}
                 </td>
               </tr>
             </tbody>

@@ -5687,6 +5687,8 @@
     "f_settle_type": "Settlement type",
     "type_early": "Early move-out",
     "type_expiry": "End of term",
+    "type_auto": "Auto",
+    "reset_auto": "reset to auto",
     "col_no": "No.",
     "col_item": "Item",
     "col_kind": "Type",

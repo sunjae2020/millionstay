@@ -1,4 +1,4 @@
-import { pgTable, serial, integer, text, numeric, jsonb, timestamp } from "drizzle-orm/pg-core";
+import { pgTable, serial, integer, text, numeric, jsonb, timestamp, date } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 
@@ -41,6 +41,14 @@ export const depositSettlementsTable = pgTable("deposit_settlements", {
   // C(최종 반환 차액)가 마이너스일 때 — 차감이 보증금을 넘어 임차인에게서 회수해야
   // 하는 금액을 청구한 인보이스. 확인서가 정본이고 인보이스는 미수금 회수 도구다.
   invoice_id: integer("invoice_id"),
+
+  // 확인서 헤더의 "기준일자" — 정산을 어느 날짜 기준으로 끊었는지. 비워 두면
+  // finalized_at ?? proposed_at ?? created_at 으로 폴백한다(종전 동작). 퇴거일과
+  // 확인서를 쓴 날이 다른 실무(8/28 퇴거, 9/3 작성)를 위해 운영자가 직접 잡는다.
+  as_of_date: date("as_of_date"),
+  // "정산구분" — early(중도퇴거) | expiry(만기퇴거). 비워 두면 기준일자와 계약
+  // 종료일을 비교해 자동 판정하고, 값이 있으면 그 값이 자동 판정을 이긴다.
+  settlement_type: text("settlement_type"),
 
   notes: text("notes"),
   created_by: integer("created_by"),

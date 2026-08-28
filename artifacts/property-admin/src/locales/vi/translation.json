@@ -5595,6 +5595,8 @@
     "f_settle_type": "Loại quyết toán",
     "type_early": "Trả phòng trước hạn",
     "type_expiry": "Hết hạn hợp đồng",
+    "type_auto": "Tự động",
+    "reset_auto": "về tự động",
     "col_no": "STT",
     "col_item": "Khoản mục",
     "col_kind": "Loại",
