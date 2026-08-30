@@ -236,6 +236,28 @@ app.use([
   // leaked token can't be used to hammer PDF rendering/email (H-203).
   "/api/v1/public/contract-signing",
 ], applicationLimiter);
+// Public, unauthenticated write/upload endpoints that previously only fell
+// through to generalLimiter (300/min). Each POST fans out email (auth/register
+// notifies every SuperAdmin — mail-bomb vector), creates DB rows (inquiries) or
+// writes to Cloudinary (no-login token uploads), so cap them at the application
+// tier (100/min/IP). Same skip rule as every limiter: disabled outside prod.
+app.use([
+  "/api/v1/auth/register",
+  "/api/v1/public/contact-inquiries",
+  "/api/v1/public/sales-inquiries",
+  "/api/v1/public/listing-inquiries",
+  "/api/v1/public/long-term-inquiries",
+  "/api/v1/public/management-inquiries",
+  "/api/v1/public/student-inquiries",
+  "/api/v1/public/sites/:slug/inquiry",
+  "/api/v1/public/sale-listings/:id/inquiry",
+  // No-login token uploads (세입자 온보딩 링크 + 세대점검표) — multer +
+  // Cloudinary writes behind a bearer-less token; a leaked token must not be
+  // able to hammer storage.
+  "/api/v1/public/doc-requests/:token/upload",
+  "/api/v1/public/intake/:token/photo",
+  "/api/v1/public/unit-inspections/:token/photos",
+], applicationLimiter);
 app.use([
   "/api/v1/guest/me/data",
   "/api/v1/guest/me/export",
@@ -369,5 +391,43 @@ if (process.env["NODE_ENV"] === "production") {
     });
   });
 }
+
+// ── Central JSON error handler ── registered last so it catches every error any
+// route or middleware forwards (Express 5 also routes rejected async handlers
+// here). Without it, Express's default handler renders an HTML error page — and
+// in dev, the full stack trace. Preserves the status an upstream middleware
+// attached (body-parser 400/413, etc.) so existing monitors see the same codes;
+// only the body format changes from HTML to the API's `{ error }` JSON shape.
+app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
+  const fromErr =
+    typeof err?.status === "number" ? err.status
+    : typeof err?.statusCode === "number" ? err.statusCode
+    : 500;
+  const status = fromErr >= 400 && fromErr < 600 ? fromErr : 500;
+
+  logger.error(
+    { err, reqId: (req as any).id, method: req.method, path: req.path, status },
+    "Unhandled request error",
+  );
+
+  if (res.headersSent) {
+    // Response already streaming — delegate so Node tears the socket down.
+    next(err);
+    return;
+  }
+
+  // Never leak internals in production: only messages explicitly marked safe
+  // (http-errors sets `expose` for 4xx, e.g. body-parser's "invalid JSON") get
+  // through; everything else collapses to a generic message. Dev keeps detail.
+  const message = !isProduction
+    ? String(err?.message ?? "Internal server error")
+    : err?.expose === true && err?.message && status < 500
+      ? String(err.message)
+      : status >= 500
+        ? "Internal server error"
+        : "Request failed";
+
+  res.status(status).json({ error: message });
+});
 
 export default app;

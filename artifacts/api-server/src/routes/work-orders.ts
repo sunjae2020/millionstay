@@ -39,17 +39,11 @@ import {
 } from "../lib/documents/workOrderDocument";
 
 import { insertInvoiceWithRef } from "../lib/billing/invoiceRef";
+// 작업지시 번호는 개수 기반이 아니라 최댓값+1 + 중복 키 재시도로 발급한다(청구서와 동일 패턴).
+import { insertWorkOrderWithRef } from "../lib/workOrders/orderRef";
 
 const router = Router();
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 10 * 1024 * 1024 } });
-
-async function nextOrderRef(): Promise<string> {
-  const year = new Date().getFullYear();
-  const rows = await db.select({ id: workOrdersTable.id }).from(workOrdersTable)
-    .where(ilike(workOrdersTable.order_ref, `MS-WO-${year}-%`));
-  const count = rows.length + 1;
-  return `MS-WO-${year}-${String(count).padStart(5, "0")}`;
-}
 
 /** 건물명 — 작업지시의 property_id, 없으면 호수가 속한 건물. */
 function resolvePropertyName(
@@ -252,9 +246,7 @@ router.get("/v1/work-orders/facets", async (req, res): Promise<void> => {
 router.post("/v1/work-orders", async (req, res): Promise<void> => {
   const parsed = CreateWorkOrderBody.safeParse(req.body);
   if (!parsed.success) { res.status(400).json({ error: parsed.error.message }); return; }
-  const order_ref = await nextOrderRef();
-  const [row] = await db.insert(workOrdersTable).values({
-    order_ref,
+  const row = await insertWorkOrderWithRef({
     property_id: parsed.data.property_id ?? null,
     space_id: parsed.data.space_id ?? null,
     title: parsed.data.title,
@@ -268,7 +260,7 @@ router.post("/v1/work-orders", async (req, res): Promise<void> => {
     notes: parsed.data.notes ?? null,
     ...appointmentFieldsFrom(req.body, { partial: false }),
     ...ledgerFieldsFrom(req.body, { partial: false }),
-  }).returning();
+  });
 
   // Auto-dispatch to a matching partner when a category is set (unless the caller
   // opted out with auto_dispatch:false). Best-effort — a no-match leaves it

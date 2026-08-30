@@ -75,7 +75,9 @@ pnpm --filter @workspace/million-stay-web typecheck
 curl -s https://workspaceapi-server-production-ff8e.up.railway.app/api/v1/public/spaces?limit=1 | head -c 200
 
 # Direct DB query (Supabase prod)
-PGPASSWORD='Leno2016!!123' /opt/homebrew/opt/libpq/bin/psql \
+# ⚠️ DB 비밀번호는 절대 문서·커밋에 넣지 않는다. 실제 값은 루트 `.env.local`
+#    (gitignored)의 SUPABASE_DB_PASSWORD 에 두고 아래처럼 환경변수로만 참조한다.
+PGPASSWORD="$SUPABASE_DB_PASSWORD" /opt/homebrew/opt/libpq/bin/psql \
   "postgresql://postgres.rdwzpbxrkjlmtwcoiniq@aws-1-ap-southeast-1.pooler.supabase.com:5432/postgres?sslmode=require" \
   -c "SELECT count(*) FROM spaces;"
 ```

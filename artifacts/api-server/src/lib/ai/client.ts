@@ -226,6 +226,23 @@ export function getAiClient(taskId: AiTaskId): AiClient {
   const r = resolveTask(taskId);
   const p = providerOrPlaceholder(r.provider);
 
+  // ── Vendor pinning for movable:"no" tasks ──
+  // A task marked movable:"no" in the registry (ID-document OCR, document
+  // intake) handles identity documents or sets retention clocks: which VENDOR
+  // sees that data is a privacy decision, not a cost one. The env/admin
+  // override may still pick a different MODEL, but only on the task's default
+  // provider — any other vendor is refused here rather than silently honoured.
+  const task = AI_TASKS[taskId];
+  if (task.movable === "no") {
+    const pinned = parseModelRef(task.defaultModel).provider;
+    if (r.provider !== pinned) {
+      throw new AiConfigError(
+        `Task "${taskId}" is pinned to ${pinned} (movable: "no" — ${task.rationale.slice(0, 120)}…). ` +
+          `${task.envKey} resolves to ${r.provider}/${r.model}; unset it or point it at a ${pinned} model.`,
+      );
+    }
+  }
+
   if (r.missing_capabilities.length > 0) {
     throw new AiConfigError(
       `Task "${taskId}" needs ${r.missing_capabilities.join(", ")}, which ${p.label} does not ` +

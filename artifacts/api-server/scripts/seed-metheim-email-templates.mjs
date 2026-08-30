@@ -205,6 +205,10 @@ async function main() {
     return;
   }
 
+  // Metheim 전용 시드 — 다른 운영 DB에 붙으면 여기서 멈춘다 (DRY_RUN 은 DB 미접속).
+  const { guardDbInstance } = await import("../../../scripts/lib/dbGuard.mjs");
+  guardDbInstance({ databaseUrl: url, expected: "metheim" });
+
   // pg 는 여기서 처음 필요하다 — DRY_RUN 검증은 DB 드라이버 없이도 돌아야 한다.
   const { default: pg } = await import("pg");
   const pool = new pg.Pool({ connectionString: url, ssl: { rejectUnauthorized: false } });

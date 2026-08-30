@@ -108,21 +108,36 @@ export async function postEntry(input: PostEntryInput): Promise<typeof journalEn
       .limit(1);
     if (existing) return existing;
 
-    let entry: typeof journalEntriesTable.$inferSelect;
+    // Header + lines are one atomic unit. A crash between the two inserts used to
+    // leave a header with no lines — and posting_key idempotency then blocked
+    // re-posting that entry forever. All-or-nothing keeps the pre-check honest.
     try {
-      const [row] = await db
-        .insert(journalEntriesTable)
-        .values({
-          posting_key: input.postingKey,
-          entry_date: input.entryDate,
-          description: input.description,
-          source_type: input.sourceType,
-          source_id: input.sourceId,
-          currency: input.currency || "AUD",
-        })
-        .returning();
-      if (!row) return null;
-      entry = row;
+      return await db.transaction(async (tx) => {
+        const [row] = await tx
+          .insert(journalEntriesTable)
+          .values({
+            posting_key: input.postingKey,
+            entry_date: input.entryDate,
+            description: input.description,
+            source_type: input.sourceType,
+            source_id: input.sourceId,
+            currency: input.currency || "AUD",
+          })
+          .returning();
+        if (!row) return null;
+
+        await tx.insert(journalLinesTable).values(
+          lines.map((l) => ({
+            entry_id: row.id,
+            account_code: l.account_code,
+            account_name: l.account_name,
+            debit: String(l.debit),
+            credit: String(l.credit),
+          })),
+        );
+
+        return row;
+      });
     } catch (e: unknown) {
       const code = (e as { code?: string } | null)?.code;
       const cause = (e as { cause?: { code?: string } } | null)?.cause?.code;
@@ -137,18 +152,6 @@ export async function postEntry(input: PostEntryInput): Promise<typeof journalEn
       }
       throw e;
     }
-
-    await db.insert(journalLinesTable).values(
-      lines.map((l) => ({
-        entry_id: entry.id,
-        account_code: l.account_code,
-        account_name: l.account_name,
-        debit: String(l.debit),
-        credit: String(l.credit),
-      })),
-    );
-
-    return entry;
   } catch (err) {
     console.error(`[gl] postEntry failed for ${input.postingKey}:`, err);
     return null;

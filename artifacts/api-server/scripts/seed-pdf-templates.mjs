@@ -19,12 +19,14 @@
  * ko/ja/zh/th agreement copy reuses the team-reviewed translations already in
  * doc-template-translations.json (contract.terms / homestay_placement_terms).
  *
- * Usage:  DATABASE_URL=... node scripts/seed-pdf-templates.mjs
+ * Usage:  DATABASE_URL=... node scripts/seed-pdf-templates.mjs --instance=<name> --apply
+ *         (기본은 dry-run — --apply 없이는 아무것도 쓰지 않는다)
  */
 import pg from "pg";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
+import { guardDbInstance, confirmWrite } from "../../../scripts/lib/dbGuard.mjs";
 
 const { Pool } = pg;
 const __dir = dirname(fileURLToPath(import.meta.url));
@@ -266,6 +268,9 @@ const TEMPLATES = [
     bodies: MOVE_OUT_NOTE,
   },
 ];
+
+guardDbInstance();
+if (!confirmWrite()) process.exit(0);
 
 const pool = new Pool({ connectionString: process.env.DATABASE_URL, ssl: { rejectUnauthorized: false } });
 const c = await pool.connect();

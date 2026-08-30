@@ -8,13 +8,14 @@
  * 값을 넣기 전까지 sendSms() 는 알림톡을 시도하지 않고 SMS 로만 나간다. 즉 이 작업은
  * 언제 해도 안전하고, 되돌리려면 --clear 로 지우면 SMS 로 돌아간다.
  *
- * Usage:
- *   DATABASE_URL=… node scripts/set-kakao-template-id.mjs sms.booking_confirmed TX_0001
- *   DATABASE_URL=… node scripts/set-kakao-template-id.mjs sms.rent_due TX_0002 --button "청구서 보기"
- *   DATABASE_URL=… node scripts/set-kakao-template-id.mjs sms.booking_confirmed --clear
+ * Usage (쓰기는 --instance=<name> + --apply 필요; --list 는 조회 전용이라 예외):
+ *   DATABASE_URL=… node scripts/set-kakao-template-id.mjs sms.booking_confirmed TX_0001 --instance=<name> --apply
+ *   DATABASE_URL=… node scripts/set-kakao-template-id.mjs sms.rent_due TX_0002 --button "청구서 보기" --instance=<name> --apply
+ *   DATABASE_URL=… node scripts/set-kakao-template-id.mjs sms.booking_confirmed --clear --instance=<name> --apply
  *   DATABASE_URL=… node scripts/set-kakao-template-id.mjs --list
  */
 import pg from "pg";
+import { guardDbInstance, confirmWrite } from "../../../scripts/lib/dbGuard.mjs";
 
 const args = process.argv.slice(2);
 const flag = (n) => args.includes(n);
@@ -24,6 +25,12 @@ const positional = args.filter((a, i) =>
 
 const url = process.env.DATABASE_URL;
 if (!url) { console.error("DATABASE_URL 이 필요합니다"); process.exit(1); }
+
+// --list 는 조회 전용이라 그대로 두고, 쓰기 모드만 인스턴스 확인 + --apply 를 요구한다.
+if (!flag("--list")) {
+  guardDbInstance({ databaseUrl: url });
+  if (!confirmWrite()) process.exit(0);
+}
 
 const pool = new pg.Pool({ connectionString: url, ssl: { rejectUnauthorized: false } });
 

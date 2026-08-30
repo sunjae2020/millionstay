@@ -18,6 +18,7 @@ import {
 } from "@workspace/db";
 import { getRateToAud } from "../rateSnapshot.js";
 import { insertInvoiceWithRef } from "./invoiceRef";
+import { billingTodayIso } from "./billingDate";
 
 /** Settings key (also an integrations ALLOWED_KEY) toggling the recurring cron. */
 export const RECURRING_INVOICES_ENABLED_KEY = "RECURRING_INVOICES_ENABLED";
@@ -39,11 +40,6 @@ export async function isRecurringInvoicesEnabled(): Promise<boolean> {
   } catch {
     return false;
   }
-}
-
-/** Today in Sydney (YYYY-MM-DD), matching the cron timezone. */
-function sydneyToday(): string {
-  return new Intl.DateTimeFormat("en-CA", { timeZone: "Australia/Sydney" }).format(new Date());
 }
 
 function addDays(ymd: string, days: number): string {
@@ -77,7 +73,9 @@ function periodLabel(frequency: string, ymd: string): string {
 export interface RecurringBillingResult { enabled: boolean; scanned: number; created: number; skipped: number; ended: number; errors: number }
 
 export async function generateRecurringInvoices(): Promise<RecurringBillingResult> {
-  const today = sydneyToday();
+  // Today in the billing timezone (BILLING_TIMEZONE, default Australia/Sydney) —
+  // one source shared by all billing jobs; see lib/billing/billingDate.ts.
+  const today = billingTodayIso();
   const result: RecurringBillingResult = { enabled: true, scanned: 0, created: 0, skipped: 0, ended: 0, errors: 0 };
 
   // App-controlled gate (integration_settings, env override). Off → no-op.

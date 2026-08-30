@@ -23,8 +23,9 @@
  * Source text lives beside this script as data/hk-lease-agreement.<locale>.txt
  * so the legal wording is reviewed as a plain file rather than inline in code.
  *
- * Usage:  DATABASE_URL=... node scripts/seed-hk-lease-agreement.mjs
- *         DATABASE_URL=... PUBLISH=1 node scripts/seed-hk-lease-agreement.mjs
+ * Usage:  DATABASE_URL=... node scripts/seed-hk-lease-agreement.mjs --instance=<name> --apply
+ *         DATABASE_URL=... PUBLISH=1 node scripts/seed-hk-lease-agreement.mjs --instance=<name> --apply
+ *         (기본은 dry-run — --apply 없이는 아무것도 쓰지 않는다)
  *
  * Seeds as `draft` by default — the agreement only starts appearing on generated
  * contracts once it is published (in the Studio, or with PUBLISH=1).
@@ -33,6 +34,7 @@ import pg from "pg";
 import { readFileSync, existsSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
+import { guardDbInstance, confirmWrite } from "../../../scripts/lib/dbGuard.mjs";
 
 const { Pool } = pg;
 const __dir = dirname(fileURLToPath(import.meta.url));
@@ -100,6 +102,9 @@ if (!bodies.ko) {
 if (!bodies.ko.includes("[별지]")) {
   console.warn("⚠ No [별지] marker in the ko body — the annex page will not be rendered separately.");
 }
+
+guardDbInstance();
+if (!confirmWrite()) process.exit(0);
 
 const pool = new Pool({ connectionString: process.env.DATABASE_URL, ssl: { rejectUnauthorized: false } });
 const c = await pool.connect();

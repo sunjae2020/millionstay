@@ -21,6 +21,7 @@ import { readFileSync } from "node:fs";
 import path from "node:path";
 import pg from "pg";
 import { v2 as cloudinary } from "cloudinary";
+import { guardDbInstance } from "../../../scripts/lib/dbGuard.mjs";
 
 const args = process.argv.slice(2);
 const apply = args.includes("--apply");
@@ -101,6 +102,7 @@ function publicIdOf(url) {
 }
 
 const client = new pg.Client({ connectionString: envValue("DATABASE_URL") });
+guardDbInstance({ databaseUrl: envValue("DATABASE_URL") });
 await client.connect();
 
 const where = [];

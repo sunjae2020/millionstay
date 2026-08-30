@@ -27,6 +27,7 @@ import { getAckRule } from "../lib/applicationEmails.js";
 import { sendHomestayHostEmail, sendLeadNotificationEmail } from "../lib/email.js";
 import { isCloudinaryConfigured, uploadPrivateToCloudinary, generateSignedUrl, cldFolder } from "../utils/cloudinary.js";
 import { logAction } from "../utils/auditLog.js";
+import { calcRetentionDate } from "../lib/retention";
 import { decodeUploadFilename } from "../lib/uploadFilename.js";
 import { parsePageParams, pageMeta } from "../utils/pagination.js";
 
@@ -374,6 +375,9 @@ homestayPortalRouter.post("/v1/homestay/documents", upload.single("file"), async
     cloudinary_public_id: uploaded.public_id,
     uploaded_by: partner.id,
     uploaded_by_type: "PartnerUser",
+    // APP 11.5 — host WWCC/ID scans must carry a destruction date like every
+    // other document insert, so the central purge job actually reaches them.
+    retention_until: calcRetentionDate(doc_type),
   } as any).returning();
 
   // Mark any matching requested-doc as fulfilled.

@@ -30,22 +30,10 @@ import {
   spacesTable,
 } from "@workspace/db";
 import { DEFAULT_CURRENCY } from "../currency";
+// 청구 기준 시간대 헬퍼는 billingDate.ts 로 승격됐다 — 모든 청구 크론이 공유한다.
+import { todayInBillingTz } from "./billingDate";
 
 const pad = (n: number) => String(n).padStart(2, "0");
-
-/**
- * 청구 달력의 기준 시간대. 크론이 도는 서버는 UTC 라서 `new Date()`의 UTC 날짜를 그대로
- * 쓰면 "매월 28일에 발행" 같은 날짜 조건이 하루 어긋난다(시드니 03:10 = 전날 17:10 UTC).
- * 테넌트의 실제 영업 시간대로 오늘 날짜를 읽는다 — Metheim 은 `BILLING_TIMEZONE=Asia/Seoul`.
- */
-const BILLING_TZ = process.env.BILLING_TIMEZONE || "Australia/Sydney";
-
-/** 기준 시간대의 오늘 날짜(연·월·일). */
-function todayInBillingTz(): { year: number; month: number; day: number } {
-  const [y, m, d] = new Intl.DateTimeFormat("en-CA", { timeZone: BILLING_TZ })
-    .format(new Date()).split("-").map(Number);
-  return { year: y, month: m, day: d };
-}
 
 /** 한 달 뒤의 (연, 월). */
 function addMonth(year: number, month: number): { year: number; month: number } {

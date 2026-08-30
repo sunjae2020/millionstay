@@ -1054,8 +1054,8 @@ export default function BookingDetail() {
                           <td className="px-4 py-3 font-medium">{svc.service_name ?? svc.name}</td>
                           <td className="px-4 py-3 text-muted-foreground">{svc.service_type ?? "—"}</td>
                           <td className="px-4 py-3">{svc.quantity ?? 1}</td>
-                          <td className="px-4 py-3">{svc.unit_price ? `$${Number(svc.unit_price).toFixed(2)}` : "—"}</td>
-                          <td className="px-4 py-3">{svc.total_price ? `$${Number(svc.total_price).toFixed(2)}` : "—"}</td>
+                          <td className="px-4 py-3">{svc.unit_price ? formatMoney(svc.unit_price, svc.currency ?? brandCurrency, currencyPosition) : "—"}</td>
+                          <td className="px-4 py-3">{svc.total_price ? formatMoney(svc.total_price, svc.currency ?? brandCurrency, currencyPosition) : "—"}</td>
                           <td className="px-4 py-3 text-muted-foreground">{svc.billing_trigger ?? "—"}</td>
                           <td className="px-4 py-3 text-muted-foreground">{svc.frequency ?? "—"}</td>
                           <td className="px-4 py-3">

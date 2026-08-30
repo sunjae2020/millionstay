@@ -2,6 +2,7 @@ import { notifyCsTicketResolved } from "../lib/cs/csNotify";
 import { Router, type IRouter } from "express";
 import multer from "multer";
 import { eq, desc, and, ilike, or, sql, isNull, inArray, gte, lte } from "drizzle-orm";
+import { insertWorkOrderWithRef } from "../lib/workOrders/orderRef";
 import { db, csTicketsTable, csMessagesTable, guestUsersTable, partnerUsersTable, bookingsTable, workOrdersTable, spacesTable } from "@workspace/db";
 import { requireAuth } from "../middlewares/requireAuth";
 import { isCloudinaryConfigured, uploadToCloudinary, cldFolder } from "../utils/cloudinary";
@@ -12,13 +13,6 @@ import { deletedFilter, makeBulkDelete, makeBulkRestore } from "../lib/softDelet
 
 import { keywordCondition } from "../lib/listSearch";
 const router: IRouter = Router();
-
-async function nextWorkOrderRef(): Promise<string> {
-  const year = new Date().getFullYear();
-  const rows = await db.select({ id: workOrdersTable.id }).from(workOrdersTable)
-    .where(ilike(workOrdersTable.order_ref, `MS-WO-${year}-%`));
-  return `MS-WO-${year}-${String(rows.length + 1).padStart(5, "0")}`;
-}
 
 // Convert a CS ticket into a dispatched maintenance work order (Phase 3 bridge).
 // Admin-mediated ("관리자 경유 수리"): the admin supplies the dispatch category
@@ -48,26 +42,24 @@ router.post("/v1/cs-tickets/:id/create-work-order", requireAuth, async (req, res
     }
 
     const category = typeof req.body?.category === "string" && req.body.category.trim() ? req.body.category.trim().toLowerCase() : null;
-    const order_ref = await nextWorkOrderRef();
-    const [wo] = await db.insert(workOrdersTable).values({
-      order_ref,
+    const wo = await insertWorkOrderWithRef({
       property_id: propertyId,
       space_id: spaceId,
       title: ticket.subject,
       description: ticket.description,
       priority: ticket.priority ?? "Normal",
       category,
-    }).returning();
+    });
 
-    await db.update(csTicketsTable).set({ work_order_id: wo!.id }).where(eq(csTicketsTable.id, id));
+    await db.update(csTicketsTable).set({ work_order_id: wo.id }).where(eq(csTicketsTable.id, id));
 
     let dispatch: any = null;
     if (category) {
-      try { dispatch = await dispatchWorkOrder(wo!.id); } catch (e) { console.error("[cs-tickets] bridge dispatch failed:", e); }
+      try { dispatch = await dispatchWorkOrder(wo.id); } catch (e) { console.error("[cs-tickets] bridge dispatch failed:", e); }
     }
-    void logAction({ entityType: "cs_ticket", entityId: id, action: "CREATE", actorId: (req as any).user?.id ?? null, newValue: { work_order_id: wo!.id, order_ref, dispatched: dispatch?.ok ?? false } });
+    void logAction({ entityType: "cs_ticket", entityId: id, action: "CREATE", actorId: (req as any).user?.id ?? null, newValue: { work_order_id: wo.id, order_ref: wo.order_ref, dispatched: dispatch?.ok ?? false } });
 
-    const [fresh] = await db.select().from(workOrdersTable).where(eq(workOrdersTable.id, wo!.id)).limit(1);
+    const [fresh] = await db.select().from(workOrdersTable).where(eq(workOrdersTable.id, wo.id)).limit(1);
     res.status(201).json({ success: true, data: fresh, dispatch });
   } catch (err: any) {
     res.status(500).json({ success: false, error: { code: "SERVER_ERROR", message: err.message } });
