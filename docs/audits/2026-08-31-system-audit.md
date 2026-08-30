@@ -271,3 +271,44 @@ SELECT invoice_ref, count(*) FROM invoices GROUP BY 1 HAVING count(*)>1;
 2. **이번 주** — C-2 주민등록번호 마스킹·암호화, C-3 DB 가드 모듈, H-3 보존기한, H-1 `BILLING_TIMEZONE` 통일.
 3. **이번 달** — C-5 계약 겹침 제약, H-2 청구 기간 키 통일, H-4 알림, H-6 RBAC fail-closed, H-9 번역, H-10 noindex.
 4. **분기** — P2 전반 + 미측정 항목 DB 실측.
+
+---
+
+## 조치 현황 (2026-08-31, 커밋 `64d51008` + `7e27798f`)
+
+브랜치 `fix/security-audit-2026-08-31` (`origin/main` 기준). **미배포** — 머지 전 검토 필요.
+검증: `pnpm typecheck` 0 에러 · `check-privacy.sh` PASS · `check-brand-overrides.sh` PASS.
+
+| ID | 상태 | 비고 |
+|---|---|---|
+| C-1 자격증명 | ⚠️ **부분** | 파일에서 제거 완료. **비밀번호 회전은 사람이 해야 함** — 히스토리에 잔존 |
+| C-2 주민등록번호 | ✅ | 리스트 마스킹 + `has_*` 플래그. 상세는 편집 폼 왕복 때문에 원본 유지 |
+| C-3 DB 가드 | ✅ | `scripts/lib/dbGuard.mjs` + 18개 스크립트 배선, 프로드 ref 목록화 |
+| C-4 인보이스 채번 | ✅ | 체리픽 + 작업지시 번호까지 확대(`cs-tickets` 포함) |
+| C-5 계약 이중배정 | ⚠️ **부분** | 앱 레벨 409 + `allow_overlap` override. **DB 제약은 후속** |
+| H-1 청구 타임존 | ✅ | `billingDate.ts`로 통일. 한국 인스턴스 월세가 1일에 발행 |
+| H-2 월세 스킵 | ⚠️ **가시화만** | 가드는 의도적으로 유지(이중청구 위험). WARN + `suspicious_skips` |
+| H-3 보존기한 | ✅ | 홈스테이 호스트 서류. **기존 NULL 행 백필은 후속** |
+| H-4 에러·크론 | ⚠️ **부분** | JSON 핸들러 + `cron_failure` 키. **트래킹/알림 도입은 후속** |
+| H-5 헬스체크 | ✅ | `/api/readyz` 신설, 정보노출 제거, 커밋 SHA 추가 |
+| H-6 RBAC | ⚠️ **부분** | 프리픽스 4개 추가 + WARN. fail-open은 의도적 유지 |
+| H-7 GL·Stripe | ✅ | 트랜잭션 + 부가세 leg. 정산 중복 호출도 제거 |
+| H-8 세대 집계 | ✅ | 오너 포털에 `countableUnitFilter` |
+| H-9 번역 누락 | ❌ **미조치** | 별도 작업 — `translate-i18n.mjs` 실행 필요 |
+| H-10 noindex | ✅ | 내부 4앱 3중 차단. **sitemap·hreflang은 미조치** |
+| H-11 레이트리밋 | ✅ | 공개 write/업로드 12개 경로 |
+| H-12 크론 게이트 | ✅ | 홈스테이 렌트에 모듈 토글 |
+| M-1 공개 CDN 사진 | ❌ **보류** | 렌더 경로 전면 수정 필요 — 별도 작업 |
+| M-2 이중 독촉 | ✅ | 통합청구 자식 제외 |
+| M-5 통화 표기 | ✅ | `formatMoney` 교체 |
+| M-9 서명 레이스 | ✅ | compare-and-swap |
+| M-11 AI 벤더 고정 | ✅ | `movable:"no"` 코드 강제 |
+
+### 오탐으로 확인된 것
+`routes/bookings.ts`가 연락처 행을 통째로 select하지만, `shapeBooking`(`:128-132`)이
+이름·휴대폰·이메일만 투영하므로 주민등록번호는 응답에 나가지 않습니다.
+
+### 남은 후속 과제
+DB EXCLUDE 제약(C-5) · 주민등록번호 암호화 저장(C-2) · `retention_until` NULL 백필(H-3) ·
+에러 트래킹 도입(H-4) · 번역 채우기(H-9) · sitemap·hreflang(H-10) · CS 사진 private 전환(M-1) ·
+그리고 **미측정 SQL 4종의 실측**.
