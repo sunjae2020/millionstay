@@ -23,6 +23,7 @@ import pg from "pg";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
+import { guardDbInstance } from "../../../scripts/lib/dbGuard.mjs";
 
 const { Pool } = pg;
 const __dir = dirname(fileURLToPath(import.meta.url));
@@ -36,6 +37,7 @@ if (!DATABASE_URL) {
   console.error("DATABASE_URL is required.");
   process.exit(1);
 }
+guardDbInstance({ databaseUrl: DATABASE_URL });
 
 /** Flatten a nested resource object into dot-notation keys. */
 function flatten(obj, prefix = "", out = {}) {

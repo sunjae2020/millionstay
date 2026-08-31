@@ -6,13 +6,18 @@
  * editable email/contract copy lives in one place (the Templates Studio). The
  * legacy table is left intact (dormant) — its admin UI is unlinked separately.
  *
- * Usage:  DATABASE_URL=... node scripts/migrate-legacy-email-templates.mjs
+ * Usage:  DATABASE_URL=... node scripts/migrate-legacy-email-templates.mjs --instance=<name> --apply
+ *         (기본은 dry-run — --apply 없이는 아무것도 쓰지 않는다)
  */
 import pg from "pg";
+import { guardDbInstance, confirmWrite } from "../../../scripts/lib/dbGuard.mjs";
 const { Pool } = pg;
 
 const humanize = (code) =>
   code.toLowerCase().split(/[_\s]+/).map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join(" ");
+
+guardDbInstance();
+if (!confirmWrite()) process.exit(0);
 
 const pool = new Pool({ connectionString: process.env.DATABASE_URL, ssl: { rejectUnauthorized: false } });
 const c = await pool.connect();

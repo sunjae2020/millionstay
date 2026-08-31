@@ -15,6 +15,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import pg from "pg";
+import { guardDbInstance } from "./lib/dbGuard.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, "..");
@@ -143,6 +144,7 @@ if (!url) {
   console.error("DATABASE_URL must be set");
   process.exit(1);
 }
+guardDbInstance({ databaseUrl: url });
 const pool = new pg.Pool({
   connectionString: url,
   ssl: url.includes("supabase.") ? { rejectUnauthorized: false } : undefined,

@@ -19,6 +19,14 @@ import { generateConsolidatedInvoices } from "./lib/billing/consolidatedInvoices
 import { checkWorkOrderSla } from "./lib/dispatch/workOrderDispatch";
 import { runCampaignSends } from "./lib/marketing/worker";
 
+// Structured, greppable failure record for scheduled jobs. Every cron catch
+// handler goes through this so one grep for `cron_failure` (or a log query on
+// event=cron_failure) surfaces every silently failing job. Logging only — no
+// email/webhook fan-out, so a repeatedly failing cron can never spam anyone.
+function cronFailure(job: string): (err: unknown) => void {
+  return (err) => logger.error({ err, cron: job, event: "cron_failure" }, `Cron job failed: ${job}`);
+}
+
 const rawPort = process.env["PORT"];
 
 if (!rawPort) {
@@ -159,7 +167,7 @@ cron.schedule(
   () => {
     syncExchangeRates()
       .then((r) => logger.info({ ok: r.ok, updated: r.updated.length, skipped: r.skipped.length }, "Cron exchange rate sync"))
-      .catch((err) => logger.error({ err }, "Cron exchange rate sync failed"));
+      .catch(cronFailure("exchange-rate-sync"));
   },
   { timezone: "Australia/Sydney" },
 );
@@ -173,7 +181,7 @@ syncAllChannelImports()
 cron.schedule("0 * * * *", () => {
   syncAllChannelImports()
     .then((r) => logger.info({ total: r.total, ok: r.ok, failed: r.failed }, "Cron iCal import sync"))
-    .catch((err) => logger.error({ err }, "Cron iCal import sync failed"));
+    .catch(cronFailure("ical-import"));
 });
 
 // Retention purge (APP 11.5) — daily at 03:15 Sydney. Physically destroys
@@ -188,7 +196,7 @@ cron.schedule(
   () => {
     purgeExpiredDocuments()
       .then((r) => logger.info({ scanned: r.scanned, destroyed: r.destroyed, errors: r.errors }, "Cron retention purge"))
-      .catch((err) => logger.error({ err }, "Cron retention purge failed"));
+      .catch(cronFailure("retention-purge"));
   },
   { timezone: "Australia/Sydney" },
 );
@@ -200,9 +208,19 @@ cron.schedule(
 cron.schedule(
   "0 2 * * *",
   () => {
+    // Gate on the per-tenant homestay module toggle — the same switch
+    // routes/integrations.ts reads. integration_settings rows are loaded into
+    // process.env at boot (loadSettingsFromDb) and re-applied on every admin
+    // save (setIntegrationSetting), so this sync read sees runtime changes
+    // without a DB call. Defaults ON when unset (only an explicit "false"
+    // disables), so behaviour is unchanged for existing instances.
+    if (process.env["HOMESTAY_MODULE_ENABLED"] === "false") {
+      logger.info({ cron: "homestay-rent-billing" }, "Cron homestay rent billing skipped — HOMESTAY_MODULE_ENABLED=false");
+      return;
+    }
     generateRentCharges()
       .then((r) => logger.info({ ...r }, "Cron homestay rent billing"))
-      .catch((err) => logger.error({ err }, "Cron homestay rent billing failed"));
+      .catch(cronFailure("homestay-rent-billing"));
   },
   { timezone: "Australia/Sydney" },
 );
@@ -219,7 +237,7 @@ cron.schedule(
   () => {
     generateRecurringInvoices()
       .then((r) => logger.info({ ...r }, "Cron recurring invoice billing"))
-      .catch((err) => logger.error({ err }, "Cron recurring invoice billing failed"));
+      .catch(cronFailure("recurring-invoices"));
   },
   { timezone: "Australia/Sydney" },
 );
@@ -234,7 +252,7 @@ cron.schedule(
   () => {
     generateLeaseRentInvoices()
       .then((r) => { if (r.enabled) logger.info({ ...r }, "Cron lease rent billing"); })
-      .catch((err) => logger.error({ err }, "Cron lease rent billing failed"));
+      .catch(cronFailure("lease-rent-invoices"));
   },
   { timezone: "Australia/Sydney" },
 );
@@ -253,7 +271,7 @@ cron.schedule(
         // 연락 수단이 없는 건은 조용히 넘어가면 영원히 통보가 안 된다 — 눈에 띄게 남긴다.
         if (r.noContact > 0) logger.warn({ noContact: r.noContact }, "연체 건 중 연락 수단 없음");
       })
-      .catch((err) => logger.error({ err }, "Cron rent dunning failed"));
+      .catch(cronFailure("rent-dunning"));
   },
   { timezone: "Asia/Seoul" },
 );
@@ -265,7 +283,7 @@ cron.schedule(
   () => {
     sendRentDueNotices()
       .then((r) => { if (r.enabled) logger.info({ ...r }, "Cron rent due notice"); })
-      .catch((err) => logger.error({ err }, "Cron rent due notice failed"));
+      .catch(cronFailure("rent-due-notices"));
   },
   { timezone: "Asia/Seoul" },
 );
@@ -279,7 +297,7 @@ cron.schedule(
   () => {
     generateConsolidatedInvoices()
       .then((r) => { if (r.accounts) logger.info({ ...r }, "Cron consolidated invoicing"); })
-      .catch((err) => logger.error({ err }, "Cron consolidated invoicing failed"));
+      .catch(cronFailure("consolidated-invoicing"));
   },
   { timezone: "Australia/Sydney" },
 );
@@ -295,13 +313,13 @@ cron.schedule(
 cron.schedule("*/5 * * * *", () => {
   runCampaignSends()
     .then((r) => { if (r.enabled && (r.sent || r.failed || r.deferred)) logger.info({ ...r }, "Cron marketing campaign sends"); })
-    .catch((err) => logger.error({ err }, "Cron marketing campaign sends failed"));
+    .catch(cronFailure("marketing-campaign-sends"));
 });
 
 cron.schedule("*/10 * * * *", () => {
   checkWorkOrderSla()
     .then((r) => { if (r.breached) logger.warn({ ...r }, "Cron work-order SLA breaches"); })
-    .catch((err) => logger.error({ err }, "Cron work-order SLA check failed"));
+    .catch(cronFailure("work-order-sla"));
 });
 
 const server = app.listen(port, (err) => {

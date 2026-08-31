@@ -48,7 +48,7 @@ import {
   type SigningPolicy,
 } from "@/components/ContractIssueWizard";
 import { useBrand } from "@/contexts/ThemeContext";
-import { SUPPORTED_CURRENCIES } from "@/lib/currency";
+import { SUPPORTED_CURRENCIES, formatMoney } from "@/lib/currency";
 
 import { ExportableTable } from "@/components/ui/ExportCsvButton";
 // Ordered so the tenant's own currency (from branding) leads; falls back to the full list.
@@ -170,7 +170,7 @@ export default function ContractDetail() {
   const qc = useQueryClient();
   const isNew = !id || id === "new";
   // Tenant default currency from branding settings (Metheim → KRW; MillionStay → AUD).
-  const { currency: brandCurrency } = useBrand();
+  const { currency: brandCurrency, currencyPosition } = useBrand();
 
   const [terminateOpen, setTerminateOpen] = useState(false);
   const [terminateReason, setTerminateReason] = useState("");
@@ -1584,9 +1584,9 @@ export default function ContractDetail() {
                           {item.billing_trigger === "recurring" ? t('contract.billing_recurring') : item.billing_trigger === "at_activation" ? t('contract.billing_onetime') : item.billing_trigger}
                         </td>
                         <td className="px-4 py-3 text-muted-foreground">{item.billing_frequency ?? "—"}</td>
-                        <td className="px-4 py-3 font-mono">{item.unit_price != null ? `$${Number(item.unit_price).toFixed(2)}` : "—"}</td>
+                        <td className="px-4 py-3 font-mono">{item.unit_price != null ? formatMoney(item.unit_price, item.currency ?? brandCurrency, currencyPosition) : "—"}</td>
                         <td className="px-4 py-3 text-center">{item.quantity ?? 1}</td>
-                        <td className="px-4 py-3 font-mono font-medium">{item.total_price != null ? `$${Number(item.total_price).toFixed(2)}` : "—"}</td>
+                        <td className="px-4 py-3 font-mono font-medium">{item.total_price != null ? formatMoney(item.total_price, item.currency ?? brandCurrency, currencyPosition) : "—"}</td>
                         <td className="px-4 py-3">
                           <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${item.gst_included ? "bg-blue-100 text-blue-700" : "bg-gray-100 text-gray-500"}`}>
                             {item.gst_included ? t('contract.gst_incl') : t('contract.gst_ex')}
@@ -1835,7 +1835,7 @@ export default function ContractDetail() {
                     ) : schedules.map((s: any) => (
                       <tr key={s.id} className="border-b hover:bg-gray-50">
                         <td className="px-4 py-3 font-medium">{s.schedule_type ?? "Rent"}</td>
-                        <td className="px-4 py-3 font-mono">{s.amount != null ? `$${Number(s.amount).toFixed(2)}` : "—"}</td>
+                        <td className="px-4 py-3 font-mono">{s.amount != null ? formatMoney(s.amount, s.currency ?? brandCurrency, currencyPosition) : "—"}</td>
                         <td className="px-4 py-3 text-muted-foreground">{s.currency ?? brandCurrency}</td>
                         <td className="px-4 py-3 text-muted-foreground">{s.start_date ?? "—"}</td>
                         <td className="px-4 py-3 text-muted-foreground">{s.end_date ?? "—"}</td>

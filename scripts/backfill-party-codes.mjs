@@ -2,7 +2,7 @@
 /**
  * 고객 ID 백필 — 이미 등록된 계정·연락처에 번호를 매긴다.
  *
- *     PARTY_CODE_PREFIX=MH DATABASE_URL=… node scripts/backfill-party-codes.mjs [--dry]
+ *     PARTY_CODE_PREFIX=MH DATABASE_URL=… node scripts/backfill-party-codes.mjs --instance=<name> [--dry]
  *
  * 번호는 **최초 등록 연월** 안에서 등록 순서대로 나간다. 그래서 한 번 돌린 뒤
  * 다시 돌려도 이미 번호가 있는 레코드는 건너뛰고 새로 들어온 것만 이어 붙는다 —
@@ -12,6 +12,7 @@
  * 사업자등록번호가 있거나 계정 유형이 Agent/Partner/ServiceHost면 B.
  */
 import pg from "pg";
+import { guardDbInstance } from "./lib/dbGuard.mjs";
 
 const { Client } = pg;
 const DRY = process.argv.includes("--dry");
@@ -44,6 +45,9 @@ function periodOf(value) {
 const RAW_URL = process.env.DATABASE_URL || "";
 const CONN = RAW_URL.replace(/[?&]sslmode=[^&]*/g, "").replace(/\?$/, "");
 const IS_LOCAL = /@(localhost|127\.0\.0\.1)/.test(CONN);
+
+// 어느 인스턴스 DB를 채우는지 선언 필수 — 엉뚱한 운영 DB에 번호를 매기지 않게.
+guardDbInstance({ databaseUrl: RAW_URL });
 
 const db = new Client({
   connectionString: CONN,

@@ -13,6 +13,7 @@
  */
 import pg from "pg";
 import { splitKoreanName } from "./lib/korean-name.mjs";
+import { guardDbInstance } from "../../../scripts/lib/dbGuard.mjs";
 
 const { Pool } = pg;
 const COMMIT = process.argv.includes("--commit");
@@ -21,6 +22,7 @@ if (!process.env.DATABASE_URL) {
   console.error("DATABASE_URL is required.");
   process.exit(1);
 }
+guardDbInstance();
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL.replace(/[?&](pgbouncer|uselibpqcompat|sslnegotiation|sslmode)=[^&]*/g, ""),

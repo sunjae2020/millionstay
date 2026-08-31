@@ -47,6 +47,16 @@ const PREFIX_MAP: Array<[string, Resource]> = [
   ["/v1/leads", "crm"],
   ["/v1/accounts", "crm"],
   ["/v1/tasks", "crm"],
+  // Marketing (prospects/lists/campaigns) operates on the CRM's people data.
+  ["/v1/marketing", "crm"],
+  // AI ops (providers/keys/task models/usage) is managed at Settings → AI.
+  ["/v1/ai", "settings"],
+  // External-API key management lives at Settings → API Keys. (The /api/ext
+  // runtime surface authenticates with its own key+secret, not admin JWTs.)
+  ["/v1/api-credentials", "settings"],
+  // Bank-account / payment-destination registry — financial master data, same
+  // bucket as invoices/exchange-rate even though its page sits under Settings.
+  ["/v1/payment-info", "finance"],
   ["/v1/properties", "properties"],
   ["/v1/spaces", "properties"],
   ["/v1/space", "properties"],
@@ -71,6 +81,18 @@ export function resourceForPath(path: string): Resource | null {
   return null;
 }
 
+// ── Fail-open visibility ─────────────────────────────────────────────────────
+// The allow-by-default paths above are deliberate (see the header comment), but
+// they must be VISIBLE, not silent: an admin router someone forgets to add to
+// PREFIX_MAP would otherwise bypass the matrix forever without a trace. Each
+// distinct condition is logged once per process so the log stays readable.
+const warnedFallbacks = new Set<string>();
+function warnFailOpen(key: string, message: string): void {
+  if (warnedFallbacks.has(key)) return;
+  if (warnedFallbacks.size < 500) warnedFallbacks.add(key); // bound memory
+  console.warn(`[rbac] WARN fail-open: ${message} — request allowed by design (lib/rbac.ts)`);
+}
+
 // ── Role permission cache ────────────────────────────────────────────────────
 type RoleCacheEntry = { permissions: Record<string, PermLevel> };
 let roleCache: Map<string, RoleCacheEntry> | null = null;
@@ -93,8 +115,13 @@ async function loadRoles(): Promise<Map<string, RoleCacheEntry>> {
     }
     roleCache = map;
     roleCacheExpires = now + ROLE_CACHE_TTL_MS;
-  } catch {
-    // Table may not exist yet (migration not applied) — fail open with empty map.
+  } catch (err) {
+    // Table may not exist yet (migration not applied) or the DB blipped — fail
+    // open with the stale cache (or an empty map) rather than lock admins out.
+    console.warn(
+      `[rbac] WARN fail-open: roles table unreadable (${err instanceof Error ? err.message : String(err)}) — ` +
+      `using ${roleCache ? "stale cached" : "empty"} permission map`,
+    );
     return roleCache ?? map;
   }
   return map;
@@ -107,11 +134,19 @@ async function loadRoles(): Promise<Map<string, RoleCacheEntry>> {
 export async function isAllowed(roleName: string, method: string, path: string): Promise<boolean> {
   if (roleName === "SuperAdmin") return true;
   const resource = resourceForPath(path);
-  if (!resource) return true; // unmapped route → allow
+  if (!resource) {
+    // Key on the first two path segments so ids don't fan out the warn set.
+    const prefix = path.split("/").slice(0, 3).join("/");
+    warnFailOpen(`unmapped:${prefix}`, `no PREFIX_MAP entry for "${prefix}"`);
+    return true; // unmapped route → allow
+  }
 
   const roles = await loadRoles();
   const role = roles.get(roleName);
-  if (!role) return true; // unknown role → allow
+  if (!role) {
+    warnFailOpen(`role:${roleName}`, `role "${roleName}" not found in roles table`);
+    return true; // unknown role → allow
+  }
 
   const have = role.permissions[resource];
   if (have === undefined) return true; // unset resource → allow

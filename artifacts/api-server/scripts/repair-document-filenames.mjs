@@ -17,6 +17,7 @@
 import { readFileSync } from "node:fs";
 import path from "node:path";
 import pg from "pg";
+import { guardDbInstance } from "../../../scripts/lib/dbGuard.mjs";
 
 const args = process.argv.slice(2);
 const apply = args.includes("--apply");
@@ -42,6 +43,7 @@ function repair(name) {
 }
 
 const client = new pg.Client({ connectionString: databaseUrl() });
+guardDbInstance({ databaseUrl: databaseUrl() });
 await client.connect();
 
 const { rows } = await client.query(

@@ -21,6 +21,8 @@ import {
   validateSlug,
 } from "@workspace/db";
 import { requireOwnerAuth, type PartnerAuthPayload } from "../middlewares/requirePartnerAuth";
+// 집계용 세대 스코프 — 타입 마스터 행과 소프트 삭제 세대를 제외한다(대시보드와 동일 기준).
+import { countableUnitFilter } from "../lib/unitScope";
 import { isCloudinaryConfigured, uploadToCloudinary, cldFolder, generateSignedUrl } from "../utils/cloudinary";
 import { logAction } from "../utils/auditLog";
 import { syncOwnerSubdomain } from "../lib/vercelDomains";
@@ -90,11 +92,12 @@ router.get("/v1/owner/dashboard", requireOwnerAuth, async (req, res): Promise<vo
     return;
   }
 
-  // Spaces in those properties
+  // Spaces in those properties — countable units only (no type-master rows, no
+  // soft-deleted units), matching the admin dashboard, so totals aren't inflated.
   const spaces = await db
     .select({ id: spacesTable.id, property_id: spacesTable.property_id, name: spacesTable.name, space_type: spacesTable.space_type, status: spacesTable.status })
     .from(spacesTable)
-    .where(inArray(spacesTable.property_id, propertyIds));
+    .where(and(inArray(spacesTable.property_id, propertyIds), countableUnitFilter));
 
   const spaceIds = spaces.map(s => s.id);
 
@@ -160,7 +163,7 @@ router.get("/v1/owner/properties", requireOwnerAuth, async (req, res): Promise<v
     ? await db
         .select({ id: spacesTable.id, property_id: spacesTable.property_id, name: spacesTable.name, space_type: spacesTable.space_type, status: spacesTable.status })
         .from(spacesTable)
-        .where(inArray(spacesTable.property_id, propertyIds))
+        .where(and(inArray(spacesTable.property_id, propertyIds), countableUnitFilter))
     : [];
 
   const spaceMap: Record<number, typeof spaces> = {};
@@ -205,7 +208,7 @@ router.get("/v1/owner/properties/:id", requireOwnerAuth, async (req, res): Promi
       property_id: spacesTable.property_id,
     })
     .from(spacesTable)
-    .where(eq(spacesTable.property_id, propertyId));
+    .where(and(eq(spacesTable.property_id, propertyId), countableUnitFilter));
 
   const spaceIds = spaces.map(s => s.id);
 
@@ -518,8 +521,9 @@ router.get("/v1/owner/analytics", requireOwnerAuth, async (req, res): Promise<vo
 
   const spaces = await db
     .select({ id: spacesTable.id, property_id: spacesTable.property_id, status: spacesTable.status, base_currency: spacesTable.base_currency })
+    // countableUnitFilter (deleted_at 포함) — 타입 마스터가 점유율 분모를 부풀리지 않게.
     .from(spacesTable)
-    .where(and(inArray(spacesTable.property_id, propertyIds), isNull(spacesTable.deleted_at)));
+    .where(and(inArray(spacesTable.property_id, propertyIds), countableUnitFilter));
   const spaceIds = spaces.map((s) => s.id);
   const propNameById = Object.fromEntries(properties.map((p) => [p.id, p.name]));
   const propIdBySpace = Object.fromEntries(spaces.map((s) => [s.id, s.property_id]));

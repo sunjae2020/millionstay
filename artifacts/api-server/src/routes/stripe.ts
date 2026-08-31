@@ -70,9 +70,10 @@ router.post("/v1/stripe/webhook", async (req, res): Promise<void> => {
             newValue: { status: "Paid", stripe_payment_intent: pi.id, amount: pi.amount },
           });
           // Auto-post the GL entry (best-effort; never blocks the webhook).
+          // tax_amount is a numeric column → string; without it the payment entry
+          // dropped the VAT leg and drifted AR / VAT-payable (2300).
           if (inv) {
-            void postInvoicePaid({ id: inv.id, amount: Number(inv.amount), currency: inv.currency, paidAt: now.toISOString() });
-            void generateSettlementsForInvoice(inv.id);
+            void postInvoicePaid({ id: inv.id, amount: Number(inv.amount), currency: inv.currency, tax: Number(inv.tax_amount ?? 0), paidAt: now.toISOString() });
             void generateSettlementsForInvoice(inv.id);
           }
         }
@@ -158,7 +159,7 @@ router.post("/v1/stripe/webhook", async (req, res): Promise<void> => {
               newValue: { status: "Paid", stripe_session: session.id, amount_total: session.amount_total },
             }).catch(() => {});
             // Auto-post the GL entry (best-effort; never blocks the webhook).
-            void postInvoicePaid({ id: inv.id, amount: Number(inv.amount), currency: inv.currency, paidAt: now.toISOString() });
+            void postInvoicePaid({ id: inv.id, amount: Number(inv.amount), currency: inv.currency, tax: Number(inv.tax_amount ?? 0), paidAt: now.toISOString() });
           }
           console.log(`[Stripe] checkout.session.completed → invoice ${invoiceId} paid`);
           break;

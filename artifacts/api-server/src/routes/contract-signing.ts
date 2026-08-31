@@ -270,10 +270,23 @@ contractSigningPublicRouter.post("/v1/public/contract-signing/:token/sign", asyn
       console.error("[ContractSign] signed-snapshot capture failed:", e);
     }
 
-    await db
+    // Single-use guard against concurrent submissions: the status predicate in
+    // the WHERE clause makes this compare-and-swap. Two racers both passed the
+    // early `status !== "pending"` check above; only the first can flip
+    // pending → signed here — the loser matches zero rows and must NOT
+    // overwrite the winner's signatures/content_hash/signed_snapshot.
+    const claimed = await db
       .update(contractSigningRequestsTable)
       .set({ status: "signed", signatures: enriched, signed_at: now, updated_at: now, content_hash, signed_snapshot })
-      .where(eq(contractSigningRequestsTable.id, row.id));
+      .where(and(
+        eq(contractSigningRequestsTable.id, row.id),
+        eq(contractSigningRequestsTable.status, "pending"),
+      ))
+      .returning({ id: contractSigningRequestsTable.id });
+    if (claimed.length === 0) {
+      res.status(410).json({ error: "inactive", message: "This request is no longer active." });
+      return;
+    }
 
     void appendAuditEvent(row.id, {
       event: "signed",

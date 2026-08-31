@@ -29,6 +29,7 @@ import {
   DeleteContactParams,
 } from "@workspace/api-zod";
 import { resolvePartyCode } from "../lib/documents/partyCode";
+import { maskResidentNo, maskPassportNo } from "../lib/piiMask";
 
 import { keywordCondition } from "../lib/listSearch";
 const router: IRouter = Router();
@@ -72,7 +73,16 @@ router.get("/v1/contacts", async (req, res): Promise<void> => {
     .where(and(...conditions))
     // Person lists sort by family name, then given name (see lib/nameFormat.ts).
     .orderBy(contactsTable.last_name, contactsTable.first_name);
-  res.json(rows);
+  // 고유식별정보(PIPA §24-3): the list never carries raw resident registration /
+  // passport numbers — masked display values only. Raw values stay on the
+  // detail endpoint, which the edit form and contract issuance actually use.
+  res.json(rows.map((r) => ({
+    ...r,
+    resident_no: maskResidentNo(r.resident_no),
+    passport_number: maskPassportNo(r.passport_number),
+    has_resident_no: Boolean(r.resident_no?.trim()),
+    has_passport_number: Boolean(r.passport_number?.trim()),
+  })));
 });
 
 router.post("/v1/contacts", async (req, res): Promise<void> => {

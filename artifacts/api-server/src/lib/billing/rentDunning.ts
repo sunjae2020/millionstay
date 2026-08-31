@@ -102,6 +102,9 @@ export async function sendRentDueNotices(opts: { dryRun?: boolean } = {}): Promi
     .leftJoin(contactsTable, eq(contactsTable.id, accountsTable.primary_contact_id))
     .where(and(
       isNull(invoicesTable.deleted_at),
+      // 통합 청구의 자식(공간별) 인보이스는 세입자가 직접 내는 문서가 아니다 — 부모
+      // 통합 청구서 한 장만 안내한다. 둘 다 보내면 같은 돈을 두 번 독촉하게 된다.
+      isNull(invoicesTable.parent_invoice_id),
       sql`${invoicesTable.status} in ('Sent','Draft')`,
       // 아직 기한 전이고, 기한이 daysAhead 일 안으로 다가온 건.
       // due_date 는 text 라 캐스트가 필요하다.
@@ -232,6 +235,9 @@ export async function sendRentDunning(opts: { dryRun?: boolean } = {}): Promise<
     .leftJoin(contactsTable, eq(contactsTable.id, accountsTable.primary_contact_id))
     .where(and(
       isNull(invoicesTable.deleted_at),
+      // 통합 청구의 자식 인보이스 제외 — 독촉은 세입자가 실제로 내는 부모 통합
+      // 청구서에만 나간다(자식까지 보내면 같은 돈을 두 번 독촉한다).
+      isNull(invoicesTable.parent_invoice_id),
       eq(invoicesTable.status, "Overdue"),
       sql`${invoicesTable.due_date}::date <= (${today}::date - ${maxDays}::int)`,
     ));

@@ -16,6 +16,7 @@ import { and, eq, gte, isNull, lte, or, sql } from "drizzle-orm";
 import { db, contractsTable, invoicesTable, spacesTable, integrationSettings } from "@workspace/db";
 import { DEFAULT_CURRENCY } from "../currency";
 import { consolidatedAccountIds } from "./consolidatedInvoices";
+import { billingTodayIso, todayInBillingTz } from "./billingDate";
 
 /** Settings key (also an integrations ALLOWED_KEY) toggling this cron. */
 export const LEASE_RENT_INVOICES_ENABLED_KEY = "LEASE_RENT_INVOICES_ENABLED";
@@ -46,6 +47,12 @@ export type LeaseRentResult = {
   created: number;
   overdue: number;
   skipped: number;
+  /**
+   * "이미 청구됨" 가드에 걸려 건너뛰었지만, 막은 인보이스가 월세처럼 보이지 않는 건
+   * (보증금·청소비 등). 0 이 아니면 그 달 월세가 조용히 빠졌을 수 있다 — WARN 로그의
+   * 계약·인보이스를 확인해야 한다.
+   */
+  suspiciousSkips: number;
 };
 
 /**
@@ -54,16 +61,19 @@ export type LeaseRentResult = {
  */
 export async function generateLeaseRentInvoices(opts: { year?: number; month?: number; force?: boolean } = {}): Promise<LeaseRentResult> {
   const enabled = opts.force === true || (await isLeaseRentInvoicesEnabled());
-  if (!enabled) return { enabled: false, created: 0, overdue: 0, skipped: 0 };
+  if (!enabled) return { enabled: false, created: 0, overdue: 0, skipped: 0, suspiciousSkips: 0 };
 
-  const now = new Date();
-  const year = opts.year ?? now.getUTCFullYear();
-  const month = opts.month ?? now.getUTCMonth() + 1;
+  // 기준 시간대(BILLING_TIMEZONE, 기본 시드니)의 오늘로 대상 월을 잡는다. UTC 로 읽으면
+  // 시드니 새벽 크론이 매월 1일에 아직 지난달을 보고 새 달 월세를 하루 늦게 만든다.
+  const today = todayInBillingTz();
+  const year = opts.year ?? today.year;
+  const month = opts.month ?? today.month;
   const monthStart = `${year}-${pad(month)}-01`;
   const monthEnd = dueDateFor(year, month, 31);
 
   let created = 0;
   let skipped = 0;
+  let suspiciousSkips = 0;
 
   const leases = await db.select({
     id: contractsTable.id,
@@ -100,7 +110,17 @@ export async function generateLeaseRentInvoices(opts: { year?: number; month?: n
     if (lease.end_date && dueDate > lease.end_date) { skipped++; continue; }
 
     // Already billed for this month? (covers both migrated and generated refs)
-    const [existing] = await db.select({ id: invoicesTable.id })
+    //
+    // ⚠️ This guard is deliberately BROAD — any invoice due in the month blocks the
+    // rent invoice, even a deposit or cleaning bill. Narrowing it would double-bill
+    // migrated data, so we DON'T. Instead, when the blocking invoice doesn't look
+    // like rent, we log a WARN and count it so ops can spot silently skipped rent.
+    const [existing] = await db.select({
+      id: invoicesTable.id,
+      ref: invoicesTable.invoice_ref,
+      kind: invoicesTable.invoice_kind,
+      description: invoicesTable.description,
+    })
       .from(invoicesTable)
       .where(and(
         eq(invoicesTable.contract_id, lease.id),
@@ -109,7 +129,27 @@ export async function generateLeaseRentInvoices(opts: { year?: number; month?: n
         lte(invoicesTable.due_date, monthEnd),
       ))
       .limit(1);
-    if (existing) { skipped++; continue; }
+    if (existing) {
+      const ref = existing.ref ?? "";
+      const desc = existing.description ?? "";
+      const looksLikeRent =
+        ref.startsWith("RENT-") ||           // this generator / consolidated child
+        ref.startsWith("CINV-") ||           // consolidated parent
+        existing.kind === "consolidated" ||
+        desc.includes("월세") ||
+        desc.includes("임대료") ||
+        /rent/i.test(desc);
+      if (!looksLikeRent) {
+        suspiciousSkips++;
+        console.warn(
+          `[leaseRent] contract #${lease.id} (${lease.ref}): skipping ${year}-${pad(month)} rent — `
+          + `blocked by non-rent-looking invoice ${ref || `#${existing.id}`} ("${desc}"). `
+          + `Rent for this month may never be billed; verify and bill manually if needed.`,
+        );
+      }
+      skipped++;
+      continue;
+    }
 
     let unitName: string | null = null;
     if (lease.space_id) {
@@ -132,16 +172,17 @@ export async function generateLeaseRentInvoices(opts: { year?: number; month?: n
   }
 
   // Anything unpaid past its due date is overdue — this is the 미납 signal the
-  // dashboard and the contract rent tab surface.
-  const today = new Date().toISOString().slice(0, 10);
+  // dashboard and the contract rent tab surface. Cutoff uses the billing timezone,
+  // not UTC — otherwise flagging lags a day for tenants east of UTC.
+  const todayIso = billingTodayIso();
   const overdueRows = await db.update(invoicesTable)
     .set({ status: "Overdue", updated_at: new Date() })
     .where(and(
       isNull(invoicesTable.deleted_at),
       sql`${invoicesTable.status} in ('Sent','Draft')`,
-      sql`${invoicesTable.due_date} < ${today}`,
+      sql`${invoicesTable.due_date} < ${todayIso}`,
     ))
     .returning({ id: invoicesTable.id });
 
-  return { enabled: true, created, overdue: overdueRows.length, skipped };
+  return { enabled: true, created, overdue: overdueRows.length, skipped, suspiciousSkips };
 }

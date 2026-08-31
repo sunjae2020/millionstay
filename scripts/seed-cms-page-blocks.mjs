@@ -15,12 +15,13 @@
 // seed-metheim-page-content.mjs wrote, so the figures stay single-sourced.
 //
 // Usage:
-//   DATABASE_URL=<metheim> node scripts/seed-cms-page-blocks.mjs [--apply] [--locale=ko]
+//   DATABASE_URL=<metheim> node scripts/seed-cms-page-blocks.mjs --instance=<name> [--apply] [--locale=ko]
 
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import pg from "pg";
+import { guardDbInstance } from "./lib/dbGuard.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, "..");
@@ -33,6 +34,7 @@ if (!url) {
   console.error("DATABASE_URL must be set (point it at the tenant database)");
   process.exit(1);
 }
+guardDbInstance({ databaseUrl: url });
 
 const locale = JSON.parse(
   fs.readFileSync(path.join(ROOT, `artifacts/million-stay-web/src/locales/${LOCALE}/translation.json`), "utf8"),

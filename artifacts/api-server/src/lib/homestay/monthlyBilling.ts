@@ -14,11 +14,9 @@ import {
 } from "@workspace/db";
 import { getHomestayBillingSettings } from "./billingSettings.js";
 import { hasActiveRentSchedule } from "./rentSchedule.js";
-
-/** Today in Sydney (YYYY-MM-DD), matching the cron timezone. */
-function sydneyToday(): string {
-  return new Intl.DateTimeFormat("en-CA", { timeZone: "Australia/Sydney" }).format(new Date());
-}
+// Today in the billing timezone (BILLING_TIMEZONE, default Australia/Sydney) —
+// one source shared by all billing jobs; see lib/billing/billingDate.ts.
+import { billingTodayIso } from "../billing/billingDate.js";
 
 /** Add `days` to a YYYY-MM-DD string. */
 function addDays(ymd: string, days: number): string {
@@ -32,7 +30,7 @@ export interface RentBillingResult { scanned: number; created: number; skipped: 
 
 export async function generateRentCharges(): Promise<RentBillingResult> {
   const settings = await getHomestayBillingSettings();
-  const today = sydneyToday();
+  const today = billingTodayIso();
   const threshold = addDays(today, settings.lead_days); // generate up to lead_days early
   const result: RentBillingResult = { scanned: 0, created: 0, skipped: 0, errors: 0 };
 

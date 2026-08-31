@@ -28,10 +28,12 @@
  * The Korean tenancy-terms body was polished via the humanize-korean pass
  * (run 2026-07-27-001, grade A) — do not re-machine-translate it from English.
  *
- * Usage:  DATABASE_URL=<metheim> node scripts/seed-metheim-document-templates.mjs
+ * Usage:  DATABASE_URL=<metheim> node scripts/seed-metheim-document-templates.mjs --apply
+ *         (Metheim DB 전용 가드 내장; 기본은 dry-run — --apply 없이는 아무것도 쓰지 않는다)
  *         (add KEEP_HOMESTAY=1 to skip the homestay-template cleanup)
  */
 import pg from "pg";
+import { guardDbInstance, confirmWrite } from "../../../scripts/lib/dbGuard.mjs";
 
 const { Pool } = pg;
 
@@ -329,6 +331,10 @@ const HOMESTAY_KEYS = [
 ];
 
 const LOCALES = ["ko", "en", "ja", "zh", "th", "vi"];
+
+// Metheim 전용 시드 — 다른 운영 DB에 붙으면 여기서 멈춘다.
+guardDbInstance({ expected: "metheim" });
+if (!confirmWrite()) process.exit(0);
 
 const pool = new Pool({ connectionString: process.env.DATABASE_URL, ssl: { rejectUnauthorized: false } });
 const c = await pool.connect();

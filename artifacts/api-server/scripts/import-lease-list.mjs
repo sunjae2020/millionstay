@@ -49,6 +49,7 @@ import fs from "node:fs";
 import path from "node:path";
 import pg from "pg";
 import { splitKoreanName, looksLikeOrganisation } from "./lib/korean-name.mjs";
+import { guardDbInstance } from "../../../scripts/lib/dbGuard.mjs";
 
 const { Pool } = pg;
 
@@ -78,6 +79,8 @@ if (!process.env.DATABASE_URL) {
   console.error("DATABASE_URL is required (Metheim DB).");
   process.exit(1);
 }
+// 이 임포트는 Metheim 테넌트 전용 — 다른 운영 DB에 붙으면 여기서 멈춘다.
+guardDbInstance({ expected: "metheim" });
 
 // ── CSV parsing (RFC4180, quoted fields may contain newlines) ─────────────────
 function parseCsv(text) {

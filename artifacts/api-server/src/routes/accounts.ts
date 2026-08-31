@@ -26,6 +26,7 @@ import {
   cldFolder, isCloudinaryConfigured, generateSignedUrl,
 } from "../utils/cloudinary";
 import { calcRetentionDate } from "../lib/retention";
+import { maskResidentNo, maskPassportNo } from "../lib/piiMask";
 import { decodeUploadFilename } from "../lib/uploadFilename";
 import {
   ListAccountsQueryParams,
@@ -115,7 +116,13 @@ router.get("/v1/accounts", async (req, res): Promise<void> => {
     .where(and(...conditions))
     .orderBy(accountsTable.name);
   const enriched = await Promise.all(rows.map(enrichAccount));
-  res.json(enriched);
+  // 고유식별정보(PIPA §24-3): the account list masks 주민등록번호 — the raw value
+  // stays on GET /v1/accounts/:id, which the edit form and contract party card use.
+  res.json(enriched.map((a) => ({
+    ...a,
+    resident_no: maskResidentNo(a.resident_no),
+    has_resident_no: Boolean(a.resident_no?.trim()),
+  })));
 });
 
 /**
@@ -444,17 +451,24 @@ async function loadAccountContacts(account: typeof accountsTable.$inferSelect) {
   const rows = await db.select().from(contactsTable)
     .where(and(inArray(contactsTable.id, ids), isNull(contactsTable.deleted_at)));
 
+  // 연락처 탭은 이름·연락처만 보여주는 리스트다 — 고유식별정보는 마스킹해 싣는다.
+  // (편집은 연락처 상세 화면이 GET /v1/contacts/:id 로 원본을 다시 받는다.)
+  const maskPii = (c: typeof contactsTable.$inferSelect) => ({
+    ...c,
+    resident_no: maskResidentNo(c.resident_no),
+    passport_number: maskPassportNo(c.passport_number),
+  });
   const out: Array<Record<string, unknown>> = [];
   for (const cid of slotIds) {
     const c = rows.find((r) => r.id === cid);
     if (!c) continue;
-    out.push({ ...c, role: cid === account.primary_contact_id ? "Primary" : "Secondary", link: "slot" });
+    out.push({ ...maskPii(c), role: cid === account.primary_contact_id ? "Primary" : "Secondary", link: "slot" });
   }
   for (const l of links) {
     if (slotIds.includes(l.contact_id)) continue; // already shown in its slot
     const c = rows.find((r) => r.id === l.contact_id);
     if (!c) continue;
-    out.push({ ...c, role: l.role || "Member", link: "link", link_id: l.id });
+    out.push({ ...maskPii(c), role: l.role || "Member", link: "link", link_id: l.id });
   }
   return out;
 }

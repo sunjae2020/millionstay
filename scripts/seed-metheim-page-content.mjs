@@ -15,6 +15,7 @@
 //   DATABASE_URL=<metheim> node scripts/seed-metheim-page-content.mjs [--apply]
 
 import pg from "pg";
+import { guardDbInstance } from "./lib/dbGuard.mjs";
 
 const APPLY = process.argv.includes("--apply");
 const url = process.env.DATABASE_URL;
@@ -22,6 +23,8 @@ if (!url) {
   console.error("DATABASE_URL must be set (point it at the Metheim database)");
   process.exit(1);
 }
+// Metheim 전용 콘텐츠 시드 — 대상 인스턴스를 코드에서 못 박는다.
+guardDbInstance({ databaseUrl: url, expected: "metheim" });
 
 const pool = new pg.Pool({
   connectionString: url,

@@ -1,0 +1,8 @@
+# Public marketing/booking site — allow all crawlers.
+User-agent: *
+Allow: /
+
+# No sitemap is generated yet. When one exists, uncomment and keep the
+# absolute URL matching the deployed tenant domain (this app also ships
+# for other tenants on other domains, e.g. metheim-web.vercel.app):
+# Sitemap: https://millionstay.com/sitemap.xml

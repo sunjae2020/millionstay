@@ -6,9 +6,11 @@
  * Copy mirrors the current hardcoded behaviour, so publishing changes nothing
  * until ops edit a template in the Studio. Re-running replaces the en copy.
  *
- * Usage:  DATABASE_URL=... node scripts/seed-document-templates.mjs
+ * Usage:  DATABASE_URL=... node scripts/seed-document-templates.mjs --instance=<name> --apply
+ *         (기본은 dry-run — --apply 없이는 아무것도 쓰지 않는다)
  */
 import pg from "pg";
+import { guardDbInstance, confirmWrite } from "../../../scripts/lib/dbGuard.mjs";
 const { Pool } = pg;
 
 const EMAIL_VARS = { ref: { type: "string" }, name: { type: "string" }, portal_url: { type: "url" }, note: { type: "string" } };
@@ -102,6 +104,9 @@ const TEMPLATES = [
       "By signing below, each party confirms they have read, understood and agree to these terms.",
     ].join("\n") },
 ];
+
+guardDbInstance();
+if (!confirmWrite()) process.exit(0);
 
 const pool = new Pool({ connectionString: process.env.DATABASE_URL, ssl: { rejectUnauthorized: false } });
 const c = await pool.connect();

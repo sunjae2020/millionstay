@@ -7,7 +7,7 @@ import {
   channelContactFromAccount,
 } from "../lib/acquisitionChannel";
 import { db, contractsTable, accountsTable, contactsTable, spacesTable, propertiesTable, contractProductsTable, accommodationCatalogTable, bookingsTable, recurringSchedulesTable, bookingServicesTable, invoicesTable, invoiceLineItemsTable, contractLineItemsTable, contractRelatedCostsTable, rentalBusinessRegistrationsTable } from "@workspace/db";
-import { eq, ilike, and, or, like, desc, isNull, inArray, gte, lte, sql } from "drizzle-orm";
+import { eq, ilike, and, or, like, desc, isNull, inArray, gte, lte, ne, sql } from "drizzle-orm";
 import multer from "multer";
 import { logAction } from "../utils/auditLog";
 import { keywordCondition, accountIdsByName, spaceIdsByName, yearOverlapConditions, periodOverlapConditions, distinctYears, distinctValues, columnMatches } from "../lib/listSearch";
@@ -57,28 +57,9 @@ import { accountRecipients, contractPartyRecipients, parseRecipients, toRecipien
 import { resolveTemplate, renderString } from "../lib/documents/templateEngine";
 import { createSigningRequest, type SignerSpec } from "../services/contractSigning";
 import { emailLogsTable } from "@workspace/db";
+import { createInvoiceRefSequence } from "../lib/billing/invoiceRef";
 
 // ─── Invoice ref generator (returns a factory that increments safely) ────────
-async function makeInvoiceRefFactory(): Promise<() => string> {
-  const year = new Date().getFullYear();
-  const rows = await db
-    .select({ ref: invoicesTable.invoice_ref })
-    .from(invoicesTable)
-    .where(like(invoicesTable.invoice_ref, `MS-INV-${year}-%`))
-    .orderBy(desc(invoicesTable.id))
-    .limit(1);
-  let counter = 0;
-  if (rows.length > 0) {
-    const last = rows[0].ref;
-    const num = parseInt(last.split("-").pop() ?? "0", 10);
-    counter = isNaN(num) ? 0 : num;
-  }
-  return () => {
-    counter++;
-    return `MS-INV-${year}-${String(counter).padStart(5, "0")}`;
-  };
-}
-
 // ─── Month name helper ────────────────────────────────────────────────────────
 const MONTH_NAMES = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
 
@@ -186,7 +167,7 @@ async function generateContractInvoicesAndSchedules(
   );
 
   // ── Invoice ref factory ────────────────────────────────────────────────────
-  const nextInvoiceRef = await makeInvoiceRefFactory();
+  const nextInvoiceRef = await createInvoiceRefSequence();
 
   const invoicesCreated: number[] = [];
   const schedulesCreated: number[] = [];
@@ -578,12 +559,84 @@ function mltLeaseFields(data: Record<string, unknown>) {
   };
 }
 
+/**
+ * 이중 계약 가드 — 같은 세대(space)에 기간이 겹치는 살아있는 계약이 있는지 찾는다.
+ *
+ * "살아있는" = Signed·Active (소프트 삭제 제외). Draft·Sent 는 아직 세대를 점유하지
+ * 않으므로 세지 않고, Terminated·Expired·Archived 는 이미 끝난 계약이다.
+ * 기간의 NULL 은 무기한으로 본다. 새 계약에 세대나 기간이 아예 없으면 겹침을 정의할
+ * 수 없으므로 검사하지 않는다.
+ *
+ * ⚠️ 애플리케이션 레벨 검사만 한다. 기존 데이터에 이미 겹치는 계약이 있어 DB
+ * EXCLUDE/UNIQUE 제약은 걸 수 없다(마이그레이션이 실패한다) — 후속 과제.
+ */
+async function findOverlappingContract(args: {
+  spaceId: number | null | undefined;
+  startDate: string | null | undefined;
+  endDate: string | null | undefined;
+  excludeId?: number;
+}): Promise<{ id: number; contract_ref: string; start_date: string | null; end_date: string | null } | null> {
+  const { spaceId, startDate, endDate, excludeId } = args;
+  if (!spaceId) return null;
+  if (!startDate && !endDate) return null;
+  const conditions = [
+    eq(contractsTable.space_id, spaceId),
+    isNull(contractsTable.deleted_at),
+    inArray(contractsTable.status, ["Signed", "Active"]),
+  ];
+  if (endDate) conditions.push(or(isNull(contractsTable.start_date), lte(contractsTable.start_date, endDate))!);
+  if (startDate) conditions.push(or(isNull(contractsTable.end_date), gte(contractsTable.end_date, startDate))!);
+  if (excludeId != null) conditions.push(ne(contractsTable.id, excludeId));
+  const [row] = await db.select({
+    id: contractsTable.id,
+    contract_ref: contractsTable.contract_ref,
+    start_date: contractsTable.start_date,
+    end_date: contractsTable.end_date,
+  }).from(contractsTable).where(and(...conditions)).limit(1);
+  return row ?? null;
+}
+
+/**
+ * 겹침을 검사해 처리한다. 겹치면 기본은 409 거절이고, 요청이 allow_overlap:true 를
+ * 실었으면 WARN 만 남기고 통과시킨다(이관 데이터 정리 등 운영상 의도적 중복).
+ * @returns true = 계속 진행해도 됨, false = 409 응답을 이미 보냈음.
+ */
+async function enforceContractOverlapGuard(
+  res: import("express").Response,
+  data: Record<string, unknown>,
+  args: { spaceId: number | null | undefined; startDate: string | null | undefined; endDate: string | null | undefined; excludeId?: number },
+): Promise<boolean> {
+  const conflict = await findOverlappingContract(args);
+  if (!conflict) return true;
+  if (data.allow_overlap === true) {
+    console.warn(
+      `[contracts] allow_overlap override: space #${args.spaceId} `
+      + `(${args.startDate ?? "?"} ~ ${args.endDate ?? "무기한"}) overlaps `
+      + `${conflict.contract_ref} (${conflict.start_date ?? "?"} ~ ${conflict.end_date ?? "무기한"}) — proceeding on explicit override`,
+    );
+    return true;
+  }
+  res.status(409).json({
+    error: "CONTRACT_OVERLAP",
+    message: `이 세대에 기간이 겹치는 계약이 이미 있습니다: ${conflict.contract_ref} `
+      + `(${conflict.start_date ?? "?"} ~ ${conflict.end_date ?? "무기한"}). `
+      + `의도한 중복이면 allow_overlap: true 를 넣어 다시 요청하세요.`,
+    conflicting_contract_id: conflict.id,
+    conflicting_contract_ref: conflict.contract_ref,
+  });
+  return false;
+}
+
 router.post("/v1/contracts", async (req, res): Promise<void> => {
   const data = req.body;
   const contract_ref = await nextContractRef();
   // Auto-fill 보증금 / 월세 from the selected 숙박상품 (Korean rent tier) as defaults —
   // only where the caller didn't provide the field, so manual values still win.
   const lease = await resolveLeaseTermsFromProduct(data.product_id);
+  // 이중 계약 가드 — 같은 세대·겹치는 기간의 Signed/Active 계약이 있으면 409.
+  if (!(await enforceContractOverlapGuard(res, data, {
+    spaceId: data.space_id, startDate: data.start_date ?? null, endDate: data.end_date ?? null,
+  }))) return;
   const [row] = await db.insert(contractsTable).values({
     contract_ref,
     booking_id: data.booking_id ?? null,
@@ -1590,6 +1643,21 @@ router.put("/v1/contracts/:id", async (req, res): Promise<void> => {
         terms_text: data.terms_text ?? null,
         notes: data.notes ?? null,
       };
+  // 이중 계약 가드 — 세대나 기간이 실제로 바뀔 때만 검사한다(잠긴 계약은 그 필드를
+  // 못 바꾸므로 해당 없음). 자기 자신은 제외한다.
+  if (!locked) {
+    const newSpaceId = data.space_id ?? null;
+    const newStart = data.start_date ?? null;
+    const newEnd = data.end_date ?? null;
+    const datesOrSpaceChanged =
+      newSpaceId !== (existing.space_id ?? null)
+      || newStart !== (existing.start_date ?? null)
+      || newEnd !== (existing.end_date ?? null);
+    if (datesOrSpaceChanged
+      && !(await enforceContractOverlapGuard(res, data, {
+        spaceId: newSpaceId, startDate: newStart, endDate: newEnd, excludeId: id,
+      }))) return;
+  }
   const [row] = await db.update(contractsTable).set(updates).where(eq(contractsTable.id, id)).returning();
   if (!row) { res.status(404).json({ error: "NOT_FOUND" }); return; }
   await syncChannelRelatedCost(row, existing.acquisition_channel);
@@ -2197,13 +2265,13 @@ router.post("/v1/contracts/generate-rent-invoices", async (req, res): Promise<vo
   const targets: Array<{ year: number; month: number }> = Array.isArray(months)
     ? months.filter((m: any) => m?.year && m?.month)
     : [{ year: Number(year) || new Date().getFullYear(), month: Number(month) || new Date().getMonth() + 1 }];
-  let created = 0, overdue = 0, skipped = 0;
+  let created = 0, overdue = 0, skipped = 0, suspiciousSkips = 0;
   for (const target of targets) {
     const r = await generateLeaseRentInvoices({ year: target.year, month: target.month, force: true });
-    created += r.created; overdue = r.overdue; skipped += r.skipped;
+    created += r.created; overdue = r.overdue; skipped += r.skipped; suspiciousSkips += r.suspiciousSkips;
   }
-  await logAction({ entityType: "invoice", entityId: 0, action: "AUTO_CREATED", newValue: { kind: "lease_rent", targets, created, skipped } });
-  res.json({ created, skipped, overdue, months: targets });
+  await logAction({ entityType: "invoice", entityId: 0, action: "AUTO_CREATED", newValue: { kind: "lease_rent", targets, created, skipped, suspicious_skips: suspiciousSkips } });
+  res.json({ created, skipped, overdue, suspicious_skips: suspiciousSkips, months: targets });
 });
 
 router.get("/v1/lookup/contracts", async (req, res): Promise<void> => {

@@ -39,17 +39,24 @@ if [[ -n "${TENANT:-}" ]]; then
   echo "→ Loaded tenant config: tenants/$TENANT (config.env$([[ -f "$TDIR/secrets.env" ]] && echo ' + secrets.env'))"
 fi
 
-# ── Safety: refuse to run against the primary/production DB ──────────────────
-PROD_REF="rdwzpbxrkjlmtwcoiniq"   # primary MillionStay Supabase project ref
+# ── Safety: refuse to run against any known production DB ────────────────────
+# Known production Supabase project refs (keep in sync with scripts/lib/dbGuard.mjs):
+#   rdwzpbxrkjlmtwcoiniq = millionstay (primary), dhdjxweuushugqltjael = metheim
+PROD_REFS=(
+  "rdwzpbxrkjlmtwcoiniq"   # primary MillionStay Supabase project ref
+  "dhdjxweuushugqltjael"   # Metheim Supabase project ref
+)
 : "${DATABASE_URL:?Set DATABASE_URL to the NEW instance database (session pooler URL).}"
-if [[ "$DATABASE_URL" == *"$PROD_REF"* ]]; then
-  echo "✖ REFUSING: DATABASE_URL points at the primary/production project ($PROD_REF)." >&2
-  echo "  Provisioning must target a SEPARATE Supabase project for the new instance." >&2
-  exit 1
-fi
+for PROD_REF in "${PROD_REFS[@]}"; do
+  if [[ "$DATABASE_URL" == *"$PROD_REF"* ]]; then
+    echo "✖ REFUSING: DATABASE_URL points at a known production project ($PROD_REF)." >&2
+    echo "  Provisioning must target a SEPARATE Supabase project for the new instance." >&2
+    exit 1
+  fi
+done
 MASKED="$(printf '%s' "$DATABASE_URL" | sed -E 's|(://[^:]*):[^@]*@|\1:***@|')"
 echo "→ Target instance DB: $MASKED"
-echo "→ This is NOT the primary project (guard passed)."
+echo "→ This is NOT a known production project (guard passed)."
 echo
 
 # ── 1. Schema ────────────────────────────────────────────────────────────────
@@ -63,8 +70,11 @@ if command -v psql >/dev/null 2>&1; then
 else
   echo "  ⚠ psql not found — SKIPPED translations-seed.sql (run it manually)."
 fi
-DATABASE_URL="$DATABASE_URL" node artifacts/api-server/scripts/seed-document-templates.mjs
-DATABASE_URL="$DATABASE_URL" node artifacts/api-server/scripts/seed-pdf-templates.mjs
+# The seeds go through scripts/lib/dbGuard.mjs: a fresh instance DB is by design
+# not a registered ref, so --allow-unknown-db is explicit here; --apply because
+# the seeds default to dry-run. (The known-production guard above already ran.)
+DATABASE_URL="$DATABASE_URL" node artifacts/api-server/scripts/seed-document-templates.mjs --allow-unknown-db --apply
+DATABASE_URL="$DATABASE_URL" node artifacts/api-server/scripts/seed-pdf-templates.mjs --allow-unknown-db --apply
 # Optional demo data (uncomment for a populated pilot):
 # DATABASE_URL="$DATABASE_URL" node artifacts/api-server/scripts/seed-homestay-samples.mjs
 

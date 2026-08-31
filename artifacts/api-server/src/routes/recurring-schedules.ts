@@ -5,6 +5,7 @@ import { eq, and, lte, ilike, isNull, inArray } from "drizzle-orm";
 import { z } from "zod";
 import { getRateToAud } from "../lib/rateSnapshot";
 import { deletedFilter, makeBulkDelete, makeBulkRestore } from "../lib/softDelete";
+import { insertInvoiceWithRef } from "../lib/billing/invoiceRef";
 
 const router = Router();
 
@@ -39,14 +40,6 @@ async function enrichSchedules(rows: (typeof recurringSchedulesTable.$inferSelec
     });
   }
   return result;
-}
-
-async function nextInvoiceRef(): Promise<string> {
-  const year = new Date().getFullYear();
-  const rows = await db.select({ id: invoicesTable.id }).from(invoicesTable)
-    .where(ilike(invoicesTable.invoice_ref, `MS-INV-${year}-%`));
-  const count = rows.length + 1;
-  return `MS-INV-${year}-${String(count).padStart(5, "0")}`;
 }
 
 function addDays(dateStr: string, days: number): string {
@@ -178,11 +171,9 @@ router.post("/v1/recurring-schedules/generate-due", async (req, res): Promise<vo
         ? Math.round((totalAmount - subtotal) * 100) / 100
         : 0;
 
-      const invoice_ref = await nextInvoiceRef();
       const dueDate = addDays(today, 7);
 
-      await db.insert(invoicesTable).values({
-        invoice_ref,
+      const invoice = await insertInvoiceWithRef({
         booking_id: schedule.booking_id,
         account_id: schedule.account_id,
         contract_id: schedule.contract_id ?? null,
@@ -199,7 +190,7 @@ router.post("/v1/recurring-schedules/generate-due", async (req, res): Promise<vo
         .set({ last_generated_at: new Date(), next_due_date: nextDue, updated_at: new Date() })
         .where(eq(recurringSchedulesTable.id, schedule.id));
 
-      invoiceRefs.push(invoice_ref);
+      invoiceRefs.push(invoice.invoice_ref);
     } catch (err: any) {
       errors.push(`Schedule #${schedule.id}: ${err?.message ?? "Unknown error"}`);
     }

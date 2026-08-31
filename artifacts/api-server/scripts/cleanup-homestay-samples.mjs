@@ -14,6 +14,7 @@
  *   DATABASE_URL=... node scripts/cleanup-homestay-samples.mjs --confirm
  */
 import pg from "pg";
+import { guardDbInstance } from "../../../scripts/lib/dbGuard.mjs";
 
 const { Pool } = pg;
 
@@ -25,6 +26,7 @@ if (!process.env.DATABASE_URL) {
   console.error("DATABASE_URL must be set.");
   process.exit(1);
 }
+guardDbInstance();
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
