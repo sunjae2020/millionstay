@@ -415,7 +415,8 @@
     "uploading": "업로드 중…",
     "export_csv": "CSV 내보내기",
     "export_csv_count": "{{count}}건을 CSV로 내보내기",
-    "export_csv_empty": "내보낼 데이터가 없습니다"
+    "export_csv_empty": "내보낼 데이터가 없습니다",
+    "retry": "다시 시도"
   },
   "lang": {
     "label": "언어",
@@ -1819,6 +1820,14 @@
     "billing_billed_total": "청구비용",
     "billing_no_rows": "조건에 맞는 작업지시가 없습니다.",
     "billing_preview": "미리보기",
+    "billing_preset_this_month": "이번 달",
+    "billing_preset_last_month": "지난달",
+    "billing_preset_last_3m": "최근 3개월",
+    "billing_preset_this_year": "올해",
+    "billing_preset_last_year": "작년",
+    "billing_preset_all": "전체 기간",
+    "billing_load_failed": "명세서를 불러오지 못했습니다.",
+    "billing_issue_disabled_hint": "이 기간에 아직 청구하지 않은 작업지시가 없습니다.",
     "billing_bill_to_hint": "비워두면 세대 소유주에게 청구합니다.",
     "billing_due_date": "납기일",
     "billing_already_invoiced": "{{n}}건은 이미 청구됨",
