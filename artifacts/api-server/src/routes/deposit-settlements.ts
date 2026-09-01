@@ -31,6 +31,7 @@ import { resolveTemplateBody } from "../lib/documents/templateEngine";
 import { buildMoveOutSettlementHtml, type MoveOutDocInput } from "../lib/documents/moveOutSettlementDocument";
 import { createSigningRequest, signingBaseUrl } from "../services/contractSigning";
 import { sendTenantLinkEmail } from "../lib/email";
+import { accountRecipient, notifySms } from "../lib/notify";
 import { contractSigningRequestsTable } from "@workspace/db";
 import { inArray } from "drizzle-orm";
 
@@ -594,6 +595,9 @@ adminRouter.post("/v1/deposit-settlements/:id/finalize", async (req, res): Promi
       audit_trail: [...audit, { event: "finalized", at: new Date().toISOString(), actor: (req as any).user?.id ?? null, refund: totals.refund_amount, deducted: totals.total_deducted, gl_posted: glPosted, gl_backed: glBacked }],
     }).where(eq(depositSettlementsTable.id, id));
     void logAction({ entityType: ENTITY, entityId: id, action: "PAYMENT", actorId: (req as any).user?.id ?? null, newValue: { status: "finalized", refund: totals.refund_amount, deducted: totals.total_deducted, gl_posted: glPosted } });
+    // 확정된 정산은 곧 돈이 움직인다는 뜻이다 — 임차인에게 금액과 입금 예정일을 문자로.
+    // 재확정(reopen 후 finalize)이면 금액이 바뀌었으므로 다시 보낸다(once 를 쓰지 않는다).
+    void notifySettlementFinalized(s, totals.refund_amount);
     res.json({ success: true, data: await loadSettlementDetail(id) });
   } catch (err: any) {
     res.status(500).json({ success: false, error: { code: "SERVER_ERROR", message: err.message } });
@@ -1007,10 +1011,27 @@ adminRouter.post("/v1/deposit-settlements/:id/sign-link", async (req, res): Prom
         : { ok: false, error: "NO_RECIPIENT" };
     }
 
+    // 문자로도 보낼 수 있다. `send_sms` 면 정산 임차인의 번호로, `mobile` 을 주면 그 번호로.
+    // 이메일 없는 세입자가 대부분이라 실제로는 이쪽이 주 경로가 된다.
+    let sms: { sent: boolean; reason?: string } | null = null;
+    const smsTo = (typeof req.body?.mobile === "string" && req.body.mobile.trim())
+      || (req.body?.send_sms ? tenant?.mobile ?? "" : "");
+    if (smsTo) {
+      const r = await notifySms({
+        smsKey: "sms.signature_request",
+        to: smsTo,
+        name,
+        entity: { type: ENTITY, id },
+        vars: { url, due_date: String(signing.expiresAt ?? "").slice(0, 10) },
+      });
+      sms = { sent: r.sent, reason: r.reason };
+    }
+
     res.status(201).json({
       success: true,
       data: { id: signing.id, token: signing.token, url, signer_name: name, expires_at: signing.expiresAt },
       email,
+      sms,
     });
   } catch (err: any) {
     res.status(500).json({ success: false, error: { code: "SERVER_ERROR", message: err.message } });
@@ -1034,7 +1055,28 @@ adminRouter.get("/v1/deposit-settlements/:id/sign-link", async (req, res): Promi
 });
 
 /** 정산의 임차인 — 계약(장기) 또는 예약(단기) 어느 쪽에 매달렸든 한 명으로 좁힌다. */
-async function settlementTenant(row: { contract_id: number | null; booking_id: number | null }): Promise<{ name: string | null; email: string | null } | null> {
+/** 정산 확정 문자 — 보증금 반환액과 입금 예정일. 계좌번호는 넣지 않는다. */
+async function notifySettlementFinalized(
+  row: typeof depositSettlementsTable.$inferSelect,
+  refund: number,
+): Promise<void> {
+  const tenant = await settlementTenant(row);
+  if (!tenant?.mobile) return;
+  await notifySms({
+    smsKey: "sms.moveout_settlement",
+    to: tenant.mobile,
+    name: tenant.name,
+    entity: { type: ENTITY, id: row.id },
+    vars: {
+      amount: `${refund.toLocaleString()} ${row.currency}`,
+      // 입금 예정일은 정산 기준일자가 있으면 그것을, 없으면 확정일을 쓴다.
+      date: (row.as_of_date ?? new Date().toISOString().slice(0, 10)) as string,
+      url: "",
+    },
+  });
+}
+
+async function settlementTenant(row: { contract_id: number | null; booking_id: number | null }): Promise<{ name: string | null; email: string | null; mobile: string | null } | null> {
   let accountId: number | null = null;
   if (row.contract_id) {
     const [c] = await db.select({ acc: contractsTable.tenant_account_id }).from(contractsTable)
@@ -1046,9 +1088,10 @@ async function settlementTenant(row: { contract_id: number | null; booking_id: n
     accountId = b?.acc ?? null;
   }
   if (!accountId) return null;
-  const [acc] = await db.select({ name: accountsTable.name, email: accountsTable.account_email })
-    .from(accountsTable).where(eq(accountsTable.id, accountId)).limit(1);
-  return acc ? { name: acc.name ?? null, email: acc.email ?? null } : null;
+  // 계정 전화 → 주 연락처 휴대폰 순서. 정산 통보는 이메일 없는 세입자가 대부분이라
+  // 번호까지 같이 들고 와야 한다.
+  const r = await accountRecipient(accountId);
+  return r ? { name: r.name ?? null, email: r.email ?? null, mobile: r.mobile ?? null } : null;
 }
 
 /* ═══════════════════════════════════════════════════════════

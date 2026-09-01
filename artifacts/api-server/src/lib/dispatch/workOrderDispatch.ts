@@ -1,6 +1,8 @@
-import { db, workOrdersTable, serviceHostsTable, accountsTable, usersTable } from "@workspace/db";
+import { db, workOrdersTable, serviceHostsTable, accountsTable, usersTable, spacesTable } from "@workspace/db";
 import { eq, and, inArray, notInArray, lte, isNull, sql } from "drizzle-orm";
 import { sendHomestayNotification } from "../homestay/notify";
+import { accountRecipient, notifySms, staffAlertMobiles } from "../notify";
+import { portalBaseUrl } from "../partnerPortal";
 
 // PARTNER AUTO-DISPATCH + SLA (Phase 3). Matches a work order's category to an
 // active service host's declared specialties, assigns it (load-balanced by open
@@ -79,7 +81,53 @@ async function assignHost(
     .where(eq(workOrdersTable.id, wo.id));
 
   void notifyPartnerDispatched(host.account_id, host.name, wo.order_ref, wo.title, wo.category, due);
+  // 현장 파트너(청소·기사·정비)는 이메일을 보지 않는다 — 배정은 문자로 나가야 도착한다.
+  // 이메일과 같은 사건이므로 멱등 키를 하나로 묶어(logKey) 재배정 때만 다시 나간다.
+  void notifyPartnerDispatchedSms(wo, host);
   return { ok: true, service_host_id: host.id, service_host_name: host.name, sla_ack_due_at: due.toISOString() };
+}
+
+/**
+ * 배정 문자. 문안(sms.job_assigned)은 언제·어디서·무엇 세 가지만 담는다 —
+ * 🚨 세입자 개인정보는 넣지 않는다(문자는 전달·캡처가 쉽고 단말에 남는다).
+ */
+async function notifyPartnerDispatchedSms(
+  wo: typeof workOrdersTable.$inferSelect,
+  host: typeof serviceHostsTable.$inferSelect,
+): Promise<void> {
+  const to = await accountRecipient(host.account_id);
+  if (!to?.mobile) return;
+  const when = wo.scheduled_start_at ?? (wo.scheduled_at ? new Date(wo.scheduled_at) : null);
+  const space = await spaceLabel(wo.space_id);
+  await notifySms({
+    smsKey: "sms.job_assigned",
+    to: to.mobile,
+    name: host.name,
+    entity: { type: "work_order", id: wo.id },
+    vars: {
+      date: when ? krDate(when) : "일정 미정",
+      time_window: when ? krTime(when) : "",
+      space_name: space ?? wo.order_ref,
+      job_type: wo.category ?? wo.title,
+      url: portalBaseUrl("service_host"),
+    },
+  });
+}
+
+/** 세대명. 없으면 null — 문안은 호출부가 order_ref 로 대체한다. */
+async function spaceLabel(spaceId: number | null): Promise<string | null> {
+  if (!spaceId) return null;
+  const [s] = await db.select({ name: spacesTable.name }).from(spacesTable)
+    .where(eq(spacesTable.id, spaceId)).limit(1);
+  return s?.name ?? null;
+}
+
+const KR_TZ = process.env.BILLING_TIMEZONE || "Asia/Seoul";
+function krDate(d: Date): string {
+  return new Intl.DateTimeFormat("ko-KR", { timeZone: KR_TZ, month: "numeric", day: "numeric" }).format(d);
+}
+function krTime(d: Date): string {
+  return new Intl.DateTimeFormat("ko-KR", { timeZone: KR_TZ, hour: "2-digit", minute: "2-digit", hour12: false }).format(d);
 }
 
 async function partnerEmail(accountId: number | null): Promise<string | null> {
@@ -131,7 +179,27 @@ export async function checkWorkOrderSla(): Promise<{ breached: number }> {
       });
     }
   }
+  // 야간·주말에 이메일을 보는 사람은 없다. SLA 가 깨진 건은 당번 번호로도 알린다
+  // (STAFF_ALERT_MOBILES, 없으면 관리자 계정 전화). 건당 한 통 — 크론이 다시 돌아도
+  // sla_status 가 breached 로 바뀌어 있어 같은 건은 다시 잡히지 않는다.
+  void notifyStaffSlaBreach(overdue);
   return { breached: overdue.length };
+}
+
+async function notifyStaffSlaBreach(rows: (typeof workOrdersTable.$inferSelect)[]): Promise<void> {
+  const mobiles = await staffAlertMobiles();
+  if (!mobiles.length) return;
+  const url = `${process.env.CLIENT_URL ?? ""}/work-orders`;
+  for (const wo of rows) {
+    for (const to of mobiles) {
+      await notifySms({
+        smsKey: "sms.staff_system_alert",
+        to,
+        entity: { type: "work_order", id: wo.id },
+        vars: { job_type: `작업지시 ${wo.order_ref} 접수확인 지연(SLA)`, url },
+      });
+    }
+  }
 }
 
 function escapeText(s: string): string {

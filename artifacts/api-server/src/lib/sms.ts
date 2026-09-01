@@ -70,6 +70,19 @@ export function normalizeKrPhone(raw: string): string | null {
   return /^01[016789]\d{7,8}$/.test(d) ? d : null;
 }
 
+/**
+ * **발신**번호 정규화. 수신자(normalizeKrPhone)와 규칙이 다르다 —
+ * 발신번호는 휴대폰이 아니라 대표 유선번호인 경우가 대부분이고(예: 061-XXX-XXXX),
+ * 070·080·1544 대표번호도 사전등록 대상이다. 여기서 휴대폰 규칙을 그대로 쓰면
+ * 정상 발신번호가 "미설정" 으로 떨어져 발송이 통째로 멈춘다.
+ */
+export function normalizeKrSender(raw: string): string | null {
+  const d = raw.replace(/[^\d+]/g, "").replace(/^\+?82/, "0");
+  if (/^0\d{8,10}$/.test(d)) return d;    // 02·지역번호·010·070·080
+  if (/^1[5-9]\d{6}$/.test(d)) return d;  // 1544·1588 등 8자리 대표번호
+  return null;
+}
+
 export interface SendSmsOptions {
   to: string;
   /** 템플릿 키(kind='sms'). 지정하면 DB 문안을 쓰고 text 는 무시한다. */
@@ -187,7 +200,7 @@ export async function sendSms(opts: SendSmsOptions): Promise<SmsSendResult> {
   // 4. 설정 확인.
   const apiKey = (process.env.SOLAPI_API_KEY ?? "").trim();
   const apiSecret = (process.env.SOLAPI_API_SECRET ?? "").trim();
-  const from = normalizeKrPhone(process.env.SMS_SENDER_NUMBER ?? "");
+  const from = normalizeKrSender(process.env.SMS_SENDER_NUMBER ?? "");
   if (!apiKey || !apiSecret || !from) {
     console.log(`[sms] 미설정 — 발송 건너뜀 (${type} ${bytes}B → ${to})`);
     return { ok: false, skipped: true, error: "SMS 미설정", type, bytes };
@@ -252,4 +265,49 @@ export async function smsBalance(): Promise<number | null> {
     console.error("[sms] 잔액 조회 실패:", err instanceof Error ? err.message : err);
     return null;
   }
+}
+
+/* ── 개통 상태 ───────────────────────────────────────────────────────────────
+   "왜 문자가 안 나가지" 는 대부분 설정 하나가 비어서다. 값 자체가 아니라 **무엇이
+   비었는지**를 돌려준다 — 관리자 화면과 개통 점검 스크립트가 같은 판단을 쓰도록. */
+
+export interface SmsConfigStatus {
+  /** 거래성 SMS 를 보낼 수 있는 최소 조건(키·시크릿·발신번호). */
+  configured: boolean;
+  api_key: boolean;
+  api_secret: boolean;
+  /** 정규화된 발신번호. 등록 안 된 형식이면 null 이라 그 자체가 오류 신호다. */
+  sender_number: string | null;
+  /** 광고성 SMS 무료거부 080 번호. 없으면 광고 발송은 거부된다(거래성은 무관). */
+  ad_opt_out_number: string | null;
+  advertising_ready: boolean;
+  /** 카카오 알림톡 발신프로필. 없으면 SMS 로만 나간다. */
+  kakao_pf_id: boolean;
+  /** 발송을 막는 항목들(사람이 읽는 문장). */
+  missing: string[];
+}
+
+export function smsConfigStatus(): SmsConfigStatus {
+  const apiKey = !!(process.env.SOLAPI_API_KEY ?? "").trim();
+  const apiSecret = !!(process.env.SOLAPI_API_SECRET ?? "").trim();
+  const sender = normalizeKrSender(process.env.SMS_SENDER_NUMBER ?? "");
+  const optOut = (process.env.SMS_AD_OPT_OUT_NUMBER ?? "").trim() || null;
+  const missing: string[] = [];
+  if (!apiKey) missing.push("SOLAPI_API_KEY");
+  if (!apiSecret) missing.push("SOLAPI_API_SECRET");
+  if (!sender) {
+    missing.push((process.env.SMS_SENDER_NUMBER ?? "").trim()
+      ? "SMS_SENDER_NUMBER (국내 발신번호 형식이 아닙니다)"
+      : "SMS_SENDER_NUMBER");
+  }
+  return {
+    configured: apiKey && apiSecret && !!sender,
+    api_key: apiKey,
+    api_secret: apiSecret,
+    sender_number: sender,
+    ad_opt_out_number: optOut,
+    advertising_ready: !!optOut,
+    kakao_pf_id: !!(process.env.KAKAO_PF_ID ?? "").trim(),
+    missing,
+  };
 }
