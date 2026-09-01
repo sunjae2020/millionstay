@@ -1252,6 +1252,14 @@ export const ListAccountsResponseItem = zod.object({
     .string()
     .nullish()
     .describe("주민등록번호 (개인 계정). 임대차 계약서 당사자 표에 인쇄된다."),
+  sns_type: zod
+    .string()
+    .nullish()
+    .describe("메신저 종류 (KakaoTalk \/ LINE \/ WhatsApp \/ WeChat …)."),
+  sns_id: zod
+    .string()
+    .nullish()
+    .describe("메신저 아이디. 계약서 당사자 표(임차인 을)에 노출된다."),
   field_sources: zod.record(zod.string(), zod.string()).nullish(),
   manual_input: zod.boolean(),
   status: zod.string(),
@@ -1306,6 +1314,14 @@ export const CreateAccountBody = zod.object({
     .string()
     .nullish()
     .describe("주민등록번호 (개인 계정). 임대차 계약서 당사자 표에 인쇄된다."),
+  sns_type: zod
+    .string()
+    .nullish()
+    .describe("메신저 종류 (KakaoTalk \/ LINE \/ WhatsApp \/ WeChat …)."),
+  sns_id: zod
+    .string()
+    .nullish()
+    .describe("메신저 아이디. 계약서 당사자 표(임차인 을)에 노출된다."),
   field_sources: zod.record(zod.string(), zod.string()).nullish(),
   manual_input: zod.boolean().default(createAccountBodyManualInputDefault),
   status: zod.string().default(createAccountBodyStatusDefault),
@@ -1364,6 +1380,14 @@ export const GetAccountResponse = zod.object({
     .string()
     .nullish()
     .describe("주민등록번호 (개인 계정). 임대차 계약서 당사자 표에 인쇄된다."),
+  sns_type: zod
+    .string()
+    .nullish()
+    .describe("메신저 종류 (KakaoTalk \/ LINE \/ WhatsApp \/ WeChat …)."),
+  sns_id: zod
+    .string()
+    .nullish()
+    .describe("메신저 아이디. 계약서 당사자 표(임차인 을)에 노출된다."),
   field_sources: zod.record(zod.string(), zod.string()).nullish(),
   manual_input: zod.boolean(),
   status: zod.string(),
@@ -1418,6 +1442,14 @@ export const UpdateAccountBody = zod.object({
     .string()
     .nullish()
     .describe("주민등록번호 (개인 계정). 임대차 계약서 당사자 표에 인쇄된다."),
+  sns_type: zod
+    .string()
+    .nullish()
+    .describe("메신저 종류 (KakaoTalk \/ LINE \/ WhatsApp \/ WeChat …)."),
+  sns_id: zod
+    .string()
+    .nullish()
+    .describe("메신저 아이디. 계약서 당사자 표(임차인 을)에 노출된다."),
   field_sources: zod.record(zod.string(), zod.string()).nullish(),
   manual_input: zod.boolean().optional(),
   status: zod.string().optional(),
@@ -1469,6 +1501,14 @@ export const UpdateAccountResponse = zod.object({
     .string()
     .nullish()
     .describe("주민등록번호 (개인 계정). 임대차 계약서 당사자 표에 인쇄된다."),
+  sns_type: zod
+    .string()
+    .nullish()
+    .describe("메신저 종류 (KakaoTalk \/ LINE \/ WhatsApp \/ WeChat …)."),
+  sns_id: zod
+    .string()
+    .nullish()
+    .describe("메신저 아이디. 계약서 당사자 표(임차인 을)에 노출된다."),
   field_sources: zod.record(zod.string(), zod.string()).nullish(),
   manual_input: zod.boolean(),
   status: zod.string(),

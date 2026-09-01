@@ -7,6 +7,8 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
 } from "@/components/ui/dialog";
 import { AccountLookupSelect } from "@/components/AccountLookupSelect";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { SNS_TYPES, SNS_PLACEHOLDER, snsLabelKey } from "@/lib/sns";
 import { apiJson, ApiError } from "@/lib/apiFetch";
 import { ExternalLink, Loader2, Pencil } from "lucide-react";
 import { Link } from "wouter";
@@ -29,6 +31,7 @@ const EDITABLE_FIELDS = [
   "name", "account_email", "phone1", "phone2",
   "address_line1", "address_suburb", "address_state", "address_postcode", "address_country",
   "biz_registration_no", "corp_registration_no", "ceo_name", "resident_no",
+  "sns_type", "sns_id",
 ] as const;
 type EditableField = (typeof EDITABLE_FIELDS)[number];
 
@@ -104,6 +107,15 @@ export function ContractPartyCard({
     [idLabel, idValue || null],
   ];
   if (variant === "landlord") rows.push([t("account.label_ceo"), account?.ceo_name || null]);
+  // 임차인은 메신저로 닿는 일이 많아 계약 화면에서 바로 보이게 한다.
+  if (variant === "tenant") {
+    const snsType = account?.sns_type ? t(snsLabelKey(account.sns_type)) : null;
+    const snsId = account?.sns_id || null;
+    rows.push([
+      t("contract.party_sns"),
+      snsId ? (snsType ? `${snsType} · ${snsId}` : snsId) : null,
+    ]);
+  }
 
   function openEditor() {
     if (!account) return;
@@ -229,6 +241,26 @@ export function ContractPartyCard({
               <>
                 {field("resident_no", t("account.label_resident_no"), "000000-0000000")}
                 <p className="text-xs text-muted-foreground">{t("account.hint_resident_no")}</p>
+                <div className="grid grid-cols-3 gap-3">
+                  <div className="grid gap-1.5">
+                    <Label className="text-xs">{t("account.label_sns_type")}</Label>
+                    <Select
+                      value={draft["sns_type"] || "__none"}
+                      onValueChange={(v) => setDraft((d) => ({ ...d, sns_type: v === "__none" ? "" : v }))}
+                    >
+                      <SelectTrigger><SelectValue placeholder="—" /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="__none">—</SelectItem>
+                        {SNS_TYPES.map((n) => (
+                          <SelectItem key={n} value={n}>{t(snsLabelKey(n))}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="col-span-2">
+                    {field("sns_id", t("account.label_sns_id"), SNS_PLACEHOLDER[draft["sns_type"] ?? ""] ?? t("contact.ph_sns_id"))}
+                  </div>
+                </div>
               </>
             )}
           </div>

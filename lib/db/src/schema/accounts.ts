@@ -50,6 +50,11 @@ export const accountsTable = pgTable("accounts", {
   // 이 값을 먼저 보고, 비어 있으면 대표 연락처의 값으로 대체한다. 고유식별정보라
   // 로거 redact 목록(lib/logger.ts)에 올라 있고 화면에서는 뒷자리를 가려 보여준다.
   resident_no: text("resident_no"),
+  // 메신저 계정 — 한국·아시아 고객은 이메일·전화보다 카카오톡/LINE 으로 연락한다.
+  // 사람의 계정이므로 원본은 연락처(contacts.sns_type/sns_id)에 두고, 여기에는
+  // 대표 연락처에서 복사된 값이 들어간다. 계약서 당사자 표(임차인 을)에 노출된다.
+  sns_type: text("sns_type"),
+  sns_id: text("sns_id"),
   // Provenance per column: { "<column>": "manual" | "contact" | "crawl" }.
   // Written when a field is filled from the linked contact or the website
   // crawler, so an admin can tell which values were auto-collected.

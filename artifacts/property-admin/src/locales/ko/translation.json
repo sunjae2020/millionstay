@@ -980,6 +980,8 @@
     "autofill_hint_person": "연결된 연락처에서 정보를 가져옵니다. 적용 전에 항목별로 확인할 수 있습니다.",
     "resident_no_edit_hint": "번호는 기본 정보 섹션에서 수정합니다.",
     "label_resident_no": "주민등록번호",
+    "label_sns_type": "SNS 종류",
+    "label_sns_id": "SNS ID",
     "hint_resident_no": "임대차 계약서 임차인 칸에 인쇄됩니다. 화면에는 뒷자리를 가려 표시합니다.",
     "tab_rental_business": "임대사업자"
   },
@@ -1516,7 +1518,8 @@
     "mlt_refilled": "등록증의 값으로 다시 채웠습니다.",
     "hint_mlt_from_registration": "임대사업자 등록증 {{no}}에서 가져온 값입니다. 이 계약에 맞게 고쳐도 등록증은 바뀌지 않습니다.",
     "col_gst": "GST",
-    "party_email": "E-mail"
+    "party_email": "E-mail",
+    "party_sns": "메신저"
   },
   "invoice": {
     "new": "새 청구서",

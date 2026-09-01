@@ -18,6 +18,7 @@ import {
 } from "@workspace/api-client-react";
 import { LookupSelect } from "@/components/LookupSelect";
 import { AccountLookupSelect } from "@/components/AccountLookupSelect";
+import { SNS_TYPES, SNS_PLACEHOLDER, snsLabelKey } from "@/lib/sns";
 import { AccountIdentityPanel, type FillSource } from "@/components/AccountIdentityPanel";
 import { EntityPreviewDialog, type EntityPreview } from "@/components/EntityPreviewDialog";
 import { AddAccountContactDialog } from "@/components/AddAccountContactDialog";
@@ -110,6 +111,8 @@ interface AccountForm {
   corp_registration_no: string;
   ceo_name: string;
   resident_no: string;
+  sns_type: string;
+  sns_id: string;
   manual_input: boolean;
   status: string;
 }
@@ -297,6 +300,7 @@ export default function AccountDetail() {
       payment_info_id: null, default_commission_id: null, default_currency: brandCurrency,
       parent_account_id: null, description: "", logo_url: "", biz_registration_no: "", corp_registration_no: "", ceo_name: "",
       resident_no: "",
+      sns_type: "", sns_id: "",
       manual_input: false, status: "Active",
     },
   });
@@ -346,6 +350,8 @@ export default function AccountDetail() {
         corp_registration_no: (account as any).corp_registration_no ?? "",
         ceo_name: (account as any).ceo_name ?? "",
         resident_no: (account as any).resident_no ?? "",
+        sns_type: (account as any).sns_type ?? "",
+        sns_id: (account as any).sns_id ?? "",
         manual_input: account.manual_input ?? false,
         status: account.status ?? "Active",
       });
@@ -411,6 +417,9 @@ export default function AccountDetail() {
       corp_registration_no: individual ? null : (values.corp_registration_no || null),
       ceo_name: individual ? null : (values.ceo_name || null),
       resident_no: individual ? (values.resident_no || null) : null,
+      // 메신저는 법인 계정도 채널을 가질 수 있어 entity_kind 로 가르지 않는다.
+      sns_type: values.sns_type || null,
+      sns_id: values.sns_id || null,
       // Verification only means anything alongside the number it was run on —
       // clearing the number clears the verdict with it.
       biz_verify_status: !individual && values.biz_registration_no ? bizVerify.status : null,
@@ -629,6 +638,28 @@ export default function AccountDetail() {
             <div className="grid gap-1.5">
               <Label>{isIndividual ? t('account.label_phone') : `${t('account.label_phone')} 1`}</Label>
               <Input {...register("phone1")} />
+            </div>
+          </div>
+          {/* 메신저 — 한국·아시아 고객은 메일·전화보다 카카오톡·LINE 으로 닿는다.
+              계약서 임차인(을) 카드에 그대로 실린다. */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div className="grid gap-1.5">
+              <Label>{t('account.label_sns_type')}</Label>
+              <Controller name="sns_type" control={control} render={({ field }) => (
+                <Select value={field.value || "__none"} onValueChange={(v) => field.onChange(v === "__none" ? "" : v)}>
+                  <SelectTrigger><SelectValue placeholder="—" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="__none">—</SelectItem>
+                    {SNS_TYPES.map((n) => (
+                      <SelectItem key={n} value={n}>{t(snsLabelKey(n))}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )} />
+            </div>
+            <div className="grid gap-1.5 sm:col-span-2">
+              <Label>{t('account.label_sns_id')}</Label>
+              <Input {...register("sns_id")} placeholder={SNS_PLACEHOLDER[watch("sns_type")] ?? t('contact.ph_sns_id')} />
             </div>
           </div>
           {!isIndividual && (
