@@ -23,6 +23,7 @@ import { postInvoicePaid, postInvoiceIssued } from "../lib/billing/gl";
 import { generateSettlementsForInvoice } from "../lib/billing/payout";
 import { generateConsolidatedInvoices } from "../lib/billing/consolidatedInvoices";
 import { deletedFilter, makeBulkDelete, makeBulkRestore } from "../lib/softDelete";
+import { invoiceRecipient, notifySms } from "../lib/notify";
 import {
   CreateInvoiceBody,
   UpdateInvoiceBody,
@@ -433,9 +434,30 @@ router.post("/v1/invoices/:id/pay", async (req, res): Promise<void> => {
     // Also best-effort: a settlement failure must never fail a payment.
     void generateSettlementsForInvoice(row.id);
   }
+  // 입금 확인 문자. 한국 임대차에서 "냈는데 처리됐나" 문의가 가장 흔한 문의이고,
+  // 한 통이면 없어진다. 이메일 없이 번호만 있는 세입자가 대부분이라 SMS 가 주 채널이다.
+  // once=true — 같은 인보이스로 두 번 수납 처리되어도 문자는 한 번이다.
+  void notifyInvoicePaid(row.id, Number(row.amount), row.currency, paidAt);
   const [result] = await enrichInvoices([row]);
   res.json(result);
 });
+
+/** 수납 → 세입자에게 입금 확인 문자. 실패해도 수납은 이미 끝났다(절대 throw 하지 않는다). */
+async function notifyInvoicePaid(invoiceId: number, amount: number, currency: string, paidAt: Date): Promise<void> {
+  const to = await invoiceRecipient(invoiceId);
+  if (!to?.mobile) return;
+  await notifySms({
+    smsKey: "sms.payment_received",
+    to: to.mobile,
+    name: to.name,
+    entity: { type: "invoice", id: invoiceId },
+    once: true,
+    vars: {
+      amount: `${amount.toLocaleString()} ${currency ?? ""}`.trim(),
+      date: paidAt.toISOString().slice(0, 10),
+    },
+  });
+}
 
 router.post("/v1/invoices/:id/void", async (req, res): Promise<void> => {
   const existing = await db.select({ status: invoicesTable.status }).from(invoicesTable).where(eq(invoicesTable.id, Number(req.params.id))).then(r => r[0]);

@@ -1,13 +1,23 @@
+---
+status: live
+domain: 인프라
+last_verified: 2026-09-01
+---
+
 # SMS 발송 개통 절차 (SOLAPI)
 
-문안 24종과 발송 코드(`lib/sms.ts`)는 준비돼 있다. **아직 한 통도 나가지 않는다** —
-아래를 갖춰야 발송이 켜진다. 설정이 없으면 `sendSms()` 는 조용히 `skipped` 를 돌려주므로
-호출부를 먼저 배선해 두어도 사고가 나지 않는다.
+문안 24종, 발송 코드(`lib/sms.ts`), 통보 배선(`lib/notify.ts` + 호출부)은 준비돼 있다.
+**남은 것은 계정과 번호뿐이다** — 아래를 갖추면 그 순간부터 나간다. 설정이 없으면
+`sendSms()` 가 조용히 `skipped` 를 돌려주므로, 배선된 상태로 두어도 사고가 나지 않는다.
 
 ## 1. 계정과 인증 정보
 
 1. https://solapi.com 가입 → 콘솔에서 **API Key / API Secret** 발급
-2. Railway(api-server) 환경변수에 등록:
+2. 값을 넣는 곳은 두 군데다. **관리자 화면 쪽이 기본**이다:
+
+   - **관리자 → 설정 → 통합 → 💬 문자 · 카카오 알림톡** — 배포 없이 저장·교체되고,
+     같은 화면에서 잔액 조회와 테스트 발송까지 된다(`integration_settings` 에 저장).
+   - Railway(api-server) 환경변수 — 부팅 시 폴백. 화면에서 넣은 값이 우선한다.
 
 ```
 SOLAPI_API_KEY=...
@@ -52,13 +62,22 @@ SOLAPI 는 선불이다. 잔액이 떨어지면 발송이 실패한다.
 
 ## 5. 개통 확인
 
+점검 스크립트가 인증·발신번호·잔액·문안·알림톡 매핑을 한 번에 본다. **발송하지 않으므로
+돈이 들지 않고**, 막힌 항목이 있으면 종료코드 1 로 끝난다.
+
 ```bash
-# 잔액 조회 — 인증 정보가 맞는지 가장 싸게 확인하는 방법
-SOLAPI_API_KEY=... SOLAPI_API_SECRET=... \
-  npx tsx -e 'import("./artifacts/api-server/src/lib/sms.js").then(m=>m.smsBalance().then(console.log))'
+cd artifacts/api-server
+DATABASE_URL=… node scripts/sms-preflight.mjs
+
+# 실제 한 통까지 확인
+DATABASE_URL=… node scripts/sms-preflight.mjs --send 01012345678
 ```
 
-이어서 본인 번호로 거래성 SMS 한 통을 보내 확인한다(광고성은 3번 완료 후).
+관리자 화면(설정 → 통합 → 문자)의 **잔액 조회 / 테스트 발송** 버튼이 같은 일을 한다.
+번호를 비우고 누르면 잔액만 조회하므로, 키가 맞는지 확인하는 데는 요금이 들지 않는다.
+
+값은 **DB(관리자 화면) → 환경변수** 순서로 읽는다 — 스크립트도 서버와 같은 순서를 쓰므로
+"화면에는 들어 있는데 점검은 없다고 한다" 같은 어긋남이 생기지 않는다.
 
 ---
 
@@ -94,11 +113,36 @@ SOLAPI_API_KEY=... SOLAPI_API_SECRET=... \
 
 심사는 광고성 문구를 걸러낸다. 24종을 거래성만 골라 둔 것이 여기서 그대로 유리하게 작용한다.
 
-## 아직 안 된 것
+## 어떤 사건에서 문자가 나가나 (배선 현황)
 
-- **발송부 배선** — `sendSms()` 를 실제 이벤트(예약확정·작업배정·연체)에 거는 작업은
-  Phase E 에서 이메일 배선과 함께 한다. 지금은 함수와 문안만 있다.
-- 발송 이력 저장 — 이메일은 `email_logs` 가 있으나 SMS 는 없다. 분쟁 대응에 필요하다.
+호출부는 전부 `lib/notify.ts` 의 `notifySms()` 를 거친다 — 수신자 조회·중복 방지·이력이
+한 곳에 모여 있어야 한 군데만 빠뜨리는 사고가 나지 않는다.
+
+| 사건 | 문안 | 수신자 | 위치 |
+|---|---|---|---|
+| 납부 기한 3일 전 | `sms.rent_due` | 세입자 | `lib/billing/rentDunning.ts` (크론) |
+| 연체 1·2·3차 | `sms.rent_overdue` | 세입자 | `lib/billing/rentDunning.ts` (크론) |
+| 인보이스 수납 | `sms.payment_received` | 세입자 | `POST /v1/invoices/:id/pay` |
+| 작업 파트너 배정 | `sms.job_assigned` | 서비스 호스트 | `lib/dispatch/workOrderDispatch.ts` |
+| 접수확인 SLA 초과 | `sms.staff_system_alert` | 당번(`STAFF_ALERT_MOBILES`) | 〃 (SLA 크론) |
+| 작업 확인 서명 링크 | `sms.signature_request` | 시설 담당자 | `POST /v1/work-orders/:id/sign-link` (`mobile`) |
+| 방문 확정 | `sms.inspection_notice` / `sms.appointment_reminder` | 입회자 | `POST /v1/work-orders/:id/send-confirmation` |
+| 보증금 정산 확정 | `sms.moveout_settlement` | 임차인 | `POST /v1/deposit-settlements/:id/finalize` |
+| 정산 확인 서명 링크 | `sms.signature_request` | 임차인 | `POST /v1/deposit-settlements/:id/sign-link` (`send_sms`) |
+| 소유주·파트너·에이전트 지급 | `sms.owner_payout_sent` / `sms.host_payout_sent` / `sms.commission_paid` | 수취인 | `paySettlement()` — 개별 지급·페이런 공통 |
+
+이력은 `email_log` 에 남는다(`template_code` = 문안 키, `to_email` 칸에 번호). 테이블
+이름은 이메일이지만 이 로그가 답하는 질문은 "이 건은 통보했는가" 이고 그건 채널과
+무관하다. 실패도 `status='Failed'` 로 남으므로 조용한 실패가 없다.
+
+### 아직 트리거가 없는 문안
+
+문안은 있으나 그 사건 자체가 시스템에 없어 걸 곳이 없는 것들이다. 기능이 생길 때 함께
+배선한다 — `sms.auth_code`(휴대폰 인증 플로우 없음), `sms.booking_confirmed` ·
+`sms.checkin_guide`(게스트 예약은 이메일 경로), `sms.defect_registered` ·
+`sms.maintenance_notice` · `sms.owner_approval_request` · `sms.referral_status` ·
+`sms.job_reminder` · `sms.job_changed` · `sms.job_cancelled` · `sms.report_required` ·
+`sms.staff_urgent_ticket`.
 
 ---
 

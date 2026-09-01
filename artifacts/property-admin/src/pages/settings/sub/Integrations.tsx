@@ -36,6 +36,19 @@ interface IntegrationStatus {
     }>;
     broken_tasks?: Array<{ task: string; provider: string; missing_capabilities: string[]; provider_configured: boolean }>;
   };
+  sms: {
+    provider: string;
+    console_url: string;
+    configured: boolean;
+    api_key: boolean;
+    api_secret: boolean;
+    sender_number: string | null;
+    ad_opt_out_number: string | null;
+    advertising_ready: boolean;
+    kakao_pf_id: boolean;
+    missing: string[];
+    masked_key: string;
+  };
   maps: { provider: string; configured: boolean; note: string };
   ical: { provider: string; configured: boolean; note: string };
   billing?: { recurring_invoices_enabled: boolean; lease_rent_invoices_enabled?: boolean };
@@ -461,6 +474,102 @@ const GoogleSheetsFields = () => {
   );
 };
 
+/**
+ * 문자·알림톡(SOLAPI). 개통을 막는 것은 대개 값 하나라서, 무엇이 비었는지를 먼저
+ * 보여 주고 그다음에 입력칸을 준다. "연결 확인" 은 잔액 조회(무료)이고, 번호를 넣고
+ * 누르면 그 번호로 실제 한 통이 나간다 — 발신번호 사전등록이 끝났는지는 그때 갈린다.
+ */
+const SmsFields = ({ status, onRefresh }: { status: IntegrationStatus | null; onRefresh: () => void }) => {
+  const { t } = useTranslation();
+  const [to, setTo] = useState("");
+  const [sending, setSending] = useState(false);
+  const [result, setResult] = useState<{ ok: boolean; msg: string } | null>(null);
+  const sms = status?.sms;
+
+  async function sendTest() {
+    setSending(true);
+    setResult(null);
+    try {
+      const res = await apiFetch("/api/v1/integrations/solapi/test", {
+        method: "POST",
+        body: JSON.stringify(to.trim() ? { to: to.trim() } : {}),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setResult({
+          ok: true,
+          msg: to.trim()
+            ? t("integrations.sms_test_sent")
+            : t("integrations.sms_balance_ok", { balance: Number(data.balance ?? 0).toLocaleString() }),
+        });
+        onRefresh();
+      } else {
+        setResult({ ok: false, msg: data.error ?? t("integrations.test_failed") });
+      }
+    } catch {
+      setResult({ ok: false, msg: t("integrations.request_failed") });
+    } finally {
+      setSending(false);
+    }
+  }
+
+  return (
+    <div className="space-y-3">
+      {sms && sms.missing.length > 0 && (
+        <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
+          {t("integrations.sms_missing", { keys: sms.missing.join(", ") })}
+        </p>
+      )}
+      <div className="flex flex-col gap-1">
+        <Label className="text-xs text-muted-foreground">{t("integrations.sms_api_key")}</Label>
+        <MaskedKeyInput value={sms?.masked_key ?? ""} envKey="SOLAPI_API_KEY" onSaved={onRefresh} />
+      </div>
+      <div className="flex flex-col gap-1">
+        <Label className="text-xs text-muted-foreground">{t("integrations.sms_api_secret")}</Label>
+        <MaskedKeyInput value={sms?.api_secret ? "••••••••" : ""} envKey="SOLAPI_API_SECRET" onSaved={onRefresh} />
+      </div>
+      <div className="flex flex-col gap-1">
+        <Label className="text-xs text-muted-foreground">{t("integrations.sms_sender")}</Label>
+        <MaskedKeyInput value={sms?.sender_number ?? ""} envKey="SMS_SENDER_NUMBER" onSaved={onRefresh} />
+        <p className="text-[11px] text-muted-foreground">{t("integrations.sms_sender_hint")}</p>
+      </div>
+      <div className="flex flex-col gap-1">
+        <Label className="text-xs text-muted-foreground">{t("integrations.sms_opt_out")}</Label>
+        <MaskedKeyInput value={sms?.ad_opt_out_number ?? ""} envKey="SMS_AD_OPT_OUT_NUMBER" onSaved={onRefresh} />
+        <p className="text-[11px] text-muted-foreground">{t("integrations.sms_opt_out_hint")}</p>
+      </div>
+      <div className="flex flex-col gap-1">
+        <Label className="text-xs text-muted-foreground">{t("integrations.sms_kakao_pf")}</Label>
+        <MaskedKeyInput value={sms?.kakao_pf_id ? "••••••••" : ""} envKey="KAKAO_PF_ID" onSaved={onRefresh} />
+        <p className="text-[11px] text-muted-foreground">{t("integrations.sms_kakao_hint")}</p>
+      </div>
+
+      <div className="border-t pt-3 space-y-2">
+        <Label className="text-xs text-muted-foreground">{t("integrations.sms_test_title")}</Label>
+        <div className="flex gap-2">
+          <Input
+            value={to}
+            onChange={(e) => { setTo(e.target.value); setResult(null); }}
+            placeholder={t("integrations.sms_test_placeholder")}
+            className="h-8 text-xs font-mono flex-1"
+          />
+          <Button size="sm" className="h-8 text-xs gap-1.5" onClick={sendTest} disabled={sending}>
+            {sending && <Loader2 className="h-3 w-3 animate-spin" />}
+            {to.trim() ? t("integrations.sms_send_test") : t("integrations.sms_check_balance")}
+          </Button>
+        </div>
+        {result && (
+          <p className={cn("text-xs", result.ok ? "text-green-700" : "text-red-600")}>{result.msg}</p>
+        )}
+        <a href={sms?.console_url ?? "https://console.solapi.com"} target="_blank" rel="noopener noreferrer"
+           className="text-xs text-primary hover:underline">
+          {t("integrations.sms_console")} ↗
+        </a>
+      </div>
+    </div>
+  );
+};
+
 const CARDS: CardDef[] = [
   {
     id: "stripe",
@@ -506,6 +615,21 @@ const CARDS: CardDef[] = [
       return { variant: "connected", label: "integrations.badge_connected" };
     },
     Fields: ResendFields,
+  },
+  {
+    id: "sms",
+    emoji: "💬",
+    name: "integrations.card_sms",
+    description: "integrations.card_sms_desc",
+    getBadge: (s) => {
+      if (!s?.sms) return { variant: "not-configured", label: "integrations.badge_not_configured" };
+      if (!s.sms.configured) return { variant: "not-configured", label: "integrations.badge_not_configured" };
+      // 알림톡까지 붙으면 그렇게 표시한다 — 요금과 도달률이 눈에 띄게 달라진다.
+      return s.sms.kakao_pf_id
+        ? { variant: "connected", label: "integrations.badge_connected", labelVars: { suffix: " · Kakao" } }
+        : { variant: "connected", label: "integrations.badge_connected" };
+    },
+    Fields: SmsFields,
   },
   {
     id: "maps",

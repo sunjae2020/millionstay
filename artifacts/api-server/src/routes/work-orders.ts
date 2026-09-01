@@ -12,6 +12,7 @@ import { buildAppointmentIcs, buildCalendar, addDays } from "../lib/ical";
 import { logAction } from "../utils/auditLog";
 import { keywordCondition, spaceIdsByName, propertyIdsByName, dateRangeConditions, yearConditions, distinctYears, distinctValues } from "../lib/listSearch";
 import { deletedFilter, makeBulkDelete, makeBulkRestore } from "../lib/softDelete";
+import { contactRecipient, notifySms } from "../lib/notify";
 import { uploadToCloudinary, isCloudinaryConfigured, cldFolder } from "../utils/cloudinary";
 import { getRateToAud } from "../lib/rateSnapshot";
 import {
@@ -875,15 +876,33 @@ router.post("/v1/work-orders/:id/sign-link", async (req, res): Promise<void> => 
       newValue: { sign_link_issued: signing.id, signer: name, expires_at: signing.expiresAt },
     });
 
+    const url = `${signingBaseUrl()}/work-order/${signing.token}`;
+    // 링크를 손으로 카톡에 붙여 넣는 것이 기본 동선이지만, 번호를 같이 주면 문자로
+    // 바로 보낸다 — 담당자가 현장에 있고 카톡을 안 쓰는 경우가 드물지 않다.
+    // 발송 성공 여부는 응답에 담되, 실패해도 링크 발급 자체는 성공이다(링크는 이미 살아 있다).
+    let smsResult: { sent: boolean; reason?: string } | null = null;
+    const mobile = typeof req.body?.mobile === "string" ? req.body.mobile.trim() : "";
+    if (mobile) {
+      const r = await notifySms({
+        smsKey: "sms.signature_request",
+        to: mobile,
+        name,
+        entity: { type: "work_order", id },
+        vars: { url, due_date: String(signing.expiresAt ?? "").slice(0, 10) },
+      });
+      smsResult = { sent: r.sent, reason: r.reason };
+    }
+
     res.status(201).json({
       success: true,
       data: {
         id: signing.id,
         token: signing.token,
         // 카톡으로 그대로 붙여 넣는 주소. SIGNING_BASE_URL(테넌트별 웹) 기준.
-        url: `${signingBaseUrl()}/work-order/${signing.token}`,
+        url,
         signer_name: name,
         expires_at: signing.expiresAt,
+        sms: smsResult,
       },
     });
   } catch (err: any) {
@@ -1157,8 +1176,43 @@ router.post("/v1/work-orders/:id/send-confirmation", async (req, res): Promise<v
   const now = new Date();
   await db.update(workOrdersTable).set({ confirmation_sent_at: now, updated_at: now }).where(eq(workOrdersTable.id, id));
   void logAction({ entityType: "work_order", entityId: id, action: "UPDATE", actorId: (req as any).user?.id ?? null, newValue: { confirmation_sent_to: to } });
+  // 같은 내용을 문자로도 남긴다. 세대 안에 들어가는 방문은 사전 통지가 원칙이고,
+  // 이메일 초대장은 열지 않는 수신자가 많다. 점검이면 통지 문안, 그 밖은 방문 문안.
+  void notifyVisitConfirmed(wo, contactId, unit, start, end);
   res.json({ success: true, data: { to, sent_at: now.toISOString() } });
 });
+
+/**
+ * 방문 확정 문자. 점검(inspection_type 이 있는 건)은 sms.inspection_notice,
+ * 그 밖의 약속은 sms.appointment_reminder 를 쓴다 — 문안이 다르고, 점검 통지는
+ * 세대 출입 사전 통지의 기록이기도 하다.
+ */
+async function notifyVisitConfirmed(
+  wo: typeof workOrdersTable.$inferSelect,
+  contactId: number | null,
+  unit: string | null,
+  start: Date,
+  end: Date,
+): Promise<void> {
+  const to = await contactRecipient(contactId);
+  if (!to?.mobile) return;
+  const tz = process.env.BILLING_TIMEZONE || "Asia/Seoul";
+  const date = new Intl.DateTimeFormat("ko-KR", { timeZone: tz, month: "numeric", day: "numeric" }).format(start);
+  const hm = (d: Date) => new Intl.DateTimeFormat("ko-KR", { timeZone: tz, hour: "2-digit", minute: "2-digit", hour12: false }).format(d);
+  const isInspection = !!wo.inspection_type;
+  await notifySms({
+    smsKey: isInspection ? "sms.inspection_notice" : "sms.appointment_reminder",
+    to: to.mobile,
+    name: to.name,
+    entity: { type: "work_order", id: wo.id },
+    vars: {
+      space_name: unit ?? wo.order_ref,
+      purpose: wo.title,
+      date,
+      time_window: `${hm(start)}~${hm(end)}`,
+    },
+  });
+}
 
 // ── Work-order photos (#7) — before/after (request/confirmation) evidence ─────
 

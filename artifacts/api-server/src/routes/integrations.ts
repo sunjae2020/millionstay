@@ -9,6 +9,7 @@ import { resolveEmailBrand } from "../lib/emailBrand.js";
 import { allProviders, apiKeyOf, capabilitiesOf, isProviderConfigured, providerEnvKeys } from "../lib/ai/providers.js";
 import { taskModelEnvKeys } from "../lib/ai/tasks.js";
 import { resetAiClients, resolveAllTasks } from "../lib/ai/client.js";
+import { sendSms, smsBalance, smsConfigStatus } from "../lib/sms.js";
 
 const router: IRouter = Router();
 
@@ -41,6 +42,18 @@ function allowedKeys(): string[] {
     // tenant has its own DB, so this row is inherently per-instance. Defaults
     // to enabled when unset, so homestay tenants are unaffected.
     "HOMESTAY_MODULE_ENABLED",
+    // ── 문자·알림톡 (SOLAPI) ────────────────────────────────────────────────
+    // Railway 변수로도 넣을 수 있지만 여기서 관리하면 개통·발신번호 교체가 배포
+    // 없이 끝난다. 발신번호는 사전등록제라 값만 바꿔서는 안 되고 콘솔 등록이
+    // 먼저다 — 그래서 /v1/integrations/solapi/test 로 확인하고 저장하는 순서다.
+    "SOLAPI_API_KEY",
+    "SOLAPI_API_SECRET",
+    "SMS_SENDER_NUMBER",
+    "SMS_AD_OPT_OUT_NUMBER",
+    "KAKAO_PF_ID",
+    // 문안의 {{contact_phone}} 과 장애·SLA 알림을 받을 당번 번호(쉼표 구분).
+    "SUPPORT_PHONE",
+    "STAFF_ALERT_MOBILES",
     // ── AI vendors ──────────────────────────────────────────────────────────
     // One key (and optional base URL) per provider in lib/ai/providers.ts, plus
     // one model override per task in lib/ai/tasks.ts. Derived from those two
@@ -150,6 +163,15 @@ router.get("/v1/integrations/status", async (_req: Request, res: Response): Prom
   const chatResolution = taskResolutions.find((t) => t.task === "chat")!;
   const csResolution = taskResolutions.find((t) => t.task === "cs_translate")!;
 
+  // SMS 설정은 DB(integration_settings)에도 올 수 있으므로 process.env 로 끌어올린
+  // 뒤에 판정한다 — 그러지 않으면 방금 저장한 값이 "미설정" 으로 보인다.
+  const solapiKey = await getEnvVar("SOLAPI_API_KEY");
+  await getEnvVar("SOLAPI_API_SECRET");
+  await getEnvVar("SMS_SENDER_NUMBER");
+  await getEnvVar("SMS_AD_OPT_OUT_NUMBER");
+  await getEnvVar("KAKAO_PF_ID");
+  const smsStatus = smsConfigStatus();
+
   const maskedCloudApiKey = maskKey(cloudApiKey);
   const maskedCloudApiSecret = maskKey(cloudApiSecret);
 
@@ -216,6 +238,13 @@ router.get("/v1/integrations/status", async (_req: Request, res: Response): Prom
             missing_capabilities: t.missing_capabilities,
           })),
         error: null,
+      },
+      sms: {
+        // 값 자체가 아니라 "무엇이 비었는가" 를 준다 — 개통 점검 스크립트와 같은 판단.
+        ...smsStatus,
+        masked_key: maskKey(solapiKey),
+        provider: "SOLAPI",
+        console_url: "https://console.solapi.com",
       },
       maps: {
         provider: "OpenStreetMap",
@@ -341,6 +370,51 @@ router.post("/v1/integrations/anthropic/test", async (_req: Request, res: Respon
   } catch (e: any) {
     res.status(400).json({ success: false, error: e?.message ?? "Anthropic connection failed" });
   }
+});
+
+/**
+ * SOLAPI 개통 확인. 인수 없이 부르면 **잔액 조회**만 한다 — 인증 정보가 맞는지
+ * 가장 싸게(무료로) 확인하는 방법이다. `to` 를 주면 그 번호로 실제 한 통을 보낸다.
+ *
+ * 실제 발송은 발신번호 사전등록까지 끝나야 성공한다. 그래서 실패 메시지를 그대로
+ * 돌려준다 — "등록되지 않은 발신번호" 같은 SOLAPI 의 사유가 곧 다음 할 일이다.
+ */
+router.post("/v1/integrations/solapi/test", async (req: Request, res: Response): Promise<void> => {
+  await getEnvVar("SOLAPI_API_KEY");
+  await getEnvVar("SOLAPI_API_SECRET");
+  await getEnvVar("SMS_SENDER_NUMBER");
+  const status = smsConfigStatus();
+  if (!status.api_key || !status.api_secret) {
+    res.status(400).json({ success: false, error: "SOLAPI_API_KEY / SOLAPI_API_SECRET 가 설정되지 않았습니다" });
+    return;
+  }
+  const balance = await smsBalance();
+  if (balance === null) {
+    res.status(400).json({ success: false, error: "SOLAPI 인증에 실패했습니다 (키·시크릿을 확인하세요)" });
+    return;
+  }
+
+  const to = typeof req.body?.to === "string" ? req.body.to.trim() : "";
+  if (!to) {
+    res.json({ success: true, balance, sender_number: status.sender_number, missing: status.missing });
+    return;
+  }
+  if (!status.configured) {
+    res.status(400).json({ success: false, error: `발송 전 설정이 비어 있습니다: ${status.missing.join(", ")}`, balance });
+    return;
+  }
+  const brand = await resolveEmailBrand();
+  const result = await sendSms({
+    to,
+    // 템플릿을 쓰지 않는다 — 문안 등록 여부와 무관하게 회선만 검증하는 것이 목적이다.
+    text: `[${brand.name}] 문자 발송 테스트입니다. 이 문자를 받으셨다면 개통이 끝났습니다.`,
+    smsOnly: true,
+  });
+  if (!result.ok) {
+    res.status(400).json({ success: false, error: result.error ?? "발송에 실패했습니다", balance });
+    return;
+  }
+  res.json({ success: true, balance, message_id: result.id, type: result.type, bytes: result.bytes });
 });
 
 router.post("/v1/integrations/update-env", async (req: Request, res: Response): Promise<void> => {

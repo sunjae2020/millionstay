@@ -29,6 +29,7 @@ import {
 } from "@workspace/db";
 import { DEFAULT_CURRENCY } from "../currency";
 import { postSettlementApproved, postSettlementPaid } from "./gl";
+import { accountRecipient, notifySms } from "../notify";
 
 const round2 = (n: number): number => Math.round(n * 100) / 100;
 
@@ -359,5 +360,39 @@ export async function paySettlement(id: number, method?: string | null): Promise
     currency: row.currency,
     paidAt: paidAt.toISOString(),
   });
+  // 송금했다는 사실은 받는 사람이 가장 빨리 알아야 하는 정보다(입금 확인 문의가 줄고,
+  // 금액이 다르면 그 자리에서 걸린다). 🚨 계좌번호는 문안에 넣지 않는다.
+  void notifyPayoutPaid(row, paidAt);
   return row;
+}
+
+/** 정산 대상별 문안. 유보(retained)는 우리 몫이라 아무에게도 보내지 않는다. */
+const PAYOUT_SMS_KEYS: Record<string, string> = {
+  landlord: "sms.owner_payout_sent",
+  owner: "sms.owner_payout_sent",
+  service_host: "sms.host_payout_sent",
+  agent: "sms.commission_paid",
+};
+
+async function notifyPayoutPaid(
+  row: typeof providerSettlementsTable.$inferSelect,
+  paidAt: Date,
+): Promise<void> {
+  const smsKey = PAYOUT_SMS_KEYS[row.party_type];
+  // 내부 이체(유보 leg)는 지급이 아니다 — 알릴 상대가 없다.
+  if (!smsKey || row.split_role !== "external_payment") return;
+  const to = await accountRecipient(row.payee_account_id);
+  if (!to?.mobile) return;
+  await notifySms({
+    smsKey,
+    to: to.mobile,
+    name: row.payee_name || to.name,
+    entity: { type: "provider_settlement", id: row.id },
+    once: true,
+    vars: {
+      period: paidAt.toISOString().slice(0, 7).replace("-", "년 ") + "월",
+      net_amount: `${Number(row.amount).toLocaleString()} ${row.currency}`,
+      date: paidAt.toISOString().slice(0, 10),
+    },
+  });
 }
