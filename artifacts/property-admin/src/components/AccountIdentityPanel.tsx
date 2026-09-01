@@ -13,6 +13,7 @@ import { ImagePreviewDialog, useImagePreview } from "@/components/ImagePreviewDi
 import { formatPersonName } from "@/lib/nameFormat";
 import { ExportableTable } from "@/components/ui/ExportCsvButton";
 import { formatDate } from "@/lib/date";
+import { snsLabelKey } from "@/lib/sns";
 import {
   Building2, User, Upload, Trash2, Sparkles, Loader2, UserRoundCheck, BadgeCheck, ShieldAlert, ShieldQuestion,
 } from "lucide-react";
@@ -43,6 +44,8 @@ const FIELD_LABELS: Array<[string, string]> = [
   ["biz_registration_no", "account.label_biz_no"],
   ["corp_registration_no", "account.label_corp_no"],
   ["resident_no", "account.label_resident_no"],
+  ["sns_type", "account.label_sns_type"],
+  ["sns_id", "account.label_sns_id"],
   ["ceo_name", "account.label_ceo"],
   ["description", "account.label_notes"],
 ];
@@ -53,6 +56,16 @@ const FIELD_LABELS: Array<[string, string]> = [
  */
 const COMPANY_ONLY_FIELDS = new Set(["website_url", "phone2", "biz_registration_no", "corp_registration_no", "ceo_name"]);
 const INDIVIDUAL_ONLY_FIELDS = new Set(["resident_no"]);
+
+/**
+ * 검토 표에 보여줄 값 — 저장되는 값과 다를 수 있다. sns_type 은 DB 에 "KakaoTalk"
+ * 처럼 식별자로 들어가므로, 표에서는 로케일 이름으로 옮겨 읽히게 한다.
+ */
+function displayFieldValue(key: string, value: string, t: (k: string) => string): string {
+  if (!value) return value;
+  if (key === "sns_type") return t(snsLabelKey(value));
+  return value;
+}
 
 /** "900101-1234567" → "900101-1******". 뒷자리는 성별 한 자리만 남긴다. */
 function maskResidentNo(value: string): string {
@@ -186,6 +199,9 @@ export function AccountIdentityPanel({
       put("address_postcode", c.postcode);
       put("address_country", c.country);
       put("resident_no", c.resident_no);
+      // 메신저는 사람의 계정이라 회사·개인 어느 쪽 계정에도 그대로 옮긴다.
+      put("sns_type", c.sns_type);
+      put("sns_id", c.sns_id);
 
       if (!Object.keys(fields).length) {
         setCopyError(t("account.fill_contact_empty"));
@@ -488,9 +504,9 @@ export function AccountIdentityPanel({
                               setReview((s) => (s ? { ...s, selected: { ...s.selected, [key]: c === true } } : s))} />
                         </td>
                         <td className="py-2 align-top text-muted-foreground">{t(labelKey)}</td>
-                        <td className="py-2 align-top text-muted-foreground break-words">{current || "—"}</td>
+                        <td className="py-2 align-top text-muted-foreground break-words">{displayFieldValue(key, current, t) || "—"}</td>
                         <td className="py-2 align-top break-words">
-                          {value}
+                          {displayFieldValue(key, value, t)}
                           {bizWarning && (
                             <span className="block text-xs text-destructive">{t("account.biz_no_checksum_bad")}</span>
                           )}

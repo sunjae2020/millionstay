@@ -791,6 +791,8 @@ export default function AccountDetail() {
             biz_registration_no: getValues("biz_registration_no") ?? "",
             ceo_name: getValues("ceo_name") ?? "",
             resident_no: getValues("resident_no") ?? "",
+            sns_type: getValues("sns_type") ?? "",
+            sns_id: getValues("sns_id") ?? "",
             description: getValues("description") ?? "",
           }}
           onApplyFields={handleApplyFields}
