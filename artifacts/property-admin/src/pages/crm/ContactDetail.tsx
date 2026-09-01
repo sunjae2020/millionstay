@@ -29,22 +29,12 @@ import { KoreanAddressSearch } from "@/components/KoreanAddressSearch";
 import { differenceInDays, parseISO } from "date-fns";
 
 import { ExportableTable } from "@/components/ui/ExportCsvButton";
+import { SNS_TYPES, SNS_PLACEHOLDER, snsLabelKey } from "@/lib/sns";
 /**
  * Messenger the SNS id belongs to. Stored as the canonical English name; the
  * label is localised, so a Korean admin picks 카카오톡 and the row reads
  * "KakaoTalk" everywhere else.
  */
-const SNS_TYPES = ["KakaoTalk", "LINE", "WhatsApp", "WeChat", "Telegram", "Instagram", "Facebook", "Other"] as const;
-
-const SNS_PLACEHOLDER: Record<string, string> = {
-  KakaoTalk: "kakao_id",
-  LINE: "line_id",
-  WhatsApp: "+82 10 1234 5678",
-  WeChat: "wechat_id",
-  Telegram: "@telegram",
-  Instagram: "@instagram",
-  Facebook: "facebook.com/…",
-};
 
 interface ContactForm {
   first_name: string;
@@ -470,7 +460,7 @@ export default function ContactDetail() {
                           <SelectContent>
                             <SelectItem value="__none">—</SelectItem>
                             {SNS_TYPES.map((n) => (
-                              <SelectItem key={n} value={n}>{t(`contact.sns_${n.toLowerCase()}`)}</SelectItem>
+                              <SelectItem key={n} value={n}>{t(snsLabelKey(n))}</SelectItem>
                             ))}
                           </SelectContent>
                         </Select>

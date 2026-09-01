@@ -965,6 +965,8 @@
     "autofill_hint_person": "从关联联系人获取资料。应用前可逐项确认。",
     "resident_no_edit_hint": "请在基本信息部分修改号码。",
     "label_resident_no": "居民登记号码",
+    "label_sns_type": "社交账号类型",
+    "label_sns_id": "社交账号 ID",
     "hint_resident_no": "将印在租赁合同的承租人栏中。屏幕上仅显示部分位数。",
     "tab_rental_business": "租赁事业者"
   },
@@ -1428,6 +1430,7 @@
     "party_address": "地址",
     "party_phone": "联系方式",
     "party_email": "电子邮箱",
+    "party_sns": "通讯软件",
     "party_missing": "未填写",
     "party_none_selected": "选择账户后，将在此显示合同上会出现的信息。",
     "party_edit_account": "编辑账户信息",

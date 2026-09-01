@@ -980,6 +980,8 @@
     "autofill_hint_person": "Pull details from the linked contact. You approve every field before it is applied.",
     "resident_no_edit_hint": "Edit the number in the General section.",
     "label_resident_no": "Resident registration number",
+    "label_sns_type": "SNS type",
+    "label_sns_id": "SNS ID",
     "hint_resident_no": "Printed in the tenant block of the lease agreement. Shown masked on screen.",
     "tab_rental_business": "Rental business"
   },
@@ -1448,6 +1450,7 @@
     "party_address": "Address",
     "party_phone": "Phone",
     "party_email": "E-mail",
+    "party_sns": "Messenger",
     "party_missing": "Not set",
     "party_none_selected": "Pick an account to see the details that will appear on the agreement.",
     "party_edit_account": "Edit account",

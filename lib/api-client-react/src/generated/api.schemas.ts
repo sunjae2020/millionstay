@@ -905,6 +905,8 @@ export interface AccountResponse {
   /** @nullable */
   biz_registration_no?: string | null;
   /** @nullable */
+  corp_registration_no?: string | null;
+  /** @nullable */
   biz_verify_status?: string | null;
   /** @nullable */
   biz_verified_at?: string | null;
@@ -915,6 +917,16 @@ export interface AccountResponse {
    * @nullable
    */
   resident_no?: string | null;
+  /**
+   * 메신저 종류 (KakaoTalk / LINE / WhatsApp / WeChat …).
+   * @nullable
+   */
+  sns_type?: string | null;
+  /**
+   * 메신저 아이디. 계약서 당사자 표(임차인 을)에 노출된다.
+   * @nullable
+   */
+  sns_id?: string | null;
   /** @nullable */
   field_sources?: AccountResponseFieldSources;
   manual_input: boolean;
@@ -991,6 +1003,8 @@ export interface CreateAccountBody {
   /** @nullable */
   biz_registration_no?: string | null;
   /** @nullable */
+  corp_registration_no?: string | null;
+  /** @nullable */
   biz_verify_status?: string | null;
   /** @nullable */
   biz_verified_at?: string | null;
@@ -1001,6 +1015,16 @@ export interface CreateAccountBody {
    * @nullable
    */
   resident_no?: string | null;
+  /**
+   * 메신저 종류 (KakaoTalk / LINE / WhatsApp / WeChat …).
+   * @nullable
+   */
+  sns_type?: string | null;
+  /**
+   * 메신저 아이디. 계약서 당사자 표(임차인 을)에 노출된다.
+   * @nullable
+   */
+  sns_id?: string | null;
   /** @nullable */
   field_sources?: CreateAccountBodyFieldSources;
   manual_input?: boolean;
@@ -1075,6 +1099,8 @@ export interface UpdateAccountBody {
   /** @nullable */
   biz_registration_no?: string | null;
   /** @nullable */
+  corp_registration_no?: string | null;
+  /** @nullable */
   biz_verify_status?: string | null;
   /** @nullable */
   biz_verified_at?: string | null;
@@ -1085,6 +1111,16 @@ export interface UpdateAccountBody {
    * @nullable
    */
   resident_no?: string | null;
+  /**
+   * 메신저 종류 (KakaoTalk / LINE / WhatsApp / WeChat …).
+   * @nullable
+   */
+  sns_type?: string | null;
+  /**
+   * 메신저 아이디. 계약서 당사자 표(임차인 을)에 노출된다.
+   * @nullable
+   */
+  sns_id?: string | null;
   /** @nullable */
   field_sources?: UpdateAccountBodyFieldSources;
   manual_input?: boolean;
