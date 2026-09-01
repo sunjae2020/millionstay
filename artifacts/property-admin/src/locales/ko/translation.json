@@ -7238,6 +7238,8 @@
     "intake_f_last_name": "성",
     "intake_f_mobile_number": "휴대폰",
     "intake_f_email": "이메일",
+    "intake_f_sns_type": "SNS 종류",
+    "intake_f_sns_id": "SNS ID",
     "intake_f_date_of_birth": "생년월일",
     "intake_f_nationality": "국적",
     "intake_f_address_line1": "주소",

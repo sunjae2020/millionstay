@@ -26,8 +26,17 @@ import {
 
 const DEV_SITE = isDevelopmentSite();
 
+/**
+ * 메신저 종류. 값은 연락처(contacts.sns_type)에 그대로 저장되는 식별자라
+ * 번역하지 않고, 화면 표기만 `intake.sns_*` 키로 옮긴다.
+ * 어드민 쪽 정본은 property-admin 의 `src/lib/sns.ts` — 목록을 늘릴 때 함께 고친다.
+ */
+const SNS_TYPES = [
+  "KakaoTalk", "LINE", "WhatsApp", "WeChat", "Telegram", "Instagram", "Facebook", "Other",
+] as const;
+
 /** 화면에 서는 순서. 필수는 이름·연락처·비상연락처 셋뿐이다. */
-const SECTIONS: Array<{ key: string; fields: Array<{ name: string; type?: string; required?: boolean }> }> = [
+const SECTIONS: Array<{ key: string; fields: Array<{ name: string; type?: string; required?: boolean; options?: readonly string[] }> }> = [
   {
     key: "person",
     fields: [
@@ -35,6 +44,8 @@ const SECTIONS: Array<{ key: string; fields: Array<{ name: string; type?: string
       { name: "first_name" },
       { name: "mobile_number", type: "tel", required: true },
       { name: "email", type: "email" },
+      { name: "sns_type", options: SNS_TYPES },
+      { name: "sns_id" },
       { name: "date_of_birth", type: "date" },
       { name: "nationality" },
     ],
@@ -206,12 +217,25 @@ export default function IntakeForm() {
                   {t(`intake.f_${f.name}`)}
                   {f.required && <span className="ml-0.5 text-red-600">*</span>}
                 </span>
-                <Input
-                  type={f.type ?? "text"}
-                  value={values[f.name] ?? ""}
-                  onChange={(e) => set(f.name, e.target.value)}
-                  placeholder={t(`intake.ph_${f.name}`, "")}
-                />
+                {f.options ? (
+                  <select
+                    className="h-10 rounded-md border border-input bg-background px-3 text-sm"
+                    value={values[f.name] ?? ""}
+                    onChange={(e) => set(f.name, e.target.value)}
+                  >
+                    <option value="">—</option>
+                    {f.options.map((o) => (
+                      <option key={o} value={o}>{t(`intake.sns_${o.toLowerCase()}`, o)}</option>
+                    ))}
+                  </select>
+                ) : (
+                  <Input
+                    type={f.type ?? "text"}
+                    value={values[f.name] ?? ""}
+                    onChange={(e) => set(f.name, e.target.value)}
+                    placeholder={t(`intake.ph_${f.name}`, "")}
+                  />
+                )}
               </label>
             ))}
           </div>
