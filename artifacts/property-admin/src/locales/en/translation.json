@@ -7238,6 +7238,8 @@
     "intake_f_last_name": "Last name",
     "intake_f_mobile_number": "Mobile",
     "intake_f_email": "Email",
+    "intake_f_sns_type": "SNS type",
+    "intake_f_sns_id": "SNS ID",
     "intake_f_date_of_birth": "Date of birth",
     "intake_f_nationality": "Nationality",
     "intake_f_address_line1": "Street",

@@ -375,6 +375,7 @@ async function intakePrefill(contactId: number | null, contract: any) {
     ...base,
     first_name: c.first_name, last_name: c.last_name,
     email: c.email, mobile_number: c.mobile_number,
+    sns_type: c.sns_type, sns_id: c.sns_id,
     date_of_birth: c.date_of_birth, nationality: c.nationality,
     address_line1: c.address_line1, suburb: c.suburb, state: c.state,
     postcode: c.postcode, country: c.country,
@@ -451,6 +452,8 @@ const INTAKE_CONTACT_FIELDS = [
   "address_line1", "suburb", "state", "postcode", "country",
   "emergency_contact_name", "emergency_contact_relation", "emergency_contact_phone",
   "profile_photo_url",
+  // 메신저 — 입주 당일 연락은 대개 카카오톡·LINE 으로 간다.
+  "sns_type", "sns_id",
 ] as const;
 const INTAKE_CONTRACT_FIELDS = ["vehicle_no", "pet_note", "cohabitants"] as const;
 
