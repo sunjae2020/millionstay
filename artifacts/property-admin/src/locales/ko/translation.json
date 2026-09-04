@@ -7158,7 +7158,9 @@
       "website_enrich": "계정 웹사이트 자동채움",
       "match_rationale": "홈스테이 매칭 사유",
       "id_document_ocr": "신분증 판독(사진 추출)",
-      "transaction_categorise": "거래 계정과목 제안"
+      "transaction_categorise": "거래 계정과목 제안",
+      "transaction_receipt_ocr": "영수증 판독",
+      "transaction_split_suggest": "분할 배분 제안"
     },
     "custom_engine": "직접 추가",
     "add_engine": "엔진 추가",
@@ -7449,7 +7451,26 @@
     "suggest_apply": "적용",
     "suggest_none": "자신 있는 제안이 없습니다.",
     "dupe_warning": "같은 날·같은 금액·같은 거래처 거래가 이미 {{count}}건 있습니다",
-    "col_base_amount": "기준통화 환산"
+    "col_base_amount": "기준통화 환산",
+    "bank_ledger": "은행 원장",
+    "all_bank_accounts": "전체 통장",
+    "bank_unassigned": "통장 미지정",
+    "bucket_all": "전체",
+    "bucket_review": "분류 대기",
+    "bucket_categorised": "분류 완료",
+    "bucket_excluded": "제외",
+    "bank_net": "순증감",
+    "bank_gl_balance": "장부 잔액",
+    "bank_statement_balance": "명세서 잔액",
+    "bank_reconciled": "일치",
+    "bank_difference": "{{amount}} 차이",
+    "bank_no_statement": "명세서 잔액이 아직 없습니다",
+    "ocr_upload": "영수증 읽기",
+    "ocr_done": "영수증을 읽었습니다 — 저장 전에 값을 확인하세요.",
+    "ocr_confidence": "확신도 약 {{pct}}%",
+    "split_suggest": "분할 제안",
+    "split_suggest_none": "제안할 것이 없습니다 — 계약의 정산 조건을 먼저 등록하세요.",
+    "bank_gl_shared": "여러 통장이 같은 계정과목을 써서 잔액 대사를 할 수 없습니다 — 통장마다 계정과목을 나누세요"
   },
   "payment_schedule": {
     "title": "결제 일정",

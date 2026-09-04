@@ -7058,7 +7058,9 @@
       "website_enrich": "Bổ sung thông tin website của tài khoản",
       "match_rationale": "Lý do ghép nối homestay",
       "id_document_ocr": "OCR giấy tờ tuỳ thân (cắt ảnh chân dung)",
-      "transaction_categorise": "Gợi ý tài khoản giao dịch"
+      "transaction_categorise": "Gợi ý tài khoản giao dịch",
+      "transaction_receipt_ocr": "Đọc biên nhận",
+      "transaction_split_suggest": "Gợi ý phân bổ"
     },
     "custom_engine": "Tự thêm",
     "add_engine": "Thêm engine",
@@ -7349,7 +7351,26 @@
     "suggest_apply": "Áp dụng",
     "suggest_none": "Không có gợi ý đủ tin cậy.",
     "dupe_warning": "Đã có {{count}} giao dịch cùng ngày, cùng số tiền và cùng đối tác",
-    "col_base_amount": "Quy đổi tiền cơ sở"
+    "col_base_amount": "Quy đổi tiền cơ sở",
+    "bank_ledger": "Sổ ngân hàng",
+    "all_bank_accounts": "Tất cả tài khoản",
+    "bank_unassigned": "Chưa gán tài khoản",
+    "bucket_all": "Tất cả",
+    "bucket_review": "Chờ phân loại",
+    "bucket_categorised": "Đã phân loại",
+    "bucket_excluded": "Đã loại trừ",
+    "bank_net": "Biến động ròng",
+    "bank_gl_balance": "Số dư sổ sách",
+    "bank_statement_balance": "Số dư sao kê",
+    "bank_reconciled": "Khớp",
+    "bank_difference": "Lệch {{amount}}",
+    "bank_no_statement": "Chưa có số dư sao kê",
+    "ocr_upload": "Đọc biên nhận",
+    "ocr_done": "Đã đọc biên nhận — kiểm tra trước khi lưu.",
+    "ocr_confidence": "Độ tin cậy khoảng {{pct}}%",
+    "split_suggest": "Gợi ý phân bổ",
+    "split_suggest_none": "Không có gợi ý — hãy nhập điều khoản thanh toán của hợp đồng trước.",
+    "bank_gl_shared": "Nhiều tài khoản dùng chung mã sổ cái nên không đối chiếu số dư được — hãy tách mã cho từng tài khoản"
   },
   "payment_schedule": {
     "title": "Lịch thanh toán",

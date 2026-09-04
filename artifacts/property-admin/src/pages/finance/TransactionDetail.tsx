@@ -475,6 +475,29 @@ function SplitDialog({
   const remaining = Math.round((total - used) * 100) / 100;
   const money = (n: number) => formatMoney(n, currency, brand.currencyPosition);
 
+  // 제안은 계약 정산 조건이 있으면 그 산수를, 없으면 모델을 쓴다. 어느 쪽이든
+  // 서버가 합계를 원본 이하로 잘라 주므로 그대로 채워 넣어도 안전하다.
+  const suggest = useMutation({
+    mutationFn: async () => {
+      const res = await apiFetch(`/api/v1/transactions/${txnId}/split-suggest`, { method: "POST" });
+      const payload = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(payload?.error ?? "Failed");
+      return payload.data as {
+        legs: Array<{ amount: number; role: "disbursement" | "retained"; counterparty_name: string | null; description: string | null; basis: string }>;
+      };
+    },
+    onSuccess: (d) => {
+      if (!d.legs.length) { toast({ title: t("transaction.split_suggest_none") }); return; }
+      setLegs(d.legs.map((l) => ({
+        amount: String(l.amount),
+        role: l.role,
+        counterparty_name: l.counterparty_name ?? "",
+        description: l.description ?? "",
+      })));
+    },
+    onError: (e: Error) => toast({ title: t("common.error"), description: e.message, variant: "destructive" }),
+  });
+
   const save = useMutation({
     mutationFn: async () => {
       const res = await apiFetch(`/api/v1/transactions/${txnId}/split`, {
@@ -537,10 +560,16 @@ function SplitDialog({
           ))}
         </div>
         <div className="flex items-center justify-between">
-          <Button variant="outline" size="sm"
-            onClick={() => setLegs([...legs, { amount: "", role: "disbursement", counterparty_name: "", description: "" }])}>
-            <Plus className="h-3.5 w-3.5 mr-1" />{t("transaction.split_add_leg")}
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button variant="outline" size="sm"
+              onClick={() => setLegs([...legs, { amount: "", role: "disbursement", counterparty_name: "", description: "" }])}>
+              <Plus className="h-3.5 w-3.5 mr-1" />{t("transaction.split_add_leg")}
+            </Button>
+            <Button variant="outline" size="sm" onClick={() => suggest.mutate()} disabled={suggest.isPending}>
+              {suggest.isPending ? <Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" /> : <Sparkles className="h-3.5 w-3.5 mr-1" />}
+              {t("transaction.split_suggest")}
+            </Button>
+          </div>
           <span className={`text-sm tabular-nums ${remaining < 0 ? "text-red-600 font-medium" : "text-muted-foreground"}`}>
             {t("transaction.split_remaining", { amount: money(remaining) })}
           </span>

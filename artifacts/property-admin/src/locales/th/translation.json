@@ -7099,7 +7099,9 @@
       "website_enrich": "ดึงข้อมูลเว็บไซต์ของบัญชี",
       "match_rationale": "เหตุผลการจับคู่โฮมสเตย์",
       "id_document_ocr": "OCR เอกสารแสดงตน (ตัดรูปถ่าย)",
-      "transaction_categorise": "แนะนำรหัสบัญชีรายการ"
+      "transaction_categorise": "แนะนำรหัสบัญชีรายการ",
+      "transaction_receipt_ocr": "อ่านใบเสร็จ",
+      "transaction_split_suggest": "แนะนำการแบ่ง"
     },
     "custom_engine": "เพิ่มเอง",
     "add_engine": "เพิ่มเอนจิน",
@@ -7390,7 +7392,26 @@
     "suggest_apply": "ใช้",
     "suggest_none": "ไม่มีคำแนะนำที่มั่นใจ",
     "dupe_warning": "มีรายการวันที่ จำนวนเงิน และคู่ค้าเดียวกันอยู่แล้ว {{count}} รายการ",
-    "col_base_amount": "จำนวนสกุลหลัก"
+    "col_base_amount": "จำนวนสกุลหลัก",
+    "bank_ledger": "บัญชีแยกประเภทธนาคาร",
+    "all_bank_accounts": "ทุกบัญชีธนาคาร",
+    "bank_unassigned": "ยังไม่ระบุบัญชี",
+    "bucket_all": "ทั้งหมด",
+    "bucket_review": "รอตรวจ",
+    "bucket_categorised": "จัดหมวดแล้ว",
+    "bucket_excluded": "ยกเว้น",
+    "bank_net": "เคลื่อนไหวสุทธิ",
+    "bank_gl_balance": "ยอดตามบัญชี",
+    "bank_statement_balance": "ยอดตาม statement",
+    "bank_reconciled": "ตรงกัน",
+    "bank_difference": "ต่างกัน {{amount}}",
+    "bank_no_statement": "ยังไม่มียอด statement",
+    "ocr_upload": "อ่านใบเสร็จ",
+    "ocr_done": "อ่านใบเสร็จแล้ว — ตรวจสอบก่อนบันทึก",
+    "ocr_confidence": "ความมั่นใจราว {{pct}}%",
+    "split_suggest": "แนะนำการแบ่ง",
+    "split_suggest_none": "ไม่มีข้อเสนอ — โปรดบันทึกเงื่อนไขการจ่ายของสัญญาก่อน",
+    "bank_gl_shared": "หลายบัญชีใช้รหัสบัญชีเดียวกัน จึงกระทบยอดไม่ได้ — ควรแยกรหัสต่อบัญชี"
   },
   "payment_schedule": {
     "title": "กำหนดชำระเงิน",

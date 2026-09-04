@@ -7113,7 +7113,9 @@
       "website_enrich": "アカウントのサイト情報取得",
       "match_rationale": "ホームステイのマッチ理由",
       "id_document_ocr": "身分証 OCR（顔写真抽出）",
-      "transaction_categorise": "取引の勘定科目提案"
+      "transaction_categorise": "取引の勘定科目提案",
+      "transaction_receipt_ocr": "領収書読取",
+      "transaction_split_suggest": "分割配分の提案"
     },
     "custom_engine": "追加",
     "add_engine": "エンジンを追加",
@@ -7404,7 +7406,26 @@
     "suggest_apply": "適用",
     "suggest_none": "確度の高い提案がありません。",
     "dupe_warning": "同じ日・同じ金額・同じ取引先の取引がすでに {{count}} 件あります",
-    "col_base_amount": "基準通貨換算"
+    "col_base_amount": "基準通貨換算",
+    "bank_ledger": "銀行元帳",
+    "all_bank_accounts": "すべての口座",
+    "bank_unassigned": "口座未指定",
+    "bucket_all": "すべて",
+    "bucket_review": "要確認",
+    "bucket_categorised": "分類済み",
+    "bucket_excluded": "除外",
+    "bank_net": "純増減",
+    "bank_gl_balance": "帳簿残高",
+    "bank_statement_balance": "明細残高",
+    "bank_reconciled": "一致",
+    "bank_difference": "{{amount}} の差異",
+    "bank_no_statement": "明細残高がまだありません",
+    "ocr_upload": "領収書を読取",
+    "ocr_done": "領収書を読み取りました — 保存前に確認してください。",
+    "ocr_confidence": "確信度 約{{pct}}%",
+    "split_suggest": "分割を提案",
+    "split_suggest_none": "提案できるものがありません — 契約の精算条件を先に登録してください。",
+    "bank_gl_shared": "複数の口座が同じ勘定科目を使うため残高照合ができません — 口座ごとに科目を分けてください"
   },
   "payment_schedule": {
     "title": "支払スケジュール",

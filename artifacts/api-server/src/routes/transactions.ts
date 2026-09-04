@@ -1,4 +1,5 @@
 import { Router, type IRouter } from "express";
+import multer from "multer";
 import { and, desc, eq, inArray, isNull, sql, type SQL, asc } from "drizzle-orm";
 import { parseListPage, parseSortParams, buildOrderBy, type SortMap } from "../utils/pagination.js";
 import { z } from "zod";
@@ -13,6 +14,7 @@ import {
   bankAccountsTable,
   chartOfAccountsTable,
   spacesTable,
+  journalLinesTable,
 } from "@workspace/db";
 import { DEFAULT_CURRENCY } from "../lib/currency";
 import { logAction } from "../utils/auditLog";
@@ -20,6 +22,8 @@ import { deletedFilter, makeBulkDelete, makeBulkRestore } from "../lib/softDelet
 import { postTransaction } from "../lib/billing/gl";
 import { stampBaseAmount } from "../lib/billing/baseAmount";
 import { getAiClient, isTaskConfigured } from "../lib/ai/client";
+import { extractReceipt } from "../lib/billing/receiptOcr";
+import { contractPayoutTermsTable } from "@workspace/db";
 import { buildReceiptHtml } from "../lib/documents/receiptDocument";
 import { type InvoiceDocInput } from "../lib/documents/invoiceDocument";
 import { resolveCompanyInfo } from "../lib/documents/companyInfo";
@@ -191,11 +195,30 @@ router.get("/v1/transactions", async (req, res): Promise<void> => {
       conditions.push(eq(transactionsTable.workflow_status, wf));
     }
 
+    // ── 은행 원장 버킷 (QuickBooks 식) ────────────────────────────────────
+    // 통장을 훑는 사람이 알고 싶은 것은 하나다: "아직 손 안 댄 게 뭐냐".
+    //   review      분류 대기 — 원장에 아직 안 올라간 건
+    //   categorised 분류 완료 — 분개가 붙은 건
+    //   excluded    제외 — 취소된 건(통장엔 찍혔지만 장부에서 뺀 것)
+    // bucket 은 status 필터를 이긴다 — excluded 탭은 기본 목록이 숨기는 void 를
+    // 일부러 보여줘야 하기 때문이다.
+    const bucket = String(req.query.bucket ?? "").trim();
     const status = String(req.query.status ?? "").trim();
-    // 취소(void)된 거래는 명시적으로 찾을 때만 보인다 — 기본 목록에 섞이면
-    // 합계를 눈으로 검산할 수 없다.
-    if (status) conditions.push(eq(transactionsTable.status, status));
-    else conditions.push(sql`${transactionsTable.status} <> 'void'`);
+    if (bucket === "excluded") {
+      conditions.push(eq(transactionsTable.status, "void"));
+    } else if (bucket === "categorised") {
+      conditions.push(sql`${transactionsTable.status} <> 'void'`);
+      conditions.push(sql`${transactionsTable.journal_entry_id} IS NOT NULL`);
+    } else if (bucket === "review") {
+      conditions.push(sql`${transactionsTable.status} <> 'void'`);
+      conditions.push(sql`${transactionsTable.journal_entry_id} IS NULL`);
+    } else if (status) {
+      // 취소(void)된 거래는 명시적으로 찾을 때만 보인다 — 기본 목록에 섞이면
+      // 합계를 눈으로 검산할 수 없다.
+      conditions.push(eq(transactionsTable.status, status));
+    } else {
+      conditions.push(sql`${transactionsTable.status} <> 'void'`);
+    }
 
     const contractId = Number(req.query.contract_id);
     if (Number.isFinite(contractId) && contractId > 0) conditions.push(eq(transactionsTable.contract_id, contractId));
@@ -203,8 +226,12 @@ router.get("/v1/transactions", async (req, res): Promise<void> => {
     if (Number.isFinite(invoiceId) && invoiceId > 0) conditions.push(eq(transactionsTable.invoice_id, invoiceId));
     const scheduleId = Number(req.query.payment_schedule_id);
     if (Number.isFinite(scheduleId) && scheduleId > 0) conditions.push(eq(transactionsTable.payment_schedule_id, scheduleId));
-    const bankAccountId = Number(req.query.bank_account_id);
-    if (Number.isFinite(bankAccountId) && bankAccountId > 0) conditions.push(eq(transactionsTable.bank_account_id, bankAccountId));
+    // 통장 스코프. "unassigned" 는 통장이 아직 지정되지 않은 건 — 대사에서 가장
+    // 먼저 손봐야 하는 부류라 따로 고를 수 있어야 한다.
+    const bankRaw = String(req.query.bank_account_id ?? "").trim();
+    const bankAccountId = Number(bankRaw);
+    if (bankRaw === "unassigned") conditions.push(sql`${transactionsTable.bank_account_id} IS NULL`);
+    else if (Number.isFinite(bankAccountId) && bankAccountId > 0) conditions.push(eq(transactionsTable.bank_account_id, bankAccountId));
     const accountId = Number(req.query.account_id);
     if (Number.isFinite(accountId) && accountId > 0) conditions.push(eq(transactionsTable.account_id, accountId));
 
@@ -281,6 +308,95 @@ router.get("/v1/transactions", async (req, res): Promise<void> => {
   } catch (err) {
     console.error("[GET /v1/transactions]", err);
     res.status(500).json({ error: "Failed to list transactions" });
+  }
+});
+
+/**
+ * 은행 원장 요약 — 통장별 버킷 건수와 잔액 대사.
+ *
+ * 통장을 훑는 사람의 질문은 둘이다. "아직 분류 안 한 게 몇 건이냐"와 "장부가
+ * 통장이랑 맞냐". 전자는 버킷 배지로, 후자는 원장 현금잔액 대 명세서 잔액의
+ * 차이로 답한다.
+ *
+ * ⚠️ `/:id` 보다 먼저 등록해야 한다 — 뒤에 두면 "bank-summary" 가 id 로 잡힌다.
+ */
+router.get("/v1/transactions/bank-summary", async (req, res): Promise<void> => {
+  try {
+    const accounts = await db.select().from(bankAccountsTable)
+      .where(isNull(bankAccountsTable.deleted_at))
+      .orderBy(bankAccountsTable.id);
+
+    // 통장별 버킷 건수 + 순증감. 계좌 수만큼 쿼리를 돌리면 N+1 이므로 한 번에 모은다.
+    const perAccount = await db.select({
+      bank_account_id: transactionsTable.bank_account_id,
+      review: sql<number>`COUNT(*) FILTER (WHERE ${transactionsTable.journal_entry_id} IS NULL AND ${transactionsTable.status} <> 'void')::int`,
+      categorised: sql<number>`COUNT(*) FILTER (WHERE ${transactionsTable.journal_entry_id} IS NOT NULL AND ${transactionsTable.status} <> 'void')::int`,
+      excluded: sql<number>`COUNT(*) FILTER (WHERE ${transactionsTable.status} = 'void')::int`,
+      // 확정된 돈만 센다. 유보 leg 은 원본이 이미 센 돈의 배분이라 뺀다.
+      net: sql<string>`COALESCE(SUM(CASE
+        WHEN ${transactionsTable.status} NOT IN ('confirmed','posted') THEN 0
+        WHEN ${transactionsTable.split_role} = 'retained' THEN 0
+        WHEN ${transactionsTable.txn_type} = 'income' THEN ${transactionsTable.amount}
+        WHEN ${transactionsTable.txn_type} = 'expense' THEN -${transactionsTable.amount}
+        ELSE 0 END), 0)`,
+    }).from(transactionsTable)
+      .where(isNull(transactionsTable.deleted_at))
+      .groupBy(transactionsTable.bank_account_id);
+
+    const byAccount = new Map(perAccount.map((r) => [r.bank_account_id, r]));
+
+    // 원장 현금잔액은 계정과목 코드별로 한 번에 계산한다.
+    const glByCode = await db.select({
+      code: journalLinesTable.account_code,
+      balance: sql<string>`COALESCE(SUM(${journalLinesTable.debit} - ${journalLinesTable.credit}), 0)`,
+    }).from(journalLinesTable).groupBy(journalLinesTable.account_code);
+    const glMap = new Map(glByCode.map((r) => [r.code, round2(Number(r.balance ?? 0))]));
+
+    // ⚠️ 원장 잔액은 **계정과목(1000 현금) 단위**이지 통장 단위가 아니다. 두 통장이
+    // 같은 코드를 쓰면 둘 다 같은 잔액을 보여주고, 그 차이는 아무 뜻이 없다. 그럴
+    // 때는 차이를 계산하지 않고 공유 사실을 알린다 — "일치/불일치"를 잘못 말하는
+    // 것이 침묵보다 나쁘다. (계정과목을 통장마다 따로 두면 대사가 살아난다.)
+    const codeUsage = new Map<string, number>();
+    for (const a of accounts) codeUsage.set(a.gl_account_code, (codeUsage.get(a.gl_account_code) ?? 0) + 1);
+
+    const data = accounts.map((a) => {
+      const b = byAccount.get(a.id);
+      const glBalance = glMap.get(a.gl_account_code) ?? 0;
+      const glShared = (codeUsage.get(a.gl_account_code) ?? 0) > 1;
+      const statement = a.statement_balance != null ? round2(Number(a.statement_balance)) : null;
+      return {
+        gl_shared: glShared,
+        id: a.id,
+        name: a.name,
+        bank_name: a.bank_name,
+        currency: a.currency,
+        gl_account_code: a.gl_account_code,
+        review_count: b?.review ?? 0,
+        categorised_count: b?.categorised ?? 0,
+        excluded_count: b?.excluded ?? 0,
+        net_movement: round2(Number(b?.net ?? 0)),
+        gl_balance: glBalance,
+        statement_balance: statement,
+        // 명세서 잔액이 없거나 계정과목을 공유하면 "맞다/틀리다"를 말할 수 없다.
+        // 0 으로 두면 맞는 것처럼 보이므로 null 을 그대로 흘린다.
+        difference: statement != null && !glShared ? round2(statement - glBalance) : null,
+      };
+    });
+
+    // 통장이 지정되지 않은 건 — 대사에서 가장 먼저 손봐야 하는 부류다.
+    const un = byAccount.get(null);
+    res.json({
+      success: true,
+      data,
+      unassigned: {
+        review_count: un?.review ?? 0,
+        categorised_count: un?.categorised ?? 0,
+        excluded_count: un?.excluded ?? 0,
+      },
+    });
+  } catch (err) {
+    console.error("[GET /v1/transactions/bank-summary]", err);
+    res.status(500).json({ error: "Failed to build bank summary" });
   }
 });
 
@@ -719,6 +835,145 @@ router.get("/v1/transactions/:id/duplicates", async (req, res): Promise<void> =>
   )).limit(10);
 
   res.json({ success: true, data: await enrichTransactions(rows) });
+});
+
+// ── 영수증 판독 ─────────────────────────────────────────────────────────────
+// 종이 영수증을 손으로 옮겨 적는 일이 거래 입력의 대부분이고, 그 과정에서 날짜와
+// 금액이 가장 자주 틀린다. 읽어서 **폼을 채워 주기만** 한다 — 저장은 사람이 한다.
+// 파일은 메모리에서만 다루고 저장하지 않는다: 영수증에는 카드번호 일부·사업자
+// 정보가 찍혀 있어, 보관할 이유가 없는 이미지를 남기지 않는 것이 안전하다.
+
+const receiptUpload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 15 * 1024 * 1024, files: 1 },
+});
+
+router.post("/v1/transactions/extract-receipt", receiptUpload.single("file"), async (req, res): Promise<void> => {
+  if (!isTaskConfigured("transaction_receipt_ocr")) {
+    res.status(503).json({ error: "AI is not configured for this instance" });
+    return;
+  }
+  const file = (req as unknown as { file?: Express.Multer.File }).file;
+  if (!file) { res.status(400).json({ error: "A receipt file is required" }); return; }
+
+  const mime = file.mimetype.toLowerCase();
+  if (!mime.startsWith("image/") && mime !== "application/pdf") {
+    res.status(400).json({ error: "Upload an image or a PDF" });
+    return;
+  }
+
+  try {
+    const draft = await extractReceipt({ buffer: file.buffer, mimetype: mime });
+    res.json({ success: true, data: draft });
+  } catch (err) {
+    console.error("[POST /v1/transactions/extract-receipt]", err);
+    res.status(502).json({ error: "Could not read the receipt" });
+  }
+});
+
+// ── 분할 제안 ───────────────────────────────────────────────────────────────
+/**
+ * 이 입금을 어떻게 나눌지 제안한다.
+ *
+ * 계약의 정산 조건(`contract_payout_terms`)이 이미 산수를 갖고 있으므로 **계산은
+ * 서버가 한다** — 모델에 금액을 맡기면 반올림이 흔들리고 합계가 원본을 넘긴다.
+ * 조건이 없을 때만 모델에게 상대방·비율을 물어보고, 그 결과도 서버가 다시 잘라낸다.
+ */
+router.post("/v1/transactions/:id/split-suggest", async (req, res): Promise<void> => {
+  const id = Number(req.params.id);
+  const [row] = await db.select().from(transactionsTable).where(eq(transactionsTable.id, id)).limit(1);
+  if (!row) { res.status(404).json({ error: "Not found" }); return; }
+  if (row.txn_type !== "income") { res.status(400).json({ error: "Only an incoming transaction is split" }); return; }
+
+  const total = round2(Number(row.amount ?? 0));
+  const legs: Array<{ amount: number; role: "disbursement" | "retained"; counterparty_name: string | null; description: string | null; basis: string }> = [];
+
+  // 1순위: 계약 정산 조건. 있으면 이것이 정답이고 모델을 부를 이유가 없다.
+  if (row.contract_id) {
+    const terms = await db.select().from(contractPayoutTermsTable).where(and(
+      eq(contractPayoutTermsTable.contract_id, row.contract_id),
+      eq(contractPayoutTermsTable.status, "Active"),
+      isNull(contractPayoutTermsTable.deleted_at),
+    ));
+    for (const t of terms) {
+      const amount = t.basis === "percent_of_rent" && t.rate != null
+        ? round2(total * (Number(t.rate) / 100))
+        : round2(Number(t.amount ?? 0));
+      if (amount > 0) {
+        legs.push({
+          amount,
+          role: "disbursement",
+          counterparty_name: t.payee_name || null,
+          description: t.party_type === "landlord" ? "집주인 정산" : "파트너 정산",
+          basis: t.basis === "percent_of_rent" ? `${Number(t.rate)}%` : "fixed",
+        });
+      }
+    }
+  }
+
+  // 2순위: 조건이 없으면 모델에게 물어본다. 금액은 여전히 서버가 다듬는다.
+  if (legs.length === 0 && isTaskConfigured("transaction_split_suggest")) {
+    try {
+      const [enriched] = await enrichTransactions([row]);
+      const ai = getAiClient("transaction_split_suggest");
+      const msg = await ai.messages.create({
+        max_tokens: 500,
+        messages: [{
+          role: "user",
+          content: [
+            "A Korean property manager received one payment and must fan it out to the parties it belongs to.",
+            "Typically most of a rent receipt goes to the property owner and a management fee is retained.",
+            "",
+            `amount: ${total} ${row.currency}`,
+            `memo: ${row.description ?? "(none)"}`,
+            `payer: ${enriched?.counterparty_display ?? "(unknown)"}`,
+            `contract: ${enriched?.contract_ref ?? "(none)"}`,
+            "",
+            'Reply with JSON only: {"legs":[{"percent":<0-100>,"role":"disbursement"|"retained","counterparty_name":"...","description":"..."}]}',
+            "Percentages must not exceed 100 in total.",
+          ].join("\n"),
+        }],
+      });
+      const text = msg.content.map((c) => (c.type === "text" ? c.text : "")).join("");
+      const json = /\{[\s\S]*\}/.exec(text)?.[0];
+      const parsed = json ? JSON.parse(json) as { legs?: Array<Record<string, unknown>> } : null;
+      for (const l of parsed?.legs ?? []) {
+        const pct = Number(l.percent);
+        if (!Number.isFinite(pct) || pct <= 0) continue;
+        legs.push({
+          amount: round2(total * (pct / 100)),
+          role: l.role === "retained" ? "retained" : "disbursement",
+          counterparty_name: typeof l.counterparty_name === "string" ? l.counterparty_name : null,
+          description: typeof l.description === "string" ? l.description : null,
+          basis: `${pct}% (AI)`,
+        });
+      }
+    } catch (err) {
+      console.error("[split-suggest ai]", err);
+    }
+  }
+
+  // 서버가 마지막으로 잘라낸다. 합계가 원본을 넘으면 제안 자체가 무의미하고,
+  // 사람이 그대로 저장하면 /split 이 어차피 거부한다 — 그 전에 맞춰 준다.
+  let used = round2(legs.reduce((s, l) => s + l.amount, 0));
+  if (used > total) {
+    const scale = total / used;
+    for (const l of legs) l.amount = round2(l.amount * scale);
+    used = round2(legs.reduce((s, l) => s + l.amount, 0));
+  }
+  // 남는 금액은 우리 몫(유보)이다. 남겨두면 사람이 매번 같은 계산을 반복한다.
+  const remainder = round2(total - used);
+  if (remainder > 0) {
+    legs.push({
+      amount: remainder,
+      role: "retained",
+      counterparty_name: null,
+      description: "관리 수수료(잔여)",
+      basis: "remainder",
+    });
+  }
+
+  res.json({ success: true, data: { total, currency: row.currency, legs } });
 });
 
 // ── 분할 배분 ───────────────────────────────────────────────────────────────

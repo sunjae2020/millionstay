@@ -1,10 +1,10 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link, useSearch } from "wouter";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   ArrowDownLeft, ArrowRightLeft, ArrowUpRight, BookOpen, CheckCircle2, ChevronLeft, ChevronRight,
-  Loader2, Plus, XCircle,
+  Landmark, Loader2, Plus, ScanLine, XCircle,
 } from "lucide-react";
 import { Layout } from "@/components/Layout";
 import { Button } from "@/components/ui/button";
@@ -149,6 +149,10 @@ export default function TransactionList() {
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
   const [showDeleted, setShowDeleted] = useState(false);
+  // 은행 원장 — 통장 스코프와 버킷. 통장을 훑는 사람의 질문은 "아직 손 안 댄 게
+  // 뭐냐" 하나라, 그 답이 탭 배지로 먼저 보여야 한다.
+  const [bankAccount, setBankAccount] = useState("_all");
+  const [bucket, setBucket] = useState("_all");
 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [form, setForm] = useState<FormState>(emptyForm);
@@ -166,6 +170,8 @@ export default function TransactionList() {
     from: from || undefined,
     to: to || undefined,
     payment_schedule_id: scheduleFilter ?? undefined,
+    bank_account_id: bankAccount !== "_all" ? bankAccount : undefined,
+    bucket: bucket !== "_all" ? bucket : undefined,
     deleted: showDeleted ? "only" : undefined,
   };
 
@@ -179,12 +185,43 @@ export default function TransactionList() {
       defaultPageSize: 100,
     });
 
+  const { data: bankSummary } = useQuery<{
+    data: Array<{
+      id: number; name: string; currency: string; review_count: number; categorised_count: number;
+      excluded_count: number; net_movement: number; gl_balance: number;
+      statement_balance: number | null; difference: number | null; gl_shared: boolean;
+    }>;
+    unassigned: { review_count: number; categorised_count: number; excluded_count: number };
+  }>({
+    queryKey: ["transactions-bank-summary"],
+    queryFn: async () => {
+      const res = await apiFetch("/api/v1/transactions/bank-summary");
+      if (!res.ok) throw new Error("Failed");
+      return res.json();
+    },
+  });
+
+  const activeBank = bankAccount !== "_all" && bankAccount !== "unassigned"
+    ? bankSummary?.data.find((b) => String(b.id) === bankAccount)
+    : undefined;
+
+  // 탭 배지 건수 — 통장을 고르면 그 통장 것만, 아니면 전 계좌 합.
+  const bucketCounts = useMemo(() => {
+    const rowsOf = bankAccount === "unassigned"
+      ? (bankSummary ? [bankSummary.unassigned] : [])
+      : activeBank ? [activeBank] : (bankSummary?.data ?? []);
+    const sum = (k: "review_count" | "categorised_count" | "excluded_count") =>
+      rowsOf.reduce((n, r) => n + ((r as Record<string, number>)[k] ?? 0), 0);
+    return { review: sum("review_count"), categorised: sum("categorised_count"), excluded: sum("excluded_count") };
+  }, [bankSummary, activeBank, bankAccount]);
+
   // 합계 타일은 서버가 **필터 전체** 기준으로 계산해 meta 로 실어 보낸다.
   const meta = rawMeta as TxnListResponse["meta"] | undefined;
   const money = (n: number, cur?: string) => formatMoney(n, cur || brand.currency, brand.currencyPosition);
 
   const invalidate = () => {
     invalidateList();
+    qc.invalidateQueries({ queryKey: ["transactions-bank-summary"] });
     qc.invalidateQueries({ queryKey: ["transactions"] });
     qc.invalidateQueries({ queryKey: ["payment-schedule"] });
   };
@@ -410,6 +447,83 @@ export default function TransactionList() {
           <SummaryTile label={t("transaction.net")} value={money(meta?.net ?? 0)} cls="" />
         </div>
 
+        {/* ── 은행 원장 ─────────────────────────────────────────────────────
+            통장을 고르고, 버킷 탭으로 "아직 손 안 댄 것"부터 좁힌다. 잔액 대사는
+            명세서 잔액이 등록된 통장에서만 뜻이 있으므로 없으면 아예 안 보여준다
+            — 0으로 두면 맞는 것처럼 읽힌다. */}
+        <div className="border rounded-lg bg-card px-4 py-3 mb-5 space-y-3">
+          <div className="flex flex-wrap items-center gap-2">
+            <Landmark className="h-4 w-4 text-muted-foreground" />
+            <span className="font-medium text-sm">{t("transaction.bank_ledger")}</span>
+            <Select value={bankAccount} onValueChange={setBankAccount}>
+              <SelectTrigger className="w-56 h-8"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="_all">{t("transaction.all_bank_accounts")}</SelectItem>
+                {(bankSummary?.data ?? []).map((b) => (
+                  <SelectItem key={b.id} value={String(b.id)}>{b.name}</SelectItem>
+                ))}
+                <SelectItem value="unassigned">{t("transaction.bank_unassigned")}</SelectItem>
+              </SelectContent>
+            </Select>
+
+            <div className="flex rounded-md border overflow-hidden">
+              {([
+                { key: "_all", label: t("transaction.bucket_all"), n: null },
+                { key: "review", label: t("transaction.bucket_review"), n: bucketCounts.review },
+                { key: "categorised", label: t("transaction.bucket_categorised"), n: bucketCounts.categorised },
+                { key: "excluded", label: t("transaction.bucket_excluded"), n: bucketCounts.excluded },
+              ] as const).map((b) => (
+                <button
+                  key={b.key}
+                  onClick={() => setBucket(b.key)}
+                  className={`px-3 py-1.5 text-xs font-medium transition-colors ${
+                    bucket === b.key ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-muted"
+                  }`}
+                >
+                  {b.label}{b.n != null && b.n > 0 ? ` (${b.n})` : ""}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {activeBank && (
+            <div className="flex flex-wrap items-center gap-x-6 gap-y-1 text-xs">
+              <span className="text-muted-foreground">
+                {t("transaction.bank_net")}{" "}
+                <span className="tabular-nums font-medium text-foreground">
+                  {money(activeBank.net_movement, activeBank.currency)}
+                </span>
+              </span>
+              <span className="text-muted-foreground">
+                {t("transaction.bank_gl_balance")}{" "}
+                <span className="tabular-nums font-medium text-foreground">
+                  {money(activeBank.gl_balance, activeBank.currency)}
+                </span>
+              </span>
+              {activeBank.gl_shared ? (
+                // 계정과목을 여러 통장이 공유하면 잔액 대사가 성립하지 않는다.
+                <span className="text-amber-600">{t("transaction.bank_gl_shared")}</span>
+              ) : activeBank.statement_balance != null ? (
+                <>
+                  <span className="text-muted-foreground">
+                    {t("transaction.bank_statement_balance")}{" "}
+                    <span className="tabular-nums font-medium text-foreground">
+                      {money(activeBank.statement_balance, activeBank.currency)}
+                    </span>
+                  </span>
+                  <span className={Math.abs(activeBank.difference ?? 0) < 0.01 ? "text-green-600" : "text-red-600 font-medium"}>
+                    {Math.abs(activeBank.difference ?? 0) < 0.01
+                      ? t("transaction.bank_reconciled")
+                      : t("transaction.bank_difference", { amount: money(activeBank.difference ?? 0, activeBank.currency) })}
+                  </span>
+                </>
+              ) : (
+                <span className="text-muted-foreground">{t("transaction.bank_no_statement")}</span>
+              )}
+            </div>
+          )}
+        </div>
+
         {scheduleFilter && (
           <div className="mb-3 text-sm">
             <span className="px-2 py-1 rounded bg-primary/10 text-primary">
@@ -556,6 +670,46 @@ function TransactionDialog({
     });
   }
 
+  // ── 영수증 판독 ───────────────────────────────────────────────────────────
+  // 읽은 값은 **비어 있는 칸에만** 채운다. 사람이 이미 입력한 것을 모델이 덮으면
+  // 무엇이 내 입력이고 무엇이 판독인지 알 수 없어진다. 확신 없는 칸은 서버가
+  // null 로 내려주므로 그대로 비워 둔다.
+  const ocrRef = useRef<HTMLInputElement>(null);
+  const ocr = useMutation({
+    mutationFn: async (file: File) => {
+      const fd = new FormData();
+      fd.append("file", file);
+      const res = await apiFetch("/api/v1/transactions/extract-receipt", { method: "POST", body: fd });
+      const payload = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(payload?.error ?? "Failed");
+      return payload.data as {
+        txn_date: string | null; amount: number | null; tax_amount: number | null;
+        total_amount: number | null; currency: string | null; counterparty_name: string | null;
+        description: string | null; txn_type: "income" | "expense" | null;
+        payment_method: string | null; confidence: number | null; notes: string | null;
+      };
+    },
+    onSuccess: (d) => {
+      setForm({
+        ...form,
+        txn_type: d.txn_type ?? form.txn_type,
+        txn_date: d.txn_date ?? form.txn_date,
+        // 공급가액이 안 읽히면 총액이라도 넣는다 — 부가세는 사람이 나눈다.
+        amount: form.amount || String(d.amount ?? d.total_amount ?? ""),
+        tax_amount: form.tax_amount || (d.tax_amount != null ? String(d.tax_amount) : ""),
+        currency: form.currency || d.currency || brand.currency,
+        counterparty_name: form.counterparty_name || d.counterparty_name || "",
+        description: form.description || d.description || "",
+        payment_method: d.payment_method ?? form.payment_method,
+      });
+      toast({
+        title: t("transaction.ocr_done"),
+        description: d.notes ?? (d.confidence != null ? t("transaction.ocr_confidence", { pct: Math.round(d.confidence * 100) }) : undefined),
+      });
+    },
+    onError: (e: Error) => toast({ title: t("common.error"), description: e.message, variant: "destructive" }),
+  });
+
   const save = useMutation({
     mutationFn: async () => {
       const body = {
@@ -599,7 +753,29 @@ function TransactionDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>{form.id ? t("transaction.edit") : t("transaction.new")}</DialogTitle>
+          <DialogTitle className="flex items-center justify-between gap-3">
+            <span>{form.id ? t("transaction.edit") : t("transaction.new")}</span>
+            {!form.id && (
+              <>
+                <input
+                  ref={ocrRef}
+                  type="file"
+                  accept="image/*,application/pdf"
+                  className="hidden"
+                  onChange={(e) => {
+                    const f = e.target.files?.[0];
+                    if (f) ocr.mutate(f);
+                    e.target.value = "";
+                  }}
+                />
+                <Button type="button" variant="outline" size="sm" disabled={ocr.isPending}
+                  onClick={() => ocrRef.current?.click()}>
+                  {ocr.isPending ? <Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" /> : <ScanLine className="h-3.5 w-3.5 mr-1" />}
+                  {t("transaction.ocr_upload")}
+                </Button>
+              </>
+            )}
+          </DialogTitle>
         </DialogHeader>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">

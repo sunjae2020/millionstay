@@ -7159,7 +7159,9 @@
       "website_enrich": "Account website enrichment",
       "match_rationale": "Homestay match rationale",
       "id_document_ocr": "Identity document OCR",
-      "transaction_categorise": "Transaction categorisation"
+      "transaction_categorise": "Transaction categorisation",
+      "transaction_receipt_ocr": "Receipt reading",
+      "transaction_split_suggest": "Split suggestion"
     },
     "custom_engine": "Custom",
     "add_engine": "Add an engine",
@@ -7449,7 +7451,26 @@
     "suggest_apply": "Apply",
     "suggest_none": "No confident suggestion.",
     "dupe_warning": "{{count}} transaction(s) with the same date, amount and counterparty already exist",
-    "col_base_amount": "Base amount"
+    "col_base_amount": "Base amount",
+    "bank_ledger": "Bank ledger",
+    "all_bank_accounts": "All bank accounts",
+    "bank_unassigned": "No bank account",
+    "bucket_all": "All",
+    "bucket_review": "For review",
+    "bucket_categorised": "Categorised",
+    "bucket_excluded": "Excluded",
+    "bank_net": "Net movement",
+    "bank_gl_balance": "Ledger balance",
+    "bank_statement_balance": "Statement balance",
+    "bank_reconciled": "Reconciled",
+    "bank_difference": "Off by {{amount}}",
+    "bank_no_statement": "No statement balance imported yet",
+    "ocr_upload": "Read a receipt",
+    "ocr_done": "Receipt read — check the fields before saving.",
+    "ocr_confidence": "Confidence about {{pct}}%",
+    "split_suggest": "Suggest split",
+    "split_suggest_none": "Nothing to suggest — add the contract's payout terms first.",
+    "bank_gl_shared": "Several accounts share this ledger code — balance reconciliation needs one code per account"
   },
   "payment_schedule": {
     "title": "Payment schedule",

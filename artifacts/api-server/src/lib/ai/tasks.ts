@@ -20,6 +20,8 @@ export type AiTaskId =
   | "chat"
   | "cs_translate"
   | "transaction_categorise"
+  | "transaction_receipt_ocr"
+  | "transaction_split_suggest"
   | "i18n_translate"
   | "cms_translate"
   | "content_translate"
@@ -221,6 +223,38 @@ export const AI_TASKS: Record<AiTaskId, AiTask> = {
       "Suggests a chart-of-accounts code from the memo and counterparty. The suggestion is a " +
       "pre-fill that a person confirms before posting, and the ledger refuses an unbalanced " +
       "entry regardless — a wrong guess costs one correction, so the cheapest capable model is fine.",
+  },
+  transaction_receipt_ocr: {
+    id: "transaction_receipt_ocr",
+    label: "transaction_receipt_ocr",
+    area: "documents",
+    envKey: "TRANSACTION_RECEIPT_OCR_MODEL",
+    fallbackEnvKey: "CHAT_MODEL",
+    defaultModel: "claude-sonnet-4-6",
+    needs: { vision: true, pdf: true },
+    volume: "medium",
+    movable: "verify",
+    source: "routes/transactions.ts (POST /v1/transactions/extract-receipt)",
+    rationale:
+      "Reads a photographed receipt or a supplier invoice PDF into a draft transaction. Every " +
+      "field lands in a form the operator confirms before saving, so a misread costs a correction. " +
+      "Needs vision AND pdf — a supplier invoice arrives as often as a photo.",
+  },
+  transaction_split_suggest: {
+    id: "transaction_split_suggest",
+    label: "transaction_split_suggest",
+    area: "data",
+    envKey: "TRANSACTION_SPLIT_SUGGEST_MODEL",
+    fallbackEnvKey: "CHAT_MODEL",
+    defaultModel: "claude-sonnet-4-6",
+    needs: {},
+    volume: "low",
+    movable: "yes",
+    source: "routes/transactions.ts (POST /v1/transactions/:id/split-suggest)",
+    rationale:
+      "Proposes how one receipt fans out into owner payout + retained fee. The contract's payout " +
+      "terms already give the arithmetic, so the model only handles the leftovers; the server " +
+      "re-checks that the legs never exceed the source before anything is written.",
   },
 };
 

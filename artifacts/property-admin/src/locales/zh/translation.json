@@ -7117,7 +7117,9 @@
       "website_enrich": "账户网站信息补全",
       "match_rationale": "寄宿家庭匹配理由",
       "id_document_ocr": "证件 OCR（提取证件照）",
-      "transaction_categorise": "交易科目建议"
+      "transaction_categorise": "交易科目建议",
+      "transaction_receipt_ocr": "收据识别",
+      "transaction_split_suggest": "拆分建议"
     },
     "custom_engine": "自定义",
     "add_engine": "添加引擎",
@@ -7408,7 +7410,26 @@
     "suggest_apply": "应用",
     "suggest_none": "没有把握的建议。",
     "dupe_warning": "已存在 {{count}} 笔相同日期、金额和往来单位的交易",
-    "col_base_amount": "本位币折算"
+    "col_base_amount": "本位币折算",
+    "bank_ledger": "银行账簿",
+    "all_bank_accounts": "全部账户",
+    "bank_unassigned": "未指定账户",
+    "bucket_all": "全部",
+    "bucket_review": "待分类",
+    "bucket_categorised": "已分类",
+    "bucket_excluded": "已排除",
+    "bank_net": "净变动",
+    "bank_gl_balance": "账面余额",
+    "bank_statement_balance": "对账单余额",
+    "bank_reconciled": "已核对",
+    "bank_difference": "相差 {{amount}}",
+    "bank_no_statement": "尚未导入对账单余额",
+    "ocr_upload": "读取收据",
+    "ocr_done": "已读取收据——保存前请核对。",
+    "ocr_confidence": "置信度约 {{pct}}%",
+    "split_suggest": "建议拆分",
+    "split_suggest_none": "无可建议内容——请先登记合同的结算条件。",
+    "bank_gl_shared": "多个账户共用同一会计科目，无法进行余额核对——请为每个账户分设科目"
   },
   "payment_schedule": {
     "title": "付款计划",
