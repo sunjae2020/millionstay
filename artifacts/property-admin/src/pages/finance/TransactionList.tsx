@@ -20,6 +20,7 @@ import {
 } from "@/components/ui/select";
 import { DataTable, ACTIONS_KEY, type ColumnDef } from "@/components/ui/data-table";
 import { LookupSelect } from "@/components/LookupSelect";
+import { useDocumentRowActions } from "@/components/DocumentRowActions";
 import { apiFetch } from "@/lib/apiFetch";
 import { useToast } from "@/hooks/use-toast";
 import { useBrand } from "@/contexts/ThemeContext";
@@ -177,6 +178,18 @@ export default function TransactionList() {
     qc.invalidateQueries({ queryKey: ["payment-schedule"] });
   };
 
+  // 영수증은 공용 미리보기 모달로 연다(bare download 금지 — 문서 규약).
+  // 거래 영수증에는 발송 엔드포인트가 없으므로 emailPath 는 주지 않는다.
+  const { documentActionsColumn, documentPreview } = useDocumentRowActions<Transaction>((r) =>
+    r.status === "confirmed" || r.status === "posted"
+      ? {
+          ref: r.invoice_ref ?? r.txn_ref,
+          typeLabel: t("transaction.receipt"),
+          pdfPath: `/api/v1/transactions/${r.id}/receipt/pdf`,
+        }
+      : null,
+  );
+
   const action = useMutation({
     mutationFn: async ({ id, verb }: { id: number; verb: "confirm" | "post" | "void" }) => {
       const res = await apiFetch(`/api/v1/transactions/${id}/${verb}`, { method: "POST" });
@@ -317,6 +330,7 @@ export default function TransactionList() {
         </span>
       ),
     },
+    documentActionsColumn,
     {
       key: ACTIONS_KEY,
       header: "common.actions",
@@ -345,7 +359,7 @@ export default function TransactionList() {
         </div>
       ),
     },
-  ], [t, action, brand.currency, brand.currencyPosition]);
+  ], [t, action, brand.currency, brand.currencyPosition, documentActionsColumn]);
 
   return (
     <Layout>
@@ -446,6 +460,8 @@ export default function TransactionList() {
           }
         />
       </div>
+
+      {documentPreview}
 
       <TransactionDialog
         open={dialogOpen}

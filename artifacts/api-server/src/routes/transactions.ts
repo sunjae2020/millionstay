@@ -17,6 +17,13 @@ import { DEFAULT_CURRENCY } from "../lib/currency";
 import { logAction } from "../utils/auditLog";
 import { deletedFilter, makeBulkDelete, makeBulkRestore } from "../lib/softDelete";
 import { postTransaction } from "../lib/billing/gl";
+import { buildReceiptHtml } from "../lib/documents/receiptDocument";
+import { type InvoiceDocInput } from "../lib/documents/invoiceDocument";
+import { resolveCompanyInfo } from "../lib/documents/companyInfo";
+import { resolveTemplateBody } from "../lib/documents/templateEngine";
+import { normalizeLang } from "../lib/documents/i18n";
+import { resolveDocFileName } from "../lib/documents/docFileName";
+import { sendPdf } from "./invoices";
 import {
   generateContractSchedule,
   recalcSchedulePaid,
@@ -473,6 +480,84 @@ router.delete("/v1/transactions/:id", async (req, res): Promise<void> => {
   if (row.payment_schedule_id) await recalcSchedulePaid([row.payment_schedule_id]);
   void logAction({ entityType: ENTITY, entityId: id, action: "DELETE" });
   res.status(204).send();
+});
+
+// ── 영수증 ──────────────────────────────────────────────────────────────────
+// 영수증은 인보이스가 이미 쓰는 `buildReceiptHtml` 을 그대로 태운다. 거래 전용
+// 렌더러를 새로 만들면 회사 정보·도장·다국어·테마가 두 벌이 되고, 한쪽만 고쳐지는
+// 날이 반드시 온다. 문서 규약대로 **미리보기 모달**로 열리며 별도 저장소 없이
+// 요청 시점에 렌더한다(MillionStay 에는 receipts 테이블이 없다 — 영수증은 파생물이다).
+
+/** 거래 한 건을 영수증 렌더러가 아는 모양으로 옮긴다. */
+async function buildTransactionDocInput(id: number, lang: string): Promise<InvoiceDocInput | null> {
+  const [row] = await db.select().from(transactionsTable).where(eq(transactionsTable.id, id)).limit(1);
+  if (!row) return null;
+  const [enriched] = await enrichTransactions([row]);
+  if (!enriched) return null;
+
+  // 청구서에 붙은 거래면 그 청구서 번호를 쓴다 — 세입자가 받은 청구서와 영수증의
+  // 번호가 달라지면 대조할 수 없다. 청구서 없는 수납이면 거래번호가 곧 문서번호다.
+  const ref = enriched.invoice_ref ?? enriched.txn_ref;
+  const amount = Number(row.amount ?? 0);
+  const tax = Number(row.tax_amount ?? 0);
+
+  return {
+    invoice_ref: ref,
+    status: "Paid",
+    amount: String(amount),
+    currency: row.currency,
+    due_date: null,
+    paid_at: row.txn_date,
+    payment_method: row.payment_method,
+    description: row.description,
+    notes: row.notes,
+    created_at: row.created_at,
+    tax_amount: String(tax),
+    total_amount: String(round2(amount + tax)),
+    account_id: row.account_id,
+    account_name: enriched.counterparty_display,
+    contract_ref: enriched.contract_ref,
+  } as InvoiceDocInput;
+}
+
+/**
+ * GET /v1/transactions/:id/receipt/pdf [?format=html]
+ *
+ * 확정되지 않은 거래에는 발행하지 않는다 — 초안이나 취소된 건으로 영수증이
+ * 나가면 "냈다"는 증거가 잘못 만들어진다.
+ */
+router.get("/v1/transactions/:id/receipt/pdf", async (req, res): Promise<void> => {
+  const id = Number(req.params.id);
+  if (!Number.isFinite(id)) { res.status(400).json({ error: "Invalid id" }); return; }
+
+  const [row] = await db.select({ status: transactionsTable.status, type: transactionsTable.txn_type })
+    .from(transactionsTable).where(eq(transactionsTable.id, id)).limit(1);
+  if (!row) { res.status(404).json({ error: "Not found" }); return; }
+  if (row.status !== "confirmed" && row.status !== "posted") {
+    res.status(409).json({ error: "Receipt is only issued for a confirmed transaction" });
+    return;
+  }
+
+  const asHtml = req.query.format === "html";
+  const lang = normalizeLang(req.query.lang as string);
+  const docInput = await buildTransactionDocInput(id, lang);
+  if (!docInput) { res.status(404).json({ error: "Not found" }); return; }
+
+  const terms = await resolveTemplateBody("pdf", "pdf.receipt", lang, { ref: docInput.invoice_ref });
+  const html = buildReceiptHtml(docInput, await resolveCompanyInfo(lang), !asHtml, lang, terms);
+  if (asHtml) { res.type("html").send(html); return; }
+
+  const filename = await resolveDocFileName({
+    kind: "receipt",
+    entityType: "transaction",
+    entityId: id,
+    variant: "receipt",
+    accountId: docInput.account_id ?? null,
+    party: [docInput.account_name],
+    org: [docInput.account_name],
+    issueDate: docInput.paid_at ?? docInput.created_at,
+  });
+  await sendPdf(res, html, filename);
 });
 
 // ═══ 계약 결제 일정 ═════════════════════════════════════════════════════════

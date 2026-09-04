@@ -7318,7 +7318,8 @@
     "page_of": "{{page}} / {{pages}} · tổng {{total}}",
     "per_page": "{{n}} / trang",
     "no_ar_lines": "Hợp đồng này không có kỳ phải thu chưa tất toán.",
-    "no_ap_lines": "Hợp đồng này không có kỳ phải trả chưa tất toán."
+    "no_ap_lines": "Hợp đồng này không có kỳ phải trả chưa tất toán.",
+    "receipt": "Biên nhận"
   },
   "payment_schedule": {
     "title": "Lịch thanh toán",

@@ -7418,7 +7418,8 @@
     "page_of": "{{page}} / {{pages}} · {{total}} total",
     "per_page": "{{n}} / page",
     "no_ar_lines": "No unsettled receivable items on this contract.",
-    "no_ap_lines": "No unsettled payable items on this contract."
+    "no_ap_lines": "No unsettled payable items on this contract.",
+    "receipt": "Receipt"
   },
   "payment_schedule": {
     "title": "Payment schedule",

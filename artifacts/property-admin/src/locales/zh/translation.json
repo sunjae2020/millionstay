@@ -7377,7 +7377,8 @@
     "page_of": "{{page}} / {{pages}} · 共 {{total}} 条",
     "per_page": "每页 {{n}} 条",
     "no_ar_lines": "该合同没有未结的应收期次。",
-    "no_ap_lines": "该合同没有未结的应付期次。"
+    "no_ap_lines": "该合同没有未结的应付期次。",
+    "receipt": "收据"
   },
   "payment_schedule": {
     "title": "付款计划",

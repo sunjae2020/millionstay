@@ -7418,7 +7418,8 @@
     "page_of": "{{page}} / {{pages}} · 총 {{total}}건",
     "per_page": "{{n}}건씩",
     "no_ar_lines": "이 계약에 미정산 받을 돈 회차가 없습니다.",
-    "no_ap_lines": "이 계약에 미정산 줄 돈 회차가 없습니다."
+    "no_ap_lines": "이 계약에 미정산 줄 돈 회차가 없습니다.",
+    "receipt": "영수증"
   },
   "payment_schedule": {
     "title": "결제 일정",

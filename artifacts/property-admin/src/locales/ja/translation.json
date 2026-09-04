@@ -7373,7 +7373,8 @@
     "page_of": "{{page}} / {{pages}} · 全{{total}}件",
     "per_page": "{{n}}件ずつ",
     "no_ar_lines": "この契約に未精算の受取回次がありません。",
-    "no_ap_lines": "この契約に未精算の支払回次がありません。"
+    "no_ap_lines": "この契約に未精算の支払回次がありません。",
+    "receipt": "領収書"
   },
   "payment_schedule": {
     "title": "支払スケジュール",
