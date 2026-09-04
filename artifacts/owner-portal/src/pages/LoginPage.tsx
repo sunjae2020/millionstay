@@ -2,6 +2,7 @@ import { useState, FormEvent } from "react";
 import { Link } from "wouter";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "@/lib/auth";
+import { getRememberedLoginEmail } from "@/lib/api";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { APP_NAME } from "@/lib/appName";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
@@ -13,7 +14,8 @@ const HAS_TENANT_LOGO = Boolean(import.meta.env.VITE_LOGO_URL);
 export default function LoginPage() {
   const { login } = useAuth();
   const { t } = useTranslation();
-  const [email, setEmail] = useState("");
+  // Signing back in after a session ends shouldn't mean retyping the address.
+  const [email, setEmail] = useState(getRememberedLoginEmail);
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");

@@ -4593,7 +4593,8 @@
     "success_title": "请查收您的邮件",
     "success_message": "如果 <1>{{email}}</1> 存在对应账户，我们已发送密码重置链接。请检查您的收件箱（以及垃圾邮件文件夹）。",
     "link_expiry": "该链接将在 <1>1 小时</1> 后失效。",
-    "error_generic": "出现错误，请重试。"
+    "error_generic": "出现错误，请重试。",
+    "email_placeholder": "you@example.com"
   },
   "not_found": {
     "heading": "404 找不到页面",

@@ -365,7 +365,7 @@
     "sent": "{{email}} のアカウントが存在する場合、再設定リンクを送信しました。受信トレイをご確認ください。リンクは1時間で失効します。",
     "back_to_login": "ログインに戻る",
     "email": "メールアドレス",
-    "email_placeholder": "you@partner.com",
+    "email_placeholder": "you@example.com",
     "sending": "送信中...",
     "send": "再設定リンクを送信"
   },

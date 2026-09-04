@@ -4552,7 +4552,8 @@
     "success_title": "Kiểm tra email của bạn",
     "success_message": "Nếu tài khoản tồn tại cho <1>{{email}}</1>, chúng tôi đã gửi một liên kết đặt lại mật khẩu. Vui lòng kiểm tra hộp thư đến (và thư mục spam).",
     "link_expiry": "Liên kết sẽ hết hạn sau <1>1 giờ</1>.",
-    "error_generic": "Đã xảy ra lỗi. Vui lòng thử lại."
+    "error_generic": "Đã xảy ra lỗi. Vui lòng thử lại.",
+    "email_placeholder": "you@example.com"
   },
   "not_found": {
     "heading": "404 Không Tìm Thấy Trang",

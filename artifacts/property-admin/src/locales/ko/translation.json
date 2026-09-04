@@ -4625,7 +4625,7 @@
     "success_message": "<1>{{email}}</1> 계정이 존재하는 경우 비밀번호 재설정 링크를 보내 드렸습니다. 받은 편지함(및 스팸 폴더)을 확인해 주세요.",
     "link_expiry": "이 링크는 <1>1시간</1> 후에 만료됩니다.",
     "error_generic": "문제가 발생했습니다. 다시 시도해 주세요.",
-    "email_placeholder": "your@email.com"
+    "email_placeholder": "you@example.com"
   },
   "not_found": {
     "heading": "404 페이지를 찾을 수 없습니다",

@@ -1221,7 +1221,7 @@
     "login_subtitle": "Sign in to manage your Melbourne room",
     "session_expired": "Your session has expired. Please sign in again.",
     "email_label": "Email address",
-    "email_placeholder": "your@email.com",
+    "email_placeholder": "you@example.com",
     "password_label": "Password",
     "password_placeholder_login": "Enter your password",
     "forgot_password": "Forgot password?",

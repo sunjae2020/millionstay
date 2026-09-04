@@ -4591,7 +4591,8 @@
     "success_title": "メールをご確認ください",
     "success_message": "<1>{{email}}</1> のアカウントが存在する場合、パスワード再設定リンクをお送りしました。受信トレイ（および迷惑メールフォルダ）をご確認ください。",
     "link_expiry": "このリンクは <1>1時間</1> で有効期限が切れます。",
-    "error_generic": "問題が発生しました。もう一度お試しください。"
+    "error_generic": "問題が発生しました。もう一度お試しください。",
+    "email_placeholder": "you@example.com"
   },
   "not_found": {
     "heading": "404 ページが見つかりません",

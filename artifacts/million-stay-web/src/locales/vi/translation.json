@@ -1246,7 +1246,8 @@
     "set_new_password": "Đặt mật khẩu mới",
     "forgot_title": "Đặt lại mật khẩu",
     "sending": "Đang gửi…",
-    "send_reset_link": "Gửi liên kết đặt lại"
+    "send_reset_link": "Gửi liên kết đặt lại",
+    "email_placeholder": "you@example.com"
   },
   "contact_page": {
     "hero_tagline": "Chúng tôi rất mong nhận được phản hồi từ bạn",
@@ -1419,7 +1420,8 @@
       "submit": "Đăng nhập",
       "failed": "Email hoặc mật khẩu không đúng.",
       "new_applicant": "Người đăng ký mới?",
-      "apply_link": "Đăng ký trở thành chủ nhà"
+      "apply_link": "Đăng ký trở thành chủ nhà",
+      "email_placeholder": "you@example.com"
     },
     "portal": {
       "title": "Cổng thông tin chủ nhà",

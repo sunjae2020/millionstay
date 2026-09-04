@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { getApiBase } from "./api-base";
+import { refreshGuestToken, getGuestToken, getGuestRefreshToken } from "./store";
 import i18n from "../i18n";
 
 // Current guest UI language as a bare code ("ko-KR" → "ko"), sent as ?lang so the
@@ -11,19 +12,30 @@ function currentLang(): string {
 
 const BASE = `${getApiBase()}/api/v1`;
 const GUEST_TOKEN_KEY = "ms_guest_token";
+const GUEST_REFRESH_KEY = "ms_guest_refresh_token";
 const GUEST_STORAGE_KEY = "ms-guest-storage";
 
 function authHeaders(): Record<string, string> {
-  const token = localStorage.getItem(GUEST_TOKEN_KEY);
+  const token = getGuestToken();
   return token ? { Authorization: `Bearer ${token}` } : {};
 }
 
+function isAuthPath(path: string): boolean {
+  return /\/auth\/(login|guest\/login|guest\/register|guest\/refresh|partner\/login)/.test(path);
+}
+
 function clearAuthAndRedirect() {
-  localStorage.removeItem(GUEST_TOKEN_KEY);
   try {
+    localStorage.removeItem(GUEST_TOKEN_KEY);
+    localStorage.removeItem(GUEST_REFRESH_KEY);
     localStorage.removeItem(GUEST_STORAGE_KEY);
   } catch {}
-  window.location.href = "/login?reason=session_expired";
+  // Carry the current page along so signing back in returns the guest to it.
+  const here = window.location.pathname + window.location.search;
+  const canReturn = here.startsWith("/") && !here.startsWith("//") && !here.startsWith("/login");
+  window.location.href = canReturn
+    ? `/login?reason=session_expired&redirect=${encodeURIComponent(here)}`
+    : "/login?reason=session_expired";
 }
 
 export class ApiError extends Error {
@@ -67,20 +79,29 @@ async function safeReadJson(res: Response): Promise<unknown> {
 }
 
 export async function apiFetch<T>(path: string, options?: RequestInit): Promise<T> {
-  let res: Response;
-  try {
-    res = await fetch(`${BASE}${path}`, {
-      headers: { "Content-Type": "application/json", ...authHeaders(), ...((options?.headers as Record<string, string>) ?? {}) },
-      ...options,
-    });
-  } catch (err) {
-    throw new ApiError(0, "NETWORK", friendlyMessage(0), { cause: String(err) });
+  const send = async (): Promise<Response> => {
+    try {
+      return await fetch(`${BASE}${path}`, {
+        headers: { "Content-Type": "application/json", ...authHeaders(), ...((options?.headers as Record<string, string>) ?? {}) },
+        ...options,
+      });
+    } catch (err) {
+      throw new ApiError(0, "NETWORK", friendlyMessage(0), { cause: String(err) });
+    }
+  };
+
+  let res = await send();
+  // An expired access token is not the end of the session: rotate it with the
+  // 30-day refresh token and replay the request once.
+  if (res.status === 401 && !isAuthPath(path) && getGuestRefreshToken() && await refreshGuestToken()) {
+    res = await send();
   }
   const body = await safeReadJson(res);
 
   if (res.status === 401) {
-    // Login itself returns 401 with body — let the caller decide. Otherwise treat as expired session.
-    const isLoginAttempt = /\/auth\/(login|guest\/login|partner\/login)/.test(path);
+    // Login itself returns 401 with body — let the caller decide. Otherwise the
+    // session is genuinely over (the refresh above already failed).
+    const isLoginAttempt = isAuthPath(path);
     if (!isLoginAttempt) clearAuthAndRedirect();
     const serverErr = (body as any)?.error ?? (body as any)?.message;
     throw new ApiError(401, "UNAUTHORIZED", friendlyMessage(401, serverErr), body);
@@ -230,6 +251,7 @@ export function useGetPublicSpace(
 export interface GuestAuthResponse {
   success?: boolean;
   token: string;
+  refresh_token?: string;
   user: {
     id: number;
     email: string;
@@ -263,6 +285,7 @@ interface RegisterPayload {
 
 interface RegisterResponse {
   token: string;
+  refresh_token?: string;
   user: {
     id: number;
     email: string;

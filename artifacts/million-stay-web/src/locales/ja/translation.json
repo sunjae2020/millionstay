@@ -1022,7 +1022,7 @@
     "login_subtitle": "メルボルンの部屋を管理するにはログインしてください",
     "session_expired": "セッションが期限切れです。再度ログインしてください。",
     "email_label": "メールアドレス",
-    "email_placeholder": "your@email.com",
+    "email_placeholder": "you@example.com",
     "password_label": "パスワード",
     "password_placeholder_login": "パスワードを入力",
     "forgot_password": "パスワードをお忘れですか？",

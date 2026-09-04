@@ -243,7 +243,8 @@
     "submit": "Gửi liên kết đặt lại",
     "sending": "Đang gửi...",
     "back_to_login": "Quay lại đăng nhập",
-    "sent": "Nếu tồn tại tài khoản với email {{email}}, một liên kết đặt lại đã được gửi. Vui lòng kiểm tra hộp thư đến của bạn. Liên kết sẽ hết hạn sau 1 giờ."
+    "sent": "Nếu tồn tại tài khoản với email {{email}}, một liên kết đặt lại đã được gửi. Vui lòng kiểm tra hộp thư đến của bạn. Liên kết sẽ hết hạn sau 1 giờ.",
+    "email_placeholder": "you@example.com"
   },
   "reset": {
     "title": "Đặt mật khẩu mới",

@@ -19,6 +19,56 @@ export type UserType = "admin" | "guest" | "partner";
 
 const REFRESH_TOKEN_TTL_MS = 30 * 24 * 60 * 60 * 1000; // 30 days
 
+/**
+ * Rotation grace window.
+ *
+ * Rotation revokes the presented token, so two refreshes that race — two
+ * browser tabs, a background timer firing while a 401 retry is in flight, a
+ * request replayed after a flaky network — would have the loser present a
+ * token that was revoked milliseconds earlier. Treating that as theft logged
+ * the user out of every session, which is the single biggest source of
+ * "it signed me out again" reports.
+ *
+ * Within the grace window we replay the rotation instead: the loser gets the
+ * same successor token the winner got. Outside the window, reuse is still
+ * treated as theft.
+ */
+const ROTATION_GRACE_MS = 60 * 1000;
+const MAX_GRACE_ENTRIES = 5000;
+
+interface RotationRecord {
+  newToken: string;
+  userId: number;
+  userType: UserType;
+  at: number;
+}
+
+/** oldTokenHash → the rotation it produced, for ROTATION_GRACE_MS. */
+const recentRotations = new Map<string, RotationRecord>();
+
+function pruneRotations(): void {
+  const cutoff = Date.now() - ROTATION_GRACE_MS;
+  for (const [hash, rec] of recentRotations) {
+    if (rec.at <= cutoff) recentRotations.delete(hash);
+  }
+  // Hard cap so a burst can never grow the map without bound.
+  while (recentRotations.size > MAX_GRACE_ENTRIES) {
+    const oldest = recentRotations.keys().next();
+    if (oldest.done) break;
+    recentRotations.delete(oldest.value);
+  }
+}
+
+function recallRotation(tokenHash: string): RotationRecord | null {
+  const rec = recentRotations.get(tokenHash);
+  if (!rec) return null;
+  if (Date.now() - rec.at > ROTATION_GRACE_MS) {
+    recentRotations.delete(tokenHash);
+    return null;
+  }
+  return rec;
+}
+
 function hashToken(token: string): string {
   return createHash("sha256").update(token).digest("hex");
 }
@@ -101,6 +151,9 @@ export async function verifyRefreshToken(
   // Reuse detection: revoked token presented again → treat as theft.
   if (row.revoked_at !== null) {
     const ut = row.user_type as UserType;
+    // …unless it was revoked by a rotation moments ago: that is a benign race
+    // between two clients of the same session, not a stolen token.
+    if (recallRotation(tokenHash)) return null;
     console.warn(
       `[refresh-tokens] REUSE DETECTED: user ${row.user_id} (${ut}) presented a revoked token. Mass-revoking all sessions.`,
     );
@@ -147,6 +200,14 @@ export async function rotateRefreshToken(
   oldRaw: string,
   opts?: { ipAddress?: string | null; userAgent?: string | null },
 ): Promise<{ newToken: string; userId: number; userType: UserType } | null> {
+  const oldHash = hashToken(oldRaw);
+
+  // Racing refresh of the same token: hand back the successor already issued.
+  const replayed = recallRotation(oldHash);
+  if (replayed) {
+    return { newToken: replayed.newToken, userId: replayed.userId, userType: replayed.userType };
+  }
+
   const verified = await verifyRefreshToken(oldRaw);
   if (!verified) return null;
   await revokeRefreshToken(oldRaw);
@@ -155,6 +216,13 @@ export async function rotateRefreshToken(
     userType: verified.user_type,
     ipAddress: opts?.ipAddress ?? null,
     userAgent: opts?.userAgent ?? null,
+  });
+  pruneRotations();
+  recentRotations.set(oldHash, {
+    newToken,
+    userId: verified.user_id,
+    userType: verified.user_type,
+    at: Date.now(),
   });
   return { newToken, userId: verified.user_id, userType: verified.user_type };
 }
