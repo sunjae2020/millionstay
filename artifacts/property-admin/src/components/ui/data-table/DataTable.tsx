@@ -30,7 +30,13 @@ import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { csvFileName, downloadCsv, nodeToText, toCsvString } from "@/lib/csv";
 import { formatDate } from "@/lib/date";
-import { ACTIONS_KEY, type ColumnDef, type DataTableEditing, type EditValue } from "./types";
+import {
+  ACTIONS_KEY,
+  type ColumnDef,
+  type DataTableEditing,
+  type DataTableServer,
+  type EditValue,
+} from "./types";
 import { useTablePrefs } from "./useTablePrefs";
 import { ResizableSortableTh } from "./ResizableSortableTh";
 import { ColumnsMenu } from "./ColumnsMenu";
@@ -65,6 +71,12 @@ export interface DataTableProps<T> {
   exportable?: boolean;
   /** Base name for the downloaded file; defaults to `tableKey`. */
   exportFileName?: string;
+  /**
+   * 서버 정렬 + 서버 페이징 모드. `useServerList` 의 `server` 를 그대로 넘긴다.
+   * 넘기면 `data` 는 "현재 페이지의 행"으로 취급되고, 정렬·페이징·건수·CSV 전량
+   * 조회가 모두 서버 기준이 된다. 생략하면 종전대로 전량 클라이언트 처리.
+   */
+  server?: DataTableServer<T>;
   className?: string;
 }
 
@@ -128,6 +140,7 @@ export function DataTable<T>({
   toolbarExtra,
   exportable = true,
   exportFileName,
+  server,
   className,
 }: DataTableProps<T>) {
   const { t } = useTranslation();
@@ -152,19 +165,41 @@ export function DataTable<T>({
     return map;
   }, [columns]);
 
-  const { sorted, sortKey, sortDir, toggleSort } = useSortableData(data, {
+  // 클라이언트 모드에서만 쓰이는 정렬/페이징. 훅은 순서 고정을 위해 항상 호출한다.
+  const clientSort = useSortableData(data, {
     defaultKey: defaultSort?.key ?? null,
     defaultDir: defaultSort?.dir ?? "asc",
     accessors,
   });
-  const pagination = usePagination(sorted, defaultPageSize);
+  const clientPagination = usePagination(clientSort.sorted, defaultPageSize);
+
+  const sortKey = server ? server.sortKey : clientSort.sortKey;
+  const sortDir = server ? server.sortDir : clientSort.sortDir;
+  const toggleSort = server ? server.onSort : clientSort.toggleSort;
+
+  /** 현재 화면에 그릴 행. 서버 모드에서는 응답이 곧 그 페이지다. */
+  const pageRows = server ? (data ?? []) : clientPagination.paginatedItems;
+
+  const paginationProps = server
+    ? {
+        page: server.page,
+        pageSize: server.pageSize,
+        total: server.total,
+        totalPages: Math.max(1, Math.ceil(server.total / server.pageSize)),
+        hasPrev: server.page > 1,
+        hasNext: server.page * server.pageSize < server.total,
+        onPage: server.onPage,
+        onPageSize: server.onPageSize,
+      }
+    : clientPagination;
 
   const selectionEnabled = !!selection?.enable && canWrite;
   const [selectedIds, setSelectedIds] = useState<Set<string | number>>(new Set());
   const [bulkAction, setBulkAction] = useState<BulkAction>(null);
   const [isBulkLoading, setIsBulkLoading] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
 
-  const pageIds = pagination.paginatedItems.map(rowKey);
+  const pageIds = pageRows.map(rowKey);
   const allPageSelected = pageIds.length > 0 && pageIds.every((id) => selectedIds.has(id));
   const somePageSelected = pageIds.some((id) => selectedIds.has(id));
 
@@ -260,15 +295,37 @@ export function DataTable<T>({
   const exportCols = visibleCols.filter(
     (c) => c.key !== ACTIONS_KEY && c.exportable !== false,
   );
-  const exportRowCount = selectedIds.size > 0 ? selectedIds.size : sorted.length;
+  const allRows = server ? pageRows : clientSort.sorted;
+  const exportRowCount =
+    selectedIds.size > 0 ? selectedIds.size : server ? server.total : clientSort.sorted.length;
 
-  function exportCsv() {
-    const rows = selectedIds.size > 0 ? sorted.filter((r) => selectedIds.has(rowKey(r))) : sorted;
-    const header = exportCols.map((c) => (typeof c.header === "string" ? t(c.header) : c.key));
-    const body = rows.map((row) =>
-      exportCols.map((c) => (c.csv ? c.csv(row) : nodeToText(c.cell(row)))),
-    );
-    downloadCsv(toCsvString([header, ...body]), csvFileName(exportFileName ?? tableKey));
+  // 서버 모드에서는 현재 페이지만 갖고 있으므로, 선택이 없으면 전량을 다시 받아
+  // 내보낸다(리스트는 필터·정렬이 걸린 상태 그대로).
+  async function exportCsv() {
+    setIsExporting(true);
+    try {
+      let rows: T[];
+      if (selectedIds.size > 0) {
+        rows = allRows.filter((r) => selectedIds.has(rowKey(r)));
+      } else if (server?.fetchAll) {
+        rows = await server.fetchAll();
+      } else {
+        rows = allRows;
+      }
+      const header = exportCols.map((c) => (typeof c.header === "string" ? t(c.header) : c.key));
+      const body = rows.map((row) =>
+        exportCols.map((c) => (c.csv ? c.csv(row) : nodeToText(c.cell(row)))),
+      );
+      downloadCsv(toCsvString([header, ...body]), csvFileName(exportFileName ?? tableKey));
+    } catch (err) {
+      toast({
+        title: t("common.error"),
+        description: err instanceof Error ? err.message : String(err),
+        variant: "destructive",
+      });
+    } finally {
+      setIsExporting(false);
+    }
   }
 
   const dialogCopy: Record<Exclude<BulkAction, null>, { title: string; desc: string; confirm: string; danger: boolean }> = {
@@ -317,11 +374,15 @@ export function DataTable<T>({
               variant="outline"
               size="sm"
               className="h-8 gap-1.5"
-              onClick={exportCsv}
-              disabled={isLoading || exportRowCount === 0}
+              onClick={() => void exportCsv()}
+              disabled={isLoading || isExporting || exportRowCount === 0}
               title={t("common.export_csv_count", { count: exportRowCount })}
             >
-              <Download className="h-3.5 w-3.5" />
+              {isExporting ? (
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+              ) : (
+                <Download className="h-3.5 w-3.5" />
+              )}
               {t("common.export_csv")}
             </Button>
           )}
@@ -434,7 +495,12 @@ export function DataTable<T>({
                     colKey={col.key}
                     label={typeof col.header === "string" ? t(col.header) : col.header}
                     align={col.align}
-                    sortable={col.sortable !== false && col.key !== ACTIONS_KEY}
+                    sortable={
+                      col.sortable !== false &&
+                      col.key !== ACTIONS_KEY &&
+                      // 서버 모드: 서버가 정렬할 수 있는 컬럼만 누를 수 있다.
+                      (!server || server.sortableKeys.includes(col.key))
+                    }
                     activeKey={sortKey}
                     sortDir={sortDir}
                     onSort={toggleSort}
@@ -460,7 +526,7 @@ export function DataTable<T>({
                   </td>
                 </tr>
               ) : (
-                pagination.paginatedItems.map((row) => {
+                pageRows.map((row) => {
                   const id = rowKey(row);
                   return (
                     <tr
@@ -518,7 +584,7 @@ export function DataTable<T>({
             </tbody>
           </table>
         </div>
-        <TablePagination {...pagination} />
+        <TablePagination {...paginationProps} />
       </div>
 
       {/* Confirm dialog */}

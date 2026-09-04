@@ -6,15 +6,22 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
-  useListBookings, useConfirmBooking, useCheckInBooking, getListBookingsQueryKey,
+  useConfirmBooking, useCheckInBooking,
   type ListBookingsParams, type BookingListItem,
 } from "@workspace/api-client-react";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
+import { apiJson } from "@/lib/apiFetch";
 import { Plus, Search, List, Calendar } from "lucide-react";
-import { DataTable, ACTIONS_KEY, type ColumnDef } from "@/components/ui/data-table";
-import { LeaseAmountCell, monthlyEquivalent, leaseModeOf } from "@/components/LeaseAmountCell";
+import { DataTable, useServerList, ACTIONS_KEY, type ColumnDef } from "@/components/ui/data-table";
+import { LeaseAmountCell, monthlyEquivalent } from "@/components/LeaseAmountCell";
 import { ALL, SearchBox, DateRangeFilter, FacetSelect, ResetFiltersButton, useListFacets, useYearLabel } from "@/components/list-filters";
 import { formatDate } from "@/lib/date";
+
+/** 서버가 정렬할 수 있는 컬럼(api-server routes/bookings.ts 의 BOOKING_SORT 와 1:1). */
+const SORTABLE_KEYS = [
+  "booking_ref", "guest", "space_name", "check_in_date", "check_out_date",
+  "stay_nights", "amount", "booking_status", "booking_source", "created_at", "updated_at",
+];
 
 const BOOKING_STATUS_COLORS: Record<string, string> = {
   Draft: "bg-gray-100 text-gray-700 border-gray-200",
@@ -131,15 +138,15 @@ export default function BookingList() {
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
   const [showDeleted, setShowDeleted] = useState(false);
-  const qc = useQueryClient();
-
-  const params: ListBookingsParams & Record<string, string | undefined> = {
+  const filters = {
     search: search || undefined,
     booking_status: statusFilter || undefined,
     booking_source: sourceFilter || undefined,
     year: year === ALL ? undefined : year,
     date_from: dateFrom || undefined,
     date_to: dateTo || undefined,
+    // 임대 유형도 서버가 건다(백필 전 행은 월세 유무로 갈음 — 서버 규칙과 동일).
+    lease_mode: leaseMode || undefined,
     ...(showDeleted ? { deleted: "only" } : {}),
   };
   const { data: facets } = useListFacets("bookings", showDeleted);
@@ -149,19 +156,28 @@ export default function BookingList() {
     setSearch(""); setStatusFilter(""); setSourceFilter(""); setYear(ALL); setDateFrom(""); setDateTo("");
   };
 
-  const { data: bookings, isLoading } = useListBookings(params, {
-    query: { queryKey: getListBookingsQueryKey(params) },
+  const { rows, total, isLoading, server, invalidate } = useServerList<BookingListItem>(
+    "/api/v1/bookings",
+    { filters, sortableKeys: SORTABLE_KEYS, defaultSort: { key: "created_at", dir: "desc" } },
+  );
+
+  // 캘린더는 한 달치를 통으로 그려야 해서 페이지 단위 응답으로는 부족하다.
+  // 캘린더를 열었을 때만 같은 필터로 전량을 따로 받는다.
+  const { data: calendarBookings } = useQuery<BookingListItem[]>({
+    queryKey: ["bookings-calendar", filters],
+    queryFn: () => {
+      const p = new URLSearchParams({ limit: "2000" });
+      for (const [k, v] of Object.entries(filters)) if (v) p.set(k, String(v));
+      return apiJson(`/api/v1/bookings?${p}`);
+    },
+    enabled: view === "calendar",
   });
-  // 임대 유형은 목록 API 의 필터가 아니라 행의 값에서 바로 판정한다(백필 전 행 포함).
-  const rows = leaseMode
-    ? (bookings ?? []).filter((b) => leaseModeOf(b as any) === leaseMode)
-    : bookings;
 
   const confirmMutation = useConfirmBooking({
-    mutation: { onSuccess: () => qc.invalidateQueries({ queryKey: getListBookingsQueryKey({}) }) },
+    mutation: { onSuccess: () => invalidate() },
   });
   const checkInMutation = useCheckInBooking({
-    mutation: { onSuccess: () => qc.invalidateQueries({ queryKey: getListBookingsQueryKey({}) }) },
+    mutation: { onSuccess: () => invalidate() },
   });
 
   const columns: ColumnDef<BookingListItem>[] = useMemo(
@@ -253,7 +269,7 @@ export default function BookingList() {
     <Layout>
       <PageHeader
         title={t("nav.booking")}
-        subtitle={`${bookings?.length ?? 0} ${t("common.total")}`}
+        subtitle={`${total} ${t("common.total")}`}
         actions={
           <div className="flex gap-2">
             <div className="flex rounded-md border overflow-hidden">
@@ -272,19 +288,20 @@ export default function BookingList() {
       />
       <div className="p-6 space-y-4">
         {view === "calendar" ? (
-          <CalendarView bookings={bookings ?? []} />
+          <CalendarView bookings={calendarBookings ?? []} />
         ) : (
           <DataTable
             tableKey="bookings"
             columns={columns}
             data={rows}
+            server={server}
             isLoading={isLoading}
             rowKey={(b) => b.id}
             emptyText={t("booking.no_bookings")}
             selection={{
               enable: true,
               resource: "bookings",
-              onChanged: () => qc.invalidateQueries({ queryKey: getListBookingsQueryKey({}) }),
+              onChanged: () => invalidate(),
             }}
             showDeleted={showDeleted}
             onToggleShowDeleted={setShowDeleted}

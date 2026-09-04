@@ -288,6 +288,7 @@ export default function HomestayStudentRequestDetail() {
       toast({ title: t("homestayStudent.toast_updated") });
       qc.invalidateQueries({ queryKey: ["homestay-student-request", id] });
       qc.invalidateQueries({ queryKey: ["homestay-student-requests"] });
+      qc.invalidateQueries({ queryKey: ["/api/v1/homestay-student-requests"] });
       setStatusOpen(false);
     },
     onError: (e: any) => toast({ title: t("homestayStudent.error"), description: e.message, variant: "destructive" }),

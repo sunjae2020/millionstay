@@ -1,6 +1,7 @@
 import { Router, type IRouter } from "express";
 import multer from "multer";
-import { eq, ilike, and, or, isNull, inArray, desc, SQL } from "drizzle-orm";
+import { eq, ilike, and, or, isNull, inArray, desc, SQL, sql, asc } from "drizzle-orm";
+import { parseListPage, parseSortParams, buildOrderBy, sendList, type SortMap } from "../utils/pagination.js";
 import { db, contactsTable, documentsTable, accountsTable, accountContactsTable } from "@workspace/db";
 import { deletedFilter, makeBulkDelete, makeBulkRestore } from "../lib/softDelete";
 import {
@@ -46,6 +47,18 @@ function normalizeNames<T extends { first_name?: string | null; last_name?: stri
   return out;
 }
 
+/** 정렬 허용 컬럼 — ContactList 의 SORTABLE_KEYS 와 1:1. 이름은 성(姓) 기준. */
+const CONTACT_SORT: SortMap = {
+  name: sql`coalesce(${contactsTable.last_name}, '') || ' ' || coalesce(${contactsTable.first_name}, '')`,
+  email: contactsTable.email,
+  mobile_number: contactsTable.mobile_number,
+  nationality: contactsTable.nationality,
+  portal_enabled: contactsTable.portal_enabled,
+  status: contactsTable.status,
+  created_at: contactsTable.created_at,
+  updated_at: contactsTable.updated_at,
+};
+
 router.get("/v1/contacts", async (req, res): Promise<void> => {
   const parsed = ListContactsQueryParams.safeParse(req.query);
   if (!parsed.success) { res.status(400).json({ error: parsed.error.message }); return; }
@@ -69,20 +82,28 @@ router.get("/v1/contacts", async (req, res): Promise<void> => {
       [{ first: contactsTable.first_name, last: contactsTable.last_name }],
     ));
   }
-  const rows = await db.select().from(contactsTable)
-    .where(and(...conditions))
-    // Person lists sort by family name, then given name (see lib/nameFormat.ts).
-    .orderBy(contactsTable.last_name, contactsTable.first_name);
+  const where = and(...conditions);
+  const { limit, offset, page } = parseListPage(req.query);
+  const sort = parseSortParams(req.query, CONTACT_SORT);
+  const [rows, [{ count }]] = await Promise.all([
+    db.select().from(contactsTable)
+      .where(where)
+      // Person lists sort by family name, then given name (see lib/nameFormat.ts).
+      .orderBy(...buildOrderBy(CONTACT_SORT, sort, contactsTable.id,
+        [asc(contactsTable.last_name), asc(contactsTable.first_name)]))
+      .limit(limit).offset(offset),
+    db.select({ count: sql<number>`count(*)::int` }).from(contactsTable).where(where),
+  ]);
   // 고유식별정보(PIPA §24-3): the list never carries raw resident registration /
   // passport numbers — masked display values only. Raw values stay on the
   // detail endpoint, which the edit form and contract issuance actually use.
-  res.json(rows.map((r) => ({
+  sendList(res, rows.map((r) => ({
     ...r,
     resident_no: maskResidentNo(r.resident_no),
     passport_number: maskPassportNo(r.passport_number),
     has_resident_no: Boolean(r.resident_no?.trim()),
     has_passport_number: Boolean(r.passport_number?.trim()),
-  })));
+  })), count ?? 0, { limit, offset, page });
 });
 
 router.post("/v1/contacts", async (req, res): Promise<void> => {

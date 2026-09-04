@@ -7,7 +7,8 @@ import {
   channelContactFromAccount,
 } from "../lib/acquisitionChannel";
 import { db, contractsTable, accountsTable, contactsTable, spacesTable, propertiesTable, contractProductsTable, accommodationCatalogTable, bookingsTable, recurringSchedulesTable, bookingServicesTable, invoicesTable, invoiceLineItemsTable, contractLineItemsTable, contractRelatedCostsTable, rentalBusinessRegistrationsTable } from "@workspace/db";
-import { eq, ilike, and, or, like, desc, isNull, inArray, gte, lte, ne, sql } from "drizzle-orm";
+import { eq, ilike, and, or, like, desc, isNull, inArray, gte, lte, ne, sql, asc } from "drizzle-orm";
+import { parseListPage, parseSortParams, buildOrderBy, sendList, type SortMap } from "../utils/pagination.js";
 import multer from "multer";
 import { logAction } from "../utils/auditLog";
 import { keywordCondition, accountIdsByName, spaceIdsByName, yearOverlapConditions, periodOverlapConditions, distinctYears, distinctValues, columnMatches } from "../lib/listSearch";
@@ -445,6 +446,36 @@ async function contractKeywordCondition(q: string) {
   );
 }
 
+/**
+ * 정렬 허용 컬럼(프런트 DataTable 컬럼 키 = 이 맵의 키 = ContractList 의 SORTABLE_KEYS).
+ * 임차인·공간명은 계약 테이블에 없으므로 상관 서브쿼리로 정렬한다(조인하면 목록
+ * 쿼리와 enrich 경로가 갈라진다). 금액은 LeaseAmountCell.monthlyEquivalent 를
+ * SQL 로 옮긴 월 환산액 — 장기/단기가 섞인 목록을 한 축으로 줄 세우기 위함.
+ */
+const CONTRACT_SORT: SortMap = {
+  contract_ref: contractsTable.contract_ref,
+  status: contractsTable.status,
+  start_date: contractsTable.start_date,
+  end_date: contractsTable.end_date,
+  contract_category: contractsTable.contract_category,
+  lease_form: contractsTable.lease_form,
+  lease_mode: contractsTable.lease_mode,
+  created_at: contractsTable.created_at,
+  updated_at: contractsTable.updated_at,
+  tenant_name: sql`(select a.name from accounts a where a.id = ${contractsTable.tenant_account_id})`,
+  space_name: sql`(select sp.name from spaces sp where sp.id = ${contractsTable.space_id})`,
+  amount: sql`(case
+      when ${contractsTable.lease_mode} = 'long'
+        or (${contractsTable.lease_mode} is null and coalesce(${contractsTable.monthly_rent}, 0) > 0)
+        then coalesce(${contractsTable.monthly_rent}, 0)
+      else coalesce(${contractsTable.rate_amount}, ${contractsTable.weekly_rate}, 0)
+        * (case ${contractsTable.rate_period}
+             when 'daily' then 365.0 / 12
+             when 'monthly' then 1
+             else 52.0 / 12 end)
+    end)`,
+};
+
 router.get("/v1/contracts", async (req, res): Promise<void> => {
   const {
     q, status, tenant_account_id, space_id, booking_id, account_id,
@@ -470,11 +501,18 @@ router.get("/v1/contracts", async (req, res): Promise<void> => {
   if (account_id) conditions.push(eq(contractsTable.tenant_account_id, Number(account_id)));
   if (space_id) conditions.push(eq(contractsTable.space_id, Number(space_id)));
   if (booking_id) conditions.push(eq(contractsTable.booking_id, Number(booking_id)));
-  const rows = await db.select().from(contractsTable)
-    .where(and(...conditions))
-    .orderBy(contractsTable.id);
+  const where = and(...conditions);
+  const { limit, offset, page } = parseListPage(req.query);
+  const sort = parseSortParams(req.query, CONTRACT_SORT);
+  const [rows, [{ count }]] = await Promise.all([
+    db.select().from(contractsTable)
+      .where(where)
+      .orderBy(...buildOrderBy(CONTRACT_SORT, sort, contractsTable.id))
+      .limit(limit).offset(offset),
+    db.select({ count: sql<number>`count(*)::int` }).from(contractsTable).where(where),
+  ]);
   const result = await enrichContracts(rows);
-  res.json(result);
+  sendList(res, result, count ?? 0, { limit, offset, page });
 });
 
 /**

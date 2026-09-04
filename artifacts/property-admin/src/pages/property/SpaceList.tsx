@@ -8,16 +8,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
-  useListSpaces,
   useDeleteSpace,
-  getListSpacesQueryKey,
-  type ListSpacesParams,
   type SpaceListItem,
 } from "@workspace/api-client-react";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
+import { apiJson } from "@/lib/apiFetch";
 import { Plus, Search, Pencil, Trash2 } from "lucide-react";
 import { formatDate } from "@/lib/date";
-import { DataTable, ACTIONS_KEY, type ColumnDef } from "@/components/ui/data-table";
+import { DataTable, useServerList, ACTIONS_KEY, type ColumnDef } from "@/components/ui/data-table";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -29,6 +27,12 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 
+/** 서버가 정렬할 수 있는 컬럼(api-server routes/spaces.ts 의 SPACE_SORT 와 1:1). */
+const SORTABLE_KEYS = [
+  "name", "owner_name", "parent_space_name", "exclusive_area_m2", "status",
+  "policy_name", "property_name", "space_type", "booking_mode", "created_at", "updated_at",
+];
+
 export default function SpaceList() {
   const { t } = useTranslation();
   const [search, setSearch] = useState("");
@@ -38,47 +42,35 @@ export default function SpaceList() {
   const [bookingMode, setBookingMode] = useState("");
   const [showDeleted, setShowDeleted] = useState(false);
   const [deleteId, setDeleteId] = useState<number | null>(null);
-  const qc = useQueryClient();
 
-  const params: ListSpacesParams & { deleted?: string } = {
+  const filters = {
     search: search || undefined,
     space_type: spaceType || undefined,
     status: status || undefined,
     booking_mode: bookingMode || undefined,
+    // 상위 공간 필터도 서버가 건다(서버 페이징 후에는 로드된 행으로 거를 수 없다).
+    parent_space_id: parentSpaceId || undefined,
     ...(showDeleted ? { deleted: "only" } : {}),
   };
 
-  const { data: spaces, isLoading } = useListSpaces(params, {
-    query: { queryKey: getListSpacesQueryKey(params) },
+  const { rows: spaces, total, isLoading, server, invalidate } = useServerList<SpaceListItem>(
+    "/api/v1/spaces",
+    { filters, sortableKeys: SORTABLE_KEYS, defaultSort: { key: "name", dir: "asc" } },
+  );
+
+  // 상위 공간(타입 마스터) 필터 선택지. 서버 페이징 이후에는 화면에 로드된 행에서
+  // 뽑을 수 없어 전체 데이터 기준 facets 를 따로 받는다.
+  const { data: facets } = useQuery<{ parents: { id: number; name: string }[] }>({
+    queryKey: ["space-facets", showDeleted],
+    queryFn: () => apiJson(`/api/v1/spaces/facets${showDeleted ? "?deleted=only" : ""}`),
   });
-
-  // Parent-space filter options, derived from the loaded rows. Instances that
-  // group units under a container space (e.g. a per-unit-type "타입" parent) get
-  // a meaningful filter here; instances with no parents keep the type filter.
-  const parentOptions = useMemo(() => {
-    const byId = new Map<number, string>();
-    for (const s of spaces ?? []) {
-      if (s.parent_space_id != null && s.parent_space_name) {
-        byId.set(s.parent_space_id, s.parent_space_name);
-      }
-    }
-    return [...byId.entries()]
-      .map(([id, name]) => ({ id, name }))
-      .sort((a, b) => a.name.localeCompare(b.name));
-  }, [spaces]);
+  const parentOptions = facets?.parents ?? [];
   const hasParents = parentOptions.length > 0;
-
-  // Parent filtering is client-side: the list already loads every row.
-  const filtered = useMemo(() => {
-    const list = spaces ?? [];
-    if (!parentSpaceId) return list;
-    return list.filter((s) => String(s.parent_space_id ?? "") === parentSpaceId);
-  }, [spaces, parentSpaceId]);
 
   const deleteMutation = useDeleteSpace({
     mutation: {
       onSuccess: () => {
-        qc.invalidateQueries({ queryKey: getListSpacesQueryKey() });
+        invalidate();
         setDeleteId(null);
       },
     },
@@ -164,7 +156,7 @@ export default function SpaceList() {
     <Layout>
       <PageHeader
         title={t("nav.space")}
-        subtitle={`${filtered.length} ${t("common.total")}`}
+        subtitle={`${total} ${t("common.total")}`}
         actions={
           <Link href="/property/spaces/new">
             <Button size="sm" className="gap-1.5">
@@ -177,7 +169,8 @@ export default function SpaceList() {
         <DataTable
           tableKey="spaces"
           columns={columns}
-          data={filtered}
+          data={spaces}
+          server={server}
           isLoading={isLoading}
           rowKey={(s) => s.id}
           defaultSort={{ key: "name", dir: "asc" }}
@@ -185,7 +178,7 @@ export default function SpaceList() {
           selection={{
             enable: true,
             resource: "spaces",
-            onChanged: () => qc.invalidateQueries({ queryKey: getListSpacesQueryKey() }),
+            onChanged: () => invalidate(),
           }}
           showDeleted={showDeleted}
           onToggleShowDeleted={setShowDeleted}

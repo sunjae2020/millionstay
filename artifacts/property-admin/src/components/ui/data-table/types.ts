@@ -88,3 +88,26 @@ export interface TablePrefs {
 }
 
 export const EMPTY_PREFS: TablePrefs = { order: [], hidden: [], widths: {} };
+
+/**
+ * 서버 정렬 + 서버 페이징 모드 서술자(`useServerList` 가 만들어 준다).
+ *
+ * 이 prop 이 있으면 DataTable 은 **받은 행이 곧 현재 페이지**라고 보고 클라이언트
+ * 정렬·페이지 자르기를 하지 않는다. 정렬 가능 헤더는 `sortableKeys` 로 제한된다 —
+ * 서버가 정렬하지 못하는 파생 컬럼을 현재 페이지 안에서만 정렬하면 전체 기준으로는
+ * 틀린 결과가 되기 때문이다.
+ */
+export interface DataTableServer<T> {
+  /** 필터 적용 후 전체 건수(X-Total-Count). */
+  total: number;
+  page: number;
+  pageSize: number;
+  sortKey: string | null;
+  sortDir: "asc" | "desc";
+  sortableKeys: string[];
+  onPage: (page: number) => void;
+  onPageSize: (size: number) => void;
+  onSort: (key: string) => void;
+  /** CSV 내보내기용 전량 조회. 없으면 현재 페이지만 내보낸다. */
+  fetchAll?: () => Promise<T[]>;
+}

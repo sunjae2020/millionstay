@@ -2,14 +2,30 @@ import { Router, type IRouter } from "express";
 import { eq, ilike, and, sql, isNull, inArray, SQL, asc } from "drizzle-orm";
 import { db, serviceCatalogTable } from "@workspace/db";
 import { deletedFilter, makeBulkDelete, makeBulkRestore } from "../lib/softDelete";
+import { parseListPage, parseSortParams, buildOrderBy, sendList, type SortMap } from "../utils/pagination.js";
 
 import { keywordCondition } from "../lib/listSearch";
 const router: IRouter = Router();
 
+/** 정렬 허용 컬럼 — ServiceList 의 SORTABLE_KEYS 와 1:1. */
+const SERVICE_SORT: SortMap = {
+  name: serviceCatalogTable.name,
+  service_type: serviceCatalogTable.service_type,
+  base_price: serviceCatalogTable.base_price,
+  currency: serviceCatalogTable.currency,
+  billing_trigger: serviceCatalogTable.billing_trigger,
+  is_optional: serviceCatalogTable.is_optional,
+  is_refundable: serviceCatalogTable.is_refundable,
+  status: serviceCatalogTable.status,
+  created_at: serviceCatalogTable.created_at,
+  updated_at: serviceCatalogTable.updated_at,
+};
+
 /* ── GET /v1/services ──────────────────────────────────── */
 router.get("/v1/services", async (req, res): Promise<void> => {
   try {
-    const { q, service_type, status, limit = "100", offset = "0" } = req.query as Record<string, string>;
+    const { q, service_type, status } = req.query as Record<string, string>;
+    const { limit, offset, page } = parseListPage(req.query);
 
     const conditions: SQL[] = [deletedFilter(serviceCatalogTable.deleted_at, req)];
     if (q) conditions.push(keywordCondition(q, [serviceCatalogTable.name, serviceCatalogTable.description]));
@@ -18,14 +34,17 @@ router.get("/v1/services", async (req, res): Promise<void> => {
 
     const where = and(...conditions);
 
+    const sort = parseSortParams(req.query, SERVICE_SORT);
     const [rows, [{ count }]] = await Promise.all([
       db.select().from(serviceCatalogTable).where(where)
-        .orderBy(asc(serviceCatalogTable.sort_order), asc(serviceCatalogTable.name))
-        .limit(Number(limit)).offset(Number(offset)),
+        .orderBy(...buildOrderBy(SERVICE_SORT, sort, serviceCatalogTable.id,
+          [asc(serviceCatalogTable.sort_order), asc(serviceCatalogTable.name)]))
+        .limit(limit).offset(offset),
       db.select({ count: sql<number>`count(*)::int` }).from(serviceCatalogTable).where(where),
     ]);
 
-    res.json({ success: true, data: rows, meta: { total: count, limit: Number(limit), offset: Number(offset) } });
+    res.setHeader("X-Total-Count", String(count));
+    res.json({ success: true, data: rows, meta: { total: count, limit, offset, page } });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Failed to list services" });

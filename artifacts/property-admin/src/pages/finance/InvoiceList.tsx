@@ -1,24 +1,24 @@
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useLocation, Link } from "wouter";
-import {
-  useListInvoices,
-  getListInvoicesQueryKey,
-  type ListInvoicesParams,
-  type Invoice,
-} from "@workspace/api-client-react";
-import { useQueryClient } from "@tanstack/react-query";
+import { type Invoice } from "@workspace/api-client-react";
 import { Layout } from "@/components/Layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Plus } from "lucide-react";
-import { DataTable, type ColumnDef } from "@/components/ui/data-table";
+import { DataTable, useServerList, type ColumnDef } from "@/components/ui/data-table";
 import { useBrand } from "@/contexts/ThemeContext";
 import { formatMoney } from "@/lib/currency";
 import { formatDate } from "@/lib/date";
 import { useDocumentRowActions } from "@/components/DocumentRowActions";
 import { ALL, SearchBox, DateRangeFilter, FacetSelect, ResetFiltersButton, useListFacets, useYearLabel } from "@/components/list-filters";
+
+/** 서버가 정렬할 수 있는 컬럼(api-server routes/invoices.ts 의 INVOICE_SORT 와 1:1). */
+const SORTABLE_KEYS = [
+  "invoice_ref", "booking_ref", "contract_ref", "account_name", "amount",
+  "due_date", "status", "created_at", "updated_at",
+];
 
 const statusColors: Record<string, string> = {
   Draft: "bg-gray-100 text-gray-600",
@@ -37,11 +37,10 @@ export default function InvoiceList() {
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
   const [showDeleted, setShowDeleted] = useState(false);
-  const qc = useQueryClient();
   const { data: facets } = useListFacets("invoices", showDeleted);
   const yearLabel = useYearLabel();
 
-  const params: ListInvoicesParams & Record<string, string | undefined> = {
+  const filters = {
     q: q || undefined,
     status: status === ALL ? undefined : status,
     year: year === ALL ? undefined : year,
@@ -53,9 +52,10 @@ export default function InvoiceList() {
   const hasFilters = !!q || status !== ALL || year !== ALL || !!dateFrom || !!dateTo;
   const resetFilters = () => { setQ(""); setStatus(ALL); setYear(ALL); setDateFrom(""); setDateTo(""); };
 
-  const { data: invoicesRaw = [], isLoading } = useListInvoices(params, {
-    query: { queryKey: getListInvoicesQueryKey(params) },
-  });
+  const { rows: invoicesRaw, isLoading, server, invalidate } = useServerList<Invoice>(
+    "/api/v1/invoices",
+    { filters, sortableKeys: SORTABLE_KEYS, defaultSort: { key: "created_at", dir: "desc" } },
+  );
 
   const { documentActionsColumn, documentPreview } = useDocumentRowActions<Invoice>((inv) => ({
     ref: inv.invoice_ref,
@@ -140,13 +140,14 @@ export default function InvoiceList() {
           tableKey="invoices"
           columns={columns}
           data={invoicesRaw}
+          server={server}
           isLoading={isLoading}
           rowKey={(inv) => inv.id}
           emptyText={t("invoice.no_invoices")}
           selection={{
             enable: true,
             resource: "invoices",
-            onChanged: () => qc.invalidateQueries({ queryKey: getListInvoicesQueryKey() }),
+            onChanged: invalidate,
           }}
           showDeleted={showDeleted}
           onToggleShowDeleted={setShowDeleted}

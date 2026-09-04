@@ -8,14 +8,11 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import {
-  useListAccounts,
   useDeleteAccount,
-  getListAccountsQueryKey,
-  type ListAccountsParams,
+  type ListAccountsQueryResult,
 } from "@workspace/api-client-react";
-import { useQueryClient } from "@tanstack/react-query";
 import { Plus, Search, Pencil, Trash2, AlertTriangle } from "lucide-react";
-import { DataTable, ACTIONS_KEY, type ColumnDef } from "@/components/ui/data-table";
+import { DataTable, useServerList, ACTIONS_KEY, type ColumnDef } from "@/components/ui/data-table";
 import {
   AlertDialog, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
@@ -25,6 +22,14 @@ import { apiFetch } from "@/lib/apiFetch";
 import { accountTypeOptions, accountTypeLabel, accountTypeColor } from "@/lib/accountTypes";
 import { useModules } from "@/hooks/useModules";
 
+
+type AccountRow = ListAccountsQueryResult[number];
+
+/** 서버가 정렬할 수 있는 컬럼(api-server routes/accounts.ts 의 ACCOUNT_SORT 와 1:1).
+ *  대표 연락처(primary_contact_name)는 서버 파생값이라 정렬 대상이 아니다. */
+const SORTABLE_KEYS = [
+  "name", "account_type", "account_email", "status", "created_at", "updated_at",
+];
 
 export default function AccountList() {
   const { t } = useTranslation();
@@ -38,22 +43,22 @@ export default function AccountList() {
   const [showDeleted, setShowDeleted] = useState(false);
   const [deleteId, setDeleteId] = useState<number | null>(null);
   const [isPermanentDeleting, setIsPermanentDeleting] = useState(false);
-  const qc = useQueryClient();
 
-  const params: ListAccountsParams & { deleted?: string } = {
+  const filters = {
     search: search || undefined,
     account_type: typeFilter || undefined,
     status: statusFilter || undefined,
     ...(showDeleted ? { deleted: "only" } : {}),
   };
-  const { data: accounts, isLoading } = useListAccounts(params, {
-    query: { queryKey: getListAccountsQueryKey(params) },
-  });
+  const { rows: accounts, total, isLoading, server, invalidate } = useServerList<AccountRow>(
+    "/api/v1/accounts",
+    { filters, sortableKeys: SORTABLE_KEYS, defaultSort: { key: "name", dir: "asc" } },
+  );
 
   const archiveMutation = useDeleteAccount({
     mutation: {
       onSuccess: () => {
-        qc.invalidateQueries({ queryKey: getListAccountsQueryKey() });
+        invalidate();
         setDeleteId(null);
       },
     },
@@ -64,14 +69,13 @@ export default function AccountList() {
     setIsPermanentDeleting(true);
     try {
       await apiFetch(`/api/v1/accounts/${deleteId}?permanent=true`, { method: "DELETE" });
-      qc.invalidateQueries({ queryKey: getListAccountsQueryKey() });
+      invalidate();
       setDeleteId(null);
     } finally {
       setIsPermanentDeleting(false);
     }
   };
 
-  type AccountRow = NonNullable<typeof accounts>[number];
   const columns: ColumnDef<AccountRow>[] = useMemo(
     () => [
       {
@@ -170,7 +174,7 @@ export default function AccountList() {
     <Layout>
       <PageHeader
         title={t("nav.account")}
-        subtitle={`${accounts?.length ?? 0} ${t("common.total")}`}
+        subtitle={`${total} ${t("common.total")}`}
         actions={
           <Link href="/crm/accounts/new">
             <Button size="sm" className="gap-1.5"><Plus className="h-4 w-4" /> {t("account.new")}</Button>
@@ -182,6 +186,7 @@ export default function AccountList() {
           tableKey="accounts"
           columns={columns}
           data={accounts}
+          server={server}
           isLoading={isLoading}
           rowKey={(a) => a.id}
           defaultSort={{ key: "name", dir: "asc" }}
@@ -189,9 +194,9 @@ export default function AccountList() {
           selection={{
             enable: true,
             resource: "accounts",
-            onChanged: () => qc.invalidateQueries({ queryKey: getListAccountsQueryKey() }),
+            onChanged: () => invalidate(),
           }}
-          editing={{ resource: "accounts", onEdited: () => qc.invalidateQueries({ queryKey: getListAccountsQueryKey() }) }}
+          editing={{ resource: "accounts", onEdited: () => invalidate() }}
           showDeleted={showDeleted}
           onToggleShowDeleted={setShowDeleted}
           toolbarExtra={

@@ -12,7 +12,7 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Plus, Search, Pencil, Archive, Calendar, Package, Zap } from "lucide-react";
-import { DataTable, ACTIONS_KEY, type ColumnDef } from "@/components/ui/data-table";
+import { DataTable, useServerList, ACTIONS_KEY, type ColumnDef } from "@/components/ui/data-table";
 import { useBrand } from "@/contexts/ThemeContext";
 import { formatMoney } from "@/lib/currency";
 import { apiFetch } from "@/lib/apiFetch";
@@ -29,16 +29,11 @@ const TYPE_CONFIG: Record<string, { label: string; color: string; icon: React.El
   physical:  { label: "Physical",  color: "bg-amber-100 text-amber-700",  icon: Package },
 };
 
-async function fetchServices(q?: string, service_type?: string, status?: string, deleted?: string) {
-  const params = new URLSearchParams();
-  if (q) params.set("q", q);
-  if (service_type) params.set("service_type", service_type);
-  if (status) params.set("status", status);
-  if (deleted) params.set("deleted", deleted);
-  const res = await apiFetch(`/api/v1/services?${params}`);
-  if (!res.ok) throw new Error("Failed to fetch services");
-  return res.json();
-}
+/** 서버가 정렬할 수 있는 컬럼(api-server routes/service-catalog.ts 의 SERVICE_SORT 와 1:1). */
+const SORTABLE_KEYS = [
+  "name", "service_type", "base_price", "currency", "billing_trigger",
+  "is_optional", "is_refundable", "status", "created_at", "updated_at",
+];
 
 async function archiveService(id: number) {
   const res = await apiFetch(`/api/v1/services/${id}`, { method: "DELETE" });
@@ -56,25 +51,26 @@ export default function ServiceList() {
   const [showDeleted, setShowDeleted] = useState(false);
   const qc = useQueryClient();
 
-  const { data, isLoading } = useQuery({
-    queryKey: ["services", q, typeFilter, statusFilter, showDeleted],
-    queryFn: () => fetchServices(
-      q || undefined,
-      typeFilter !== "_all" ? typeFilter : undefined,
-      statusFilter !== "_all" ? statusFilter : undefined,
-      showDeleted ? "only" : undefined,
-    ),
+  const filters = {
+    q: q || undefined,
+    service_type: typeFilter !== "_all" ? typeFilter : undefined,
+    status: statusFilter !== "_all" ? statusFilter : undefined,
+    deleted: showDeleted ? "only" : undefined,
+  };
+  const { rows, isLoading, server, invalidate } = useServerList<any>("/api/v1/services", {
+    filters,
+    sortableKeys: SORTABLE_KEYS,
+    defaultSort: { key: "name", dir: "asc" },
   });
 
   const archiveMutation = useMutation({
     mutationFn: (id: number) => archiveService(id),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["services"] });
+      invalidate();
       setArchiveId(null);
     },
   });
 
-  const rows: any[] = data?.data ?? [];
 
   const columns: ColumnDef<any>[] = useMemo(
     () => [
@@ -208,6 +204,7 @@ export default function ServiceList() {
 
       <div className="p-6">
         <DataTable
+          server={server}
           tableKey="service-catalog"
           columns={columns}
           data={rows}
@@ -217,9 +214,9 @@ export default function ServiceList() {
           selection={{
             enable: true,
             resource: "services",
-            onChanged: () => qc.invalidateQueries({ queryKey: ["services"] }),
+            onChanged: () => invalidate(),
           }}
-          editing={{ resource: "services", onEdited: () => qc.invalidateQueries({ queryKey: ["services"] }) }}
+          editing={{ resource: "services", onEdited: () => invalidate() }}
           showDeleted={showDeleted}
           onToggleShowDeleted={setShowDeleted}
           toolbarExtra={

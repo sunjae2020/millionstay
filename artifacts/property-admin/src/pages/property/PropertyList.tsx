@@ -7,16 +7,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
-  useListProperties,
   useDeleteProperty,
-  getListPropertiesQueryKey,
-  type ListPropertiesParams,
   type PropertyListItem,
 } from "@workspace/api-client-react";
-import { useQueryClient } from "@tanstack/react-query";
 import { Plus, Search, Pencil, Trash2 } from "lucide-react";
 import { formatDate } from "@/lib/date";
-import { DataTable, ACTIONS_KEY, type ColumnDef } from "@/components/ui/data-table";
+import { DataTable, useServerList, ACTIONS_KEY, type ColumnDef } from "@/components/ui/data-table";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -28,28 +24,32 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 
+/** 서버가 정렬할 수 있는 컬럼(api-server routes/properties.ts 의 PROPERTY_SORT 와 1:1).
+ *  소유주명(owner_account_name)은 아직 서버 파생값이라 정렬 대상이 아니다. */
+const SORTABLE_KEYS = ["name", "address", "suburb_name", "approval_status", "created_at", "updated_at"];
+
 export default function PropertyList() {
   const { t } = useTranslation();
   const [search, setSearch] = useState("");
   const [approvalStatus, setApprovalStatus] = useState("");
   const [showDeleted, setShowDeleted] = useState(false);
   const [deleteId, setDeleteId] = useState<number | null>(null);
-  const qc = useQueryClient();
 
-  const params: ListPropertiesParams & { deleted?: string } = {
+  const filters = {
     search: search || undefined,
     approval_status: approvalStatus || undefined,
     ...(showDeleted ? { deleted: "only" } : {}),
   };
 
-  const { data: properties, isLoading } = useListProperties(params, {
-    query: { queryKey: getListPropertiesQueryKey(params) },
-  });
+  const { rows: properties, total, isLoading, server, invalidate } = useServerList<PropertyListItem>(
+    "/api/v1/properties",
+    { filters, sortableKeys: SORTABLE_KEYS, defaultSort: { key: "created_at", dir: "desc" } },
+  );
 
   const deleteMutation = useDeleteProperty({
     mutation: {
       onSuccess: () => {
-        qc.invalidateQueries({ queryKey: getListPropertiesQueryKey() });
+        invalidate();
         setDeleteId(null);
       },
     },
@@ -129,7 +129,7 @@ export default function PropertyList() {
     <Layout>
       <PageHeader
         title={t("nav.property")}
-        subtitle={`${properties?.length ?? 0} ${t("common.total")}`}
+        subtitle={`${total} ${t("common.total")}`}
         actions={
           <Link href="/property/properties/new">
             <Button size="sm" className="gap-1.5">
@@ -142,7 +142,8 @@ export default function PropertyList() {
         <DataTable
           tableKey="properties"
           columns={columns}
-          data={properties ?? []}
+          data={properties}
+          server={server}
           isLoading={isLoading}
           rowKey={(prop) => prop.id}
           defaultSort={{ key: "name", dir: "asc" }}
@@ -150,7 +151,7 @@ export default function PropertyList() {
           selection={{
             enable: true,
             resource: "properties",
-            onChanged: () => qc.invalidateQueries({ queryKey: getListPropertiesQueryKey() }),
+            onChanged: () => invalidate(),
           }}
           showDeleted={showDeleted}
           onToggleShowDeleted={setShowDeleted}

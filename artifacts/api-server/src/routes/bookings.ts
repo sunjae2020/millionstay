@@ -1,6 +1,7 @@
 import { Router, type IRouter } from "express";
 import { DEFAULT_CURRENCY } from "../lib/currency";
-import { eq, ne, ilike, and, between, gte, lte, SQL, or, isNull, inArray } from "drizzle-orm";
+import { eq, ne, ilike, and, between, gte, lte, SQL, or, isNull, inArray, sql, asc, desc } from "drizzle-orm";
+import { parseListPage, parseSortParams, buildOrderBy, sendList, type SortMap } from "../utils/pagination.js";
 import { periodOverlapConditions, yearOverlapConditions, distinctYears, keywordCondition } from "../lib/listSearch";
 import {
   db,
@@ -323,6 +324,34 @@ async function unblockDatesForBooking(spaceId: number, checkIn: string, checkOut
   }
 }
 
+/** 정렬 허용 컬럼 — BookingList 의 SORTABLE_KEYS 와 1:1. 금액은 계약과 같은 월 환산액. */
+const BOOKING_SORT: SortMap = {
+  booking_ref: bookingsTable.booking_ref,
+  check_in_date: bookingsTable.check_in_date,
+  check_out_date: bookingsTable.check_out_date,
+  stay_nights: bookingsTable.stay_nights,
+  booking_status: bookingsTable.booking_status,
+  booking_source: bookingsTable.booking_source,
+  created_at: bookingsTable.created_at,
+  updated_at: bookingsTable.updated_at,
+  space_name: sql`(select sp.name from spaces sp where sp.id = ${bookingsTable.space_id})`,
+  guest: sql`coalesce(
+      (select a.name from accounts a where a.id = ${bookingsTable.account_id}),
+      (select coalesce(c.first_name, '') || ' ' || coalesce(c.last_name, '')
+         from contacts c where c.id = ${bookingsTable.contact_id})
+    )`,
+  amount: sql`(case
+      when ${bookingsTable.lease_mode} = 'long'
+        or (${bookingsTable.lease_mode} is null and coalesce(${bookingsTable.monthly_rent}, 0) > 0)
+        then coalesce(${bookingsTable.monthly_rent}, 0)
+      else coalesce(${bookingsTable.rate_amount}, ${bookingsTable.agreed_weekly_rate}, 0)
+        * (case ${bookingsTable.rate_period}
+             when 'daily' then 365.0 / 12
+             when 'monthly' then 1
+             else 52.0 / 12 end)
+    end)`,
+};
+
 router.get("/v1/bookings", async (req, res): Promise<void> => {
   const parsed = ListBookingsQueryParams.safeParse(req.query);
   if (!parsed.success) { res.status(400).json({ error: parsed.error.message }); return; }
@@ -340,28 +369,46 @@ router.get("/v1/bookings", async (req, res): Promise<void> => {
   conditions.push(...periodOverlapConditions(bookingsTable.check_in_date, bookingsTable.check_out_date, date_from, date_to));
   conditions.push(...yearOverlapConditions(bookingsTable.check_in_date, bookingsTable.check_out_date, year));
 
-  const rows = await db
-    .select()
-    .from(bookingsTable)
-    .where(and(...conditions))
-    .orderBy(bookingsTable.created_at);
+  // 임대 유형(장기/단기). 백필 전 행은 lease_mode 가 NULL 이라 월세 유무로 갈음한다
+  // (계약 목록과 같은 규칙). 예전에는 프런트가 로드된 행에서 걸렀다.
+  const leaseMode = String((req.query as Record<string, string>).lease_mode ?? "").trim();
+  if (leaseMode === "long") {
+    conditions.push(or(eq(bookingsTable.lease_mode, "long"),
+      and(isNull(bookingsTable.lease_mode), sql`coalesce(${bookingsTable.monthly_rent}, 0) > 0`))!);
+  } else if (leaseMode === "short") {
+    conditions.push(or(eq(bookingsTable.lease_mode, "short"),
+      and(isNull(bookingsTable.lease_mode), sql`coalesce(${bookingsTable.monthly_rent}, 0) = 0`))!);
+  }
 
-  const enriched = await buildBookingResponses(rows);
-
-  let filtered = enriched;
+  // 검색은 SQL 단계에서 끝낸다. 예전처럼 enrich 후 배열을 거르면 서버 페이징이
+  // "현재 페이지 안에서만" 검색되는 꼴이 된다.
   if (search) {
-    const s = search.toLowerCase();
-    filtered = enriched.filter(
-      (b) =>
-        b.booking_ref.toLowerCase().includes(s) ||
-        (b.account_name ?? "").toLowerCase().includes(s) ||
-        (b.contact_name ?? "").toLowerCase().includes(s) ||
-        // 공간(호수)으로도 찾을 수 있어야 한다 — 목록에 함께 보이는 축이다.
-        ((b as { space_name?: string | null }).space_name ?? "").toLowerCase().includes(s)
+    const like = `%${search}%`;
+    conditions.push(
+      or(
+        ilike(bookingsTable.booking_ref, like),
+        sql`exists (select 1 from accounts a where a.id = ${bookingsTable.account_id} and a.name ilike ${like})`,
+        sql`exists (select 1 from contacts c where c.id = ${bookingsTable.contact_id}
+              and (coalesce(c.first_name, '') || ' ' || coalesce(c.last_name, '')) ilike ${like})`,
+        sql`exists (select 1 from spaces sp where sp.id = ${bookingsTable.space_id} and sp.name ilike ${like})`,
+      )!,
     );
   }
 
-  res.json(filtered);
+  const where = and(...conditions);
+  const { limit, offset, page } = parseListPage(req.query);
+  const sort = parseSortParams(req.query, BOOKING_SORT);
+
+  const [rows, [{ count }]] = await Promise.all([
+    db.select().from(bookingsTable)
+      .where(where)
+      .orderBy(...buildOrderBy(BOOKING_SORT, sort, bookingsTable.id, [asc(bookingsTable.created_at)]))
+      .limit(limit).offset(offset),
+    db.select({ count: sql<number>`count(*)::int` }).from(bookingsTable).where(where),
+  ]);
+
+  const enriched = await buildBookingResponses(rows);
+  sendList(res, enriched, count ?? 0, { limit, offset, page });
 });
 
 /** 연도 선택지(체크인 기준). "/:id" 보다 먼저 선언해야 한다. */

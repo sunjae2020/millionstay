@@ -136,6 +136,8 @@ export function PaymentScheduleCard({
   const invalidate = () => {
     qc.invalidateQueries({ queryKey: ["payment-schedule", contractId] });
     qc.invalidateQueries({ queryKey: ["transactions"] });
+    // 거래 목록은 서버 페이징 훅(useServerList)이 API 경로를 키로 쓴다.
+    qc.invalidateQueries({ queryKey: ["/api/v1/transactions"] });
   };
 
   const generate = useMutation({

@@ -6,7 +6,7 @@
 // applicant is redirected to /sign/:token to complete the signature. Matching
 // is admin-brokered (Phase 5), so no portal login is created here.
 import { Router, type IRouter } from "express";
-import { and, desc, eq, ilike, isNull, or, sql } from "drizzle-orm";
+import { and, desc, eq, ilike, isNull, or, sql, asc } from "drizzle-orm";
 import { keywordCondition } from "../lib/listSearch";
 import { db, homestayStudentRequestsTable, homestayHostApplicationsTable, homestayHostAvailabilityTable, accountsTable, usersTable } from "@workspace/db";
 import { generateStudentRef } from "../lib/homestayRef.js";
@@ -19,7 +19,7 @@ import { logAction } from "../utils/auditLog.js";
 import { rankHosts } from "../lib/homestay/matching.js";
 import { attachRationales } from "../lib/homestay/matchRationale.js";
 import { sendStudentPortalInvite } from "../lib/homestay/studentPortalInvite.js";
-import { parsePageParams, pageMeta } from "../utils/pagination.js";
+import { parseListPage, pageMeta, parseSortParams, buildOrderBy, type SortMap } from "../utils/pagination.js";
 import { formatFirstName, formatLastName, formatPersonName } from "../lib/nameFormat.js";
 
 const STUDENT_ENTITY = "homestay_student_request";
@@ -167,10 +167,22 @@ homestayStudentPublicRouter.post("/v1/public/homestay-student-requests", async (
 export const homestayStudentAdminRouter: IRouter = Router();
 
 // List requests, newest first. Optional ?q= (ref/name/email) and ?status=.
+/** 정렬 허용 컬럼 — HomestayStudentRequests 의 SORTABLE_KEYS 와 1:1. */
+const STUDENT_REQUEST_SORT: SortMap = {
+  request_ref: homestayStudentRequestsTable.request_ref,
+  student: sql`coalesce(${homestayStudentRequestsTable.student_last_name}, '') || ' ' || coalesce(${homestayStudentRequestsTable.student_first_name}, '')`,
+  student_email: homestayStudentRequestsTable.student_email,
+  status: homestayStudentRequestsTable.status,
+  submitted: homestayStudentRequestsTable.created_at,
+  created_at: homestayStudentRequestsTable.created_at,
+  updated_at: homestayStudentRequestsTable.updated_at,
+};
+
 homestayStudentAdminRouter.get("/v1/homestay-student-requests", async (req, res): Promise<void> => {
   try {
     const { status } = req.query as Record<string, string>;
-    const { limit, offset, page, q } = parsePageParams(req.query);
+    const { limit, offset, page, q } = parseListPage(req.query);
+    const sort = parseSortParams(req.query, STUDENT_REQUEST_SORT);
     const conds = [isNull(homestayStudentRequestsTable.deleted_at)];
     if (status && status !== "all") conds.push(eq(homestayStudentRequestsTable.status, status));
     if (q) conds.push(keywordCondition(
@@ -192,9 +204,10 @@ homestayStudentAdminRouter.get("/v1/homestay-student-requests", async (req, res)
       .where(whereExpr);
     const rows = await db.select().from(homestayStudentRequestsTable)
       .where(whereExpr)
-      .orderBy(desc(homestayStudentRequestsTable.created_at))
+      .orderBy(...buildOrderBy(STUDENT_REQUEST_SORT, sort, homestayStudentRequestsTable.id, [desc(homestayStudentRequestsTable.created_at)]))
       .limit(limit)
       .offset(offset);
+    res.setHeader("X-Total-Count", String(total ?? 0));
     res.json({ success: true, data: rows, meta: pageMeta(total ?? 0, { limit, offset, page }) });
   } catch (e) {
     console.error("[homestay-student-admin] list failed:", e);

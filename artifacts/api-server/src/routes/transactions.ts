@@ -1,5 +1,6 @@
 import { Router, type IRouter } from "express";
-import { and, desc, eq, inArray, isNull, sql, type SQL } from "drizzle-orm";
+import { and, desc, eq, inArray, isNull, sql, type SQL, asc } from "drizzle-orm";
+import { parseListPage, parseSortParams, buildOrderBy, type SortMap } from "../utils/pagination.js";
 import { z } from "zod";
 import {
   db,
@@ -156,6 +157,22 @@ async function enrichTransactions(rows: TxnRow[]) {
 }
 
 // ── 목록 ────────────────────────────────────────────────────────────────────
+/** 정렬 허용 컬럼 — TransactionList 의 SORTABLE_KEYS 와 1:1. */
+const TRANSACTION_SORT: SortMap = {
+  txn_ref: transactionsTable.txn_ref,
+  txn_date: transactionsTable.txn_date,
+  txn_type: transactionsTable.txn_type,
+  counterparty_display: transactionsTable.counterparty_name,
+  amount: sql`${transactionsTable.amount}::numeric`,
+  status: transactionsTable.status,
+  gl_account_code: transactionsTable.gl_account_code,
+  created_at: transactionsTable.created_at,
+  updated_at: transactionsTable.updated_at,
+  contract_ref: sql`(select c.contract_ref from contracts c where c.id = ${transactionsTable.contract_id})`,
+  invoice_ref: sql`(select i.invoice_ref from invoices i where i.id = ${transactionsTable.invoice_id})`,
+  bank_account_name: sql`(select ba.name from bank_accounts ba where ba.id = ${transactionsTable.bank_account_id})`,
+};
+
 router.get("/v1/transactions", async (req, res): Promise<void> => {
   try {
     const q = String(req.query.q ?? "").trim();
@@ -215,8 +232,12 @@ router.get("/v1/transactions", async (req, res): Promise<void> => {
 
     // 서버 페이지네이션. 예전에는 `limit(500)` 하드 상한이었는데, 501번째 거래부터는
     // 화면에서 아예 사라진다 — 운영 몇 달이면 닿는 수치라 실질적인 데이터 유실이었다.
-    const page = Math.max(1, Number(req.query.page) || 1);
-    const limit = Math.min(500, Math.max(1, Number(req.query.limit) || 100));
+    // page/limit(기존) 과 limit/offset(useServerList) 을 모두 받는다. 페이징
+    // 파라미터가 아예 없으면 종전대로 100건 — 전량 반환은 원장 규모상 위험하다.
+    const { limit, offset, page } = parseListPage(req.query, {
+      defaultLimit: 100, maxLimit: 500, unpagedLimit: 100,
+    });
+    const sort = parseSortParams(req.query, TRANSACTION_SORT);
     const where = and(...conditions);
 
     // 요약과 총건수는 **페이지가 아니라 필터 전체**를 대상으로 집계한다. 페이지 합계를
@@ -225,9 +246,10 @@ router.get("/v1/transactions", async (req, res): Promise<void> => {
       db.select()
         .from(transactionsTable)
         .where(where)
-        .orderBy(desc(transactionsTable.txn_date), desc(transactionsTable.id))
+        .orderBy(...buildOrderBy(TRANSACTION_SORT, sort, transactionsTable.id,
+          [desc(transactionsTable.txn_date), desc(transactionsTable.id)]))
         .limit(limit)
-        .offset((page - 1) * limit),
+        .offset(offset),
       db.select({
         total: sql<number>`count(*)::int`,
         // ⚠️ 유보(retained) leg 은 집계에서 뺀다. 원본 입금이 이미 그 돈을 세었고,
@@ -242,6 +264,7 @@ router.get("/v1/transactions", async (req, res): Promise<void> => {
     const income = round2(Number(agg?.income ?? 0));
     const expense = round2(Number(agg?.expense ?? 0));
 
+    res.setHeader("X-Total-Count", String(agg?.total ?? 0));
     res.json({
       success: true,
       data,

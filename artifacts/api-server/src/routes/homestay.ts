@@ -2,7 +2,7 @@ import { Router, type IRouter } from "express";
 import { DEFAULT_CURRENCY } from "../lib/currency";
 import bcrypt from "bcryptjs";
 import multer from "multer";
-import { eq, and, isNull, desc, ilike, or, inArray, sql } from "drizzle-orm";
+import { eq, and, isNull, desc, ilike, or, inArray, sql, asc } from "drizzle-orm";
 import { keywordCondition } from "../lib/listSearch";
 import {
   db,
@@ -29,7 +29,7 @@ import { isCloudinaryConfigured, uploadPrivateToCloudinary, generateSignedUrl, c
 import { logAction } from "../utils/auditLog.js";
 import { calcRetentionDate } from "../lib/retention";
 import { decodeUploadFilename } from "../lib/uploadFilename.js";
-import { parsePageParams, pageMeta } from "../utils/pagination.js";
+import { parseListPage, pageMeta, parseSortParams, buildOrderBy, type SortMap } from "../utils/pagination.js";
 
 const HOMESTAY_ENTITY = "homestay_host_application";
 
@@ -484,10 +484,22 @@ homestayPortalRouter.post("/v1/homestay/submit", async (req, res): Promise<void>
    ═══════════════════════════════════════════════════════════════════════════ */
 export const homestayAdminRouter: IRouter = Router();
 
+/** 정렬 허용 컬럼 — HomestayApplications 의 SORTABLE_KEYS 와 1:1. */
+const HOMESTAY_APP_SORT: SortMap = {
+  application_ref: homestayHostApplicationsTable.application_ref,
+  host: sql`coalesce(${homestayHostApplicationsTable.last_name}, '') || ' ' || coalesce(${homestayHostApplicationsTable.first_name}, '')`,
+  email: homestayHostApplicationsTable.email,
+  suburb: homestayHostApplicationsTable.suburb,
+  status: homestayHostApplicationsTable.status,
+  created_at: homestayHostApplicationsTable.created_at,
+  updated_at: homestayHostApplicationsTable.updated_at,
+};
+
 homestayAdminRouter.get("/v1/homestay-applications", async (req, res): Promise<void> => {
   try {
     const { status } = req.query as Record<string, string>;
-    const { limit, offset, page, q } = parsePageParams(req.query);
+    const { limit, offset, page, q } = parseListPage(req.query);
+    const sort = parseSortParams(req.query, HOMESTAY_APP_SORT);
     const conds = [isNull(homestayHostApplicationsTable.deleted_at)];
     if (status && status !== "all") conds.push(eq(homestayHostApplicationsTable.status, status));
     if (q) conds.push(keywordCondition(
@@ -506,9 +518,10 @@ homestayAdminRouter.get("/v1/homestay-applications", async (req, res): Promise<v
       .where(whereExpr);
     const rows = await db.select().from(homestayHostApplicationsTable)
       .where(whereExpr)
-      .orderBy(desc(homestayHostApplicationsTable.created_at))
+      .orderBy(...buildOrderBy(HOMESTAY_APP_SORT, sort, homestayHostApplicationsTable.id, [desc(homestayHostApplicationsTable.created_at)]))
       .limit(limit)
       .offset(offset);
+    res.setHeader("X-Total-Count", String(total ?? 0));
     res.json({ success: true, data: rows, meta: pageMeta(total ?? 0, { limit, offset, page }) });
   } catch (e) {
     console.error("[homestay-admin] list failed:", e);

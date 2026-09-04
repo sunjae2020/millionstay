@@ -1,18 +1,13 @@
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link, useLocation } from "wouter";
-import {
-  useListWorkOrders,
-  getListWorkOrdersQueryKey,
-  type ListWorkOrdersParams,
-} from "@workspace/api-client-react";
 import { Layout } from "@/components/Layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Plus, Pencil, FileSpreadsheet } from "lucide-react";
 import { RepairBillingDialog } from "@/components/RepairBillingDialog";
-import { DataTable, ACTIONS_KEY, type ColumnDef } from "@/components/ui/data-table";
+import { DataTable, useServerList, ACTIONS_KEY, type ColumnDef } from "@/components/ui/data-table";
 import { ALL, SearchBox, DateRangeFilter, FacetSelect, ResetFiltersButton, useListFacets, useYearLabel } from "@/components/list-filters";
 import { useQueryClient } from "@tanstack/react-query";
 import { useWorkOrderCategoryLabel } from "@/lib/workOrderCategories";
@@ -46,6 +41,13 @@ const priorityColors: Record<string, string> = {
   Urgent: "bg-red-100 text-red-600",
 };
 
+/** 서버가 정렬할 수 있는 컬럼(api-server routes/work-orders.ts 의 WORK_ORDER_SORT 와 1:1).
+ *  담당자·서비스호스트·청구금액은 서버 파생값이라 정렬 대상이 아니다. */
+const SORTABLE_KEYS = [
+  "order_ref", "title", "property_name", "space_name", "reported_at", "scheduled_at",
+  "category", "priority", "status", "created_at", "updated_at",
+];
+
 export default function WorkOrderList() {
   const { t } = useTranslation();
   const [, navigate] = useLocation();
@@ -64,7 +66,7 @@ export default function WorkOrderList() {
   // ?space_id=N — arriving from a space's 하자보수 tab, scoped to that unit.
   const spaceIdFilter = new URLSearchParams(window.location.search).get("space_id");
 
-  const params: ListWorkOrdersParams & Record<string, string | undefined> = {
+  const filters = {
     q: q || undefined,
     ...(spaceIdFilter ? { space_id: spaceIdFilter } : {}),
     status: status === ALL ? undefined : status,
@@ -83,9 +85,10 @@ export default function WorkOrderList() {
     setQ(""); setStatus(ALL); setPriority(ALL); setCategory(ALL); setYear(ALL); setDateFrom(""); setDateTo("");
   };
 
-  const { data: workOrdersRaw = [], isLoading } = useListWorkOrders(params, {
-    query: { queryKey: getListWorkOrdersQueryKey(params) },
-  });
+  const { rows: workOrdersRaw, isLoading, server, invalidate } = useServerList<any>(
+    "/api/v1/work-orders",
+    { filters, sortableKeys: SORTABLE_KEYS, defaultSort: { key: "created_at", dir: "desc" } },
+  );
 
   const columns: ColumnDef<any>[] = useMemo(
     () => [
@@ -215,13 +218,14 @@ export default function WorkOrderList() {
           tableKey="work-orders"
           columns={columns}
           data={workOrdersRaw}
+          server={server}
           isLoading={isLoading}
           rowKey={(wo) => wo.id}
           emptyText={t("workorder.no_workorders")}
           selection={{
             enable: true,
             resource: "work-orders",
-            onChanged: () => qc.invalidateQueries({ queryKey: getListWorkOrdersQueryKey() }),
+            onChanged: () => invalidate(),
           }}
           showDeleted={showDeleted}
           onToggleShowDeleted={setShowDeleted}

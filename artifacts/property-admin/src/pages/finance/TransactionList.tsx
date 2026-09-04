@@ -18,7 +18,7 @@ import {
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import { DataTable, ACTIONS_KEY, type ColumnDef } from "@/components/ui/data-table";
+import { DataTable, useServerList, ACTIONS_KEY, type ColumnDef } from "@/components/ui/data-table";
 import { LookupSelect } from "@/components/LookupSelect";
 import { useDocumentRowActions } from "@/components/DocumentRowActions";
 import { apiFetch } from "@/lib/apiFetch";
@@ -75,6 +75,13 @@ interface Transaction {
   journal_entry_id: number | null;
   workflow_status: string;
 }
+
+/** 서버가 정렬할 수 있는 컬럼(api-server routes/transactions.ts 의 TRANSACTION_SORT 와 1:1). */
+const SORTABLE_KEYS = [
+  "txn_ref", "txn_date", "txn_type", "counterparty_display", "amount",
+  "contract_ref", "invoice_ref", "bank_account_name", "gl_account_code", "status",
+  "created_at", "updated_at",
+];
 
 interface TxnListResponse {
   data: Transaction[];
@@ -142,8 +149,7 @@ export default function TransactionList() {
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
   const [showDeleted, setShowDeleted] = useState(false);
-  const [page, setPage] = useState(1);
-  const [limit, setLimit] = useState(100);
+
   const [dialogOpen, setDialogOpen] = useState(false);
   const [form, setForm] = useState<FormState>(emptyForm);
 
@@ -153,38 +159,32 @@ export default function TransactionList() {
     return Number.isFinite(id) && id > 0 ? id : null;
   }, [search]);
 
-  const params = useMemo(() => {
-    const p = new URLSearchParams();
-    if (q) p.set("q", q);
-    if (type !== "_all") p.set("txn_type", type);
-    if (status !== "_all") p.set("status", status);
-    if (from) p.set("from", from);
-    if (to) p.set("to", to);
-    if (scheduleFilter) p.set("payment_schedule_id", String(scheduleFilter));
-    if (showDeleted) p.set("deleted", "only");
-    p.set("page", String(page));
-    p.set("limit", String(limit));
-    return p.toString();
-  }, [q, type, status, from, to, scheduleFilter, showDeleted, page, limit]);
+  const filters = {
+    q: q || undefined,
+    txn_type: type !== "_all" ? type : undefined,
+    status: status !== "_all" ? status : undefined,
+    from: from || undefined,
+    to: to || undefined,
+    payment_schedule_id: scheduleFilter ?? undefined,
+    deleted: showDeleted ? "only" : undefined,
+  };
 
-  // 필터가 바뀌면 1페이지로 되돌린다 — 3페이지를 보던 중 필터를 좁히면 결과가
-  // 한 페이지뿐인데 빈 화면이 나온다.
-  useEffect(() => { setPage(1); }, [q, type, status, from, to, scheduleFilter, showDeleted, limit]);
+  // 페이지 이동·정렬·건수는 DataTable 이 server prop 으로 직접 다룬다(예전의
+  // 별도 페이지 버튼 + defaultPageSize 이중 페이징을 대체).
+  const { rows, isLoading, server, meta: rawMeta, invalidate: invalidateList } =
+    useServerList<Transaction>("/api/v1/transactions", {
+      filters,
+      sortableKeys: SORTABLE_KEYS,
+      defaultSort: { key: "txn_date", dir: "desc" },
+      defaultPageSize: 100,
+    });
 
-  const { data, isLoading } = useQuery<TxnListResponse>({
-    queryKey: ["transactions", params],
-    queryFn: async () => {
-      const res = await apiFetch(`/api/v1/transactions?${params}`);
-      if (!res.ok) throw new Error("Failed to load transactions");
-      return res.json();
-    },
-  });
-
-  const rows = data?.data ?? [];
-  const meta = data?.meta;
+  // 합계 타일은 서버가 **필터 전체** 기준으로 계산해 meta 로 실어 보낸다.
+  const meta = rawMeta as TxnListResponse["meta"] | undefined;
   const money = (n: number, cur?: string) => formatMoney(n, cur || brand.currency, brand.currencyPosition);
 
   const invalidate = () => {
+    invalidateList();
     qc.invalidateQueries({ queryKey: ["transactions"] });
     qc.invalidateQueries({ queryKey: ["payment-schedule"] });
   };
@@ -424,7 +424,7 @@ export default function TransactionList() {
           columns={columns}
           data={rows}
           isLoading={isLoading}
-          defaultPageSize={limit}
+          server={server}
           rowKey={(r) => r.id}
           emptyText={t("transaction.empty")}
           selection={{ enable: true, resource: "transactions", onChanged: invalidate }}
@@ -460,31 +460,6 @@ export default function TransactionList() {
               <DateInput value={from} onChange={setFrom} className="w-40" />
               <DateInput value={to} onChange={setTo} className="w-40" min={from || undefined} />
 
-              {/* 서버 페이지 이동. DataTable 자체 페이징은 defaultPageSize={limit} 로
-                  한 페이지에 다 담아, 두 겹으로 나뉘어 보이지 않게 한다. */}
-              <div className="flex items-center gap-1 ml-auto">
-                <span className="text-xs text-muted-foreground tabular-nums">
-                  {t("transaction.page_of", { page: meta?.page ?? 1, pages: meta?.pages ?? 1, total: meta?.total ?? 0 })}
-                </span>
-                <Button variant="outline" size="sm" className="h-8 w-8 p-0"
-                  disabled={(meta?.page ?? 1) <= 1}
-                  onClick={() => setPage((p) => Math.max(1, p - 1))}>
-                  <ChevronLeft className="h-4 w-4" />
-                </Button>
-                <Button variant="outline" size="sm" className="h-8 w-8 p-0"
-                  disabled={(meta?.page ?? 1) >= (meta?.pages ?? 1)}
-                  onClick={() => setPage((p) => p + 1)}>
-                  <ChevronRight className="h-4 w-4" />
-                </Button>
-                <Select value={String(limit)} onValueChange={(v) => setLimit(Number(v))}>
-                  <SelectTrigger className="w-24 h-8"><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    {[50, 100, 200, 500].map((n) => (
-                      <SelectItem key={n} value={String(n)}>{t("transaction.per_page", { n })}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
             </div>
           }
         />

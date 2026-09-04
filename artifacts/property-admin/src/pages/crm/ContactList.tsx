@@ -8,14 +8,11 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import {
-  useListContacts,
   useDeleteContact,
-  getListContactsQueryKey,
-  type ListContactsParams,
+  type ListContactsQueryResult,
 } from "@workspace/api-client-react";
-import { useQueryClient } from "@tanstack/react-query";
 import { Plus, Search, Pencil, Trash2, Globe, AlertTriangle, User } from "lucide-react";
-import { DataTable, ACTIONS_KEY, type ColumnDef } from "@/components/ui/data-table";
+import { DataTable, useServerList, ACTIONS_KEY, type ColumnDef } from "@/components/ui/data-table";
 import {
   AlertDialog, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
@@ -23,6 +20,14 @@ import {
 import { useAuth } from "@/contexts/AuthContext";
 import { apiFetch } from "@/lib/apiFetch";
 import { formatPersonName, personSortKey, formatPersonLabel, formatPhone } from "@/lib/nameFormat";
+
+type ContactRow = ListContactsQueryResult[number];
+
+/** 서버가 정렬할 수 있는 컬럼(api-server routes/contacts.ts 의 CONTACT_SORT 와 1:1). */
+const SORTABLE_KEYS = [
+  "name", "email", "mobile_number", "nationality", "portal_enabled", "status",
+  "created_at", "updated_at",
+];
 
 export default function ContactList() {
   const { t } = useTranslation();
@@ -33,21 +38,21 @@ export default function ContactList() {
   const [showDeleted, setShowDeleted] = useState(false);
   const [deleteId, setDeleteId] = useState<number | null>(null);
   const [isPermanentDeleting, setIsPermanentDeleting] = useState(false);
-  const qc = useQueryClient();
 
-  const params: ListContactsParams & { deleted?: string } = {
+  const filters = {
     search: search || undefined,
     status: statusFilter || undefined,
     ...(showDeleted ? { deleted: "only" } : {}),
   };
-  const { data: contacts, isLoading } = useListContacts(params, {
-    query: { queryKey: getListContactsQueryKey(params) },
-  });
+  const { rows: contacts, total, isLoading, server, invalidate } = useServerList<ContactRow>(
+    "/api/v1/contacts",
+    { filters, sortableKeys: SORTABLE_KEYS, defaultSort: { key: "name", dir: "asc" } },
+  );
 
   const archiveMutation = useDeleteContact({
     mutation: {
       onSuccess: () => {
-        qc.invalidateQueries({ queryKey: getListContactsQueryKey() });
+        invalidate();
         setDeleteId(null);
       },
     },
@@ -58,14 +63,13 @@ export default function ContactList() {
     setIsPermanentDeleting(true);
     try {
       await apiFetch(`/api/v1/contacts/${deleteId}?permanent=true`, { method: "DELETE" });
-      qc.invalidateQueries({ queryKey: getListContactsQueryKey() });
+      invalidate();
       setDeleteId(null);
     } finally {
       setIsPermanentDeleting(false);
     }
   };
 
-  type ContactRow = NonNullable<typeof contacts>[number];
   const columns: ColumnDef<ContactRow>[] = useMemo(
     () => [
       {
@@ -165,7 +169,7 @@ export default function ContactList() {
     <Layout>
       <PageHeader
         title={t("nav.contact")}
-        subtitle={`${contacts?.length ?? 0} ${t("common.total")}`}
+        subtitle={`${total} ${t("common.total")}`}
         actions={
           <Link href="/crm/contacts/new">
             <Button size="sm" className="gap-1.5"><Plus className="h-4 w-4" /> {t("contact.new")}</Button>
@@ -177,6 +181,7 @@ export default function ContactList() {
           tableKey="contacts"
           columns={columns}
           data={contacts}
+          server={server}
           isLoading={isLoading}
           rowKey={(c) => c.id}
           defaultSort={{ key: "name", dir: "asc" }}
@@ -184,9 +189,9 @@ export default function ContactList() {
           selection={{
             enable: true,
             resource: "contacts",
-            onChanged: () => qc.invalidateQueries({ queryKey: getListContactsQueryKey() }),
+            onChanged: () => invalidate(),
           }}
-          editing={{ resource: "contacts", onEdited: () => qc.invalidateQueries({ queryKey: getListContactsQueryKey() }) }}
+          editing={{ resource: "contacts", onEdited: () => invalidate() }}
           showDeleted={showDeleted}
           onToggleShowDeleted={setShowDeleted}
           toolbarExtra={

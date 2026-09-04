@@ -1,7 +1,8 @@
 import { Router } from "express";
 import { DEFAULT_CURRENCY } from "../lib/currency";
 import { db, invoicesTable, invoiceLineItemsTable, bookingsTable, contractsTable, accountsTable, emailLogsTable, paymentInfoTable } from "@workspace/db";
-import { eq, ilike, and, asc, isNull, inArray } from "drizzle-orm";
+import { eq, ilike, and, asc, isNull, inArray, sql, desc } from "drizzle-orm";
+import { parseListPage, parseSortParams, buildOrderBy, sendList, type SortMap } from "../utils/pagination.js";
 import { z } from "zod";
 import { logAction } from "../utils/auditLog";
 import { keywordCondition, accountIdsByName, dateRangeConditions, yearConditions, distinctYears, columnMatches } from "../lib/listSearch";
@@ -203,6 +204,19 @@ async function resolveInvoiceBankAccount(paymentInfoId: number | null) {
   };
 }
 
+/** 정렬 허용 컬럼 — InvoiceList 의 SORTABLE_KEYS 와 1:1. */
+const INVOICE_SORT: SortMap = {
+  invoice_ref: invoicesTable.invoice_ref,
+  status: invoicesTable.status,
+  amount: sql`${invoicesTable.amount}::numeric`,
+  due_date: invoicesTable.due_date,
+  created_at: invoicesTable.created_at,
+  updated_at: invoicesTable.updated_at,
+  account_name: sql`(select a.name from accounts a where a.id = ${invoicesTable.account_id})`,
+  booking_ref: sql`(select b.booking_ref from bookings b where b.id = ${invoicesTable.booking_id})`,
+  contract_ref: sql`(select c.contract_ref from contracts c where c.id = ${invoicesTable.contract_id})`,
+};
+
 router.get("/v1/invoices", async (req, res): Promise<void> => {
   const {
     q, status, booking_id, contract_id, account_id,
@@ -229,11 +243,18 @@ router.get("/v1/invoices", async (req, res): Promise<void> => {
   // 청구서에 묶인 공간별 인보이스만 조회한다.
   if (invoice_kind) conditions.push(eq(invoicesTable.invoice_kind, invoice_kind));
   if (parent_invoice_id) conditions.push(eq(invoicesTable.parent_invoice_id, Number(parent_invoice_id)));
-  const rows = await db.select().from(invoicesTable)
-    .where(and(...conditions))
-    .orderBy(invoicesTable.id);
+  const where = and(...conditions);
+  const { limit, offset, page } = parseListPage(req.query);
+  const sort = parseSortParams(req.query, INVOICE_SORT);
+  const [rows, [{ count }]] = await Promise.all([
+    db.select().from(invoicesTable)
+      .where(where)
+      .orderBy(...buildOrderBy(INVOICE_SORT, sort, invoicesTable.id))
+      .limit(limit).offset(offset),
+    db.select({ count: sql<number>`count(*)::int` }).from(invoicesTable).where(where),
+  ]);
   const result = await enrichInvoices(rows);
-  res.json(result);
+  sendList(res, result, count ?? 0, { limit, offset, page });
 });
 
 /** 연도 선택지. 목록이 필터로 좁혀져도 선택지가 사라지지 않게 전체에서 뽑는다. "/:id" 보다 먼저. */

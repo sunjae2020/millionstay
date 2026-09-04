@@ -12,7 +12,7 @@
 // strings; wrap writes in String(), reads in Number().
 import { Router, type IRouter } from "express";
 import { DEFAULT_CURRENCY } from "../lib/currency";
-import { and, desc, eq, isNull, ilike, sql } from "drizzle-orm";
+import { and, desc, eq, isNull, ilike, sql, asc } from "drizzle-orm";
 import { columnMatches } from "../lib/listSearch";
 import {
   db,
@@ -36,7 +36,7 @@ import { logAction } from "../utils/auditLog.js";
 import { getStripe } from "./stripe.js";
 import { getHomestayBillingSettings, saveHomestayBillingSettings, type HomestayBillingSettings } from "../lib/homestay/billingSettings.js";
 import { resolveTemplate, renderString } from "../lib/documents/templateEngine.js";
-import { parsePageParams, pageMeta } from "../utils/pagination.js";
+import { parseListPage, pageMeta, parseSortParams, buildOrderBy, type SortMap } from "../utils/pagination.js";
 import { createBookingForPlacement } from "../lib/homestay/placementBooking.js";
 import { createPlacementInvoice, createExtensionInvoice } from "../lib/homestay/placementInvoice.js";
 import { createCommissionForPlacement, approveCommission, markCommissionPaid } from "../lib/homestay/commission.js";
@@ -102,10 +102,20 @@ async function enrich(p: typeof homestayPlacementsTable.$inferSelect) {
 }
 
 // ── List ─────────────────────────────────────────────────────────────────────
+/** 정렬 허용 컬럼 — HomestayPlacements 의 SORTABLE_KEYS 와 1:1. */
+const PLACEMENT_SORT: SortMap = {
+  placement_ref: homestayPlacementsTable.placement_ref,
+  status: homestayPlacementsTable.status,
+  move_in_date: homestayPlacementsTable.move_in_date,
+  created_at: homestayPlacementsTable.created_at,
+  updated_at: homestayPlacementsTable.updated_at,
+};
+
 homestayPlacementAdminRouter.get("/v1/homestay-placements", async (req, res): Promise<void> => {
   try {
     const { status } = req.query as Record<string, string>;
-    const { limit, offset, page, q } = parsePageParams(req.query);
+    const { limit, offset, page, q } = parseListPage(req.query);
+    const sort = parseSortParams(req.query, PLACEMENT_SORT);
     const conds = [isNull(homestayPlacementsTable.deleted_at)];
     if (status && status !== "all") conds.push(eq(homestayPlacementsTable.status, status));
     if (q) conds.push(columnMatches(homestayPlacementsTable.placement_ref, q));
@@ -116,10 +126,11 @@ homestayPlacementAdminRouter.get("/v1/homestay-placements", async (req, res): Pr
       .where(whereExpr);
     const rows = await db.select().from(homestayPlacementsTable)
       .where(whereExpr)
-      .orderBy(desc(homestayPlacementsTable.created_at))
+      .orderBy(...buildOrderBy(PLACEMENT_SORT, sort, homestayPlacementsTable.id, [desc(homestayPlacementsTable.created_at)]))
       .limit(limit)
       .offset(offset);
     const data = await Promise.all(rows.map(enrich));
+    res.setHeader("X-Total-Count", String(total ?? 0));
     res.json({ success: true, data, meta: pageMeta(total ?? 0, { limit, offset, page }) });
   } catch (e) {
     console.error("[homestay-placements] list failed:", e);

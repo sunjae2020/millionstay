@@ -6,15 +6,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import {
-  useListContracts,
-  getListContractsQueryKey,
-  type ListContractsParams,
-  type Contract,
-} from "@workspace/api-client-react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { type Contract } from "@workspace/api-client-react";
+import { useQuery } from "@tanstack/react-query";
 import { Plus, Search, X } from "lucide-react";
-import { DataTable, type ColumnDef } from "@/components/ui/data-table";
+import { DataTable, useServerList, type ColumnDef } from "@/components/ui/data-table";
 import { useBrand } from "@/contexts/ThemeContext";
 import { formatMoney } from "@/lib/currency";
 import { formatDate } from "@/lib/date";
@@ -48,6 +43,12 @@ const statusColors: Record<string, string> = {
   Terminated: "bg-red-100 text-red-700",
 };
 
+/** 서버가 정렬할 수 있는 컬럼(api-server routes/contracts.ts 의 CONTRACT_SORT 와 1:1). */
+const SORTABLE_KEYS = [
+  "contract_ref", "tenant_name", "space_name", "start_date", "end_date",
+  "amount", "status", "created_at", "updated_at",
+];
+
 export default function ContractList() {
   const { t } = useTranslation();
   const { currency, currencyPosition } = useBrand();
@@ -60,14 +61,13 @@ export default function ContractList() {
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
   const [showDeleted, setShowDeleted] = useState(false);
-  const qc = useQueryClient();
 
   const { data: facets } = useQuery<ContractFacets>({
     queryKey: ["contract-facets", showDeleted],
     queryFn: () => apiJson<ContractFacets>(`/api/v1/contracts/facets${showDeleted ? "?deleted=only" : ""}`),
   });
 
-  const params: ListContractsParams & Record<string, string | undefined> = {
+  const filters = {
     q: q || undefined,
     status: status === "_all" ? undefined : status,
     contract_category: category === "_all" ? undefined : category,
@@ -90,9 +90,10 @@ export default function ContractList() {
   const leaseFormOptions = facets?.lease_forms ?? [];
   const yearOptions = facets?.years ?? [];
 
-  const { data: contracts, isLoading } = useListContracts(params, {
-    query: { queryKey: getListContractsQueryKey(params) },
-  });
+  const { rows: contracts, total, isLoading, server, invalidate } = useServerList<Contract>(
+    "/api/v1/contracts",
+    { filters, sortableKeys: SORTABLE_KEYS, defaultSort: { key: "created_at", dir: "desc" } },
+  );
 
   const { documentActionsColumn, documentPreview } = useDocumentRowActions<Contract>((c) => ({
     ref: c.contract_ref,
@@ -169,7 +170,7 @@ export default function ContractList() {
         <div className="flex items-center justify-between mb-6">
           <div>
             <h1 className="text-2xl font-bold">{t("nav.contract")}</h1>
-            <p className="text-sm text-muted-foreground">{contracts?.length ?? 0} {t("common.total")}</p>
+            <p className="text-sm text-muted-foreground">{total} {t("common.total")}</p>
           </div>
           <Link href="/contracts/contracts/new">
             <Button><Plus className="h-4 w-4 mr-2" />{t("contract.new")}</Button>
@@ -179,14 +180,15 @@ export default function ContractList() {
         <DataTable
           tableKey="contracts"
           columns={columns}
-          data={contracts ?? []}
+          data={contracts}
+          server={server}
           isLoading={isLoading}
           rowKey={(c) => c.id}
           emptyText={t("contract.no_contracts")}
           selection={{
             enable: true,
             resource: "contracts",
-            onChanged: () => qc.invalidateQueries({ queryKey: getListContractsQueryKey() }),
+            onChanged: invalidate,
           }}
           showDeleted={showDeleted}
           onToggleShowDeleted={setShowDeleted}

@@ -1,5 +1,6 @@
 import { Router, type IRouter } from "express";
-import { eq, ilike, and, isNull, inArray, SQL } from "drizzle-orm";
+import { eq, ilike, and, isNull, inArray, SQL, sql, asc, desc } from "drizzle-orm";
+import { parseListPage, parseSortParams, buildOrderBy, sendList, type SortMap } from "../utils/pagination.js";
 import { db, propertiesTable, suburbsTable } from "@workspace/db";
 import { deletedFilter, makeBulkDelete, makeBulkRestore } from "../lib/softDelete";
 import {
@@ -19,6 +20,16 @@ import {
 
 import { keywordCondition, accountIdsByName } from "../lib/listSearch";
 const router: IRouter = Router();
+
+/** 정렬 허용 컬럼 — PropertyList 의 SORTABLE_KEYS 와 1:1(소유주명은 아직 파생이라 제외). */
+const PROPERTY_SORT: SortMap = {
+  name: propertiesTable.name,
+  address: propertiesTable.address,
+  approval_status: propertiesTable.approval_status,
+  suburb_name: suburbsTable.name,
+  created_at: propertiesTable.created_at,
+  updated_at: propertiesTable.updated_at,
+};
 
 router.get("/v1/properties", async (req, res): Promise<void> => {
   const parsed = ListPropertiesQueryParams.safeParse(req.query);
@@ -44,6 +55,10 @@ router.get("/v1/properties", async (req, res): Promise<void> => {
     ));
   }
 
+  const where = conditions.length > 0 ? and(...conditions) : undefined;
+  const { limit, offset, page } = parseListPage(req.query);
+  const sort = parseSortParams(req.query, PROPERTY_SORT);
+
   const rows = await db
     .select({
       id: propertiesTable.id,
@@ -58,15 +73,21 @@ router.get("/v1/properties", async (req, res): Promise<void> => {
     })
     .from(propertiesTable)
     .leftJoin(suburbsTable, eq(propertiesTable.suburb_id, suburbsTable.id))
-    .where(conditions.length > 0 ? and(...conditions) : undefined)
-    .orderBy(propertiesTable.created_at);
+    .where(where)
+    .orderBy(...buildOrderBy(PROPERTY_SORT, sort, propertiesTable.id, [asc(propertiesTable.created_at)]))
+    .limit(limit).offset(offset);
+
+  const [{ count }] = await db
+    .select({ count: sql<number>`count(*)::int` })
+    .from(propertiesTable)
+    .where(where);
 
   const result = rows.map((r) => ({
     ...r,
     owner_account_name: null,
   }));
 
-  res.json(ListPropertiesResponse.parse(result));
+  sendList(res, ListPropertiesResponse.parse(result), count ?? 0, { limit, offset, page });
 });
 
 router.post("/v1/properties", async (req, res): Promise<void> => {

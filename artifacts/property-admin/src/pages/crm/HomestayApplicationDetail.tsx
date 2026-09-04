@@ -170,6 +170,7 @@ export default function HomestayApplicationDetail() {
   const refetchAll = () => {
     qc.invalidateQueries({ queryKey: ["homestay-application", id] });
     qc.invalidateQueries({ queryKey: ["homestay-applications"] });
+    qc.invalidateQueries({ queryKey: ["/api/v1/homestay-applications"] });
   };
 
   const approve = useMutation({

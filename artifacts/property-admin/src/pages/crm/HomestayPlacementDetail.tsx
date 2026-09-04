@@ -151,6 +151,7 @@ export default function HomestayPlacementDetail() {
     qc.invalidateQueries({ queryKey: ["homestay-placement", id] });
     qc.invalidateQueries({ queryKey: ["placement-signing", id] });
     qc.invalidateQueries({ queryKey: ["homestay-placements"] });
+    qc.invalidateQueries({ queryKey: ["/api/v1/homestay-placements"] });
   };
 
   const act = (path: string, method = "POST") => async () => {

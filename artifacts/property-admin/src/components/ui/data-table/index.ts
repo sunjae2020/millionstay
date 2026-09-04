@@ -8,5 +8,8 @@ export type {
   EditableConfig,
   DataTableEditing,
   EditValue,
+  DataTableServer,
 } from "./types";
 export { useTablePrefs } from "./useTablePrefs";
+export { useServerList } from "./useServerList";
+export type { ServerListOptions, ServerListResult } from "./useServerList";

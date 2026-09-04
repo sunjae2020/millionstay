@@ -132,6 +132,9 @@ app.use(cors({
     cb(new Error(`CORS blocked: ${origin}`));
   },
   credentials: true,
+  // 리스트 전체 건수는 응답 스키마를 바꾸지 않으려고 헤더로 나간다(utils/pagination.ts
+  // sendList). 브라우저는 노출 목록에 없는 헤더를 읽지 못하므로 여기에 반드시 넣는다.
+  exposedHeaders: ["X-Total-Count", "X-Page-Limit", "X-Page-Offset"],
 }));
 
 app.use(

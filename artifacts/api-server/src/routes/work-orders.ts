@@ -4,7 +4,8 @@ import multer from "multer";
 import { db, workOrdersTable, workOrderPhotosTable, contractSigningRequestsTable, propertiesTable, spacesTable, contactsTable, serviceHostsTable, invoicesTable, invoiceLineItemsTable, accountsTable, contractsTable, usersTable } from "@workspace/db";
 import { formatPersonName } from "../lib/nameFormat";
 import { sendAppointmentConfirmationEmail } from "../lib/email";
-import { eq, ilike, and, isNull, inArray, desc, sql } from "drizzle-orm";
+import { eq, ilike, and, isNull, inArray, desc, sql, asc } from "drizzle-orm";
+import { parseListPage, parseSortParams, buildOrderBy, sendList, type SortMap } from "../utils/pagination.js";
 import { dispatchWorkOrder } from "../lib/dispatch/workOrderDispatch";
 import { buildPhotoWatermark, loadPhotoWatermarkContext, watermarkedPhotoUrl } from "../lib/workOrders/photoWatermark";
 import { createSigningRequest, signingBaseUrl } from "../services/contractSigning";
@@ -193,6 +194,26 @@ function ledgerFieldsFrom(body: any, { partial }: { partial: boolean }): LedgerF
   return out;
 }
 
+/** 정렬 허용 컬럼 — WorkOrderList 의 SORTABLE_KEYS 와 1:1. */
+const WORK_ORDER_SORT: SortMap = {
+  order_ref: workOrdersTable.order_ref,
+  title: workOrdersTable.title,
+  category: workOrdersTable.category,
+  priority: workOrdersTable.priority,
+  status: workOrdersTable.status,
+  reported_at: workOrdersTable.reported_at,
+  scheduled_at: workOrdersTable.scheduled_at,
+  cost: workOrdersTable.cost,
+  net_cost: workOrdersTable.net_cost,
+  billed_on: workOrdersTable.billed_on,
+  settled_on: workOrdersTable.settled_on,
+  created_at: workOrdersTable.created_at,
+  updated_at: workOrdersTable.updated_at,
+  property_name: sql`(select p.name from properties p where p.id = ${workOrdersTable.property_id})`,
+  space_name: sql`(select sp.name from spaces sp where sp.id = ${workOrdersTable.space_id})`,
+  contract_ref: sql`(select c.contract_ref from contracts c where c.id = ${workOrdersTable.contract_id})`,
+};
+
 router.get("/v1/work-orders", async (req, res): Promise<void> => {
   const {
     q, status, priority, property_id, space_id, contract_id, category,
@@ -225,11 +246,18 @@ router.get("/v1/work-orders", async (req, res): Promise<void> => {
   // 기간은 예정일 기준(미정 건은 접수일로 대체하지 않는다 — 일정 조회가 목적).
   conditions.push(...dateRangeConditions(workOrdersTable.scheduled_at, date_from, date_to));
   conditions.push(...yearConditions(workOrdersTable.scheduled_at, year));
-  const rows = await db.select().from(workOrdersTable)
-    .where(and(...conditions))
-    .orderBy(workOrdersTable.id);
+  const where = and(...conditions);
+  const { limit, offset, page } = parseListPage(req.query);
+  const sort = parseSortParams(req.query, WORK_ORDER_SORT);
+  const [rows, [{ count }]] = await Promise.all([
+    db.select().from(workOrdersTable)
+      .where(where)
+      .orderBy(...buildOrderBy(WORK_ORDER_SORT, sort, workOrdersTable.id))
+      .limit(limit).offset(offset),
+    db.select({ count: sql<number>`count(*)::int` }).from(workOrdersTable).where(where),
+  ]);
   const result = await enrichWorkOrders(rows);
-  res.json(result);
+  sendList(res, result, count ?? 0, { limit, offset, page });
 });
 
 /** 연도·작업 종류 선택지. "/:id" 보다 먼저 선언해야 한다. */

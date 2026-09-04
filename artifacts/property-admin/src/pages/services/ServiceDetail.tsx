@@ -129,6 +129,7 @@ export default function ServiceDetail() {
     onSuccess: (data) => {
       toast({ title: t("service.toast_saved"), description: t("service.toast_saved_desc") });
       qc.invalidateQueries({ queryKey: ["services"] });
+      qc.invalidateQueries({ queryKey: ["/api/v1/services"] });
       if (isNew) navigate(`/services/${data.id}`);
       else qc.invalidateQueries({ queryKey: ["service", id] });
     },

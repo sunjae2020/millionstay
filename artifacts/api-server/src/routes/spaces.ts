@@ -1,6 +1,8 @@
 import { Router, type IRouter } from "express";
 import multer from "multer";
-import { eq, ilike, and, inArray, gte, lte, isNull, desc, SQL } from "drizzle-orm";
+import { eq, ilike, and, inArray, gte, lte, isNull, desc, SQL, sql, asc } from "drizzle-orm";
+import { parseListPage, parseSortParams, buildOrderBy, sendList, type SortMap } from "../utils/pagination.js";
+import { alias } from "drizzle-orm/pg-core";
 import { db, spacesTable, propertiesTable, spacePoliciesTable, spaceOptionMapsTable, spaceBlockedDatesTable, spaceAvailabilityTable, spaceServiceCatalogTable, serviceCatalogTable, accountsTable, spaceDefectsTable } from "@workspace/db";
 import { isCloudinaryConfigured, uploadToCloudinary, cldFolder } from "../utils/cloudinary";
 import { logAction } from "../utils/auditLog";
@@ -57,6 +59,21 @@ async function buildSpaceResponse(space: typeof spacesTable.$inferSelect) {
   };
 }
 
+/** 정렬 허용 컬럼 — SpaceList 의 SORTABLE_KEYS 와 1:1. */
+const SPACE_SORT: SortMap = {
+  name: spacesTable.name,
+  status: spacesTable.status,
+  space_type: spacesTable.space_type,
+  booking_mode: spacesTable.booking_mode,
+  exclusive_area_m2: spacesTable.exclusive_area_m2,
+  created_at: spacesTable.created_at,
+  updated_at: spacesTable.updated_at,
+  property_name: propertiesTable.name,
+  policy_name: spacePoliciesTable.name,
+  owner_name: accountsTable.name,
+  parent_space_name: sql`(select ps.name from spaces ps where ps.id = ${spacesTable.parent_space_id})`,
+};
+
 router.get("/v1/spaces", async (req, res): Promise<void> => {
   const parsed = ListSpacesQueryParams.safeParse(req.query);
   if (!parsed.success) {
@@ -86,6 +103,16 @@ router.get("/v1/spaces", async (req, res): Promise<void> => {
   const { floor_number } = req.query as Record<string, string>;
   if (floor_number) conditions.push(eq(spacesTable.floor_number, Number(floor_number)));
 
+  // 상위 공간(타입 마스터) 필터. 서버 페이징 이후에는 클라이언트가 로드된 행에서
+  // 거를 수 없으므로 서버가 받는다.
+  const parentSpaceId = Number((req.query as Record<string, string>).parent_space_id);
+  if (Number.isFinite(parentSpaceId) && parentSpaceId > 0) {
+    conditions.push(eq(spacesTable.parent_space_id, parentSpaceId));
+  }
+
+  const { limit, offset, page } = parseListPage(req.query);
+  const sort = parseSortParams(req.query, SPACE_SORT);
+
   const rows = await db
     .select({
       id: spacesTable.id,
@@ -110,7 +137,13 @@ router.get("/v1/spaces", async (req, res): Promise<void> => {
     .leftJoin(spacePoliciesTable, eq(spacesTable.space_policy_id, spacePoliciesTable.id))
     .leftJoin(accountsTable, eq(spacesTable.landlord_account_id, accountsTable.id))
     .where(and(...conditions))
-    .orderBy(spacesTable.created_at);
+    .orderBy(...buildOrderBy(SPACE_SORT, sort, spacesTable.id, [asc(spacesTable.created_at)]))
+    .limit(limit).offset(offset);
+
+  const [{ count }] = await db
+    .select({ count: sql<number>`count(*)::int` })
+    .from(spacesTable)
+    .where(and(...conditions));
 
   const spaceIds = rows.map((r) => r.id);
   const allMaps = spaceIds.length > 0
@@ -129,7 +162,23 @@ router.get("/v1/spaces", async (req, res): Promise<void> => {
     space_option_ids: allMaps.filter((m) => m.space_id === row.id).map((m) => m.space_option_id),
   }));
 
-  res.json(ListSpacesResponse.parse(result));
+  sendList(res, ListSpacesResponse.parse(result), count ?? 0, { limit, offset, page });
+});
+
+/**
+ * 상위 공간(타입 마스터) 필터 선택지. 서버 페이징 이후로는 한 페이지의 행에서
+ * 뽑을 수 없어서 전체 데이터에서 한 번에 뽑는다(계약의 /facets 와 같은 취지).
+ * 반드시 "/v1/spaces/:id" 보다 먼저 선언할 것.
+ */
+router.get("/v1/spaces/facets", async (req, res): Promise<void> => {
+  const child = alias(spacesTable, "child");
+  const rows = await db
+    .selectDistinct({ id: spacesTable.id, name: spacesTable.name })
+    .from(spacesTable)
+    .innerJoin(child, eq(child.parent_space_id, spacesTable.id))
+    .where(and(deletedFilter(spacesTable.deleted_at, req), isNull(child.deleted_at)))
+    .orderBy(asc(spacesTable.name));
+  res.json({ parents: rows });
 });
 
 router.post("/v1/spaces", async (req, res): Promise<void> => {

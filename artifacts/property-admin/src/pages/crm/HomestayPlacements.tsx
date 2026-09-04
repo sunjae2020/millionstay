@@ -5,13 +5,14 @@ import { formatDate } from "@/lib/date";
 import { Layout, PageHeader } from "@/components/Layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { DataTable, ACTIONS_KEY, type ColumnDef } from "@/components/ui/data-table";
+import { DataTable, useServerList, ACTIONS_KEY, type ColumnDef } from "@/components/ui/data-table";
 import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import { Handshake, Eye, Search } from "lucide-react";
 import { apiFetch } from "@/lib/apiFetch";
 
 const API = "/api/v1/homestay-placements";
-const FETCH_LIMIT = 1000;
+/** 서버가 정렬할 수 있는 컬럼(api-server 의 SortMap 과 1:1). */
+const SORTABLE_KEYS = ["placement_ref", "status", "move_in_date", "created_at", "updated_at"];
 
 export type PlacementStatus =
   | "Proposed" | "HostAccepted" | "AwaitingPayment" | "Active"
@@ -59,22 +60,6 @@ export function PlacementStatusBadge({ status }: { status: string }) {
   );
 }
 
-async function fetchPlacements(
-  q: string,
-  status: string,
-): Promise<{ items: Placement[]; total: number }> {
-  const params = new URLSearchParams();
-  if (q) params.set("q", q);
-  if (status) params.set("status", status);
-  params.set("limit", String(FETCH_LIMIT));
-  params.set("offset", "0");
-  const res = await apiFetch(`${API}?${params.toString()}`);
-  if (!res.ok) throw new Error("Failed to load placements");
-  const json = await res.json();
-  const items = (json.data ?? []) as Placement[];
-  return { items, total: json.meta?.total ?? items.length };
-}
-
 export default function HomestayPlacements() {
   const { t } = useTranslation();
   const [q, setQ] = useState("");
@@ -83,13 +68,11 @@ export default function HomestayPlacements() {
   const setSearch = (v: string) => setQ(v);
   const setStatusFilter = (v: "" | PlacementStatus) => setStatus(v);
 
-  const { data, isLoading } = useQuery({
-    queryKey: ["homestay-placements", q, status],
-    queryFn: () => fetchPlacements(q, status),
-    placeholderData: keepPreviousData,
+  const { rows: rows, total, isLoading, server } = useServerList<Placement>(API, {
+    filters: { q: q || undefined, status: status || undefined },
+    sortableKeys: SORTABLE_KEYS,
+    defaultSort: { key: "created_at", dir: "desc" },
   });
-  const rows = data?.items ?? [];
-  const total = data?.total ?? rows.length;
 
   const columns: ColumnDef<Placement>[] = useMemo(
     () => [
@@ -188,6 +171,7 @@ export default function HomestayPlacements() {
 
         <div className="mt-4">
           <DataTable
+            server={server}
             tableKey="homestay-placements"
             columns={columns}
             data={rows}

@@ -1,7 +1,8 @@
 import { Router, type IRouter } from "express";
 import multer from "multer";
 import crypto from "node:crypto";
-import { eq, ilike, and, or, isNull, inArray, desc, SQL } from "drizzle-orm";
+import { eq, ilike, and, or, isNull, inArray, desc, SQL, sql, asc } from "drizzle-orm";
+import { parseListPage, parseSortParams, buildOrderBy, sendList, type SortMap } from "../utils/pagination.js";
 import {
   db, accountsTable, accountContactsTable, contactsTable, commissionsTable, paymentInfoTable,
   invoicesTable, contractsTable, contractRelatedCostsTable, partnerPayoutsTable,
@@ -89,6 +90,16 @@ async function enrichAccount(row: typeof accountsTable.$inferSelect) {
   };
 }
 
+/** 정렬 허용 컬럼 — AccountList 의 SORTABLE_KEYS 와 1:1(대표 연락처는 파생이라 제외). */
+const ACCOUNT_SORT: SortMap = {
+  name: accountsTable.name,
+  account_type: accountsTable.account_type,
+  account_email: accountsTable.account_email,
+  status: accountsTable.status,
+  created_at: accountsTable.created_at,
+  updated_at: accountsTable.updated_at,
+};
+
 router.get("/v1/accounts", async (req, res): Promise<void> => {
   const parsed = ListAccountsQueryParams.safeParse(req.query);
   if (!parsed.success) { res.status(400).json({ error: parsed.error.message }); return; }
@@ -112,17 +123,24 @@ router.get("/v1/accounts", async (req, res): Promise<void> => {
       ],
     ));
   }
-  const rows = await db.select().from(accountsTable)
-    .where(and(...conditions))
-    .orderBy(accountsTable.name);
+  const where = and(...conditions);
+  const { limit, offset, page } = parseListPage(req.query);
+  const sort = parseSortParams(req.query, ACCOUNT_SORT);
+  const [rows, [{ count }]] = await Promise.all([
+    db.select().from(accountsTable)
+      .where(where)
+      .orderBy(...buildOrderBy(ACCOUNT_SORT, sort, accountsTable.id, [asc(accountsTable.name)]))
+      .limit(limit).offset(offset),
+    db.select({ count: sql<number>`count(*)::int` }).from(accountsTable).where(where),
+  ]);
   const enriched = await Promise.all(rows.map(enrichAccount));
   // 고유식별정보(PIPA §24-3): the account list masks 주민등록번호 — the raw value
   // stays on GET /v1/accounts/:id, which the edit form and contract party card use.
-  res.json(enriched.map((a) => ({
+  sendList(res, enriched.map((a) => ({
     ...a,
     resident_no: maskResidentNo(a.resident_no),
     has_resident_no: Boolean(a.resident_no?.trim()),
-  })));
+  })), count ?? 0, { limit, offset, page });
 });
 
 /**
