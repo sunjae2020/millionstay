@@ -6,6 +6,7 @@ import { apiFetch, getStoredToken } from "@/lib/apiFetch";
 import { ImagePlus, Star, Trash2, Upload, Loader2, CheckCircle2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ImagePreviewDialog, useImagePreview, type PreviewImage } from "@/components/ImagePreviewDialog";
+import { CameraButton } from "@/components/CameraButton";
 
 function apiFetchMultipart(path: string, body: FormData): Promise<Response> {
   const token = getStoredToken();
@@ -80,6 +81,12 @@ export function PropertyPhotoManager({ propertyId }: PropertyPhotoManagerProps) 
     setIsDragging(false);
     const files = Array.from(e.dataTransfer.files).filter((f) => f.type.startsWith("image/"));
     if (files.length > 0) setPendingFiles((prev) => [...prev, ...files]);
+  }
+
+  // 현장 촬영 → 곧바로 대기열. 폰에는 드래그도 붙여넣기도 없다.
+  function handleCapture(files: File[]) {
+    const images = files.filter((f) => f.type.startsWith("image/"));
+    if (images.length > 0) setPendingFiles((prev) => [...prev, ...images]);
   }
 
   function handleFileSelect(e: React.ChangeEvent<HTMLInputElement>) {
@@ -195,6 +202,15 @@ export function PropertyPhotoManager({ propertyId }: PropertyPhotoManagerProps) 
         <ImagePlus className="h-10 w-10 mx-auto mb-3 text-muted-foreground" />
         <p className="text-sm font-medium text-slate-700">{t("property_photos.dropzone")}</p>
         <p className="text-xs text-muted-foreground mt-1">{t("property_photos.formats")}</p>
+      </div>
+
+      {/* 폰에서는 끌어다 놓을 수 없다 — 현장에서는 촬영이 첫 번째 경로다. */}
+      <div className="flex justify-center" onClick={(e) => e.stopPropagation()}>
+        <CameraButton
+          disabled={uploading}
+          className="inline-flex items-center gap-1.5 rounded-lg border px-4 py-2 text-sm font-medium hover:bg-accent disabled:opacity-60"
+          onCapture={handleCapture}
+        />
       </div>
 
       {pendingFiles.length > 0 && (

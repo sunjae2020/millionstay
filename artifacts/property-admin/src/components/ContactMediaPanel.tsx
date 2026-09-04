@@ -9,6 +9,8 @@ import {
 } from "@/components/ui/dialog";
 import { apiFetch } from "@/lib/apiFetch";
 import { Loader2, Sparkles, Trash2, Upload, User, IdCard, ScanLine, ShieldCheck } from "lucide-react";
+import { CameraButton } from "@/components/CameraButton";
+import { OCR_MAX_EDGE } from "@/lib/photo";
 
 /**
  * Profile photo + business-card panel for the contact form.
@@ -347,6 +349,14 @@ export function ContactMediaPanel({
               {idScanning ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <ScanLine className="h-3.5 w-3.5" />}
               {idScanning ? t("contact.id_scanning") : t("contact.id_scan")}
             </Button>
+            {/* 신분증·증명사진은 그 자리에서 찍는 편이 빠르다. 판독을 태우는
+                이미지라 축소 상한을 키워 글자를 남긴다. */}
+            <CameraButton
+              disabled={idScanning}
+              maxEdge={OCR_MAX_EDGE}
+              className="inline-flex items-center gap-1.5 rounded-md border px-3 py-1.5 text-sm font-medium hover:bg-accent disabled:opacity-60"
+              onCapture={(files) => void handleIdPick(files[0])}
+            />
             {photoUrl && (
               <Button type="button" variant="ghost" size="sm" className="gap-1.5 text-destructive"
                 onClick={() => onPhotoChange("")}>
@@ -388,7 +398,14 @@ export function ContactMediaPanel({
                   : <span className="text-xs text-muted-foreground flex items-center gap-1"><Upload className="h-3.5 w-3.5" />{t("contact.card_pick")}</span>}
               </button>
               <input ref={ref} type="file" accept="image/*" className="hidden"
+                data-photo-max-edge={String(OCR_MAX_EDGE)}
                 onChange={(e) => pickCard(side, e.target.files?.[0])} />
+              {/* 명함은 받은 자리에서 찍는다 — OCR 이 읽을 해상도는 남긴다. */}
+              <CameraButton
+                maxEdge={OCR_MAX_EDGE}
+                className="inline-flex items-center gap-1 text-xs font-medium text-muted-foreground hover:text-foreground"
+                onCapture={(files) => pickCard(side, files[0])}
+              />
               {stored && !preview && (
                 <Button type="button" variant="ghost" size="sm" className="h-6 gap-1 text-xs text-destructive"
                   onClick={() => void deleteDocument(stored.id)}>

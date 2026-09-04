@@ -10,6 +10,7 @@ import { formatMoney } from "@/lib/currency";
 
 import { ExportableTable } from "@/components/ui/ExportCsvButton";
 import { ImagePreviewDialog, useImagePreview } from "@/components/ImagePreviewDialog";
+import { CameraButton } from "@/components/CameraButton";
 // Admin service-host detail tabs (#4): jobs & payouts (GL-backed accounting),
 // photos, and CS tickets — all scoped to one service host by id.
 
@@ -146,7 +147,7 @@ function JobPhotoUpload({ hostId, jobId }: { hostId: string; jobId: number }) {
   const qc = useQueryClient();
   const fileRef = useRef<HTMLInputElement>(null);
   const upload = useMutation({
-    mutationFn: async (files: FileList) => {
+    mutationFn: async (files: FileList | File[]) => {
       for (const file of Array.from(files)) {
         const fd = new FormData();
         fd.append("image", file);
@@ -160,6 +161,11 @@ function JobPhotoUpload({ hostId, jobId }: { hostId: string; jobId: number }) {
       <input
         ref={fileRef} type="file" accept="image/*" multiple className="hidden"
         onChange={(e) => { if (e.target.files?.length) upload.mutate(e.target.files); e.target.value = ""; }}
+      />
+      <CameraButton
+        disabled={upload.isPending}
+        className="inline-flex items-center gap-1.5 rounded-md border px-3 py-1.5 text-xs font-medium hover:bg-accent disabled:opacity-60"
+        onCapture={(files) => upload.mutate(files)}
       />
       <button
         type="button" disabled={upload.isPending} onClick={() => fileRef.current?.click()}
@@ -190,7 +196,7 @@ export function ServiceHostPhotos({ hostId }: { hostId: string }) {
   // apiJson omits the JSON content-type for FormData bodies, so the browser
   // writes the multipart boundary itself.
   const upload = useMutation({
-    mutationFn: async (files: FileList) => {
+    mutationFn: async (files: FileList | File[]) => {
       for (const file of Array.from(files)) {
         const fd = new FormData();
         fd.append("image", file);
@@ -214,6 +220,11 @@ export function ServiceHostPhotos({ hostId }: { hostId: string }) {
           <input
             ref={fileRef} type="file" accept="image/*" multiple className="hidden"
             onChange={(e) => { if (e.target.files?.length) upload.mutate(e.target.files); e.target.value = ""; }}
+          />
+          <CameraButton
+            disabled={upload.isPending}
+            className="mr-2 inline-flex items-center gap-1.5 rounded-md border px-3 py-1.5 text-sm font-medium hover:bg-accent disabled:opacity-60"
+            onCapture={(files) => upload.mutate(files)}
           />
           <Button size="sm" variant="outline" disabled={upload.isPending} onClick={() => fileRef.current?.click()}>
             <Upload className="w-3.5 h-3.5 mr-1" />

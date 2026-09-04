@@ -402,5 +402,8 @@
     "added_on": "등록",
     "last_used": "마지막 사용",
     "synced": "동기화됨"
+  },
+  "photos": {
+    "take": "사진 촬영"
   }
 }

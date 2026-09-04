@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { ImagePreviewDialog, useImagePreview } from "@/components/ImagePreviewDialog";
+import { CameraButton } from "@/components/CameraButton";
 
 const STATUS_CONFIG: Record<string, { label: string; color: string; icon: React.ReactNode }> = {
   Open:       { label: "Open",        color: "bg-blue-100 text-blue-700",   icon: <Clock className="h-3 w-3" /> },
@@ -205,7 +206,11 @@ export default function CsTicketDetail() {
   });
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files ?? []);
+    await uploadFiles(Array.from(e.target.files ?? []));
+  };
+
+  // 파일 선택과 촬영이 같은 본체를 쓴다.
+  const uploadFiles = async (files: File[]) => {
     if (!files.length) return;
     setUploading(true);
     try {
@@ -457,6 +462,12 @@ export default function CsTicketDetail() {
                 {t('common.upload', 'Attach')}
               </button>
               <input ref={fileRef} type="file" accept="image/*" multiple className="hidden" onChange={handleFileChange} />
+              {/* 고객 응대 중 현장을 찍어 바로 붙인다. */}
+              <CameraButton
+                disabled={uploading}
+                className="inline-flex items-center gap-1.5 rounded-md border px-3 py-1.5 text-sm font-medium hover:bg-accent disabled:opacity-60"
+                onCapture={(files) => void uploadFiles(files)}
+              />
               <div className="flex-1" />
               <Button
                 onClick={() => sendMutation.mutate()}

@@ -9,6 +9,7 @@ import { apiFetch, apiJson } from "@/lib/apiFetch";
 import { formatDate } from "@/lib/date";
 
 import { ExportableTable } from "@/components/ui/ExportCsvButton";
+import { CameraButton } from "@/components/CameraButton";
 /**
  * Documents filed against one record (contract, property, account …).
  *
@@ -50,7 +51,7 @@ export interface EntityDocument {
 
 export type DocumentEntityType =
   | "contract" | "invoice" | "quote" | "booking" | "account"
-  | "contact" | "property" | "space" | "work_order";
+  | "contact" | "property" | "space" | "work_order" | "transaction";
 
 interface Props {
   entityType: DocumentEntityType;
@@ -192,6 +193,12 @@ export default function EntityDocuments({ entityType, entityId, defaultDocType =
               <FolderUp className="h-4 w-4" />
               {t("file_drop.upload_folder", "Upload folder")}
             </Button>
+            {/* 영수증·증빙은 대개 종이다. 폰에서는 찍는 것이 곧 첨부다. */}
+            <CameraButton
+              disabled={uploading}
+              className="inline-flex items-center gap-1.5 rounded-md border px-3 py-1.5 text-sm font-medium hover:bg-accent disabled:opacity-60"
+              onCapture={(files) => void handleUpload(files)}
+            />
           </div>
         </>
       )}

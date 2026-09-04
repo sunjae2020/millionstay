@@ -3237,5 +3237,8 @@
     "submit_failed": "Không gửi được phiếu. Vui lòng thử lại.",
     "done_title": "Cảm ơn bạn",
     "done_desc": "Chúng tôi đã nhận được thông tin. Nếu cần thêm gì sẽ liên hệ với bạn."
+  },
+  "photos": {
+    "take": "Chụp ảnh"
   }
 }

@@ -7,6 +7,7 @@ import { ImagePlus, Star, Trash2, Upload, Loader2, CheckCircle2 } from "lucide-r
 import { cn } from "@/lib/utils";
 import { ImagePreviewDialog, useImagePreview, type PreviewImage } from "@/components/ImagePreviewDialog";
 import { filesFromDataTransfer } from "@/components/FileDropZone";
+import { CameraButton } from "@/components/CameraButton";
 
 function apiFetchMultipart(path: string, body: FormData): Promise<Response> {
   const token = getStoredToken();
@@ -106,6 +107,11 @@ export function SpacePhotoManager({ spaceId }: SpacePhotoManagerProps) {
     window.addEventListener("paste", onPaste);
     return () => window.removeEventListener("paste", onPaste);
   }, [uploading]);
+
+  // 현장에서 폰으로 찍어 바로 올린다 — 갤러리를 거치지 않는다.
+  function handleCapture(files: File[]) {
+    stageFiles(files);
+  }
 
   function handleFileSelect(e: React.ChangeEvent<HTMLInputElement>) {
     stageFiles(Array.from(e.target.files ?? []));
@@ -236,6 +242,15 @@ export function SpacePhotoManager({ spaceId }: SpacePhotoManagerProps) {
         <p className="text-xs text-muted-foreground mt-1">
           {t("file_drop.hint", "Drag files or a folder here, or press ⌘/Ctrl+V to paste them")}
         </p>
+      </div>
+
+      {/* 폰에서는 끌어다 놓을 수 없다 — 현장에서는 촬영이 첫 번째 경로다. */}
+      <div className="flex justify-center" onClick={(e) => e.stopPropagation()}>
+        <CameraButton
+          disabled={uploading}
+          className="inline-flex items-center gap-1.5 rounded-lg border px-4 py-2 text-sm font-medium hover:bg-accent disabled:opacity-60"
+          onCapture={handleCapture}
+        />
       </div>
 
       {pendingFiles.length > 0 && (

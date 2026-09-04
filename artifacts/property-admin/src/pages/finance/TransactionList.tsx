@@ -24,6 +24,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useBrand } from "@/contexts/ThemeContext";
 import { formatMoney, SUPPORTED_CURRENCIES } from "@/lib/currency";
 import { formatDate } from "@/lib/date";
+import EntityDocuments from "@/components/EntityDocuments";
 import {
   scheduleLabel, usePaymentSchedule, type PaymentScheduleRow,
 } from "@/components/PaymentScheduleCard";
@@ -716,6 +717,18 @@ function TransactionDialog({
             <p className="text-xs text-muted-foreground mt-1">{t("transaction.status_hint")}</p>
           </div>
         </div>
+
+        {/* 영수증·증빙 — 저장된 거래에만 붙는다(첨부는 거래 id 를 필요로 한다).
+            폰에서는 EntityDocuments 의 촬영 버튼으로 종이 영수증을 바로 찍는다. */}
+        {form.id ? (
+          <div className="mt-4 border-t pt-4">
+            <EntityDocuments entityType="transaction" entityId={form.id} defaultDocType="receipt" />
+          </div>
+        ) : (
+          <p className="mt-4 border-t pt-4 text-xs text-muted-foreground">
+            {t("transaction.receipt_after_save", "Save the transaction first, then attach its receipt.")}
+          </p>
+        )}
 
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>{t("common.cancel")}</Button>

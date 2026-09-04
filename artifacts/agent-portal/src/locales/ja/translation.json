@@ -316,5 +316,8 @@
     "added_on": "登録",
     "last_used": "最終使用",
     "synced": "同期済み"
+  },
+  "photos": {
+    "take": "写真を撮る"
   }
 }

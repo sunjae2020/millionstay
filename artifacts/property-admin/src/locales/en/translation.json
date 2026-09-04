@@ -7413,7 +7413,8 @@
     "field_bank_reference": "Bank memo",
     "field_description": "Description",
     "field_notes": "Notes",
-    "gl_auto": "Auto (by type)"
+    "gl_auto": "Auto (by type)",
+    "receipt_after_save": "Save the transaction first, then attach its receipt."
   },
   "payment_schedule": {
     "title": "Payment schedule",
@@ -7448,5 +7449,8 @@
     "status_waived": "Waived",
     "field_label": "Label",
     "field_label_hint": "Leave blank to use the item type"
+  },
+  "photos": {
+    "take": "Take photo"
   }
 }

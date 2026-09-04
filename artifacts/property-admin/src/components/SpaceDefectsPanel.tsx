@@ -16,6 +16,7 @@ import { ImagePreviewDialog, useImagePreview, type PreviewImage } from "@/compon
 import { cn } from "@/lib/utils";
 
 import { ExportableTable } from "@/components/ui/ExportCsvButton";
+import { CameraButton } from "@/components/CameraButton";
 // 하자 이력 — the per-unit defect register on the space detail page.
 // Column order follows the usual defect/snag-register convention:
 // identity (derived) → classification → detail → status → responsibility → evidence.
@@ -192,12 +193,12 @@ export function SpaceDefectsPanel({ spaceId }: { spaceId: number }) {
     fileInputRef.current?.click();
   }
 
-  async function handleFiles(files: FileList | null) {
-    const defectId = pendingPhotoFor;
-    if (!files?.length || !defectId) return;
+  // 촬영 버튼은 대상 하자를 이미 알고 넘긴다 — 갤러리 경로처럼 상태에 기대지 않는다.
+  async function uploadFiles(defectId: number, files: File[]) {
+    if (!files.length) return;
     setUploadingFor(defectId);
     try {
-      for (const file of Array.from(files)) {
+      for (const file of files) {
         const r = await uploadPhoto(spaceId, defectId, file);
         if (!r.ok) throw new Error((await r.json().catch(() => ({})))?.error ?? "Upload failed");
       }
@@ -209,6 +210,12 @@ export function SpaceDefectsPanel({ spaceId }: { spaceId: number }) {
       setPendingPhotoFor(null);
       if (fileInputRef.current) fileInputRef.current.value = "";
     }
+  }
+
+  async function handleFiles(files: FileList | null) {
+    const defectId = pendingPhotoFor;
+    if (!files?.length || !defectId) return;
+    await uploadFiles(defectId, Array.from(files));
   }
 
   return (
@@ -325,6 +332,12 @@ export function SpaceDefectsPanel({ spaceId }: { spaceId: number }) {
                           ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
                           : <ImagePlus className="w-3.5 h-3.5" />}
                       </Button>
+                      <CameraButton
+                        disabled={uploadingFor === d.id}
+                        className="inline-flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground hover:bg-accent disabled:opacity-60"
+                        label=""
+                        onCapture={(files) => uploadFiles(d.id, files)}
+                      />
                     </div>
                     {photos.length > 0 && (
                       <div className="flex flex-wrap gap-1 mt-1">

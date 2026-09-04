@@ -7354,7 +7354,8 @@
     "field_bank_reference": "รายละเอียดธนาคาร",
     "field_description": "รายละเอียด",
     "field_notes": "หมายเหตุ",
-    "gl_auto": "อัตโนมัติ (ตามประเภท)"
+    "gl_auto": "อัตโนมัติ (ตามประเภท)",
+    "receipt_after_save": "บันทึกรายการก่อน จึงจะแนบใบเสร็จได้"
   },
   "payment_schedule": {
     "title": "กำหนดชำระเงิน",
@@ -7389,5 +7390,8 @@
     "status_waived": "ยกเว้น",
     "field_label": "ชื่อที่แสดง",
     "field_label_hint": "เว้นว่างไว้จะแสดงตามประเภทรายการ"
+  },
+  "photos": {
+    "take": "ถ่ายรูป"
   }
 }

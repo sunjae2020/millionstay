@@ -7372,7 +7372,8 @@
     "field_bank_reference": "银行摘要",
     "field_description": "摘要",
     "field_notes": "备注",
-    "gl_auto": "自动（按类型）"
+    "gl_auto": "自动（按类型）",
+    "receipt_after_save": "先保存交易，然后即可附加收据。"
   },
   "payment_schedule": {
     "title": "付款计划",
@@ -7407,5 +7408,8 @@
     "status_waived": "已豁免",
     "field_label": "显示名称",
     "field_label_hint": "留空则按项目类型显示"
+  },
+  "photos": {
+    "take": "拍照"
   }
 }

@@ -7313,7 +7313,8 @@
     "field_bank_reference": "Nội dung chuyển khoản",
     "field_description": "Diễn giải",
     "field_notes": "Ghi chú",
-    "gl_auto": "Tự động (theo loại)"
+    "gl_auto": "Tự động (theo loại)",
+    "receipt_after_save": "Lưu giao dịch trước, rồi đính kèm biên lai."
   },
   "payment_schedule": {
     "title": "Lịch thanh toán",
@@ -7348,5 +7349,8 @@
     "status_waived": "Được miễn",
     "field_label": "Tên hiển thị",
     "field_label_hint": "Để trống sẽ hiển thị theo loại khoản mục"
+  },
+  "photos": {
+    "take": "Chụp ảnh"
   }
 }

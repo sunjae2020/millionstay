@@ -8,6 +8,7 @@ import { formatDateTime } from "@/lib/dateFormat";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
+import { CameraInput } from "@/components/CameraButton";
 import {
   ArrowLeft, Send, ImageIcon, X, Loader2, Clock, CheckCircle2, XCircle, AlertCircle, User,
 } from "lucide-react";
@@ -268,6 +269,8 @@ export default function SupportDetailPage() {
                 {t("support.attach", "Attach")}
                 <input type="file" accept="image/*" multiple className="hidden" disabled={uploading || images.length >= 5} onChange={handleFileChange} />
               </label>
+                {/* 폰에서는 찍는 것이 곧 첨부다. 같은 핸들러로 들어간다. */}
+                <CameraInput onChange={handleFileChange} disabled={uploading} />
               <div className="flex-1" />
               <Button
                 onClick={() => sendMutation.mutate()}

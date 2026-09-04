@@ -3307,5 +3307,8 @@
     "submit_failed": "The form could not be submitted. Please try again.",
     "done_title": "Thank you",
     "done_desc": "We have your details. We will be in touch if anything else is needed."
+  },
+  "photos": {
+    "take": "Take photo"
   }
 }
