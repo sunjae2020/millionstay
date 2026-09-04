@@ -19,6 +19,7 @@ import type { AiCapabilities, AiProviderId } from "./providers.js";
 export type AiTaskId =
   | "chat"
   | "cs_translate"
+  | "transaction_categorise"
   | "i18n_translate"
   | "cms_translate"
   | "content_translate"
@@ -204,6 +205,22 @@ export const AI_TASKS: Record<AiTaskId, AiTask> = {
     rationale:
       "Writes a one-line reason next to an already-computed match score. Fails soft — the " +
       "suggestions still render without it.",
+  },
+  transaction_categorise: {
+    id: "transaction_categorise",
+    label: "transaction_categorise",
+    area: "data",
+    envKey: "TRANSACTION_CATEGORISE_MODEL",
+    fallbackEnvKey: "CHAT_MODEL",
+    defaultModel: "claude-sonnet-4-6",
+    needs: {},
+    volume: "medium",
+    movable: "yes",
+    source: "routes/transactions.ts (POST /v1/transactions/:id/suggest)",
+    rationale:
+      "Suggests a chart-of-accounts code from the memo and counterparty. The suggestion is a " +
+      "pre-fill that a person confirms before posting, and the ledger refuses an unbalanced " +
+      "entry regardless — a wrong guess costs one correction, so the cheapest capable model is fine.",
   },
 };
 

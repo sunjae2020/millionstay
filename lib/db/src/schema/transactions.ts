@@ -97,6 +97,22 @@ export const transactionsTable = pgTable("transactions", {
   /** 담당 직원 — 이 지출을 요청한 사람. 승인자가 판단하려면 필요하다. */
   owner_user_id: integer("owner_user_id"),
 
+  // ── 분할 배분 (0082) ──────────────────────────────────────────────────────
+  // 입금 한 건이 여러 지출로 갈라지는 흐름(월세 수령 → 집주인 송금 + 수수료 유보).
+  parent_transaction_id: integer("parent_transaction_id"),
+  /** 'source' 원본 입금 | 'disbursement' 나간 돈 | 'retained' 유보(우리 몫) */
+  split_role: text("split_role"),
+
+  // ── 기준통화 스탬프 (0082) ────────────────────────────────────────────────
+  // 거래 시점 환율로 환산액을 **박아 둔다**. 나중에 다시 계산하면 그때 환율이
+  // 적용돼 과거 장부가 바뀐다.
+  // ⚠️ 환율을 못 구하면 NULL. 절대 1 로 채우지 않는다 — 1 은 "환산했는데 같았다"는
+  // 뜻이라 결측과 구분되지 않고, 그 순간 오류가 조용히 묻힌다.
+  base_currency: text("base_currency"),
+  base_amount: numeric("base_amount", { precision: 16, scale: 2 }),
+  fx_rate: numeric("fx_rate", { precision: 18, scale: 8 }),
+  fx_date: text("fx_date"),
+
   created_by: integer("created_by"),
   deleted_at: timestamp("deleted_at", { withTimezone: true }),
   created_at: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
@@ -104,6 +120,7 @@ export const transactionsTable = pgTable("transactions", {
 });
 
 export const TXN_TYPES = ["income", "expense", "transfer"] as const;
+export const TXN_SPLIT_ROLES = ["source", "disbursement", "retained"] as const;
 export const TXN_STATUSES = ["draft", "confirmed", "posted", "void"] as const;
 /** 결재 진행 단계. `status`(회계적 사실)와 별도 축이다. */
 export const TXN_WORKFLOW_STATUSES = [

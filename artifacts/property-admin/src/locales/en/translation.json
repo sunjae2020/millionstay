@@ -7158,7 +7158,8 @@
       "document_intake": "Document intake classification",
       "website_enrich": "Account website enrichment",
       "match_rationale": "Homestay match rationale",
-      "id_document_ocr": "Identity document OCR"
+      "id_document_ocr": "Identity document OCR",
+      "transaction_categorise": "Transaction categorisation"
     },
     "custom_engine": "Custom",
     "add_engine": "Add an engine",
@@ -7434,7 +7435,21 @@
     "mark_paid": "Mark as paid",
     "section_summary": "Summary",
     "section_journal": "Journal entry",
-    "all_approvals": "All approvals"
+    "all_approvals": "All approvals",
+    "split": "Split",
+    "unsplit": "Undo split",
+    "split_hint": "Split the {{total}} received into where it went. The source amount never changes — the legs only explain it.",
+    "split_add_leg": "Add leg",
+    "split_remaining": "Remaining {{amount}}",
+    "leg_role": "Kind",
+    "leg_disbursement": "Paid out",
+    "leg_retained": "Retained",
+    "section_legs": "Split legs ({{count}})",
+    "suggest": "Suggest account",
+    "suggest_apply": "Apply",
+    "suggest_none": "No confident suggestion.",
+    "dupe_warning": "{{count}} transaction(s) with the same date, amount and counterparty already exist",
+    "col_base_amount": "Base amount"
   },
   "payment_schedule": {
     "title": "Payment schedule",

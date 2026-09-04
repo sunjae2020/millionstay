@@ -4,11 +4,16 @@ import { Link, useRoute, useLocation } from "wouter";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   ArrowLeft, ArrowDownLeft, ArrowRightLeft, ArrowUpRight, BookOpen, CheckCircle2,
-  FileText, Loader2, Send, XCircle, Ban, Banknote,
+  FileText, Loader2, Send, XCircle, Ban, Banknote, Split, Sparkles, Plus, Trash2, CopyCheck,
 } from "lucide-react";
 import { Layout } from "@/components/Layout";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from "@/components/ui/select";
 import {
   Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle,
 } from "@/components/ui/dialog";
@@ -55,6 +60,10 @@ interface TxnDetail {
   workflow_status: string;
   journal_entry_id: number | null;
   rejection_reason: string | null;
+  base_amount: number | null;
+  split_leg_count: number;
+  split_role: string | null;
+  parent_transaction_id: number | null;
 }
 
 const WF_META: Record<string, { cls: string }> = {
@@ -84,6 +93,8 @@ export default function TransactionDetail() {
   const { previewConfig, openPreview, closePreview } = useDocumentPreview();
   const [rejectOpen, setRejectOpen] = useState(false);
   const [reason, setReason] = useState("");
+  const [splitOpen, setSplitOpen] = useState(false);
+  const [suggestion, setSuggestion] = useState<{ code: string; name: string | null; reason: string | null } | null>(null);
 
   const { data, isLoading } = useQuery<{ data: TxnDetail }>({
     queryKey: ["transaction", id],
@@ -109,6 +120,41 @@ export default function TransactionDetail() {
     () => entry?.data?.find((e) => e.id === txn?.journal_entry_id),
     [entry, txn?.journal_entry_id],
   );
+
+  const { data: legs } = useQuery<{ data: Array<{ id: number; txn_ref: string; amount: number; split_role: string; counterparty_display: string | null; description: string | null; status: string }> }>({
+    queryKey: ["transaction-legs", id],
+    enabled: !!txn?.split_leg_count,
+    queryFn: async () => {
+      const res = await apiFetch(`/api/v1/transactions/${id}/split-children`);
+      if (!res.ok) throw new Error("Failed");
+      return res.json();
+    },
+  });
+
+  // 중복 감지는 규칙 기반이라 화면을 열 때마다 조용히 돌려도 부담이 없다.
+  const { data: dupes } = useQuery<{ data: Array<{ id: number; txn_ref: string; amount: number }> }>({
+    queryKey: ["transaction-dupes", id],
+    enabled: Number.isFinite(id),
+    queryFn: async () => {
+      const res = await apiFetch(`/api/v1/transactions/${id}/duplicates`);
+      if (!res.ok) throw new Error("Failed");
+      return res.json();
+    },
+  });
+
+  const suggest = useMutation({
+    mutationFn: async () => {
+      const res = await apiFetch(`/api/v1/transactions/${id}/suggest`, { method: "POST" });
+      const payload = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(payload?.error ?? "Failed");
+      return payload as { suggestion: { code: string; name: string | null; reason: string | null } | null };
+    },
+    onSuccess: (r) => {
+      setSuggestion(r.suggestion);
+      if (!r.suggestion) toast({ title: t("transaction.suggest_none") });
+    },
+    onError: (e: Error) => toast({ title: t("common.error"), description: e.message, variant: "destructive" }),
+  });
 
   const act = useMutation({
     mutationFn: async ({ verb, body }: { verb: string; body?: unknown }) => {
@@ -176,6 +222,41 @@ export default function TransactionDetail() {
           </div>
         )}
 
+        {/* 같은 날·같은 금액·같은 거래처가 이미 있으면 알린다. 두 번 입력했을
+            가능성이 높고, 전기까지 가면 되돌리기가 번거롭다. */}
+        {(dupes?.data?.length ?? 0) > 0 && (
+          <div className="border border-amber-200 bg-amber-50 rounded-lg px-4 py-3 text-sm">
+            <div className="flex items-center gap-1.5 font-medium text-amber-800">
+              <CopyCheck className="h-4 w-4" />{t("transaction.dupe_warning", { count: dupes!.data.length })}
+            </div>
+            <div className="mt-1 flex flex-wrap gap-2">
+              {dupes!.data.map((d) => (
+                <Link key={d.id} href={`/finance/transactions/${d.id}`} className="text-amber-700 underline">
+                  {d.txn_ref}
+                </Link>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {suggestion && (
+          <div className="border border-blue-200 bg-blue-50 rounded-lg px-4 py-3 text-sm flex flex-wrap items-center gap-2">
+            <Sparkles className="h-4 w-4 text-blue-600" />
+            <span className="font-medium text-blue-800">{suggestion.code} · {suggestion.name}</span>
+            {suggestion.reason && <span className="text-blue-700">— {suggestion.reason}</span>}
+            <Button size="sm" className="ml-auto h-7"
+              onClick={async () => {
+                await apiFetch(`/api/v1/transactions/${id}`, {
+                  method: "PUT", body: JSON.stringify({ gl_account_code: suggestion.code }),
+                });
+                setSuggestion(null);
+                qc.invalidateQueries({ queryKey: ["transaction", id] });
+              }}>
+              {t("transaction.suggest_apply")}
+            </Button>
+          </div>
+        )}
+
         {/* 결재 단계 */}
         <div className="flex flex-wrap items-center gap-2">
           {(wf === "draft" || wf === "rejected") && (
@@ -214,6 +295,19 @@ export default function TransactionDetail() {
               })}
             >
               <FileText className="h-3.5 w-3.5 mr-1" />{t("transaction.receipt")}
+            </Button>
+          )}
+          {txn.txn_type === "income" && !txn.parent_transaction_id && txn.status !== "void" && (
+            <Button size="sm" variant="outline"
+              onClick={() => (txn.split_leg_count ? act.mutate({ verb: "unsplit" }) : setSplitOpen(true))}>
+              <Split className="h-3.5 w-3.5 mr-1" />
+              {txn.split_leg_count ? t("transaction.unsplit") : t("transaction.split")}
+            </Button>
+          )}
+          {!txn.gl_account_code && txn.txn_type !== "transfer" && (
+            <Button size="sm" variant="outline" onClick={() => suggest.mutate()} disabled={suggest.isPending}>
+              {suggest.isPending ? <Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" /> : <Sparkles className="h-3.5 w-3.5 mr-1" />}
+              {t("transaction.suggest")}
             </Button>
           )}
           {txn.status !== "void" && (
@@ -293,6 +387,28 @@ export default function TransactionDetail() {
           </div>
         )}
 
+        {(legs?.data?.length ?? 0) > 0 && (
+          <div className="border rounded-lg bg-card overflow-hidden">
+            <div className="px-4 py-2.5 border-b bg-muted/20">
+              <h3 className="font-semibold">{t("transaction.section_legs", { count: legs!.data.length })}</h3>
+            </div>
+            <table className="w-full text-sm">
+              <tbody>
+                {legs!.data.map((l) => (
+                  <tr key={l.id} className="border-b last:border-0">
+                    <td className="px-4 py-2">
+                      <Link href={`/finance/transactions/${l.id}`} className="text-primary hover:underline">{l.txn_ref}</Link>
+                    </td>
+                    <td className="px-4 py-2 text-muted-foreground">{t(`transaction.leg_${l.split_role}`)}</td>
+                    <td className="px-4 py-2">{l.counterparty_display ?? l.description ?? "—"}</td>
+                    <td className="px-4 py-2 text-right tabular-nums font-medium">{money(l.amount)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+
         {txn.contract_id && (
           <PaymentScheduleCard contractId={txn.contract_id} currency={txn.currency} readOnly />
         )}
@@ -316,7 +432,127 @@ export default function TransactionDetail() {
         </DialogContent>
       </Dialog>
 
+      <SplitDialog
+        open={splitOpen}
+        onOpenChange={setSplitOpen}
+        txnId={id}
+        total={txn.amount}
+        currency={txn.currency}
+        onDone={() => {
+          qc.invalidateQueries({ queryKey: ["transaction", id] });
+          qc.invalidateQueries({ queryKey: ["transaction-legs", id] });
+          qc.invalidateQueries({ queryKey: ["transactions"] });
+        }}
+      />
+
       <DocumentPreviewDialog config={previewConfig} onClose={closePreview} />
     </Layout>
+  );
+}
+
+type Leg = { amount: string; role: "disbursement" | "retained"; counterparty_name: string; description: string };
+
+/**
+ * 분할 배분 입력. 원본 금액을 넘지 못하게 막고, 남은 금액을 계속 보여준다 —
+ * 나누다 보면 얼마가 남았는지가 유일하게 알고 싶은 값이다.
+ */
+function SplitDialog({
+  open, onOpenChange, txnId, total, currency, onDone,
+}: {
+  open: boolean;
+  onOpenChange: (v: boolean) => void;
+  txnId: number;
+  total: number;
+  currency: string;
+  onDone: () => void;
+}) {
+  const { t } = useTranslation();
+  const { toast } = useToast();
+  const brand = useBrand();
+  const [legs, setLegs] = useState<Leg[]>([{ amount: "", role: "disbursement", counterparty_name: "", description: "" }]);
+
+  const used = legs.reduce((s, l) => s + (Number(l.amount) || 0), 0);
+  const remaining = Math.round((total - used) * 100) / 100;
+  const money = (n: number) => formatMoney(n, currency, brand.currencyPosition);
+
+  const save = useMutation({
+    mutationFn: async () => {
+      const res = await apiFetch(`/api/v1/transactions/${txnId}/split`, {
+        method: "POST",
+        body: JSON.stringify({
+          legs: legs
+            .filter((l) => Number(l.amount) > 0)
+            .map((l) => ({
+              amount: Number(l.amount),
+              role: l.role,
+              counterparty_name: l.counterparty_name || null,
+              description: l.description || null,
+            })),
+        }),
+      });
+      const payload = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(payload?.error ?? "Failed");
+    },
+    onSuccess: () => { onDone(); onOpenChange(false); setLegs([{ amount: "", role: "disbursement", counterparty_name: "", description: "" }]); },
+    onError: (e: Error) => toast({ title: t("common.error"), description: e.message, variant: "destructive" }),
+  });
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-2xl">
+        <DialogHeader><DialogTitle>{t("transaction.split")}</DialogTitle></DialogHeader>
+        <p className="text-sm text-muted-foreground">
+          {t("transaction.split_hint", { total: money(total) })}
+        </p>
+        <div className="space-y-2 max-h-[50vh] overflow-y-auto">
+          {legs.map((leg, i) => (
+            <div key={i} className="grid grid-cols-12 gap-2 items-end">
+              <div className="col-span-3">
+                {i === 0 && <Label className="text-xs">{t("transaction.col_amount")}</Label>}
+                <Input type="number" value={leg.amount}
+                  onChange={(e) => setLegs(legs.map((l, j) => j === i ? { ...l, amount: e.target.value } : l))} />
+              </div>
+              <div className="col-span-3">
+                {i === 0 && <Label className="text-xs">{t("transaction.leg_role")}</Label>}
+                <Select value={leg.role} onValueChange={(v) => setLegs(legs.map((l, j) => j === i ? { ...l, role: v as Leg["role"] } : l))}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="disbursement">{t("transaction.leg_disbursement")}</SelectItem>
+                    <SelectItem value="retained">{t("transaction.leg_retained")}</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="col-span-5">
+                {i === 0 && <Label className="text-xs">{t("transaction.col_counterparty")}</Label>}
+                <Input value={leg.counterparty_name}
+                  onChange={(e) => setLegs(legs.map((l, j) => j === i ? { ...l, counterparty_name: e.target.value } : l))} />
+              </div>
+              <div className="col-span-1">
+                <Button variant="ghost" size="sm" className="h-9 w-9 p-0"
+                  onClick={() => setLegs(legs.filter((_, j) => j !== i))} disabled={legs.length === 1}>
+                  <Trash2 className="h-3.5 w-3.5" />
+                </Button>
+              </div>
+            </div>
+          ))}
+        </div>
+        <div className="flex items-center justify-between">
+          <Button variant="outline" size="sm"
+            onClick={() => setLegs([...legs, { amount: "", role: "disbursement", counterparty_name: "", description: "" }])}>
+            <Plus className="h-3.5 w-3.5 mr-1" />{t("transaction.split_add_leg")}
+          </Button>
+          <span className={`text-sm tabular-nums ${remaining < 0 ? "text-red-600 font-medium" : "text-muted-foreground"}`}>
+            {t("transaction.split_remaining", { amount: money(remaining) })}
+          </span>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>{t("common.cancel")}</Button>
+          <Button onClick={() => save.mutate()} disabled={save.isPending || used <= 0 || remaining < 0}>
+            {save.isPending && <Loader2 className="h-4 w-4 mr-1 animate-spin" />}
+            {t("common.save")}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }

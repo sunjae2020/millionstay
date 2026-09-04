@@ -7116,7 +7116,8 @@
       "document_intake": "文件收件箱识别分类",
       "website_enrich": "账户网站信息补全",
       "match_rationale": "寄宿家庭匹配理由",
-      "id_document_ocr": "证件 OCR（提取证件照）"
+      "id_document_ocr": "证件 OCR（提取证件照）",
+      "transaction_categorise": "交易科目建议"
     },
     "custom_engine": "自定义",
     "add_engine": "添加引擎",
@@ -7393,7 +7394,21 @@
     "mark_paid": "标记为已支付",
     "section_summary": "交易内容",
     "section_journal": "会计分录",
-    "all_approvals": "全部审批状态"
+    "all_approvals": "全部审批状态",
+    "split": "拆分分配",
+    "unsplit": "撤销拆分",
+    "split_hint": "把收到的 {{total}} 拆分到各去向。原始金额不变——明细只是说明。",
+    "split_add_leg": "添加明细",
+    "split_remaining": "剩余 {{amount}}",
+    "leg_role": "类别",
+    "leg_disbursement": "支出",
+    "leg_retained": "留存",
+    "section_legs": "拆分明细 ({{count}})",
+    "suggest": "建议会计科目",
+    "suggest_apply": "应用",
+    "suggest_none": "没有把握的建议。",
+    "dupe_warning": "已存在 {{count}} 笔相同日期、金额和往来单位的交易",
+    "col_base_amount": "本位币折算"
   },
   "payment_schedule": {
     "title": "付款计划",

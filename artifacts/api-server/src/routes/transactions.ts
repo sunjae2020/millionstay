@@ -17,6 +17,8 @@ import { DEFAULT_CURRENCY } from "../lib/currency";
 import { logAction } from "../utils/auditLog";
 import { deletedFilter, makeBulkDelete, makeBulkRestore } from "../lib/softDelete";
 import { postTransaction } from "../lib/billing/gl";
+import { stampBaseAmount } from "../lib/billing/baseAmount";
+import { getAiClient, isTaskConfigured } from "../lib/ai/client";
 import { buildReceiptHtml } from "../lib/documents/receiptDocument";
 import { type InvoiceDocInput } from "../lib/documents/invoiceDocument";
 import { resolveCompanyInfo } from "../lib/documents/companyInfo";
@@ -56,6 +58,18 @@ type TxnRow = typeof transactionsTable.$inferSelect;
 async function enrichTransactions(rows: TxnRow[]) {
   if (rows.length === 0) return [];
   const ids = <T>(vals: (T | null)[]) => [...new Set(vals.filter((v): v is T => v != null))];
+
+  const parentIds = rows.map((r) => r.id);
+  const legCounts = parentIds.length
+    ? await db.select({
+        parent: transactionsTable.parent_transaction_id,
+        n: sql<number>`count(*)::int`,
+      }).from(transactionsTable).where(and(
+        inArray(transactionsTable.parent_transaction_id, parentIds),
+        isNull(transactionsTable.deleted_at),
+      )).groupBy(transactionsTable.parent_transaction_id)
+    : [];
+  const legCountMap = new Map(legCounts.map((r) => [r.parent, r.n]));
 
   const contractIds = ids(rows.map((r) => r.contract_id));
   const invoiceIds = ids(rows.map((r) => r.invoice_id));
@@ -129,6 +143,8 @@ async function enrichTransactions(rows: TxnRow[]) {
       schedule_due_date: sch?.due_date ?? null,
       // 레거시 행(NULL)은 draft 로 읽는다 — 승인 도입 전에 만들어진 거래다.
       workflow_status: r.workflow_status ?? "draft",
+      base_amount: r.base_amount != null ? Number(r.base_amount) : null,
+      split_leg_count: legCountMap.get(r.id) ?? 0,
       // 거래처 표시용 단일 문자열: 계정 → 연락처 → 자유 입력 순.
       counterparty_display:
         (r.account_id != null ? accountMap.get(r.account_id) : null)
@@ -180,6 +196,13 @@ router.get("/v1/transactions", async (req, res): Promise<void> => {
     const to = String(req.query.to ?? "").trim();
     if (to) conditions.push(sql`${transactionsTable.txn_date} <= ${to}`);
 
+    // 분할 자식은 기본적으로 접는다 — 원본과 자식이 나란히 서면 같은 돈이 두 번
+    // 있는 것처럼 보인다. 검색 중이거나 명시적으로 요청하면 펼친다(자식을 이름으로
+    // 찾을 수 있어야 한다).
+    if (!q && req.query.include_legs !== "1") {
+      conditions.push(sql`${transactionsTable.parent_transaction_id} IS NULL`);
+    }
+
     if (q) {
       const like = `%${q}%`;
       conditions.push(sql`(
@@ -207,7 +230,10 @@ router.get("/v1/transactions", async (req, res): Promise<void> => {
         .offset((page - 1) * limit),
       db.select({
         total: sql<number>`count(*)::int`,
-        income: sql<string>`COALESCE(SUM(CASE WHEN ${transactionsTable.txn_type} = 'income' AND ${transactionsTable.status} IN ('confirmed','posted') THEN ${transactionsTable.amount} ELSE 0 END), 0)`,
+        // ⚠️ 유보(retained) leg 은 집계에서 뺀다. 원본 입금이 이미 그 돈을 세었고,
+        // 유보는 "그 중 얼마가 우리 몫인가"를 설명하는 배분일 뿐 은행을 다시
+        // 오간 돈이 아니다. 넣으면 100만 받고 120만 벌었다고 나온다.
+        income: sql<string>`COALESCE(SUM(CASE WHEN ${transactionsTable.txn_type} = 'income' AND ${transactionsTable.status} IN ('confirmed','posted') AND ${transactionsTable.split_role} IS DISTINCT FROM 'retained' THEN ${transactionsTable.amount} ELSE 0 END), 0)`,
         expense: sql<string>`COALESCE(SUM(CASE WHEN ${transactionsTable.txn_type} = 'expense' AND ${transactionsTable.status} IN ('confirmed','posted') THEN ${transactionsTable.amount} ELSE 0 END), 0)`,
       }).from(transactionsTable).where(where),
     ]);
@@ -325,8 +351,10 @@ router.post("/v1/transactions", async (req, res): Promise<void> => {
   try {
     const b = await inheritFromSchedule(parsed.data);
     const userId = (req as any).user?.id ?? null;
+    const fx = await stampBaseAmount(round2(Math.abs(b.amount)), b.currency || DEFAULT_CURRENCY, b.txn_date);
     const [row] = await db.insert(transactionsTable).values({
       ...txnValues(b),
+      ...fx,
       txn_ref: await nextTxnRef(),
       status: b.status ?? "draft",
       confirmed_at: b.status === "confirmed" || b.status === "posted" ? new Date() : null,
@@ -366,8 +394,11 @@ router.put("/v1/transactions/:id", async (req, res): Promise<void> => {
   const becameSettled = (nextStatus === "confirmed" || nextStatus === "posted")
     && before.status !== "confirmed" && before.status !== "posted";
 
+  // 금액·통화·날짜가 바뀌면 환산액도 다시 박는다(전기 후에는 금액 변경 자체가 막혀 있다).
+  const fx = await stampBaseAmount(round2(Math.abs(Number(b.amount))), b.currency || DEFAULT_CURRENCY, b.txn_date);
   const [row] = await db.update(transactionsTable).set({
     ...txnValues(b),
+    ...fx,
     status: nextStatus,
     ...(becameSettled ? { confirmed_at: new Date(), confirmed_by: userId } : {}),
     updated_at: new Date(),
@@ -414,6 +445,14 @@ router.post("/v1/transactions/:id/post", async (req, res): Promise<void> => {
   if (row.journal_entry_id) {
     const [data] = await enrichTransactions([row]);
     res.json({ success: true, data, already_posted: true });
+    return;
+  }
+  // 유보 leg 은 은행을 오간 돈이 아니라 배분 설명이다. 전기하면 Dr 현금 이 또
+  // 찍혀 현금이 실제보다 많아진다 — 원본 입금이 이미 그 현금을 잡았다.
+  if (row.split_role === "retained") {
+    res.status(409).json({
+      error: "A retained leg is an allocation, not a cash movement — the source transaction already posts the cash",
+    });
     return;
   }
   // 거래처가 없으면 원장에서 "누구와의 거래인지" 영원히 알 수 없다.
@@ -555,6 +594,226 @@ router.post("/v1/transactions/:id/mark-paid", async (req, res): Promise<void> =>
   void logAction({ entityType: ENTITY, entityId: id, action: "UPDATE", newValue: { workflow_status: "paid" } });
   const [data] = await enrichTransactions([updated!]);
   res.json({ success: true, data });
+});
+
+// ── AI 보조 ─────────────────────────────────────────────────────────────────
+// 계정과목 제안과 중복 감지. 둘 다 **사람이 확정하기 전 단계의 힌트**다 —
+// 제안이 틀려도 전기 전에 사람이 고치고, 원장은 불균형 분개를 어차피 거부한다.
+// AI 호출은 반드시 작업 레지스트리 경유(lib/ai/tasks.ts 의 transaction_categorise).
+
+/**
+ * 적요·거래처로 계정과목을 제안한다. 계정과목 표를 그대로 보여주고 그 중에서
+ * 고르게 하므로, 표에 없는 코드를 지어내면 버리고 null 을 준다.
+ */
+router.post("/v1/transactions/:id/suggest", async (req, res): Promise<void> => {
+  const id = Number(req.params.id);
+  if (!isTaskConfigured("transaction_categorise")) {
+    res.status(503).json({ error: "AI is not configured for this instance" });
+    return;
+  }
+  const [row] = await db.select().from(transactionsTable).where(eq(transactionsTable.id, id)).limit(1);
+  if (!row) { res.status(404).json({ error: "Not found" }); return; }
+
+  const accounts = await db.select({
+    code: chartOfAccountsTable.code,
+    name: chartOfAccountsTable.name,
+    type: chartOfAccountsTable.account_type,
+  }).from(chartOfAccountsTable).where(and(
+    eq(chartOfAccountsTable.is_active, true),
+    isNull(chartOfAccountsTable.deleted_at),
+    // 수입이면 수익 계정, 지출이면 비용 계정만 후보로 준다 — 방향이 뻔한데
+    // 전체를 보여주면 엉뚱한 쪽을 고를 여지만 넓어진다.
+    row.txn_type === "income"
+      ? sql`${chartOfAccountsTable.account_type} IN ('revenue','liability')`
+      : sql`${chartOfAccountsTable.account_type} IN ('expense','asset')`,
+  )).orderBy(chartOfAccountsTable.code);
+  if (accounts.length === 0) { res.json({ success: true, suggestion: null }); return; }
+
+  const [enriched] = await enrichTransactions([row]);
+  const catalogue = accounts.map((a) => `${a.code} ${a.name} (${a.type})`).join("\n");
+  const prompt = [
+    "You are helping a Korean property-management back office categorise one bank transaction.",
+    "Pick the SINGLE best account code from the catalogue. If nothing fits well, return null.",
+    "",
+    "Catalogue:",
+    catalogue,
+    "",
+    "Transaction:",
+    `  direction: ${row.txn_type}`,
+    `  amount: ${row.amount} ${row.currency}`,
+    `  counterparty: ${enriched?.counterparty_display ?? "(unknown)"}`,
+    `  memo: ${row.description ?? "(none)"}`,
+    `  bank reference: ${row.bank_reference ?? "(none)"}`,
+    `  contract: ${enriched?.contract_ref ?? "(none)"}`,
+    "",
+    'Reply with JSON only: {"code": "<code or null>", "confidence": 0.0-1.0, "reason": "<one short sentence>"}',
+  ].join("\n");
+
+  try {
+    const ai = getAiClient("transaction_categorise");
+    const msg = await ai.messages.create({
+      max_tokens: 300,
+      messages: [{ role: "user", content: prompt }],
+    });
+    const text = msg.content.map((c) => (c.type === "text" ? c.text : "")).join("").trim();
+    const json = /\{[\s\S]*\}/.exec(text)?.[0];
+    const parsed = json ? JSON.parse(json) as { code?: string | null; confidence?: number; reason?: string } : null;
+    // 표에 없는 코드는 버린다 — 모델이 그럴듯한 코드를 지어내는 것이 가장 흔한 실패다.
+    const valid = parsed?.code && accounts.some((a) => a.code === parsed.code) ? parsed.code : null;
+    res.json({
+      success: true,
+      suggestion: valid
+        ? { code: valid, name: accounts.find((a) => a.code === valid)?.name ?? null, confidence: parsed?.confidence ?? null, reason: parsed?.reason ?? null }
+        : null,
+    });
+  } catch (err) {
+    console.error("[POST /v1/transactions/:id/suggest]", err);
+    res.status(502).json({ error: "Suggestion failed" });
+  }
+});
+
+/**
+ * 중복 입력 감지. AI 없이 결정적으로 판단한다 — 같은 날·같은 금액·같은 거래처면
+ * 중복이고, 그건 규칙으로 충분하다. 모델을 부르면 비용만 들고 답이 흔들린다.
+ */
+router.get("/v1/transactions/:id/duplicates", async (req, res): Promise<void> => {
+  const id = Number(req.params.id);
+  const [row] = await db.select().from(transactionsTable).where(eq(transactionsTable.id, id)).limit(1);
+  if (!row) { res.status(404).json({ error: "Not found" }); return; }
+
+  const rows = await db.select().from(transactionsTable).where(and(
+    sql`${transactionsTable.id} <> ${id}`,
+    isNull(transactionsTable.deleted_at),
+    sql`${transactionsTable.status} <> 'void'`,
+    eq(transactionsTable.txn_date, row.txn_date),
+    eq(transactionsTable.txn_type, row.txn_type),
+    sql`${transactionsTable.amount} = ${row.amount}`,
+    row.account_id != null
+      ? eq(transactionsTable.account_id, row.account_id)
+      : row.counterparty_name
+        ? eq(transactionsTable.counterparty_name, row.counterparty_name)
+        : sql`true`,
+  )).limit(10);
+
+  res.json({ success: true, data: await enrichTransactions(rows) });
+});
+
+// ── 분할 배분 ───────────────────────────────────────────────────────────────
+// 입금 한 건이 여러 지출로 갈라지는 흐름 — 월세를 받아 집주인에게 넘기고 수수료를
+// 뗀다. 지금까지는 세 건의 무관한 거래로 남아 "이 송금이 어느 입금에서 나왔나"에
+// 답이 없었다.
+//
+// 원본(source)은 **금액을 바꾸지 않는다.** 받은 돈은 받은 돈이다. 자식들이 그 돈이
+// 어디로 갔는지 설명할 뿐이고, 합계가 원본을 넘지 못하게 막는다.
+
+const SplitBody = z.object({
+  legs: z.array(z.object({
+    amount: z.number().positive(),
+    /** 'disbursement' 밖으로 나간 돈 | 'retained' 우리가 가진 몫 */
+    role: z.enum(["disbursement", "retained"]).default("disbursement"),
+    account_id: z.number().int().positive().nullish(),
+    counterparty_name: z.string().nullish(),
+    payment_schedule_id: z.number().int().positive().nullish(),
+    gl_account_code: z.string().nullish(),
+    description: z.string().nullish(),
+  })).min(1),
+});
+
+router.post("/v1/transactions/:id/split", async (req, res): Promise<void> => {
+  const id = Number(req.params.id);
+  const parsed = SplitBody.safeParse(req.body);
+  if (!parsed.success) { res.status(400).json({ error: parsed.error.message }); return; }
+
+  const [parent] = await db.select().from(transactionsTable).where(eq(transactionsTable.id, id)).limit(1);
+  if (!parent) { res.status(404).json({ error: "Not found" }); return; }
+  if (parent.parent_transaction_id) { res.status(409).json({ error: "A split leg cannot itself be split" }); return; }
+  if (parent.status === "void") { res.status(409).json({ error: "Voided transaction cannot be split" }); return; }
+
+  const legs = parsed.data.legs;
+  const total = round2(legs.reduce((s, l) => s + l.amount, 0));
+  const parentAmount = round2(Number(parent.amount ?? 0));
+  // 받은 것보다 많이 나눌 수는 없다. 남는 금액은 유보로 두면 되므로 부족은 허용한다.
+  if (total > parentAmount + 0.001) {
+    res.status(400).json({ error: `Legs total ${total} exceeds the source amount ${parentAmount}` });
+    return;
+  }
+
+  const existing = await db.select({ id: transactionsTable.id })
+    .from(transactionsTable)
+    .where(and(eq(transactionsTable.parent_transaction_id, id), isNull(transactionsTable.deleted_at)))
+    .limit(1);
+  if (existing.length > 0) {
+    res.status(409).json({ error: "Already split — unsplit first" });
+    return;
+  }
+
+  const userId = (req as any).user?.id ?? null;
+  const created: number[] = [];
+  for (const leg of legs) {
+    const fx = await stampBaseAmount(round2(leg.amount), parent.currency, parent.txn_date);
+    const [child] = await db.insert(transactionsTable).values({
+      txn_ref: await nextTxnRef(),
+      // 유보는 회사 안에 남는 돈이라 지출이 아니다 — 지출로 잡으면 비용이 부풀고
+      // 순액이 실제보다 작아 보인다.
+      txn_type: leg.role === "retained" ? "income" : "expense",
+      txn_date: parent.txn_date,
+      amount: String(round2(leg.amount)),
+      currency: parent.currency,
+      ...fx,
+      contract_id: parent.contract_id,
+      space_id: parent.space_id,
+      parent_transaction_id: id,
+      split_role: leg.role,
+      payment_schedule_id: leg.payment_schedule_id ?? null,
+      account_id: leg.account_id ?? null,
+      counterparty_name: leg.counterparty_name ?? null,
+      gl_account_code: leg.gl_account_code ?? null,
+      bank_account_id: parent.bank_account_id,
+      description: leg.description ?? parent.description,
+      status: "draft",
+      created_by: userId,
+    }).returning();
+    if (child) created.push(child.id);
+  }
+
+  await db.update(transactionsTable).set({ split_role: "source", updated_at: new Date() })
+    .where(eq(transactionsTable.id, id));
+
+  const scheduleIds = legs.map((l) => l.payment_schedule_id).filter((n): n is number => n != null);
+  if (scheduleIds.length) await recalcSchedulePaid(scheduleIds);
+  void logAction({ entityType: ENTITY, entityId: id, action: "UPDATE", newValue: { split: created.length } });
+  res.status(201).json({ success: true, created: created.length, ids: created });
+});
+
+/** 원본의 자식 legs. 목록이 접힌 그룹을 펼칠 때 쓴다. */
+router.get("/v1/transactions/:id/split-children", async (req, res): Promise<void> => {
+  const id = Number(req.params.id);
+  const rows = await db.select().from(transactionsTable).where(and(
+    eq(transactionsTable.parent_transaction_id, id),
+    isNull(transactionsTable.deleted_at),
+  )).orderBy(transactionsTable.id);
+  res.json({ success: true, data: await enrichTransactions(rows) });
+});
+
+/** 분할 되돌리기. 이미 전기된 자식이 있으면 막는다 — 원장에 남은 것을 지울 수는 없다. */
+router.post("/v1/transactions/:id/unsplit", async (req, res): Promise<void> => {
+  const id = Number(req.params.id);
+  const children = await db.select().from(transactionsTable).where(and(
+    eq(transactionsTable.parent_transaction_id, id),
+    isNull(transactionsTable.deleted_at),
+  ));
+  const posted = children.filter((c) => c.journal_entry_id != null);
+  if (posted.length > 0) {
+    res.status(409).json({ error: `${posted.length} leg(s) already posted to the ledger — void them instead` });
+    return;
+  }
+  const scheduleIds = children.map((c) => c.payment_schedule_id).filter((n): n is number => n != null);
+  await db.delete(transactionsTable).where(eq(transactionsTable.parent_transaction_id, id));
+  await db.update(transactionsTable).set({ split_role: null, updated_at: new Date() })
+    .where(eq(transactionsTable.id, id));
+  if (scheduleIds.length) await recalcSchedulePaid(scheduleIds);
+  void logAction({ entityType: ENTITY, entityId: id, action: "UPDATE", newValue: { unsplit: children.length } });
+  res.json({ success: true, removed: children.length });
 });
 
 // ── 삭제 ────────────────────────────────────────────────────────────────────

@@ -7157,7 +7157,8 @@
       "document_intake": "서류 인박스 판독·분류",
       "website_enrich": "계정 웹사이트 자동채움",
       "match_rationale": "홈스테이 매칭 사유",
-      "id_document_ocr": "신분증 판독(사진 추출)"
+      "id_document_ocr": "신분증 판독(사진 추출)",
+      "transaction_categorise": "거래 계정과목 제안"
     },
     "custom_engine": "직접 추가",
     "add_engine": "엔진 추가",
@@ -7434,7 +7435,21 @@
     "mark_paid": "지급 완료",
     "section_summary": "거래 내용",
     "section_journal": "분개",
-    "all_approvals": "전체 결재상태"
+    "all_approvals": "전체 결재상태",
+    "split": "분할 배분",
+    "unsplit": "분할 취소",
+    "split_hint": "받은 {{total}}이 어디로 갔는지 나눕니다. 원본 금액은 바뀌지 않습니다 — 자식은 설명일 뿐입니다.",
+    "split_add_leg": "항목 추가",
+    "split_remaining": "남은 금액 {{amount}}",
+    "leg_role": "구분",
+    "leg_disbursement": "지급",
+    "leg_retained": "유보",
+    "section_legs": "분할 내역 ({{count}})",
+    "suggest": "계정과목 제안",
+    "suggest_apply": "적용",
+    "suggest_none": "자신 있는 제안이 없습니다.",
+    "dupe_warning": "같은 날·같은 금액·같은 거래처 거래가 이미 {{count}}건 있습니다",
+    "col_base_amount": "기준통화 환산"
   },
   "payment_schedule": {
     "title": "결제 일정",

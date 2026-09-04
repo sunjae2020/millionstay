@@ -7112,7 +7112,8 @@
       "document_intake": "書類インボックスの判読・分類",
       "website_enrich": "アカウントのサイト情報取得",
       "match_rationale": "ホームステイのマッチ理由",
-      "id_document_ocr": "身分証 OCR（顔写真抽出）"
+      "id_document_ocr": "身分証 OCR（顔写真抽出）",
+      "transaction_categorise": "取引の勘定科目提案"
     },
     "custom_engine": "追加",
     "add_engine": "エンジンを追加",
@@ -7389,7 +7390,21 @@
     "mark_paid": "支払済みにする",
     "section_summary": "取引内容",
     "section_journal": "仕訳",
-    "all_approvals": "すべての承認状態"
+    "all_approvals": "すべての承認状態",
+    "split": "分割配分",
+    "unsplit": "分割を取消",
+    "split_hint": "受け取った {{total}} の行き先を分けます。元の金額は変わりません — 明細は説明にすぎません。",
+    "split_add_leg": "明細を追加",
+    "split_remaining": "残り {{amount}}",
+    "leg_role": "区分",
+    "leg_disbursement": "支払",
+    "leg_retained": "留保",
+    "section_legs": "分割明細 ({{count}})",
+    "suggest": "勘定科目を提案",
+    "suggest_apply": "適用",
+    "suggest_none": "確度の高い提案がありません。",
+    "dupe_warning": "同じ日・同じ金額・同じ取引先の取引がすでに {{count}} 件あります",
+    "col_base_amount": "基準通貨換算"
   },
   "payment_schedule": {
     "title": "支払スケジュール",

@@ -7057,7 +7057,8 @@
       "document_intake": "Đọc & phân loại tài liệu tiếp nhận",
       "website_enrich": "Bổ sung thông tin website của tài khoản",
       "match_rationale": "Lý do ghép nối homestay",
-      "id_document_ocr": "OCR giấy tờ tuỳ thân (cắt ảnh chân dung)"
+      "id_document_ocr": "OCR giấy tờ tuỳ thân (cắt ảnh chân dung)",
+      "transaction_categorise": "Gợi ý tài khoản giao dịch"
     },
     "custom_engine": "Tự thêm",
     "add_engine": "Thêm engine",
@@ -7334,7 +7335,21 @@
     "mark_paid": "Đánh dấu đã chi",
     "section_summary": "Nội dung giao dịch",
     "section_journal": "Bút toán",
-    "all_approvals": "Mọi trạng thái duyệt"
+    "all_approvals": "Mọi trạng thái duyệt",
+    "split": "Phân bổ",
+    "unsplit": "Huỷ phân bổ",
+    "split_hint": "Chia {{total}} đã nhận theo nơi tiền đi. Số tiền gốc không đổi — các dòng chỉ giải thích.",
+    "split_add_leg": "Thêm dòng",
+    "split_remaining": "Còn lại {{amount}}",
+    "leg_role": "Loại",
+    "leg_disbursement": "Chi ra",
+    "leg_retained": "Giữ lại",
+    "section_legs": "Dòng phân bổ ({{count}})",
+    "suggest": "Gợi ý tài khoản",
+    "suggest_apply": "Áp dụng",
+    "suggest_none": "Không có gợi ý đủ tin cậy.",
+    "dupe_warning": "Đã có {{count}} giao dịch cùng ngày, cùng số tiền và cùng đối tác",
+    "col_base_amount": "Quy đổi tiền cơ sở"
   },
   "payment_schedule": {
     "title": "Lịch thanh toán",

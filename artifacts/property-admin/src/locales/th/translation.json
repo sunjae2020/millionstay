@@ -7098,7 +7098,8 @@
       "document_intake": "อ่านและจัดประเภทเอกสารขาเข้า",
       "website_enrich": "ดึงข้อมูลเว็บไซต์ของบัญชี",
       "match_rationale": "เหตุผลการจับคู่โฮมสเตย์",
-      "id_document_ocr": "OCR เอกสารแสดงตน (ตัดรูปถ่าย)"
+      "id_document_ocr": "OCR เอกสารแสดงตน (ตัดรูปถ่าย)",
+      "transaction_categorise": "แนะนำรหัสบัญชีรายการ"
     },
     "custom_engine": "เพิ่มเอง",
     "add_engine": "เพิ่มเอนจิน",
@@ -7375,7 +7376,21 @@
     "mark_paid": "ทำเครื่องหมายว่าจ่ายแล้ว",
     "section_summary": "รายละเอียดรายการ",
     "section_journal": "รายการบัญชี",
-    "all_approvals": "ทุกสถานะอนุมัติ"
+    "all_approvals": "ทุกสถานะอนุมัติ",
+    "split": "แบ่งจ่าย",
+    "unsplit": "ยกเลิกการแบ่ง",
+    "split_hint": "แบ่ง {{total}} ที่ได้รับตามปลายทาง ยอดต้นทางไม่เปลี่ยน — รายการย่อยเป็นเพียงคำอธิบาย",
+    "split_add_leg": "เพิ่มรายการ",
+    "split_remaining": "คงเหลือ {{amount}}",
+    "leg_role": "ประเภท",
+    "leg_disbursement": "จ่ายออก",
+    "leg_retained": "เก็บไว้",
+    "section_legs": "รายการแบ่ง ({{count}})",
+    "suggest": "แนะนำรหัสบัญชี",
+    "suggest_apply": "ใช้",
+    "suggest_none": "ไม่มีคำแนะนำที่มั่นใจ",
+    "dupe_warning": "มีรายการวันที่ จำนวนเงิน และคู่ค้าเดียวกันอยู่แล้ว {{count}} รายการ",
+    "col_base_amount": "จำนวนสกุลหลัก"
   },
   "payment_schedule": {
     "title": "กำหนดชำระเงิน",
