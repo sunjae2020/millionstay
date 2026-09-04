@@ -18,6 +18,15 @@
 nixPkgs = ["...", "chromium"]
 
 [variables]
+# Node 24 — the version CI builds and typechecks with (.github/workflows/ci.yml).
+# MUST be pinned: nothing else in the repo declares a Node version, so nixpacks
+# fell back to its default (18) and the API crash-looped on boot the moment
+# @simplewebauthn/server@14 arrived — it reads `globalThis.crypto.subtle` at
+# module load, and the global `crypto` only exists from Node 19 on:
+#   TypeError: Cannot read properties of undefined (reading 'supports')
+# CI never caught it because it runs tsc + esbuild, never boots the server.
+NIXPACKS_NODE_VERSION = "24"
+
 # We use the system (nix) Chromium found on PATH, so skip puppeteer's ~150MB
 # Chromium download at install time.
 PUPPETEER_SKIP_DOWNLOAD = "true"
