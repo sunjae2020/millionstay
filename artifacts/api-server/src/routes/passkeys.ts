@@ -24,6 +24,7 @@ import { signGuestJWT, verifyGuestJWT } from "../middlewares/requireGuestAuth";
 import { issueRefreshToken } from "../lib/refreshTokens";
 import { PORTAL_TYPES } from "../lib/partnerPortal";
 import { formatPersonName } from "../lib/nameFormat";
+import { logAction } from "../utils/auditLog";
 import {
   resolveRp,
   storeChallenge,
@@ -230,6 +231,15 @@ router.post("/v1/auth/passkey/register/verify", async (req, res): Promise<void> 
         })
         .where(eq(webauthnCredentialsTable.id, existing.id))
         .returning();
+      // 자격증명 변경은 감사 대상이다 — 누가 언제 어떤 기기를 붙였는지 남는다.
+      void logAction({
+        entityType: `${caller.audience}_passkey`,
+        entityId: existing.id,
+        action: "UPDATE",
+        actorId: caller.id,
+        actorEmail: caller.userName,
+        newValue: { device_name: label, rp_id: rp.rpID },
+      });
       res.json({ success: true, data: publicCredential(updated) });
       return;
     }
@@ -249,6 +259,15 @@ router.post("/v1/auth/passkey/register/verify", async (req, res): Promise<void> 
         device_name: label,
       })
       .returning();
+
+    void logAction({
+      entityType: `${caller.audience}_passkey`,
+      entityId: row!.id,
+      action: "CREATE",
+      actorId: caller.id,
+      actorEmail: caller.userName,
+      newValue: { device_name: label, rp_id: rp.rpID },
+    });
 
     res.status(201).json({ success: true, data: publicCredential(row) });
   } catch (err: any) {
@@ -317,6 +336,14 @@ router.delete("/v1/auth/passkey/credentials/:id", async (req, res): Promise<void
     )
     .returning();
   if (!row) { fail(res, 404, "NOT_FOUND", "Passkey not found"); return; }
+  void logAction({
+    entityType: `${caller.audience}_passkey`,
+    entityId: row.id,
+    action: "DELETE",
+    actorId: caller.id,
+    actorEmail: caller.userName,
+    oldValue: { device_name: row.device_name, rp_id: row.rp_id },
+  });
   res.json({ success: true, data: { id: row.id } });
 });
 
@@ -390,6 +417,14 @@ router.post("/v1/auth/passkey/login/verify", async (req, res): Promise<void> => 
       .update(webauthnCredentialsTable)
       .set({ counter: verification.authenticationInfo.newCounter, last_used_at: now })
       .where(eq(webauthnCredentialsTable.id, stored.id));
+
+    void logAction({
+      entityType: `${audience}_passkey`,
+      entityId: stored.id,
+      action: "LOGIN",
+      actorId: stored.user_id,
+      newValue: { device_name: stored.device_name },
+    });
 
     const issued = await issueTokensFor(audience, stored.user_id, req);
     if (!issued) { fail(res, 403, "ACCOUNT_INACTIVE", "Account is not active"); return; }
