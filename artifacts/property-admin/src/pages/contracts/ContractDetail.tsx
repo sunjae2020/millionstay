@@ -697,6 +697,9 @@ export default function ContractDetail() {
   // 서식·종류에 따라 보여 줄 칸이 달라진다(민간임대주택 표준임대차계약서 전용 항목).
   const leaseForm = watch("lease_form");
   const watchLeaseMode = watch("lease_mode");
+  // 실 차임은 값이 있을 때만 유효한 예외값이라, 비어 있으면 흐리게 두고
+  // 입력하러 들어오면(포커스) 다시 또렷해진다.
+  const hasActualRent = String(watch("actual_monthly_rent") ?? "").trim() !== "";
 
   // 서식별 기본 납부 계좌 — Settings → Payment Info 에서 "기본 적용 서식"을 지정한
   // 계좌를 그 서식의 계약에 미리 채운다. 이미 고른 계좌는 건드리지 않고, 여기서
@@ -1492,7 +1495,7 @@ export default function ContractDetail() {
                         <Label>{t('contract.label_monthly_rent')}</Label>
                         <Input {...register("monthly_rent")} type="number" step="0.01" min="0" />
                       </div>
-                      <div>
+                      <div className={hasActualRent ? undefined : "opacity-50 transition-opacity focus-within:opacity-100 hover:opacity-100"}>
                         <Label>{t('contract.label_actual_monthly_rent')}</Label>
                         <Input {...register("actual_monthly_rent")} type="number" step="0.01" min="0" />
                         <p className="text-xs text-muted-foreground mt-1">{t('contract.hint_actual_monthly_rent')}</p>
