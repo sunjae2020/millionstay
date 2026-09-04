@@ -73,6 +73,7 @@ interface Transaction {
   notes: string | null;
   status: string;
   journal_entry_id: number | null;
+  workflow_status: string;
 }
 
 interface TxnListResponse {
@@ -84,6 +85,16 @@ const TYPE_META: Record<string, { icon: typeof ArrowDownLeft; cls: string }> = {
   income:   { icon: ArrowDownLeft,  cls: "text-green-600" },
   expense:  { icon: ArrowUpRight,   cls: "text-red-600" },
   transfer: { icon: ArrowRightLeft, cls: "text-blue-600" },
+};
+
+const WF_CLASS: Record<string, string> = {
+  draft:     "bg-gray-100 text-gray-600",
+  submitted: "bg-amber-100 text-amber-700",
+  posted:    "bg-blue-100 text-blue-700",
+  confirmed: "bg-indigo-100 text-indigo-700",
+  paid:      "bg-green-100 text-green-700",
+  rejected:  "bg-red-100 text-red-700",
+  void:      "bg-gray-100 text-gray-400 line-through",
 };
 
 const STATUS_CLASS: Record<string, string> = {
@@ -244,10 +255,19 @@ export default function TransactionList() {
       cell: (r) => {
         const Icon = TYPE_META[r.txn_type]?.icon ?? ArrowRightLeft;
         return (
-          <button className="flex items-center gap-1.5 font-medium text-primary hover:underline" onClick={() => openEdit(r)}>
-            <Icon className={`h-3.5 w-3.5 ${TYPE_META[r.txn_type]?.cls ?? ""}`} />
-            {r.txn_ref}
-          </button>
+          <div className="flex items-center gap-1.5">
+            <Icon className={`h-3.5 w-3.5 shrink-0 ${TYPE_META[r.txn_type]?.cls ?? ""}`} />
+            <Link href={`/finance/transactions/${r.id}`} className="font-medium text-primary hover:underline">
+              {r.txn_ref}
+            </Link>
+            <button
+              className="text-xs text-muted-foreground hover:text-foreground"
+              onClick={() => openEdit(r)}
+              title={t("transaction.edit")}
+            >
+              ✎
+            </button>
+          </div>
         );
       },
     },
@@ -318,6 +338,15 @@ export default function TransactionList() {
       cell: (r) => (
         <span className="text-muted-foreground text-xs">
           {r.gl_account_code ? `${r.gl_account_code} ${r.gl_account_name ?? ""}`.trim() : "—"}
+        </span>
+      ),
+    },
+    {
+      key: "workflow_status",
+      header: "transaction.col_approval",
+      cell: (r) => (
+        <span className={`px-2 py-0.5 rounded text-xs font-medium ${WF_CLASS[r.workflow_status ?? "draft"] ?? WF_CLASS.draft}`}>
+          {t(`transaction.wf_${r.workflow_status ?? "draft"}`)}
         </span>
       ),
     },

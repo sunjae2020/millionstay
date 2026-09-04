@@ -7374,7 +7374,22 @@
     "per_page": "{{n}}件ずつ",
     "no_ar_lines": "この契約に未精算の受取回次がありません。",
     "no_ap_lines": "この契約に未精算の支払回次がありません。",
-    "receipt": "領収書"
+    "receipt": "領収書",
+    "wf_draft": "下書き",
+    "wf_submitted": "承認待ち",
+    "wf_posted": "仕訳済み",
+    "wf_confirmed": "確認済み",
+    "wf_paid": "支払済み",
+    "wf_rejected": "差戻し",
+    "wf_void": "取消",
+    "col_approval": "承認",
+    "submit": "承認申請",
+    "reject": "差戻し",
+    "reject_hint": "何を直すべきか書いてください — 理由のない差戻しは対応できません。",
+    "mark_paid": "支払済みにする",
+    "section_summary": "取引内容",
+    "section_journal": "仕訳",
+    "all_approvals": "すべての承認状態"
   },
   "payment_schedule": {
     "title": "支払スケジュール",

@@ -7419,7 +7419,22 @@
     "per_page": "{{n}} / page",
     "no_ar_lines": "No unsettled receivable items on this contract.",
     "no_ap_lines": "No unsettled payable items on this contract.",
-    "receipt": "Receipt"
+    "receipt": "Receipt",
+    "wf_draft": "Draft",
+    "wf_submitted": "Submitted",
+    "wf_posted": "Posted",
+    "wf_confirmed": "Confirmed",
+    "wf_paid": "Paid",
+    "wf_rejected": "Rejected",
+    "wf_void": "Void",
+    "col_approval": "Approval",
+    "submit": "Submit for approval",
+    "reject": "Reject",
+    "reject_hint": "Say what needs fixing — a rejection without a reason cannot be acted on.",
+    "mark_paid": "Mark as paid",
+    "section_summary": "Summary",
+    "section_journal": "Journal entry",
+    "all_approvals": "All approvals"
   },
   "payment_schedule": {
     "title": "Payment schedule",

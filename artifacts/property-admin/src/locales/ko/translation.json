@@ -7419,7 +7419,22 @@
     "per_page": "{{n}}건씩",
     "no_ar_lines": "이 계약에 미정산 받을 돈 회차가 없습니다.",
     "no_ap_lines": "이 계약에 미정산 줄 돈 회차가 없습니다.",
-    "receipt": "영수증"
+    "receipt": "영수증",
+    "wf_draft": "초안",
+    "wf_submitted": "결재 대기",
+    "wf_posted": "전기 완료",
+    "wf_confirmed": "확인",
+    "wf_paid": "지급 완료",
+    "wf_rejected": "반려",
+    "wf_void": "취소",
+    "col_approval": "결재",
+    "submit": "결재 올림",
+    "reject": "반려",
+    "reject_hint": "무엇을 고쳐야 하는지 적어 주세요 — 사유 없는 반려는 처리할 수 없습니다.",
+    "mark_paid": "지급 완료",
+    "section_summary": "거래 내용",
+    "section_journal": "분개",
+    "all_approvals": "전체 결재상태"
   },
   "payment_schedule": {
     "title": "결제 일정",

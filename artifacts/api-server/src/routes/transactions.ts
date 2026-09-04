@@ -127,6 +127,8 @@ async function enrichTransactions(rows: TxnRow[]) {
       schedule_label: sch?.label ?? null,
       schedule_period: sch?.period ?? null,
       schedule_due_date: sch?.due_date ?? null,
+      // 레거시 행(NULL)은 draft 로 읽는다 — 승인 도입 전에 만들어진 거래다.
+      workflow_status: r.workflow_status ?? "draft",
       // 거래처 표시용 단일 문자열: 계정 → 연락처 → 자유 입력 순.
       counterparty_display:
         (r.account_id != null ? accountMap.get(r.account_id) : null)
@@ -145,6 +147,16 @@ router.get("/v1/transactions", async (req, res): Promise<void> => {
 
     const type = String(req.query.txn_type ?? "").trim();
     if (type) conditions.push(eq(transactionsTable.txn_type, type));
+
+    const wf = String(req.query.workflow_status ?? "").trim();
+    if (wf === "draft") {
+      // 레거시 NULL 행도 draft 로 잡아준다.
+      conditions.push(sql`(${transactionsTable.workflow_status} = 'draft' OR ${transactionsTable.workflow_status} IS NULL)`);
+    } else if (wf === "not_paid") {
+      conditions.push(sql`${transactionsTable.workflow_status} IS DISTINCT FROM 'paid'`);
+    } else if (wf) {
+      conditions.push(eq(transactionsTable.workflow_status, wf));
+    }
 
     const status = String(req.query.status ?? "").trim();
     // 취소(void)된 거래는 명시적으로 찾을 때만 보인다 — 기본 목록에 섞이면
@@ -378,6 +390,8 @@ router.post("/v1/transactions/:id/confirm", async (req, res): Promise<void> => {
   if (row.status === "void") { res.status(409).json({ error: "Voided transaction cannot be confirmed" }); return; }
   const [updated] = await db.update(transactionsTable).set({
     status: row.status === "posted" ? "posted" : "confirmed",
+    // 결재 단계도 함께 민다. 두 축을 따로 관리하게 두면 반드시 어긋난다.
+    workflow_status: row.workflow_status === "paid" ? "paid" : "confirmed",
     confirmed_at: row.confirmed_at ?? new Date(),
     confirmed_by: row.confirmed_by ?? ((req as any).user?.id ?? null),
     updated_at: new Date(),
@@ -432,6 +446,7 @@ router.post("/v1/transactions/:id/post", async (req, res): Promise<void> => {
 
   const [updated] = await db.update(transactionsTable).set({
     status: "posted",
+    workflow_status: row.workflow_status === "paid" ? "paid" : "posted",
     journal_entry_id: entry.id,
     posted_at: new Date(),
     posted_by: (req as any).user?.id ?? null,
@@ -454,6 +469,7 @@ router.post("/v1/transactions/:id/void", async (req, res): Promise<void> => {
   const reason = typeof req.body?.reason === "string" ? req.body.reason : null;
   const [row] = await db.update(transactionsTable).set({
     status: "void",
+    workflow_status: "void",
     voided_at: new Date(),
     void_reason: reason,
     updated_at: new Date(),
@@ -462,6 +478,83 @@ router.post("/v1/transactions/:id/void", async (req, res): Promise<void> => {
   if (row.payment_schedule_id) await recalcSchedulePaid([row.payment_schedule_id]);
   void logAction({ entityType: ENTITY, entityId: id, action: "UPDATE", newValue: { status: "void", reason } });
   res.json({ success: true, data: row });
+});
+
+// ── 승인 워크플로 ───────────────────────────────────────────────────────────
+// draft → submitted → posted → confirmed → paid (+ rejected).
+// `status`(회계적 사실)와는 별도 축이다 — 결제 일정 집계는 계속 status 만 읽는다.
+//
+// 만든 사람과 승인하는 사람을 가르는 것이 목적이므로, 제출은 누구나 하되
+// 반려·지급은 관리자만 한다. 읽기 전용 Viewer 는 requireAuth 가 이미 막는다.
+
+function isAdmin(req: import("express").Request): boolean {
+  const role = (req as unknown as { user?: { role?: string } })?.user?.role;
+  return role === "SuperAdmin" || role === "Admin";
+}
+
+/** 결재 올림. 초안·반려 상태에서만 올릴 수 있다. */
+router.post("/v1/transactions/:id/submit", async (req, res): Promise<void> => {
+  const id = Number(req.params.id);
+  const [row] = await db.select().from(transactionsTable).where(eq(transactionsTable.id, id)).limit(1);
+  if (!row) { res.status(404).json({ error: "Not found" }); return; }
+  const wf = row.workflow_status ?? "draft";
+  if (wf !== "draft" && wf !== "rejected") {
+    res.status(409).json({ error: `Cannot submit from "${wf}"` }); return;
+  }
+  const [updated] = await db.update(transactionsTable).set({
+    workflow_status: "submitted",
+    submitted_by: (req as any).user?.id ?? null,
+    submitted_at: new Date(),
+    // 다시 올리는 것이므로 이전 반려 사유는 지운다 — 남겨두면 승인 화면에서
+    // 방금 고친 건이 여전히 반려된 것처럼 읽힌다.
+    rejected_by: null, rejected_at: null, rejection_reason: null,
+    updated_at: new Date(),
+  }).where(eq(transactionsTable.id, id)).returning();
+  void logAction({ entityType: ENTITY, entityId: id, action: "UPDATE", newValue: { workflow_status: "submitted" } });
+  const [data] = await enrichTransactions([updated!]);
+  res.json({ success: true, data });
+});
+
+/** 반려. 사유는 필수다 — 사유 없는 반려는 다시 올릴 때 무엇을 고쳐야 할지 알 수 없다. */
+router.post("/v1/transactions/:id/reject", async (req, res): Promise<void> => {
+  if (!isAdmin(req)) { res.status(403).json({ error: "Only an admin can reject" }); return; }
+  const id = Number(req.params.id);
+  const reason = typeof req.body?.reason === "string" ? req.body.reason.trim() : "";
+  if (!reason) { res.status(400).json({ error: "A rejection reason is required" }); return; }
+  const [updated] = await db.update(transactionsTable).set({
+    workflow_status: "rejected",
+    rejected_by: (req as any).user?.id ?? null,
+    rejected_at: new Date(),
+    rejection_reason: reason,
+    updated_at: new Date(),
+  }).where(eq(transactionsTable.id, id)).returning();
+  if (!updated) { res.status(404).json({ error: "Not found" }); return; }
+  void logAction({ entityType: ENTITY, entityId: id, action: "UPDATE", newValue: { workflow_status: "rejected", reason } });
+  const [data] = await enrichTransactions([updated!]);
+  res.json({ success: true, data });
+});
+
+/**
+ * 지급 완료(송금함). 지출의 마지막 단계이고 관리자만 누른다.
+ * 전기까지 끝난 건에만 허용한다 — 원장에 없는 돈을 "보냈다"고 표시할 수는 없다.
+ */
+router.post("/v1/transactions/:id/mark-paid", async (req, res): Promise<void> => {
+  if (!isAdmin(req)) { res.status(403).json({ error: "Only an admin can mark a transaction paid" }); return; }
+  const id = Number(req.params.id);
+  const [row] = await db.select().from(transactionsTable).where(eq(transactionsTable.id, id)).limit(1);
+  if (!row) { res.status(404).json({ error: "Not found" }); return; }
+  if (row.status !== "posted") {
+    res.status(409).json({ error: "Post the transaction to the ledger before marking it paid" }); return;
+  }
+  const [updated] = await db.update(transactionsTable).set({
+    workflow_status: "paid",
+    paid_by: (req as any).user?.id ?? null,
+    paid_at: new Date(),
+    updated_at: new Date(),
+  }).where(eq(transactionsTable.id, id)).returning();
+  void logAction({ entityType: ENTITY, entityId: id, action: "UPDATE", newValue: { workflow_status: "paid" } });
+  const [data] = await enrichTransactions([updated!]);
+  res.json({ success: true, data });
 });
 
 // ── 삭제 ────────────────────────────────────────────────────────────────────

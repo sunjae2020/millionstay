@@ -80,6 +80,23 @@ export const transactionsTable = pgTable("transactions", {
   voided_at: timestamp("voided_at", { withTimezone: true }),
   void_reason: text("void_reason"),
 
+  // ── 승인 워크플로 (0081) ──────────────────────────────────────────────────
+  // draft → submitted → posted → confirmed → paid (+ rejected | void).
+  // 위의 `status` 와 **별도 축**이다. status 는 결제 일정 집계가 읽는 회계적
+  // 사실("돈이 움직였는가")이고, 이쪽은 결재 진행 상태다. 하나로 합치면
+  // "확정"의 뜻이 둘로 갈라져 미납 계산이 흔들린다.
+  // NULL = 레거시 행 → draft 로 읽는다.
+  workflow_status: text("workflow_status"),
+  submitted_by: integer("submitted_by"),
+  submitted_at: timestamp("submitted_at", { withTimezone: true }),
+  rejected_by: integer("rejected_by"),
+  rejected_at: timestamp("rejected_at", { withTimezone: true }),
+  rejection_reason: text("rejection_reason"),
+  paid_at: timestamp("paid_at", { withTimezone: true }),
+  paid_by: integer("paid_by"),
+  /** 담당 직원 — 이 지출을 요청한 사람. 승인자가 판단하려면 필요하다. */
+  owner_user_id: integer("owner_user_id"),
+
   created_by: integer("created_by"),
   deleted_at: timestamp("deleted_at", { withTimezone: true }),
   created_at: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
@@ -88,6 +105,10 @@ export const transactionsTable = pgTable("transactions", {
 
 export const TXN_TYPES = ["income", "expense", "transfer"] as const;
 export const TXN_STATUSES = ["draft", "confirmed", "posted", "void"] as const;
+/** 결재 진행 단계. `status`(회계적 사실)와 별도 축이다. */
+export const TXN_WORKFLOW_STATUSES = [
+  "draft", "submitted", "posted", "confirmed", "paid", "rejected", "void",
+] as const;
 /** 결제 일정·집계에 반영되는 상태(= 실제로 돈이 움직였다고 인정하는 상태). */
 export const TXN_SETTLED_STATUSES = ["confirmed", "posted"] as const;
 

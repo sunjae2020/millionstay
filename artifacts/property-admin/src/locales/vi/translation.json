@@ -7319,7 +7319,22 @@
     "per_page": "{{n}} / trang",
     "no_ar_lines": "Hợp đồng này không có kỳ phải thu chưa tất toán.",
     "no_ap_lines": "Hợp đồng này không có kỳ phải trả chưa tất toán.",
-    "receipt": "Biên nhận"
+    "receipt": "Biên nhận",
+    "wf_draft": "Nháp",
+    "wf_submitted": "Chờ duyệt",
+    "wf_posted": "Đã ghi sổ",
+    "wf_confirmed": "Đã xác nhận",
+    "wf_paid": "Đã chi",
+    "wf_rejected": "Bị trả lại",
+    "wf_void": "Đã huỷ",
+    "col_approval": "Phê duyệt",
+    "submit": "Trình duyệt",
+    "reject": "Trả lại",
+    "reject_hint": "Nêu rõ cần sửa gì — trả lại mà không có lý do thì không xử lý được.",
+    "mark_paid": "Đánh dấu đã chi",
+    "section_summary": "Nội dung giao dịch",
+    "section_journal": "Bút toán",
+    "all_approvals": "Mọi trạng thái duyệt"
   },
   "payment_schedule": {
     "title": "Lịch thanh toán",

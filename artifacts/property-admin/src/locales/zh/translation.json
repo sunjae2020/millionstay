@@ -7378,7 +7378,22 @@
     "per_page": "每页 {{n}} 条",
     "no_ar_lines": "该合同没有未结的应收期次。",
     "no_ap_lines": "该合同没有未结的应付期次。",
-    "receipt": "收据"
+    "receipt": "收据",
+    "wf_draft": "草稿",
+    "wf_submitted": "待审批",
+    "wf_posted": "已过账",
+    "wf_confirmed": "已确认",
+    "wf_paid": "已支付",
+    "wf_rejected": "已退回",
+    "wf_void": "已作废",
+    "col_approval": "审批",
+    "submit": "提交审批",
+    "reject": "退回",
+    "reject_hint": "请说明需要修改什么——没有理由的退回无法处理。",
+    "mark_paid": "标记为已支付",
+    "section_summary": "交易内容",
+    "section_journal": "会计分录",
+    "all_approvals": "全部审批状态"
   },
   "payment_schedule": {
     "title": "付款计划",
