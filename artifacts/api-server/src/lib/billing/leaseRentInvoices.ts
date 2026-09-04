@@ -15,6 +15,7 @@
 import { and, eq, gte, isNull, lte, or, sql } from "drizzle-orm";
 import { db, contractsTable, invoicesTable, spacesTable, integrationSettings } from "@workspace/db";
 import { DEFAULT_CURRENCY } from "../currency";
+import { linkInvoiceToSchedule } from "./scheduleLink";
 import { consolidatedAccountIds } from "./consolidatedInvoices";
 import { billingTodayIso, todayInBillingTz } from "./billingDate";
 
@@ -159,7 +160,7 @@ export async function generateLeaseRentInvoices(opts: { year?: number; month?: n
       unitName = space?.name ?? null;
     }
 
-    await db.insert(invoicesTable).values({
+    const [rentInvoice] = await db.insert(invoicesTable).values({
       invoice_ref: `RENT-${lease.id}-${year}${pad(month)}`,
       contract_id: lease.id,
       account_id: lease.account_id ?? null,
@@ -169,7 +170,12 @@ export async function generateLeaseRentInvoices(opts: { year?: number; month?: n
       status: "Sent",
       due_date: dueDate,
       description: `${year}년 ${month}월 월세${unitName ? ` (${unitName})` : ""}`,
-    });
+      // 대상 월을 남겨야 결제 일정의 그 달 회차와 맞출 수 있다.
+      billing_period: `${year}-${pad(month)}`,
+    }).returning();
+    // 생성한 청구서를 그 달의 회차에 박는다("청구했다"). 회차가 아직 없으면
+    // (계약에서 일정을 안 뽑았으면) 조용히 지나간다 — 청구 자체는 이미 끝났다.
+    if (rentInvoice) void linkInvoiceToSchedule(rentInvoice.id);
     created++;
   }
 

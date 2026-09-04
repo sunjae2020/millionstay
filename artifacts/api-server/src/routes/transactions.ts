@@ -387,6 +387,14 @@ router.post("/v1/transactions/:id/post", async (req, res): Promise<void> => {
   const [row] = await db.select().from(transactionsTable).where(eq(transactionsTable.id, id)).limit(1);
   if (!row) { res.status(404).json({ error: "Not found" }); return; }
   if (row.status === "void") { res.status(409).json({ error: "Voided transaction cannot be posted" }); return; }
+  // 이미 분개를 들고 있으면 다시 전기하지 않는다. 인보이스 수납이 만든 거래는
+  // `invoice_paid:<id>` 분개를 물려받는데, 여기서 또 전기하면 posting_key 가
+  // 달라(`transaction:<id>`) 멱등 가드를 빠져나가고 같은 돈이 두 번 기록된다.
+  if (row.journal_entry_id) {
+    const [data] = await enrichTransactions([row]);
+    res.json({ success: true, data, already_posted: true });
+    return;
+  }
   // 거래처가 없으면 원장에서 "누구와의 거래인지" 영원히 알 수 없다.
   if (!row.account_id && !row.contact_id && !row.counterparty_name?.trim()) {
     res.status(400).json({ error: "A counterparty (account, contact or name) is required before posting" });

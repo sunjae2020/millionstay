@@ -21,6 +21,7 @@ import { formatPostalAddress } from "@workspace/address";
 import { getStripe } from "./stripe";
 import { postInvoicePaid, postInvoiceIssued } from "../lib/billing/gl";
 import { generateSettlementsForInvoice } from "../lib/billing/payout";
+import { linkInvoiceToSchedule, recordInvoicePaymentTransaction } from "../lib/billing/scheduleLink";
 import { generateConsolidatedInvoices } from "../lib/billing/consolidatedInvoices";
 import { deletedFilter, makeBulkDelete, makeBulkRestore } from "../lib/softDelete";
 import { invoiceRecipient, notifySms } from "../lib/notify";
@@ -393,6 +394,10 @@ router.post("/v1/invoices/:id/send", async (req, res): Promise<void> => {
   // 통합 청구서는 자식 인보이스가 이미 채권을 들고 있으므로 전기하지 않는다.
   if (row.invoice_kind !== "consolidated") {
     void postInvoiceIssued({ id: row.id, amount: Number(row.amount), currency: row.currency, tax: Number(row.tax_amount ?? 0), issuedAt: new Date().toISOString() });
+    // 그 달의 결제 일정 회차에 이 청구서를 박는다("청구했다"). 맞는 회차가
+    // 없거나 후보가 여럿이면 아무것도 하지 않는다 — 엉뚱한 회차에 붙는 쪽이
+    // 안 붙는 쪽보다 훨씬 나쁘다.
+    void linkInvoiceToSchedule(row.id);
   }
   const [result] = await enrichInvoices([row]);
   res.json(result);
@@ -426,6 +431,12 @@ router.post("/v1/invoices/:id/pay", async (req, res): Promise<void> => {
         .where(eq(invoicesTable.id, child.id));
       void postInvoicePaid({ id: child.id, amount: Number(child.amount), currency: child.currency, tax: Number(child.tax_amount ?? 0), paidAt: paidAt.toISOString() });
       void generateSettlementsForInvoice(child.id);
+      // 수납을 거래 원장에도 남겨 결제 일정의 미납이 줄어들게 한다. 분개는 위에서
+      // 이미 올라갔으므로 거래는 그것을 물려받는다(이중 전기 방지).
+      void recordInvoicePaymentTransaction({
+        invoiceId: child.id, amount: Number(child.amount), currency: child.currency,
+        paidAt, paymentMethod: parsed.data.payment_method,
+      });
     }
   } else {
     // Auto-post the GL entry (best-effort; never blocks or alters the response).
@@ -433,6 +444,10 @@ router.post("/v1/invoices/:id/pay", async (req, res): Promise<void> => {
     // Fan the receipt out into payout legs (집주인 / 파트너 / 에이전트 + 유보).
     // Also best-effort: a settlement failure must never fail a payment.
     void generateSettlementsForInvoice(row.id);
+    void recordInvoicePaymentTransaction({
+      invoiceId: row.id, amount: Number(row.amount), currency: row.currency,
+      paidAt, paymentMethod: parsed.data.payment_method,
+    });
   }
   // 입금 확인 문자. 한국 임대차에서 "냈는데 처리됐나" 문의가 가장 흔한 문의이고,
   // 한 통이면 없어진다. 이메일 없이 번호만 있는 세입자가 대부분이라 SMS 가 주 채널이다.
