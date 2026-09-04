@@ -1221,7 +1221,7 @@
     "login_subtitle": "멜버른 숙소를 관리하려면 로그인하세요",
     "session_expired": "세션이 만료되었습니다. 다시 로그인해 주세요.",
     "email_label": "이메일 주소",
-    "email_placeholder": "your@email.com",
+    "email_placeholder": "you@example.com",
     "password_label": "비밀번호",
     "password_placeholder_login": "비밀번호를 입력하세요",
     "forgot_password": "비밀번호를 잊으셨나요?",

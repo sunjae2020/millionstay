@@ -248,7 +248,7 @@
     "title": "重置密码",
     "subtitle": "输入您的账户邮箱，我们将发送重置链接。",
     "email_label": "邮箱地址",
-    "email_placeholder": "you@partner.com",
+    "email_placeholder": "you@example.com",
     "submit": "发送重置链接",
     "sending": "发送中...",
     "back_to_login": "返回登录",

@@ -120,7 +120,7 @@ export default function Booking() {
         },
         {
           onSuccess: (res) => {
-            setAuth(res.token, res.user);
+            setAuth(res.token, res.user, res.refresh_token);
             setCurrentStep(2);
           },
           onError: (error: unknown) => {

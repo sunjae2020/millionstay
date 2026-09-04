@@ -365,7 +365,7 @@
     "sent": "{{email}} 계정이 있는 경우 재설정 링크를 보냈습니다. 받은편지함을 확인해 주세요. 링크는 1시간 후 만료됩니다.",
     "back_to_login": "로그인으로 돌아가기",
     "email": "이메일 주소",
-    "email_placeholder": "you@partner.com",
+    "email_placeholder": "you@example.com",
     "sending": "전송 중...",
     "send": "재설정 링크 보내기"
   },

@@ -1021,7 +1021,7 @@
     "login_subtitle": "เข้าสู่ระบบเพื่อจัดการห้องของคุณในเมลเบิร์น",
     "session_expired": "เซสชันของคุณหมดอายุแล้ว กรุณาเข้าสู่ระบบอีกครั้ง",
     "email_label": "อีเมล",
-    "email_placeholder": "your@email.com",
+    "email_placeholder": "you@example.com",
     "password_label": "รหัสผ่าน",
     "password_placeholder_login": "กรอกรหัสผ่าน",
     "forgot_password": "ลืมรหัสผ่าน?",

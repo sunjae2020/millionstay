@@ -24,6 +24,95 @@ function apiBase(): string {
 
 const BASE = `${apiBase()}/api`;
 const TOKEN_KEY = "partner_token";
+const REFRESH_KEY = "partner_refresh_token";
+const LAST_EMAIL_KEY = "partner_last_email";
+
+/* ── Session token plumbing ─────────────────────────────────────────────
+ * The access token lives an hour; the refresh token lives 30 days. The auth
+ * context subscribes here so a refresh triggered by any API call keeps the
+ * signed-in state in sync — an expired access token must never end the session.
+ */
+
+type TokenListener = (token: string | null) => void;
+const tokenListeners = new Set<TokenListener>();
+
+export function onTokenChange(listener: TokenListener): () => void {
+  tokenListeners.add(listener);
+  return () => { tokenListeners.delete(listener); };
+}
+
+export function getStoredToken(): string | null {
+  try { return localStorage.getItem(TOKEN_KEY); } catch { return null; }
+}
+
+export function getStoredRefreshToken(): string | null {
+  try { return localStorage.getItem(REFRESH_KEY); } catch { return null; }
+}
+
+export function storeSession(token: string | null, refreshToken?: string | null): void {
+  try {
+    if (token) localStorage.setItem(TOKEN_KEY, token);
+    else localStorage.removeItem(TOKEN_KEY);
+    if (refreshToken !== undefined) {
+      if (refreshToken) localStorage.setItem(REFRESH_KEY, refreshToken);
+      else localStorage.removeItem(REFRESH_KEY);
+    }
+  } catch {}
+  for (const l of tokenListeners) l(token);
+}
+
+/** Remember the address the partner signed in with, so the form can prefill it. */
+export function rememberLoginEmail(email: string): void {
+  try { localStorage.setItem(LAST_EMAIL_KEY, email); } catch {}
+}
+
+export function getRememberedLoginEmail(): string {
+  try { return localStorage.getItem(LAST_EMAIL_KEY) ?? ""; } catch { return ""; }
+}
+
+/** Milliseconds until the access token expires (negative once expired). */
+export function msUntilTokenExpiry(token: string | null = getStoredToken()): number | null {
+  if (!token) return null;
+  try {
+    const payload = JSON.parse(atob(token.split(".")[1].replace(/-/g, "+").replace(/_/g, "/")));
+    return typeof payload?.exp === "number" ? payload.exp * 1000 - Date.now() : null;
+  } catch { return null; }
+}
+
+let refreshInFlight: Promise<boolean> | null = null;
+
+/**
+ * Exchange the refresh token for a fresh access token.
+ *
+ * Single-flight: rotation revokes the presented refresh token, so two of these
+ * in parallel would invalidate the session instead of extending it.
+ */
+export function refreshAccessToken(): Promise<boolean> {
+  if (refreshInFlight) return refreshInFlight;
+
+  refreshInFlight = (async () => {
+    const rt = getStoredRefreshToken();
+    if (!rt) return false;
+    try {
+      const res = await fetch(`${BASE}/v1/auth/partner/refresh`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ refresh_token: rt }),
+      });
+      const data = await res.json().catch(() => null);
+      if (!res.ok || !data?.success || !data.token) return false;
+      storeSession(data.token, data.refresh_token ?? undefined);
+      return true;
+    } catch {
+      // Network blip — keep the session; the next call or timer retries.
+      return false;
+    }
+  })();
+
+  const pending = refreshInFlight;
+  pending.finally(() => { if (refreshInFlight === pending) refreshInFlight = null; });
+  return pending;
+}
 
 export class ApiError extends Error {
   readonly status: number;
@@ -63,34 +152,47 @@ async function safeReadJson(res: Response): Promise<unknown> {
   try { return JSON.parse(text); } catch { return { _raw: text }; }
 }
 
-function clearAuthAndRedirect(): void {
-  try { localStorage.removeItem(TOKEN_KEY); } catch {}
-  const here = window.location.pathname;
-  if (!/^\/(forgot-password|reset-password|apply)/.test(here)) {
-    window.location.href = "/?reason=session_expired";
-  }
+function isLoginPath(path: string): boolean {
+  return /\/auth\/(partner\/login|partner\/refresh)/.test(path);
+}
+
+function endSession(): void {
+  // Clear the tokens and let the app re-render its login screen in place: the
+  // route stays put, so signing back in returns the partner to the same page.
+  storeSession(null, null);
 }
 
 export async function apiFetch(path: string, options?: RequestInit): Promise<Response> {
-  const token = localStorage.getItem(TOKEN_KEY);
-  const isFormData = options?.body instanceof FormData;
-  const headers: HeadersInit = {
-    ...(isFormData ? {} : { "Content-Type": "application/json" }),
-    ...(token ? { Authorization: `Bearer ${token}` } : {}),
-    ...(options?.headers ?? {}),
+  const send = async (): Promise<Response> => {
+    const token = getStoredToken();
+    const isFormData = options?.body instanceof FormData;
+    const headers: HeadersInit = {
+      ...(isFormData ? {} : { "Content-Type": "application/json" }),
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      ...(options?.headers ?? {}),
+    };
+    try {
+      return await fetch(`${BASE}${path}`, { ...options, headers });
+    } catch (err) {
+      throw new ApiError(0, "NETWORK", friendlyMessage(0), { cause: String(err) });
+    }
   };
-  try {
-    return await fetch(`${BASE}${path}`, { ...options, headers });
-  } catch (err) {
-    throw new ApiError(0, "NETWORK", friendlyMessage(0), { cause: String(err) });
+
+  const res = await send();
+  // An expired access token is not the end of the session: rotate it and
+  // replay the request once, so the hour boundary goes unnoticed.
+  if (res.status === 401 && !isLoginPath(path) && await refreshAccessToken()) {
+    return send();
   }
+  return res;
 }
 
 async function handleResponse<T>(res: Response, path: string): Promise<T> {
   const body = await safeReadJson(res);
   if (res.status === 401) {
-    const isLoginAttempt = /\/auth\/(login|guest\/login|partner\/login)/.test(path);
-    if (!isLoginAttempt) clearAuthAndRedirect();
+    // apiFetch already tried to refresh — reaching here means the session is
+    // genuinely over.
+    if (!isLoginPath(path)) endSession();
     const serverErr = (body as any)?.error ?? (body as any)?.message;
     throw new ApiError(401, "UNAUTHORIZED", friendlyMessage(401, serverErr), body);
   }

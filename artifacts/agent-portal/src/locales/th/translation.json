@@ -248,7 +248,7 @@
     "title": "รีเซ็ตรหัสผ่าน",
     "subtitle": "กรอกอีเมลบัญชีของคุณ แล้วเราจะส่งลิงก์รีเซ็ตให้",
     "email_label": "ที่อยู่อีเมล",
-    "email_placeholder": "you@partner.com",
+    "email_placeholder": "you@example.com",
     "submit": "ส่งลิงก์รีเซ็ต",
     "sending": "กำลังส่ง...",
     "back_to_login": "กลับไปหน้าเข้าสู่ระบบ",

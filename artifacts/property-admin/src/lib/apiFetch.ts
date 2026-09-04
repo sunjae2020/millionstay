@@ -10,9 +10,100 @@
 
 const TOKEN_KEY = "ms_auth_token";
 const REFRESH_KEY = "ms_refresh_token";
+const LAST_EMAIL_KEY = "ms_last_email";
 
 export function getStoredToken(): string | null {
   try { return localStorage.getItem(TOKEN_KEY); } catch { return null; }
+}
+
+export function getStoredRefreshToken(): string | null {
+  try { return localStorage.getItem(REFRESH_KEY); } catch { return null; }
+}
+
+/** Remember the address the user signed in with, so the login form can prefill it. */
+export function rememberLoginEmail(email: string): void {
+  try { localStorage.setItem(LAST_EMAIL_KEY, email); } catch {}
+}
+
+export function getRememberedLoginEmail(): string {
+  try { return localStorage.getItem(LAST_EMAIL_KEY) ?? ""; } catch { return ""; }
+}
+
+/* ── Session token plumbing ─────────────────────────────────────────────
+ * The access token lives an hour; the refresh token lives 30 days. Anything
+ * that observes a token change (AuthContext) subscribes here, so a refresh
+ * triggered by a stray API call keeps React state in sync.
+ */
+
+type TokenListener = (token: string | null) => void;
+const tokenListeners = new Set<TokenListener>();
+
+export function onTokenChange(listener: TokenListener): () => void {
+  tokenListeners.add(listener);
+  return () => { tokenListeners.delete(listener); };
+}
+
+export function storeSession(token: string | null, refreshToken?: string | null): void {
+  try {
+    if (token) localStorage.setItem(TOKEN_KEY, token);
+    else localStorage.removeItem(TOKEN_KEY);
+    if (refreshToken !== undefined) {
+      if (refreshToken) localStorage.setItem(REFRESH_KEY, refreshToken);
+      else localStorage.removeItem(REFRESH_KEY);
+    }
+  } catch {}
+  for (const l of tokenListeners) l(token);
+}
+
+/** Seconds-since-epoch expiry of a JWT, or null when it can't be read. */
+export function getTokenExpiry(token: string | null): number | null {
+  if (!token) return null;
+  try {
+    const payload = JSON.parse(atob(token.split(".")[1].replace(/-/g, "+").replace(/_/g, "/")));
+    return typeof payload?.exp === "number" ? payload.exp : null;
+  } catch { return null; }
+}
+
+/** Milliseconds until the stored access token expires (negative once expired). */
+export function msUntilTokenExpiry(token: string | null = getStoredToken()): number | null {
+  const exp = getTokenExpiry(token);
+  return exp == null ? null : exp * 1000 - Date.now();
+}
+
+let refreshInFlight: Promise<boolean> | null = null;
+
+/**
+ * Exchange the refresh token for a fresh access token.
+ *
+ * Single-flight: concurrent callers (the scheduled refresh, a 401 retry, a
+ * second API call) share one request. Rotation revokes the old refresh token,
+ * so firing two of these at once used to invalidate the whole session.
+ */
+export function refreshAccessToken(): Promise<boolean> {
+  if (refreshInFlight) return refreshInFlight;
+
+  refreshInFlight = (async () => {
+    const rt = getStoredRefreshToken();
+    if (!rt) return false;
+    try {
+      const res = await fetch("/api/v1/auth/refresh", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ refresh_token: rt }),
+      });
+      const data = await res.json().catch(() => null);
+      if (!res.ok || !data?.success || !data.token) return false;
+      storeSession(data.token, data.refresh_token ?? undefined);
+      return true;
+    } catch {
+      // Network blip — keep the session; the next call or timer retries.
+      return false;
+    }
+  })();
+
+  const pending = refreshInFlight;
+  pending.finally(() => { if (refreshInFlight === pending) refreshInFlight = null; });
+  return pending;
 }
 
 /** Structured API error. Always thrown by `apiJson`. */
@@ -59,16 +150,28 @@ async function safeReadJson(res: Response): Promise<unknown> {
   try { return JSON.parse(text); } catch { return { _raw: text }; }
 }
 
+/** Where to send the user back after a re-login. Same-origin paths only. */
+export function loginUrlFor(currentPath?: string): string {
+  const here = currentPath ?? window.location.pathname + window.location.search + window.location.hash;
+  const isPublic = /^\/(login|register|forgot-password|reset-password)/.test(here);
+  if (isPublic || !here.startsWith("/")) return "/login";
+  return `/login?next=${encodeURIComponent(here)}`;
+}
+
 function clearAuthAndRedirect(): void {
-  try {
-    localStorage.removeItem(TOKEN_KEY);
-    localStorage.removeItem(REFRESH_KEY);
-  } catch {}
+  storeSession(null, null);
   // Avoid loops: don't redirect if already on a public page.
   const here = window.location.pathname;
   if (!/^\/(login|register|forgot-password|reset-password)/.test(here)) {
-    window.location.href = "/login?reason=session_expired";
+    const target = loginUrlFor();
+    window.location.href = target === "/login"
+      ? "/login?reason=session_expired"
+      : `${target}&reason=session_expired`;
   }
+}
+
+function isLoginPath(path: string): boolean {
+  return /\/auth\/(login|guest\/login|partner\/login|refresh)/.test(path);
 }
 
 /**
@@ -76,20 +179,30 @@ function clearAuthAndRedirect(): void {
  * inspect headers/streams. For everything else, prefer `apiJson`.
  */
 export async function apiFetch(path: string, init?: RequestInit): Promise<Response> {
-  const token = getStoredToken();
-  const isFormData = init?.body instanceof FormData;
-  const headers: Record<string, string> = {
-    ...(isFormData ? {} : { "Content-Type": "application/json" }),
-    ...(init?.headers as Record<string, string> ?? {}),
-  };
-  if (token) headers["Authorization"] = `Bearer ${token}`;
+  const send = async (): Promise<Response> => {
+    const token = getStoredToken();
+    const isFormData = init?.body instanceof FormData;
+    const headers: Record<string, string> = {
+      ...(isFormData ? {} : { "Content-Type": "application/json" }),
+      ...(init?.headers as Record<string, string> ?? {}),
+    };
+    if (token) headers["Authorization"] = `Bearer ${token}`;
 
-  try {
-    return await fetch(path, { ...init, headers });
-  } catch (err) {
-    // fetch only throws on network failure, CORS denial, or aborted requests.
-    throw new ApiError(0, "NETWORK", friendlyMessage(0), { cause: String(err) });
+    try {
+      return await fetch(path, { ...init, headers });
+    } catch (err) {
+      // fetch only throws on network failure, CORS denial, or aborted requests.
+      throw new ApiError(0, "NETWORK", friendlyMessage(0), { cause: String(err) });
+    }
+  };
+
+  const res = await send();
+  // An expired access token is not the end of the session: rotate it and
+  // replay the request once, so the user never notices the hour boundary.
+  if (res.status === 401 && !isLoginPath(path) && await refreshAccessToken()) {
+    return send();
   }
+  return res;
 }
 
 /**
@@ -102,9 +215,9 @@ export async function apiJson<T = unknown>(path: string, init?: RequestInit): Pr
 
   if (res.status === 401) {
     // Login attempt itself returns 401 with body — surface the message.
-    // Otherwise this is an expired session: log out and redirect.
-    const isLoginAttempt = /\/auth\/(login|guest\/login|partner\/login)/.test(path);
-    if (!isLoginAttempt) {
+    // Otherwise the session is genuinely gone (apiFetch already tried to
+    // refresh): log out and redirect, remembering where the user was.
+    if (!isLoginPath(path)) {
       clearAuthAndRedirect();
     }
     const serverErr = (body as any)?.error ?? (body as any)?.message;

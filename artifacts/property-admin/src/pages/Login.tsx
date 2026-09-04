@@ -2,6 +2,7 @@ import { useState, useRef, useEffect, FormEvent } from "react";
 import { useLocation, Link } from "wouter";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "@/contexts/AuthContext";
+import { getRememberedLoginEmail } from "@/lib/apiFetch";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Loader2, ChevronDown, Eye, EyeOff, Globe } from "lucide-react";
@@ -81,11 +82,23 @@ function LoginLanguageSwitcher() {
   );
 }
 
+/** Where the user was before the session ended — same-origin paths only. */
+function returnPath(): string {
+  try {
+    const next = new URLSearchParams(window.location.search).get("next");
+    if (next && next.startsWith("/") && !next.startsWith("//") && !next.startsWith("/login")) {
+      return next;
+    }
+  } catch {}
+  return "/dashboard";
+}
+
 export default function LoginPage() {
   const { login } = useAuth();
   const { t } = useTranslation();
   const [, navigate] = useLocation();
-  const [email, setEmail] = useState("");
+  // Signing back in after a session ends shouldn't mean retyping the address.
+  const [email, setEmail] = useState(getRememberedLoginEmail);
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
@@ -96,7 +109,7 @@ export default function LoginPage() {
     setLoading(true);
     try {
       await login(email, password);
-      navigate("/dashboard");
+      navigate(returnPath());
     } catch (err: any) {
       setError(err.message ?? t("login.invalid"));
     } finally {
@@ -197,7 +210,7 @@ export default function LoginPage() {
                   type="email"
                   autoComplete="email"
                   required
-                  placeholder="admin@millionstay.com"
+                  placeholder="you@example.com"
                   value={email}
                   onChange={e => setEmail(e.target.value)}
                   className="h-11 bg-white border-slate-200 text-slate-900 placeholder:text-slate-400"

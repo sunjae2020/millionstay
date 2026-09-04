@@ -64,7 +64,7 @@ export default function ForgotPasswordPage() {
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="you@partner.com"
+                  placeholder="you@example.com"
                   className="w-full h-11 pl-9 pr-3 rounded-lg border border-slate-200 bg-white text-slate-900 text-sm placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:border-transparent"
                   style={{ "--tw-ring-color": BRAND } as React.CSSProperties}
                 />

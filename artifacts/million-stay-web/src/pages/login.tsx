@@ -5,7 +5,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useGuestLogin } from "@/lib/guest-api";
-import { useAuthStore } from "@/lib/store";
+import { useAuthStore, rememberLoginEmail, getRememberedLoginEmail } from "@/lib/store";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
@@ -35,7 +35,8 @@ export default function Login() {
   type LoginFormData = z.infer<typeof loginSchema>;
   const form = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
-    defaultValues: { email: "", password: "" },
+    // Signing back in after a session ends shouldn't mean retyping the address.
+    defaultValues: { email: getRememberedLoginEmail(), password: "" },
   });
 
   const onSubmit = (data: LoginFormData) => {
@@ -43,7 +44,8 @@ export default function Login() {
       { data },
       {
         onSuccess: (res) => {
-          setAuth(res.token, res.user);
+          setAuth(res.token, res.user, res.refresh_token);
+          rememberLoginEmail(data.email);
           setLocation(redirectTo);
         },
         onError: (error: unknown) => {

@@ -248,7 +248,7 @@
     "title": "パスワードの再設定",
     "subtitle": "アカウントのメールアドレスを入力すると、再設定リンクをお送りします。",
     "email_label": "メールアドレス",
-    "email_placeholder": "you@partner.com",
+    "email_placeholder": "you@example.com",
     "submit": "再設定リンクを送信",
     "sending": "送信中...",
     "back_to_login": "ログインに戻る",

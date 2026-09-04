@@ -1180,7 +1180,7 @@
     "login_subtitle": "登录以管理您的墨尔本房间",
     "session_expired": "您的会话已过期，请重新登录。",
     "email_label": "邮箱地址",
-    "email_placeholder": "your@email.com",
+    "email_placeholder": "you@example.com",
     "password_label": "密码",
     "password_placeholder_login": "请输入密码",
     "forgot_password": "忘记密码？",

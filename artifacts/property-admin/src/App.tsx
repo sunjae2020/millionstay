@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { initTheme } from "@/lib/theme";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
+import { loginUrlFor } from "@/lib/apiFetch";
 import { useModules } from "@/hooks/useModules";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -180,7 +181,8 @@ function ProtectedRouter() {
   const isPublicPath = publicPaths.some(p => location === p || location.startsWith(p + "?"));
 
   if (!user && !isPublicPath) {
-    return <Redirect to="/login" />;
+    // Carry the current page along so the user lands back where they were.
+    return <Redirect to={loginUrlFor(location + window.location.search)} />;
   }
 
   if (user && location === "/login") {

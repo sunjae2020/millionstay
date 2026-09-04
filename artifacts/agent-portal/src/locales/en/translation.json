@@ -248,7 +248,7 @@
     "title": "Reset your password",
     "subtitle": "Enter your account email and we'll send you a reset link.",
     "email_label": "Email address",
-    "email_placeholder": "you@partner.com",
+    "email_placeholder": "you@example.com",
     "submit": "Send reset link",
     "sending": "Sending...",
     "back_to_login": "Back to login",

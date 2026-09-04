@@ -1,9 +1,16 @@
 import { createContext, useContext, useState, useEffect, useCallback, useRef, type ReactNode } from "react";
 import { setAuthTokenGetter } from "@workspace/api-client-react";
-import { getStoredToken, apiJson, ApiError } from "@/lib/apiFetch";
-
-const TOKEN_KEY = "ms_auth_token";
-const REFRESH_KEY = "ms_refresh_token";
+import {
+  getStoredToken,
+  getStoredRefreshToken,
+  storeSession,
+  onTokenChange,
+  refreshAccessToken,
+  msUntilTokenExpiry,
+  rememberLoginEmail,
+  apiJson,
+  ApiError,
+} from "@/lib/apiFetch";
 
 export interface AuthUser {
   id: number;
@@ -25,28 +32,10 @@ interface AuthContextValue {
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
-function getRefreshToken(): string | null {
-  try { return localStorage.getItem(REFRESH_KEY); } catch { return null; }
-}
-function setRefreshToken(t: string | null) {
-  try {
-    if (t) localStorage.setItem(REFRESH_KEY, t);
-    else localStorage.removeItem(REFRESH_KEY);
-  } catch {}
-}
-
-async function postRefresh(refresh_token: string): Promise<{ token: string; refresh_token: string } | null> {
-  try {
-    const res = await fetch("/api/v1/auth/refresh", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ refresh_token }),
-    });
-    const data = await res.json();
-    if (!res.ok || !data.success) return null;
-    return { token: data.token, refresh_token: data.refresh_token };
-  } catch { return null; }
-}
+// Renew this long before the access token (1h) actually expires, so a slow
+// network or a sleeping laptop still has room to recover before anything 401s.
+const RENEW_LEAD_MS = 10 * 60 * 1000;
+const MIN_RENEW_DELAY_MS = 15 * 1000;
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
@@ -58,23 +47,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   tokenRef.current = token;
 
   useEffect(() => {
-    setAuthTokenGetter(() => tokenRef.current);
+    // The generated client asks for a token before every request; renew a
+    // spent one here so those calls never 401 on a stale token either.
+    setAuthTokenGetter(async () => {
+      const remaining = msUntilTokenExpiry(getStoredToken());
+      if ((remaining == null || remaining < 30_000) && getStoredRefreshToken()) {
+        await refreshAccessToken();
+      }
+      return getStoredToken() ?? tokenRef.current;
+    });
     return () => setAuthTokenGetter(null);
   }, []);
 
-  const refreshNow = useCallback(async (): Promise<boolean> => {
-    const rt = getRefreshToken();
-    if (!rt) return false;
-    const out = await postRefresh(rt);
-    if (!out) return false;
-    localStorage.setItem(TOKEN_KEY, out.token);
-    setRefreshToken(out.refresh_token);
-    setToken(out.token);
-    return true;
-  }, []);
+  // A refresh can be triggered from anywhere (a stray API call retrying a 401).
+  // Mirror the stored token into React state whenever that happens.
+  useEffect(() => onTokenChange((t) => setToken(t)), []);
+
+  const refreshNow = useCallback(() => refreshAccessToken(), []);
 
   const logout = useCallback(() => {
-    const rt = getRefreshToken();
+    const rt = getStoredRefreshToken();
     const t = tokenRef.current;
     fetch("/api/v1/auth/logout", {
       method: "POST",
@@ -84,47 +76,82 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       },
       body: JSON.stringify({ refresh_token: rt }),
     }).catch(() => {});
-    localStorage.removeItem(TOKEN_KEY);
-    setRefreshToken(null);
-    setToken(null);
+    storeSession(null, null);
     setUser(null);
   }, []);
 
   useEffect(() => {
     const stored = getStoredToken();
-    if (!stored) { setIsLoading(false); return; }
-    fetch("/api/v1/auth/me", { headers: { Authorization: `Bearer ${stored}` } })
-      .then(async (r) => {
-        if (r.ok) return r.json();
-        // Try refresh once on 401
-        if (r.status === 401) {
-          const ok = await refreshNow();
-          if (ok) {
-            const t = tokenRef.current;
-            const r2 = await fetch("/api/v1/auth/me", { headers: { Authorization: `Bearer ${t}` } });
-            if (r2.ok) return r2.json();
-          }
-        }
-        throw new Error("auth_failed");
-      })
-      .then((data) => {
+    // An expired access token is recoverable as long as the 30-day refresh
+    // token is still there — don't bounce the user to /login over it.
+    if (!stored && !getStoredRefreshToken()) { setIsLoading(false); return; }
+
+    (async () => {
+      const me = async () => {
+        const t = getStoredToken();
+        if (!t) return null;
+        const r = await fetch("/api/v1/auth/me", { headers: { Authorization: `Bearer ${t}` } });
+        return r.ok ? await r.json() : null;
+      };
+
+      try {
+        let data = await me();
+        if (!data && await refreshAccessToken()) data = await me();
+        if (!data) throw new Error("auth_failed");
         setUser(data.user);
         setToken(getStoredToken());
-      })
-      .catch(() => {
-        localStorage.removeItem(TOKEN_KEY);
-        setRefreshToken(null);
-        setToken(null);
-      })
-      .finally(() => setIsLoading(false));
-  }, [refreshNow]);
+      } catch {
+        storeSession(null, null);
+        setUser(null);
+      } finally {
+        setIsLoading(false);
+      }
+    })();
+  }, []);
 
-  // Background access-token refresh: every 50 minutes (TTL is 60 min).
+  // Renew the access token ahead of its own expiry rather than on a fixed
+  // interval, and re-arm from the new token each time.
   useEffect(() => {
     if (!token) return;
-    const id = setInterval(() => { refreshNow(); }, 50 * 60 * 1000);
-    return () => clearInterval(id);
-  }, [token, refreshNow]);
+    let cancelled = false;
+    let timer: ReturnType<typeof setTimeout> | undefined;
+
+    const arm = () => {
+      const remaining = msUntilTokenExpiry(getStoredToken());
+      // Unreadable expiry → fall back to the old fixed cadence.
+      const delay = remaining == null
+        ? 50 * 60 * 1000
+        : Math.max(remaining - RENEW_LEAD_MS, MIN_RENEW_DELAY_MS);
+      timer = setTimeout(async () => {
+        if (cancelled) return;
+        await refreshAccessToken();
+        if (!cancelled) arm();
+      }, delay);
+    };
+    arm();
+
+    return () => { cancelled = true; if (timer) clearTimeout(timer); };
+  }, [token]);
+
+  // Timers don't fire reliably in a background tab and stop entirely while the
+  // machine sleeps — which is exactly when the token quietly expires. Catch up
+  // whenever the tab comes back or the network returns.
+  useEffect(() => {
+    if (!getStoredRefreshToken()) return;
+    const catchUp = () => {
+      if (document.visibilityState === "hidden") return;
+      const remaining = msUntilTokenExpiry(getStoredToken());
+      if (remaining == null || remaining < RENEW_LEAD_MS) void refreshAccessToken();
+    };
+    document.addEventListener("visibilitychange", catchUp);
+    window.addEventListener("focus", catchUp);
+    window.addEventListener("online", catchUp);
+    return () => {
+      document.removeEventListener("visibilitychange", catchUp);
+      window.removeEventListener("focus", catchUp);
+      window.removeEventListener("online", catchUp);
+    };
+  }, [token]);
 
   const login = useCallback(async (email: string, password: string) => {
     let data: any;
@@ -140,9 +167,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (!data?.success) {
       throw new ApiError(401, "LOGIN_FAILED", data?.error ?? "Invalid email or password.");
     }
-    localStorage.setItem(TOKEN_KEY, data.token);
-    if (data.refresh_token) setRefreshToken(data.refresh_token);
-    setToken(data.token);
+    storeSession(data.token, data.refresh_token ?? undefined);
+    rememberLoginEmail(email);
     setUser(data.user);
   }, []);
 

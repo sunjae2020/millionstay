@@ -528,7 +528,7 @@ export default function BookingNew() {
 
       const authData = await authRes.json();
       const newToken = authData.token;
-      useAuthStore.getState().setAuth(newToken, authData.user);
+      useAuthStore.getState().setAuth(newToken, authData.user, authData.refresh_token);
 
       toast({ title: loginMode === "register" ? t("booking_new.account_created_creating") : t("booking_new.signed_in_creating") });
 

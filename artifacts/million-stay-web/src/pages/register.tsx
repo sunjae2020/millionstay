@@ -78,7 +78,7 @@ export default function Register() {
       { data: { ...data, phone: phoneWithPrefix } },
       {
         onSuccess: (res) => {
-          setAuth(res.token, res.user);
+          setAuth(res.token, res.user, res.refresh_token);
           const displayName = formatPersonName(res.user.first_name, res.user.last_name) || res.user.email;
           toast({ title: t("auth.welcome_toast"), description: t("auth.welcome_desc", { name: displayName }) });
           setLocation(redirectTo);

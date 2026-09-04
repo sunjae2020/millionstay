@@ -357,7 +357,8 @@
     "back_to_login": "Quay lại đăng nhập",
     "email": "Địa chỉ email",
     "sending": "Đang gửi...",
-    "send": "Gửi liên kết đặt lại"
+    "send": "Gửi liên kết đặt lại",
+    "email_placeholder": "you@example.com"
   },
   "reset": {
     "err_policy": "Mật khẩu phải có từ 12 ký tự trở lên, bao gồm chữ hoa, chữ thường, số và ký tự đặc biệt.",

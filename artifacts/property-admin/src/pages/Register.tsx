@@ -196,7 +196,7 @@ export default function RegisterPage() {
                 required
                 value={email}
                 onChange={e => setEmail(e.target.value)}
-                placeholder="you@millionstay.com"
+                placeholder="you@example.com"
                 className="h-11 bg-white border-slate-200 text-slate-900 placeholder:text-slate-400"
               />
             </div>
