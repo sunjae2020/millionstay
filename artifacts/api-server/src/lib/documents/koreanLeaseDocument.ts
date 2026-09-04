@@ -78,6 +78,11 @@ export interface KoreanLeaseDocInput {
   balance_amount: number | null;
   balance_date: string | null;
   monthly_rent: number | null;
+  /**
+   * 차임의 단위 — 단기 계약은 월세가 아니라 주세/일세로 적힐 수 있다
+   * (contracts.rate_period). 생략하면 월세로 본다.
+   */
+  rent_period?: "daily" | "weekly" | "monthly" | null;
   rent_due_day: number | null;
   start_date: string | null;
   end_date: string | null;
@@ -207,6 +212,9 @@ function renderPremisesTable(d: KoreanLeaseDocInput): string {
     </table>`;
 }
 
+/** 차임 행의 라벨 — 단기 계약의 주세·일세를 "월세"로 적지 않는다. */
+const RENT_PERIOD_KO: Record<string, string> = { daily: "일세", weekly: "주세", monthly: "월세" };
+
 /** ② 계약내용 — amounts, term and payment accounts. */
 function renderTermsTable(d: KoreanLeaseDocInput, lang: DocLang): string {
   const date = (v: string | null) => leaseDate(v, lang);
@@ -223,7 +231,7 @@ function renderTermsTable(d: KoreanLeaseDocInput, lang: DocLang): string {
       ${row("임대차보증금", escapeHtml(amountKo(d.deposit_amount)))}
       ${d.down_payment != null ? row("계 약 금", `${escapeHtml(amountKo(d.down_payment))}${d.down_payment_date ? `은 ${escapeHtml(date(d.down_payment_date))} 입금한다.` : "은 계약시 입금"}`) : ""}
       ${d.balance_amount != null ? row("잔 금", `${escapeHtml(amountKo(d.balance_amount))}${d.balance_date ? `은 ${escapeHtml(date(d.balance_date))} 입금한다.` : ""}`) : ""}
-      ${d.monthly_rent != null ? row("차임(월세)", `${escapeHtml(amountKo(d.monthly_rent))}${d.rent_due_day ? `은 매월 ${d.rent_due_day}일에 입금한다.` : ""}`) : ""}
+      ${d.monthly_rent != null ? row(`차임(${RENT_PERIOD_KO[d.rent_period ?? "monthly"]})`, `${escapeHtml(amountKo(d.monthly_rent))}${d.rent_due_day && (d.rent_period ?? "monthly") === "monthly" ? `은 매월 ${d.rent_due_day}일에 입금한다.` : ""}`) : ""}
       ${row("임대차 기간", `${escapeHtml(date(d.start_date))} ~ ${escapeHtml(date(d.end_date))}`)}
       ${accounts ? row("납 부 계 좌", accounts) : ""}
     </table>`;

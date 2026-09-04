@@ -983,7 +983,25 @@ export async function buildContractDocInput(
       .from(accommodationCatalogTable).where(eq(accommodationCatalogTable.id, row.product_id));
     listMonthlyRent = p?.price ?? null;
   }
-  const actualMonthlyRent = row.monthly_rent ?? row.weekly_rate ?? null;
+  // 차임은 계약 유형에 따라 다른 칸에 든다: 장기는 `monthly_rent`, 단기는
+  // rate_period + rate_amount(구 weekly_rate) — LeaseAmountCell 과 같은 규칙이다.
+  // 단기 계약의 rate_amount 를 읽지 않아 계약서 "계약내용" 표에서 차임 행이
+  // 통째로 빠지는 문제가 있었다.
+  let rentAmount: number | null = null;
+  let rentPeriod: "daily" | "weekly" | "monthly" = "monthly";
+  if (row.monthly_rent != null) {
+    rentAmount = row.monthly_rent;
+  } else if (row.rate_amount != null) {
+    rentAmount = row.rate_amount;
+    rentPeriod = row.rate_period === "daily" || row.rate_period === "weekly" ? row.rate_period : "monthly";
+  } else if (row.weekly_rate != null) {
+    rentAmount = row.weekly_rate;
+    rentPeriod = "weekly";
+  }
+  // 정부 표준서식(주택임대차·국토부)의 "차임(월세)" 칸은 월 단위 금액만 받는다.
+  const actualMonthlyRent = row.monthly_rent
+    ?? (rentPeriod === "monthly" ? rentAmount : null)
+    ?? row.weekly_rate ?? null;
 
   let termsText = c.terms_text;
   let annexText: string | null = null;
@@ -1003,7 +1021,7 @@ export async function buildContractDocInput(
     if (tpl?.bodyHtml?.trim()) {
       // Substitute {{variables}} from the contract + its space, then split the
       // annex out so it prints as the last page of the SAME PDF.
-      const split = splitAnnex(renderString(tpl.bodyHtml, contractTemplateVars(c, row, premises, { list: listMonthlyRent, actual: actualMonthlyRent }, lang)));
+      const split = splitAnnex(renderString(tpl.bodyHtml, contractTemplateVars(c, row, premises, { list: listMonthlyRent, actual: rentAmount ?? actualMonthlyRent }, lang)));
       termsText = split.terms;
       annexText = split.annex;
       isKoreanLease = tpl === leaseTpl;
@@ -1148,7 +1166,8 @@ export async function buildContractDocInput(
       down_payment_date: row.down_payment_date,
       balance_amount: row.balance_amount,
       balance_date: row.balance_date,
-      monthly_rent: listMonthlyRent ?? actualMonthlyRent,
+      monthly_rent: listMonthlyRent ?? rentAmount,
+      rent_period: listMonthlyRent != null ? "monthly" : rentPeriod,
       rent_due_day: row.rent_due_day,
       start_date: row.start_date,
       end_date: row.end_date,
