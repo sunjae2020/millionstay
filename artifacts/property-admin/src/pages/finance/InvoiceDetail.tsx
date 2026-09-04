@@ -16,6 +16,7 @@ import {
   getListInvoicesQueryKey,
 } from "@workspace/api-client-react";
 import { Layout } from "@/components/Layout";
+import { PaymentScheduleCard } from "@/components/PaymentScheduleCard";
 import { LookupSelect } from "@/components/LookupSelect";
 import { AccountLookupSelect } from "@/components/AccountLookupSelect";
 import { Button } from "@/components/ui/button";
@@ -499,6 +500,18 @@ export default function InvoiceDetail() {
             </div>
           )}
         </form>
+
+        {/* 계약 결제 일정 — 이 청구서가 그 계약의 어느 회차를 청구한 것인지,
+            그리고 회차별로 얼마가 실제로 들어왔는지(거래 원장 집계). */}
+        {!isNew && invoice?.contract_id != null && (
+          <div className="mt-6">
+            <PaymentScheduleCard
+              contractId={invoice.contract_id}
+              currency={invoice.currency ?? undefined}
+              highlightInvoiceId={Number(id)}
+            />
+          </div>
+        )}
 
         {/* Mark Paid Dialog */}
         <Dialog open={payOpen} onOpenChange={setPayOpen}>

@@ -75,6 +75,7 @@ import ServiceDetail from "@/pages/services/ServiceDetail";
 
 // Finance
 import InvoiceList from "@/pages/finance/InvoiceList";
+import TransactionList from "@/pages/finance/TransactionList";
 import InvoiceDetail from "@/pages/finance/InvoiceDetail";
 import ReceiptList from "@/pages/finance/ReceiptList";
 import RecurringScheduleList from "@/pages/finance/RecurringScheduleList";
@@ -373,9 +374,7 @@ function Router() {
       <Route path="/finance/invoices/new" component={InvoiceDetail} />
       <Route path="/finance/invoices/:id" component={InvoiceDetail} />
 
-      <Route path="/finance/transactions">
-        {() => <ComingSoonPage title={t("nav.transaction")} subtitle={t("coming_soon.sub_transactions")} />}
-      </Route>
+      <Route path="/finance/transactions" component={TransactionList} />
       <Route path="/finance/receipts" component={ReceiptList} />
 
       <Route path="/finance/commissions" component={CommissionList} />

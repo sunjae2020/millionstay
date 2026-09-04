@@ -29,13 +29,14 @@ import { LookupSelect } from "@/components/LookupSelect";
 import { ProductLookupSelect } from "@/components/ProductLookupSelect";
 import { ContractPartyCard } from "@/components/ContractPartyCard";
 import { ContractChannelCard, type ChannelValue } from "@/components/ContractChannelCard";
-import { ArrowLeft, Save, Loader2, Trash2, CalendarDays, Plus, Pencil, List, FileDown, Eye, Mail, Receipt, ClipboardList, Wallet, Check, FileSignature, FileText, Scale, CopyPlus, LogOut } from "lucide-react";
+import { ArrowLeft, Save, Loader2, Trash2, CalendarDays, Plus, Pencil, List, FileDown, Eye, Mail, Receipt, ClipboardList, Wallet, Check, FileSignature, FileText, Scale, CopyPlus, LogOut, CreditCard } from "lucide-react";
 import { apiFetch, apiJson } from "@/lib/apiFetch";
 import { useToast } from "@/hooks/use-toast";
 import { DocumentVersions } from "@/components/DocumentVersions";
 import { HomestaySignatureCard } from "@/components/HomestaySignatureCard";
 import { TenantOnboardingPanel } from "@/components/TenantOnboardingPanel";
 import ContractInspections from "@/components/ContractInspections";
+import { PaymentScheduleCard } from "@/components/PaymentScheduleCard";
 import SettlementBoard from "@/components/SettlementBoard";
 import ContractDocuments from "@/components/ContractDocuments";
 import { DocumentPreviewDialog, useDocumentPreview } from "@/components/DocumentPreviewDialog";
@@ -1546,6 +1547,7 @@ export default function ContractDetail() {
             {[
               { id: "line-items", label: `${t('contract.tab_line_items')}${lineItems.length ? ` (${lineItems.length})` : ""}`, icon: <List className="w-3.5 h-3.5" /> },
               { id: "related-costs", label: `${t('contract.tab_related_costs')}${relatedCosts.length ? ` (${relatedCosts.length})` : ""}`, icon: <Receipt className="w-3.5 h-3.5" /> },
+              { id: "payment-schedule", label: t('payment_schedule.tab_title'), icon: <CreditCard className="w-3.5 h-3.5" /> },
               { id: "settlement", label: t('settlement.tab_title'), icon: <Scale className="w-3.5 h-3.5" /> },
               { id: "rent-ledger", label: `${t('contract.tab_rent_ledger')}${rentInvoices.length ? ` (${rentInvoices.length})` : ""}`, icon: <Wallet className="w-3.5 h-3.5" /> },
               { id: "schedule", label: `${t('contract.tab_schedule')}${schedules.length ? ` (${schedules.length})` : ""}`, icon: <CalendarDays className="w-3.5 h-3.5" /> },
@@ -1824,6 +1826,13 @@ export default function ContractDetail() {
 
           {/* 정산 — who this contract's receipts get split between, and what
               was left for us after each split. */}
+          {/* 결제 일정 — 계약금·중도금·잔금·보증금·월세를 회차로 펼친 정본.
+              청구서와 거래 원장(/finance/transactions)이 각각 이 회차를 가리키므로,
+              여기 한 곳에서 "청구했는가 / 들어왔는가"가 함께 읽힌다. */}
+          {activeTab === "payment-schedule" && (
+            <PaymentScheduleCard contractId={Number(id)} currency={contract?.currency ?? undefined} />
+          )}
+
           {activeTab === "settlement" && <SettlementBoard contractId={id!} />}
 
           {activeTab === "schedule" && (

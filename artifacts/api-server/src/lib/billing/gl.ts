@@ -613,3 +613,82 @@ export async function trialBalance(
 
   return { data, totals };
 }
+
+/**
+ * Post one TRANSACTION (거래 원장 한 건) to the ledger.
+ *
+ * Unlike the event helpers above, the counter-account is chosen BY THE USER via
+ * `glAccountCode` — the transactions screen exists precisely to record money
+ * that no automatic event covers (owner rent paid out, a repair invoice
+ * settled, a deposit received outside an invoice). When no code is given we
+ * fall back to the obvious default for the direction, so a hurried entry still
+ * posts somewhere sensible instead of failing.
+ *
+ *   income   Dr Cash          / Cr <counter account>  (기본 4000 매출)
+ *   expense  Dr <counter acct> / Cr Cash              (기본 5100 외주비)
+ *   transfer Dr Cash / Cr Cash — both legs on 1000, so the ledger nets to zero.
+ *            (계좌 간 이체는 회사 자산 총액을 바꾸지 않는다.)
+ *
+ * `taxAmount` rides on the counter leg: cash moves gross, the counter account
+ * takes the net and the VAT account (2300 부가세예수금 / 1500 매입세액) the rest.
+ * Idempotent via posting_key `transaction:<id>`.
+ */
+export async function postTransaction(args: {
+  id: number;
+  txnType: string; // income | expense | transfer
+  amount: number;
+  taxAmount?: number;
+  currency: string;
+  txnDate: string; // YYYY-MM-DD
+  glAccountCode?: string | null;
+  glAccountName?: string | null;
+  description?: string | null;
+}): Promise<typeof journalEntriesTable.$inferSelect | null> {
+  const gross = round2(args.amount || 0);
+  if (gross <= 0) return null;
+  const tax = Math.min(round2(args.taxAmount || 0), gross);
+  const net = round2(gross - tax);
+  const entryDate = (args.txnDate || sydneyToday()).slice(0, 10);
+  const description = args.description?.trim() || `Transaction #${args.id}`;
+
+  const income = args.txnType === "income";
+  const fallback = income ? ACCOUNTS.REVENUE : ACCOUNTS.CONTRACTOR_EXPENSE;
+  const counter = {
+    code: args.glAccountCode?.trim() || fallback.code,
+    name: args.glAccountName?.trim() || fallback.name,
+  };
+  // 부가세: 수입이면 예수금(부채), 지출이면 매입세액(자산).
+  const vat = income
+    ? { code: "2300", name: "VAT Payable" }
+    : { code: "1500", name: "VAT Input Credit" };
+
+  let lines: PostingLine[];
+  if (args.txnType === "transfer") {
+    lines = [
+      { account_code: ACCOUNTS.CASH.code, account_name: ACCOUNTS.CASH.name, debit: gross, credit: 0 },
+      { account_code: ACCOUNTS.CASH.code, account_name: ACCOUNTS.CASH.name, debit: 0, credit: gross },
+    ];
+  } else if (income) {
+    lines = [
+      { account_code: ACCOUNTS.CASH.code, account_name: ACCOUNTS.CASH.name, debit: gross, credit: 0 },
+      { account_code: counter.code, account_name: counter.name, debit: 0, credit: net },
+      ...(tax > 0 ? [{ account_code: vat.code, account_name: vat.name, debit: 0, credit: tax }] : []),
+    ];
+  } else {
+    lines = [
+      { account_code: counter.code, account_name: counter.name, debit: net, credit: 0 },
+      ...(tax > 0 ? [{ account_code: vat.code, account_name: vat.name, debit: tax, credit: 0 }] : []),
+      { account_code: ACCOUNTS.CASH.code, account_name: ACCOUNTS.CASH.name, debit: 0, credit: gross },
+    ];
+  }
+
+  return postEntry({
+    postingKey: `transaction:${args.id}`,
+    entryDate,
+    description,
+    sourceType: "transaction",
+    sourceId: args.id,
+    currency: args.currency || "AUD",
+    lines,
+  });
+}
