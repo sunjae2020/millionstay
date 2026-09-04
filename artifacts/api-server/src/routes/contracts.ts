@@ -654,6 +654,7 @@ router.post("/v1/contracts", async (req, res): Promise<void> => {
     total_rent: data.total_rent ?? null,
     bond_amount: data.bond_amount ?? lease?.deposit_amount ?? null,
     monthly_rent: data.monthly_rent ?? lease?.effective_monthly ?? null,
+    actual_monthly_rent: data.actual_monthly_rent ?? null,
     advance_amount: data.advance_amount ?? null,
     contract_category: data.contract_category ?? null,
     // 서식 기본값은 자사 일반 임대차계약서 — 고르지 않고 만든 계약도 곧바로
@@ -1641,6 +1642,7 @@ router.put("/v1/contracts/:id", async (req, res): Promise<void> => {
         total_rent: data.total_rent ?? null,
         bond_amount: data.bond_amount ?? null,
         monthly_rent: data.monthly_rent ?? null,
+        actual_monthly_rent: data.actual_monthly_rent ?? null,
         advance_amount: data.advance_amount ?? null,
         contract_category: data.contract_category ?? null,
         lease_form: data.lease_form ?? null,

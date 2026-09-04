@@ -156,6 +156,7 @@ interface FormData {
   balance_amount: string;
   balance_date: string;
   monthly_rent: string;
+  actual_monthly_rent: string;
   rent_due_day: string;
   currency: string;
   document_url: string;
@@ -347,7 +348,7 @@ export default function ContractDetail() {
       mlt_ancillary_facilities: "", mlt_senior_lien: "", mlt_senior_lien_kind: "", mlt_senior_lien_amount: "",
       mlt_senior_lien_date: "", mlt_tax_arrears: "", mlt_guarantee_status: "", mlt_guarantee_amount: "",
       mlt_guarantee_none_reason: "", mlt_late_fee_rate: "",
-      balance_amount: "", balance_date: "", monthly_rent: "", rent_due_day: "",
+      balance_amount: "", balance_date: "", monthly_rent: "", actual_monthly_rent: "", rent_due_day: "",
       currency: brandCurrency,
       document_url: "", terms_text: "", notes: "",
     },
@@ -410,6 +411,7 @@ export default function ContractDetail() {
         balance_amount: (contract as any).balance_amount != null ? String((contract as any).balance_amount) : "",
         balance_date: (contract as any).balance_date ?? "",
         monthly_rent: (contract as any).monthly_rent != null ? String((contract as any).monthly_rent) : "",
+        actual_monthly_rent: (contract as any).actual_monthly_rent != null ? String((contract as any).actual_monthly_rent) : "",
         rent_due_day: (contract as any).rent_due_day != null ? String((contract as any).rent_due_day) : "",
         currency: contract.currency ?? brandCurrency,
         document_url: contract.document_url ?? "",
@@ -680,6 +682,7 @@ export default function ContractDetail() {
     balance_amount: data.balance_amount ? Number(data.balance_amount) : null,
     balance_date: data.balance_date || null,
     monthly_rent: !isShort && data.monthly_rent ? Number(data.monthly_rent) : null,
+    actual_monthly_rent: !isShort && data.actual_monthly_rent ? Number(data.actual_monthly_rent) : null,
     rent_due_day: !isShort && data.rent_due_day ? Number(data.rent_due_day) : null,
     currency: data.currency || brandCurrency,
     document_url: data.document_url || null,
@@ -1483,13 +1486,21 @@ export default function ContractDetail() {
                         <DateInput value={field.value ?? ""} onChange={field.onChange} />
                       )} />
                     </div>
-                    <div>
-                      <Label>{t('contract.label_monthly_rent')}</Label>
-                      <Input {...register("monthly_rent")} type="number" step="0.01" min="0" />
-                    </div>
-                    <div>
-                      <Label>{t('contract.label_rent_due_day')}</Label>
-                      <Input {...register("rent_due_day")} type="number" step="1" min="1" max="31" />
+                    {/* 차임 · 실 차임 · 납입일은 한 줄에 3등분 — 실제 청구되는 금액은 실 차임이다. */}
+                    <div className="sm:col-span-2 grid grid-cols-1 sm:grid-cols-3 gap-4">
+                      <div>
+                        <Label>{t('contract.label_monthly_rent')}</Label>
+                        <Input {...register("monthly_rent")} type="number" step="0.01" min="0" />
+                      </div>
+                      <div>
+                        <Label>{t('contract.label_actual_monthly_rent')}</Label>
+                        <Input {...register("actual_monthly_rent")} type="number" step="0.01" min="0" />
+                        <p className="text-xs text-muted-foreground mt-1">{t('contract.hint_actual_monthly_rent')}</p>
+                      </div>
+                      <div>
+                        <Label>{t('contract.label_rent_due_day')}</Label>
+                        <Input {...register("rent_due_day")} type="number" step="1" min="1" max="31" />
+                      </div>
                     </div>
                   </>
                 )}

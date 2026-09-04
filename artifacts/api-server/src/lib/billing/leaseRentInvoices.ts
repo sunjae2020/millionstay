@@ -81,6 +81,7 @@ export async function generateLeaseRentInvoices(opts: { year?: number; month?: n
     account_id: contractsTable.tenant_account_id,
     space_id: contractsTable.space_id,
     monthly_rent: contractsTable.monthly_rent,
+    actual_monthly_rent: contractsTable.actual_monthly_rent,
     rent_due_day: contractsTable.rent_due_day,
     currency: contractsTable.currency,
     start_date: contractsTable.start_date,
@@ -90,7 +91,7 @@ export async function generateLeaseRentInvoices(opts: { year?: number; month?: n
     .where(and(
       isNull(contractsTable.deleted_at),
       eq(contractsTable.status, "Active"),
-      sql`${contractsTable.monthly_rent} > 0`,
+      sql`coalesce(${contractsTable.actual_monthly_rent}, ${contractsTable.monthly_rent}) > 0`,
       or(isNull(contractsTable.start_date), lte(contractsTable.start_date, monthEnd)),
       or(isNull(contractsTable.end_date), gte(contractsTable.end_date, monthStart)),
     ));
@@ -162,7 +163,8 @@ export async function generateLeaseRentInvoices(opts: { year?: number; month?: n
       invoice_ref: `RENT-${lease.id}-${year}${pad(month)}`,
       contract_id: lease.id,
       account_id: lease.account_id ?? null,
-      amount: String(lease.monthly_rent ?? 0),
+      // 실 차임(월세)이 입력돼 있으면 그 금액으로, 없으면 계약서상의 차임으로 청구한다.
+      amount: String(lease.actual_monthly_rent ?? lease.monthly_rent ?? 0),
       currency: lease.currency || DEFAULT_CURRENCY,
       status: "Sent",
       due_date: dueDate,

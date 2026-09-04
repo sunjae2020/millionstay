@@ -154,7 +154,7 @@ async function generateForAccount(
     isNull(contractsTable.deleted_at),
     eq(contractsTable.tenant_account_id, account.id),
     eq(contractsTable.status, "Active"),
-    sql`${contractsTable.monthly_rent} > 0`,
+    sql`coalesce(${contractsTable.actual_monthly_rent}, ${contractsTable.monthly_rent}) > 0`,
     or(isNull(contractsTable.start_date), lte(contractsTable.start_date, monthEnd)),
     or(isNull(contractsTable.end_date), gte(contractsTable.end_date, monthStart)),
   ));
@@ -181,7 +181,8 @@ async function generateForAccount(
   for (const lease of leases) {
     if ((lease.currency || DEFAULT_CURRENCY) !== currency) { skipped++; continue; }
 
-    const rent = Number(lease.monthly_rent ?? 0);
+    // 실 차임(월세)이 있으면 실제 납부액으로 청구한다 — leaseRentInvoices 와 같은 규칙.
+    const rent = Number(lease.actual_monthly_rent ?? lease.monthly_rent ?? 0);
     const unit = lease.space_id ? (spaceNames[lease.space_id] ?? `#${lease.space_id}`) : lease.contract_ref;
     const lines: LineDraft[] = [];
 

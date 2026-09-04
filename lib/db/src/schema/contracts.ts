@@ -27,6 +27,9 @@ export const contractsTable = pgTable("contracts", {
   bond_amount: numeric("bond_amount", { precision: 12, scale: 2, mode: "number" }),
   // 월세 — promo-adjusted monthly rent auto-filled from the linked 숙박상품 tier.
   monthly_rent: numeric("monthly_rent", { precision: 12, scale: 2, mode: "number" }),
+  // 실 차임(월세) — 계약서에 적힌 차임과 달리 세입자가 실제로 납부하는 금액.
+  // 비어 있으면 monthly_rent 를 그대로 청구한다(기존 계약의 동작 유지).
+  actual_monthly_rent: numeric("actual_monthly_rent", { precision: 12, scale: 2, mode: "number" }),
   advance_amount: numeric("advance_amount", { precision: 12, scale: 2, mode: "number" }),
   // Korean-lease payment structure (계약서 구분 / 계약금·잔금·보증금·월세)
   contract_category: text("contract_category"),
