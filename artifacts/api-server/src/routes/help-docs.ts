@@ -58,6 +58,13 @@ function defaultCatalog(): SeedRow[] {
       tags: ["링크", "토큰", "규칙"], sort_order: 20,
     },
     {
+      title: "휴대폰 사용 안내 — 패스키 · 앱 설치 · 사진 촬영",
+      description: "현장 직원에게 그대로 보내는 안내서. 아이폰·안드로이드 홈 화면 설치 절차, 패스키 등록·로그인, 촬영 버튼과 사진 자동 축소 기준.",
+      category: "운영 가이드", audience: "staff",
+      url: "/help/mobile",
+      tags: ["패스키", "앱 설치", "카메라", "현장", "교육"], sort_order: 25,
+    },
+    {
       title: "직원 교육 자료",
       description: "제품·업무 흐름 전반을 다루는 교육용 슬라이드 콘텐츠.",
       category: "운영 가이드", audience: "staff",
