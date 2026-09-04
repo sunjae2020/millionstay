@@ -402,5 +402,8 @@
     "added_on": "Added",
     "last_used": "Last used",
     "synced": "Synced"
+  },
+  "photos": {
+    "take": "Take photo"
   }
 }

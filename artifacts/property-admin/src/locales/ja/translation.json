@@ -7368,7 +7368,8 @@
     "field_bank_reference": "銀行摘要",
     "field_description": "摘要",
     "field_notes": "メモ",
-    "gl_auto": "自動（種別で判定）"
+    "gl_auto": "自動（種別で判定）",
+    "receipt_after_save": "取引を保存すると領収書を添付できます。"
   },
   "payment_schedule": {
     "title": "支払スケジュール",
@@ -7403,5 +7404,8 @@
     "status_waived": "免除",
     "field_label": "表示名",
     "field_label_hint": "空欄なら項目の種別で表示されます"
+  },
+  "photos": {
+    "take": "写真を撮る"
   }
 }

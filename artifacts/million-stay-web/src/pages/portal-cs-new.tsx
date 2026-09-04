@@ -12,6 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { ArrowLeft, Send, X, Loader2, ImageIcon } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { getApiBase } from "@/lib/api-base";
+import { CameraInput } from "@/components/CameraButton";
 
 const BASE = `${getApiBase()}/api/v1`;
 function authHeaders(): Record<string, string> {
@@ -199,6 +200,8 @@ export default function PortalCsNew() {
                 )}
               </div>
               <input ref={fileRef} type="file" accept="image/*" multiple className="hidden" onChange={handleFileChange} />
+              {/* 폰에서는 찍는 것이 곧 첨부다. 같은 핸들러로 들어간다. */}
+              <CameraInput onChange={handleFileChange} />
               <p className="text-xs text-gray-400">{t("portal.cs_new.file_hint")}</p>
             </div>
 

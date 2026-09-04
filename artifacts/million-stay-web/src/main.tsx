@@ -5,6 +5,7 @@ import "./i18n";
 import { APP_NAME } from "./lib/appName";
 import { FAVICON_URL } from "./lib/brand";
 import { setupPwa } from "./lib/pwa";
+import { installPhotoOptimizer } from "@/lib/photo";
 
 // White-label: browser-tab title + favicon follow the per-instance brand (spec §2.3/§2.4).
 document.title = APP_NAME;
@@ -19,5 +20,8 @@ if (FAVICON_URL) {
 }
 
 setupPwa();
+
+// 폰 카메라 원본을 업로드 전에 줄인다 — 앱의 모든 파일 입력에 걸린다.
+installPhotoOptimizer();
 
 createRoot(document.getElementById("root")!).render(<App />);

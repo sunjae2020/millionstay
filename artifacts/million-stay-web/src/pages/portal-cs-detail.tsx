@@ -13,6 +13,7 @@ import { ArrowLeft, Send, ImageIcon, X, Loader2, Clock, CheckCircle2, XCircle, A
 import { useToast } from "@/hooks/use-toast";
 import { getApiBase } from "@/lib/api-base";
 import { APP_NAME } from "../lib/appName";
+import { CameraInput } from "@/components/CameraButton";
 
 const BASE = `${getApiBase()}/api/v1`;
 function authHeaders(): Record<string, string> {
@@ -343,6 +344,8 @@ export default function PortalCsDetail() {
                 {t("portal.cs.photo", "Photo")}
               </button>
               <input ref={fileRef} type="file" accept="image/*" multiple className="hidden" onChange={handleFileChange} />
+              {/* 폰에서는 찍는 것이 곧 첨부다. 같은 핸들러로 들어간다. */}
+              <CameraInput onChange={handleFileChange} />
               <div className="flex-1" />
               <Button
                 onClick={() => sendMutation.mutate()}

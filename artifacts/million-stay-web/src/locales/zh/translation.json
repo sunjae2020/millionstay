@@ -2792,5 +2792,8 @@
     "submit_failed": "提交失败，请重试。",
     "done_title": "谢谢",
     "done_desc": "我们已收到您的信息。如有需要会与您联系。"
+  },
+  "photos": {
+    "take": "拍照"
   }
 }

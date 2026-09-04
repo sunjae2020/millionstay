@@ -402,5 +402,8 @@
     "added_on": "添加",
     "last_used": "最近使用",
     "synced": "已同步"
+  },
+  "photos": {
+    "take": "拍照"
   }
 }

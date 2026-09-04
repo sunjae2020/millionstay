@@ -3,6 +3,7 @@ import multer from "multer";
 import {
   db, invoicesTable, contractsTable, accountsTable, bookingsTable, quotesTable,
   contactsTable, propertiesTable, spacesTable, workOrdersTable, documentsTable,
+  transactionsTable,
 } from "@workspace/db";
 import { and, eq, ilike, inArray, notInArray, isNull, or, sql, desc } from "drizzle-orm";
 import { columnMatches } from "../lib/listSearch";
@@ -202,6 +203,8 @@ const ATTACHABLE_ENTITIES = {
   property: propertiesTable,
   space: spacesTable,
   work_order: workOrdersTable,
+  // 거래에는 영수증·증빙이 붙는다. 현장에서 종이 영수증을 찍어 그대로 건다.
+  transaction: transactionsTable,
 } as const;
 
 type AttachableEntity = keyof typeof ATTACHABLE_ENTITIES;

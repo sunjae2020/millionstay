@@ -5,6 +5,7 @@ import { Layout } from "@/components/Layout";
 import { apiFetch, apiGet } from "@/lib/api";
 import { formatDate } from "@/lib/dateFormat";
 import { formatMoney } from "@/lib/money";
+import { CameraInput } from "@/components/CameraButton";
 import {
   ArrowLeft,
   Briefcase,
@@ -325,6 +326,12 @@ export default function JobDetailPage() {
                   accept="image/*"
                   multiple
                   className="hidden"
+                  onChange={(e) => handleUpload(e.target.files)}
+                />
+                {/* 청소·정비 결과는 그 자리에서 찍는다. */}
+                <CameraInput
+                  disabled={uploading || job.photos.length >= job.max_photos}
+                  className="mr-2 inline-flex cursor-pointer items-center gap-1.5 rounded-lg border px-3 py-2 text-sm hover:bg-accent"
                   onChange={(e) => handleUpload(e.target.files)}
                 />
                 <button
