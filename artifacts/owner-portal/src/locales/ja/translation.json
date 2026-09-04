@@ -22,7 +22,10 @@
     "inquiries": "お問い合わせ",
     "switch_to_light": "ライトモードに切り替え",
     "switch_to_dark": "ダークモードに切り替え",
-    "documents": "書類"
+    "documents": "書類",
+    "security": "セキュリティ",
+    "install_app": "アプリをインストール",
+    "install_ios_hint": "共有ボタンから「ホーム画面に追加」を選びます。"
   },
   "common": {
     "loading": "読み込み中...",
@@ -64,7 +67,11 @@
     "apply_prompt": "新規オーナーの方へ",
     "apply_cta": "パートナー登録を申請",
     "identifier": "メールアドレスまたは携帯番号",
-    "identifier_placeholder": "you@example.com または 010-0000-0000"
+    "identifier_placeholder": "you@example.com または 010-0000-0000",
+    "passkey_sign_in": "パスキーでログイン",
+    "passkey_or": "または",
+    "passkey_hint": "Face ID・指紋・端末のPINでログインします。",
+    "passkey_failed": "パスキーでのログインに失敗しました"
   },
   "apply": {
     "back_to_login": "ログイン画面へ戻る",
@@ -378,5 +385,22 @@
     "err_mismatch": "パスワードが一致しません。",
     "err_reset_failed": "再設定に失敗しました。リンクの有効期限が切れている可能性があります。",
     "err_network": "ネットワークエラーです。"
+  },
+  "security": {
+    "title": "セキュリティ",
+    "subtitle": "パスワードの代わりに Face ID・指紋・端末のPINでログインします。",
+    "passkeys": "パスキー",
+    "add": "この端末を登録",
+    "added": "パスキーを登録しました：{{name}}",
+    "add_failed": "パスキーを登録できませんでした",
+    "remove": "削除",
+    "remove_confirm": "このパスキーを削除しますか？その端末は再びパスワードでのログインになります。",
+    "remove_failed": "パスキーを削除できませんでした",
+    "empty": "登録済みのパスキーはありません。",
+    "unnamed": "パスキー",
+    "unsupported": "このブラウザはパスキーに対応していません。",
+    "added_on": "登録",
+    "last_used": "最終使用",
+    "synced": "同期済み"
   }
 }

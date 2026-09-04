@@ -243,7 +243,11 @@
     "stat_uptime": "Thời gian hoạt động",
     "copyright": "© {{year}} {{appName}} · Bảo lưu mọi quyền",
     "secure_footer": "Truy cập an toàn · {{appName}} Admin v2",
-    "privacy_policy": "Chính sách bảo mật"
+    "privacy_policy": "Chính sách bảo mật",
+    "passkey_sign_in": "Đăng nhập bằng passkey",
+    "passkey_or": "hoặc",
+    "passkey_hint": "Dùng Face ID, vân tay hoặc mã PIN của thiết bị.",
+    "passkey_failed": "Đăng nhập bằng passkey thất bại"
   },
   "common": {
     "columns": "Cột",
@@ -1838,7 +1842,8 @@
     "dispatch_auto": "Tự động khớp theo danh mục",
     "btn_dispatch_confirm": "Giao việc",
     "photos_caption_hint": "Ngày chụp, bất động sản/căn hộ và ghi chú này được in chìm lên từng ảnh.",
-    "review_apply_taxes": "Tính lại thuế"
+    "review_apply_taxes": "Tính lại thuế",
+    "photos_take": "Chụp ảnh"
   },
   "csticket": {
     "search_placeholder": "Tìm kiếm phiếu hỗ trợ...",
@@ -5869,7 +5874,9 @@
     "inspection_template_title": "Biểu mẫu kiểm tra",
     "inspection_template_desc": "Các dòng áp dụng cho mọi danh sách kiểm tra đơn vị",
     "ai_ops_title": "AI & mức sử dụng",
-    "ai_ops_desc": "Khoá nhà cung cấp, mô hình theo tác vụ và đồng hồ sử dụng"
+    "ai_ops_desc": "Khoá nhà cung cấp, mô hình theo tác vụ và đồng hồ sử dụng",
+    "passkeys_title": "Passkey",
+    "passkeys_desc": "Đăng nhập bằng Face ID hoặc vân tay thay cho mật khẩu."
   },
   "settings_org": {
     "page_subtitle": "Hồ sơ công ty và thông tin liên hệ",
@@ -7237,5 +7244,21 @@
     "toast_removed": "Đã xóa",
     "error_seed": "Không nạp được bộ mặc định",
     "error_save": "Không lưu được"
+  },
+  "passkeys": {
+    "title": "Passkey",
+    "subtitle": "Đăng nhập bằng Face ID, vân tay hoặc mã PIN thay cho mật khẩu.",
+    "add": "Thêm thiết bị này",
+    "unsupported": "Trình duyệt này không hỗ trợ passkey.",
+    "empty": "Chưa có passkey. Hãy thêm thiết bị bạn dùng nhiều nhất.",
+    "unnamed": "Passkey",
+    "added_on": "Đã thêm",
+    "last_used": "Dùng lần cuối",
+    "synced": "Đã đồng bộ",
+    "remove": "Xóa",
+    "remove_confirm": "Xóa passkey này? Thiết bị đó sẽ phải dùng lại mật khẩu.",
+    "toast_added_title": "Đã thêm passkey",
+    "toast_add_failed": "Không thể thêm passkey",
+    "toast_remove_failed": "Không thể xóa passkey"
   }
 }

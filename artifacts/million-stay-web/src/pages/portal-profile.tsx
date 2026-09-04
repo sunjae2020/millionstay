@@ -9,9 +9,17 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   User, Lock, Phone, Globe, Briefcase, Car, ShieldAlert,
   Banknote, Eye, EyeOff, Save, Plus, Pencil, Trash2,
-  CreditCard, ChevronDown, X, Check, Mail, Camera, Loader2,
+  CreditCard, ChevronDown, X, Check, Mail, Camera, Loader2, KeyRound,
 } from "lucide-react";
 import { getApiBase } from "@/lib/api-base";
+import {
+  passkeysSupported,
+  isPasskeyCancel,
+  listPasskeys,
+  registerPasskey,
+  deletePasskey,
+  type PasskeyCredential,
+} from "@/lib/passkey";
 import { DateInput } from "@/components/ui/date-input";
 
 const API_BASE = getApiBase();
@@ -139,6 +147,37 @@ export default function PortalProfile() {
   const [editContactId, setEditContactId] = useState<number | null>(null);
   const [contactForm, setContactForm] = useState<EmergencyForm>({ name: "", relationship: "", phone: "", email: "", is_primary: false });
   const [loadingContact, setLoadingContact] = useState(false);
+
+  // ─── Passkeys ─────────────────────────────────────────────────────────────
+  // Registering the phone here is what makes the one-tap sign-in on the login
+  // screen work. The password keeps working either way.
+  const [passkeys, setPasskeys] = useState<PasskeyCredential[]>([]);
+  const [passkeyBusy, setPasskeyBusy] = useState(false);
+  async function loadPasskeys() {
+    try { setPasskeys(await listPasskeys()); } catch { setPasskeys([]); }
+  }
+  useEffect(() => { if (token && passkeysSupported()) void loadPasskeys(); }, [token]);
+
+  async function addPasskey() {
+    setPasskeyBusy(true);
+    try {
+      await registerPasskey();
+      await loadPasskeys();
+      toast({ title: t("portal.profile.passkey_added", "Passkey added") });
+    } catch (err: unknown) {
+      if (!isPasskeyCancel(err)) {
+        toast({ variant: "destructive", title: t("portal.profile.passkey_add_failed", "Could not add the passkey"), description: (err as { message?: string })?.message });
+      }
+    } finally { setPasskeyBusy(false); }
+  }
+
+  async function removePasskey(id: number) {
+    if (!window.confirm(t("portal.profile.passkey_remove_confirm", "Remove this passkey? That device will have to use its password again."))) return;
+    try { await deletePasskey(id); await loadPasskeys(); }
+    catch (err: unknown) {
+      toast({ variant: "destructive", title: t("portal.profile.passkey_remove_failed", "Could not remove the passkey"), description: (err as { message?: string })?.message });
+    }
+  }
 
   // ─── Auth helper ─────────────────────────────────────────────────────────
   function handleUnauthorized() {
@@ -706,6 +745,46 @@ export default function PortalProfile() {
             </Button>
           </div>
         </motion.div>
+
+        {/* ── Passkeys ── */}
+        {passkeysSupported() && (
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.22 }}
+            className="bg-white rounded-2xl border p-6">
+            <SectionHeader icon={KeyRound} title={t("portal.profile.passkeys_title", "Passkeys")} color="bg-indigo-100" iconColor="text-indigo-600" />
+            <p className="text-sm text-gray-500 -mt-2 mb-4">
+              {t("portal.profile.passkeys_desc", "Sign in with Face ID, a fingerprint or your device PIN instead of a password.")}
+            </p>
+
+            {passkeys.length > 0 && (
+              <ul className="divide-y border rounded-xl mb-4">
+                {passkeys.map((c) => (
+                  <li key={c.id} className="px-4 py-3 flex items-center justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium truncate">{c.device_name ?? t("portal.profile.passkey_unnamed", "Passkey")}</p>
+                      <p className="text-xs text-gray-500">
+                        {c.last_used_at
+                          ? t("portal.profile.passkey_last_used", "Last used {{date}}", { date: new Date(c.last_used_at).toLocaleDateString() })
+                          : t("portal.profile.passkey_never_used", "Not used yet")}
+                      </p>
+                    </div>
+                    <button type="button" onClick={() => removePasskey(c.id)}
+                      className="text-gray-400 hover:text-red-600 transition-colors"
+                      aria-label={t("portal.profile.passkey_remove", "Remove")}>
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+
+            <Button onClick={addPasskey} disabled={passkeyBusy} variant="outline" className="gap-2">
+              <KeyRound className="h-4 w-4" />
+              {passkeyBusy
+                ? t("portal.profile.passkey_adding", "Adding…")
+                : t("portal.profile.passkey_add", "Add this device")}
+            </Button>
+          </motion.div>
+        )}
 
       </div>
     </PortalLayout>

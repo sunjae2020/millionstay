@@ -14,6 +14,7 @@ import { apiFetch, getStoredToken } from "@/lib/apiFetch";
 import { formatDateTime } from "@/lib/date";
 import { cn } from "@/lib/utils";
 import { Camera, ImagePlus, Loader2, Trash2, Upload, X } from "lucide-react";
+import { downscaleAll } from "@/lib/photo";
 import { ImagePreviewDialog, useImagePreview, type PreviewImage } from "@/components/ImagePreviewDialog";
 
 export type PhotoKind = "before" | "after";
@@ -156,6 +157,9 @@ function PhotoKindSection({
 }) {
   const { t } = useTranslation();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  // 현장에서 폰으로 바로 찍는 경로. capture="environment" 는 파일 선택기 대신
+  // 후면 카메라를 연다 — 갤러리를 거치지 않으니 찍고 바로 붙는다.
+  const cameraInputRef = useRef<HTMLInputElement>(null);
   const { imagePreview, openImagePreview, closeImagePreview } = useImagePreview();
   const isNew = !workOrderId;
 
@@ -199,9 +203,11 @@ function PhotoKindSection({
     return sessions.flatMap(([, group]) => group).findIndex((p) => p.id === photo.id);
   }
 
-  function addFiles(files: File[]) {
-    const images = files.filter((f) => f.type.startsWith("image/"));
-    if (images.length === 0) return;
+  async function addFiles(input: File[]) {
+    const picked = input.filter((f) => f.type.startsWith("image/"));
+    if (picked.length === 0) return;
+    // 폰 원본은 장당 4~12MB다. 올리기 전에 줄여야 현장 4G에서 끝난다.
+    const images = await downscaleAll(picked);
     if (isNew) {
       onStagedChange?.([
         ...(staged ?? []),
@@ -272,7 +278,7 @@ function PhotoKindSection({
       <div
         onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
         onDragLeave={() => setIsDragging(false)}
-        onDrop={(e) => { e.preventDefault(); setIsDragging(false); addFiles(Array.from(e.dataTransfer.files)); }}
+        onDrop={(e) => { e.preventDefault(); setIsDragging(false); void addFiles(Array.from(e.dataTransfer.files)); }}
         onClick={() => fileInputRef.current?.click()}
         className={cn(
           "border-2 border-dashed rounded-xl p-4 text-center transition-colors cursor-pointer bg-white",
@@ -281,7 +287,7 @@ function PhotoKindSection({
       >
         <input
           ref={fileInputRef} type="file" accept="image/*" multiple className="hidden"
-          onChange={(e) => { addFiles(Array.from(e.target.files ?? [])); if (fileInputRef.current) fileInputRef.current.value = ""; }}
+          onChange={(e) => { void addFiles(Array.from(e.target.files ?? [])); if (fileInputRef.current) fileInputRef.current.value = ""; }}
         />
         <ImagePlus className="h-6 w-6 mx-auto mb-1.5 text-muted-foreground" />
         <p className="text-sm font-medium text-slate-700">
@@ -293,6 +299,24 @@ function PhotoKindSection({
             : t("workorder.photos_session_hint", "Each upload is saved as its own session.")}
         </p>
       </div>
+
+      {/* 현장에서는 파일 선택이 아니라 카메라가 먼저다. */}
+      <Button
+        type="button"
+        variant="outline"
+        className="w-full mt-2 gap-1.5 sm:hidden"
+        onClick={() => cameraInputRef.current?.click()}
+      >
+        <Camera className="h-4 w-4" /> {t("workorder.photos_take", "Take a photo")}
+      </Button>
+      <input
+        ref={cameraInputRef}
+        type="file"
+        accept="image/*"
+        capture="environment"
+        className="hidden"
+        onChange={(e) => { void addFiles(Array.from(e.target.files ?? [])); if (cameraInputRef.current) cameraInputRef.current.value = ""; }}
+      />
 
       {error && <p className="text-xs text-red-600 mt-2">{error}</p>}
 

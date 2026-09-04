@@ -21,7 +21,7 @@ function authHeaders(): Record<string, string> {
 }
 
 function isAuthPath(path: string): boolean {
-  return /\/auth\/(login|guest\/login|guest\/register|guest\/refresh|partner\/login)/.test(path);
+  return /\/auth\/(login|guest\/login|guest\/register|guest\/refresh|partner\/login|passkey\/login)/.test(path);
 }
 
 function clearAuthAndRedirect() {

@@ -16,6 +16,7 @@ import SitePage from "@/pages/SitePage";
 import InquiriesPage from "@/pages/InquiriesPage";
 import SupportPage from "@/pages/SupportPage";
 import SupportDetailPage from "@/pages/SupportDetailPage";
+import SecurityPage from "@/pages/SecurityPage";
 import { OWNER_SITE_ENABLED } from "@/lib/flags";
 
 function PortalRoutes() {
@@ -53,6 +54,7 @@ function PortalRoutes() {
       {OWNER_SITE_ENABLED && <Route path="/inquiries" component={InquiriesPage} />}
       <Route path="/support" component={SupportPage} />
       <Route path="/support/:id" component={SupportDetailPage} />
+      <Route path="/security" component={SecurityPage} />
       <Route>
         <div className="p-8 text-muted-foreground">{t("common.page_not_found")}</div>
       </Route>

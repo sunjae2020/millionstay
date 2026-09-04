@@ -22,6 +22,7 @@ import {
   Palette,
   Plug,
   KeyRound,
+  Fingerprint,
   Database,
   Package,
   MailCheck,
@@ -97,6 +98,12 @@ const ADMIN_CARDS: CardDef[] = [
     description: "settings_hub.ai_ops_desc",
     icon: Bot,
     href: "/settings/ai",
+  },
+  {
+    title: "settings_hub.passkeys_title",
+    description: "settings_hub.passkeys_desc",
+    icon: Fingerprint,
+    href: "/settings/passkeys",
   },
   {
     title: "settings_hub.api_keys_title",

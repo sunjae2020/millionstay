@@ -16,7 +16,10 @@
     "light_mode": "Chế độ sáng",
     "switch_to_light": "Chuyển sang chế độ sáng",
     "switch_to_dark": "Chuyển sang chế độ tối",
-    "documents": "Tài liệu"
+    "documents": "Tài liệu",
+    "security": "Bảo mật",
+    "install_app": "Cài đặt ứng dụng",
+    "install_ios_hint": "Chạm nút Chia sẻ rồi chọn “Thêm vào màn hình chính”."
   },
   "common": {
     "loading": "Đang tải...",
@@ -56,7 +59,11 @@
     "apply_prompt": "Chủ sở hữu bất động sản mới?",
     "apply_cta": "Đăng ký hợp tác với chúng tôi",
     "identifier": "Email hoặc số di động",
-    "identifier_placeholder": "you@example.com hoặc 010-0000-0000"
+    "identifier_placeholder": "you@example.com hoặc 010-0000-0000",
+    "passkey_sign_in": "Đăng nhập bằng passkey",
+    "passkey_or": "hoặc",
+    "passkey_hint": "Dùng Face ID, vân tay hoặc mã PIN của thiết bị.",
+    "passkey_failed": "Đăng nhập bằng passkey thất bại"
   },
   "apply": {
     "back_to_login": "Quay lại đăng nhập",
@@ -368,5 +375,22 @@
     "err_mismatch": "Mật khẩu không khớp.",
     "err_reset_failed": "Đặt lại thất bại. Liên kết có thể đã hết hạn.",
     "err_network": "Lỗi kết nối mạng."
+  },
+  "security": {
+    "title": "Bảo mật",
+    "subtitle": "Đăng nhập bằng Face ID, vân tay hoặc mã PIN thay cho mật khẩu.",
+    "passkeys": "Passkey",
+    "add": "Thêm thiết bị này",
+    "added": "Đã thêm passkey: {{name}}",
+    "add_failed": "Không thể thêm passkey",
+    "remove": "Xóa",
+    "remove_confirm": "Xóa passkey này? Thiết bị đó sẽ phải dùng lại mật khẩu.",
+    "remove_failed": "Không thể xóa passkey",
+    "empty": "Chưa có passkey nào được đăng ký.",
+    "unnamed": "Passkey",
+    "unsupported": "Trình duyệt này không hỗ trợ passkey.",
+    "added_on": "Đã thêm",
+    "last_used": "Dùng lần cuối",
+    "synced": "Đã đồng bộ"
   }
 }

@@ -19,7 +19,10 @@
     "dark_mode": "Dark mode",
     "light_mode": "Light mode",
     "my_contracts": "My Contracts",
-    "documents": "Documents"
+    "documents": "Documents",
+    "security": "Security",
+    "install_app": "Install app",
+    "install_ios_hint": "Tap Share, then “Add to Home Screen”."
   },
   "common": {
     "loading": "Loading...",
@@ -61,7 +64,11 @@
     "apply_prompt": "Want to partner as an agent?",
     "apply_cta": "Apply to join {{appName}}",
     "identifier": "Email or mobile",
-    "identifier_placeholder": "you@example.com or 010-0000-0000"
+    "identifier_placeholder": "you@example.com or 010-0000-0000",
+    "passkey_sign_in": "Sign in with a passkey",
+    "passkey_or": "or",
+    "passkey_hint": "Use Face ID, a fingerprint or your device PIN.",
+    "passkey_failed": "Passkey sign-in failed"
   },
   "dashboard": {
     "welcome": "Welcome back",
@@ -292,5 +299,22 @@
     "err_mismatch": "Passwords do not match.",
     "err_reset_failed": "Reset failed. The link may have expired.",
     "err_network": "Network error."
+  },
+  "security": {
+    "title": "Security",
+    "subtitle": "Sign in with Face ID, a fingerprint or your device PIN instead of a password.",
+    "passkeys": "Passkeys",
+    "add": "Add this device",
+    "added": "Passkey added: {{name}}",
+    "add_failed": "Could not add the passkey",
+    "remove": "Remove",
+    "remove_confirm": "Remove this passkey? That device will have to use its password again.",
+    "remove_failed": "Could not remove the passkey",
+    "empty": "No passkeys registered yet.",
+    "unnamed": "Passkey",
+    "unsupported": "This browser does not support passkeys.",
+    "added_on": "Added",
+    "last_used": "Last used",
+    "synced": "Synced"
   }
 }

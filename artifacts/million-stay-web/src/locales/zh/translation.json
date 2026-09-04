@@ -538,7 +538,19 @@
       "toast_contact_updated": "已更新紧急联系人",
       "toast_failed_delete": "删除失败",
       "toast_contact_removed": "已移除紧急联系人",
-      "toast_could_not_delete": "无法删除联系人。"
+      "toast_could_not_delete": "无法删除联系人。",
+      "passkeys_title": "通行密钥",
+      "passkeys_desc": "用 Face ID、指纹或设备 PIN 代替密码登录。",
+      "passkey_add": "添加此设备",
+      "passkey_adding": "添加中…",
+      "passkey_added": "已添加通行密钥",
+      "passkey_add_failed": "无法添加通行密钥",
+      "passkey_remove": "删除",
+      "passkey_remove_confirm": "删除此通行密钥？该设备将需要重新使用密码登录。",
+      "passkey_remove_failed": "无法删除通行密钥",
+      "passkey_unnamed": "通行密钥",
+      "passkey_last_used": "最近使用 {{date}}",
+      "passkey_never_used": "尚未使用"
     },
     "booking_detail": {
       "back": "返回预订",
@@ -1233,7 +1245,10 @@
     "set_new_password": "设置新密码",
     "forgot_title": "重置密码",
     "sending": "发送中…",
-    "send_reset_link": "发送重置链接"
+    "send_reset_link": "发送重置链接",
+    "passkey_or": "或",
+    "passkey_log_in": "使用通行密钥登录",
+    "passkey_failed": "通行密钥登录失败"
   },
   "contact_page": {
     "hero_tagline": "我们期待您的来信",

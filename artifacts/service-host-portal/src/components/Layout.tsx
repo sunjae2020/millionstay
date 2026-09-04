@@ -3,12 +3,12 @@ import { Link, useLocation } from "wouter";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "@/lib/auth";
 import { useDarkMode } from "@/lib/darkMode";
+import { InstallAppButton } from "@/components/InstallAppButton";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { APP_NAME } from "@/lib/appName";
 import {
   LayoutDashboard, Briefcase, CalendarDays, DollarSign,
-  LogOut, User, ChevronRight, Menu, X, Sun, Moon, LifeBuoy, Wrench, FolderOpen,
-} from "lucide-react";
+  LogOut, User, ChevronRight, Menu, X, Sun, Moon, LifeBuoy, Wrench, FolderOpen, ShieldCheck, } from "lucide-react";
 import { formatPersonName } from "@/lib/nameFormat";
 
 // White-label logo: tenants set VITE_LOGO_URL (e.g. MetHeim's teal wordmark).
@@ -34,6 +34,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
     { href: "/earnings", icon: DollarSign, label: t("nav.earnings") },
     { href: "/documents", icon: FolderOpen, label: t("nav.documents", "Documents") },
     { href: "/support", icon: LifeBuoy, label: t("nav.support", "Support") },
+    { href: "/security", icon: ShieldCheck, label: t("nav.security", "Security") },
   ];
 
   useEffect(() => { setSidebarOpen(false); }, [location]);
@@ -132,6 +133,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
           <div className="px-1">
             <LanguageSwitcher variant="sidebar" />
           </div>
+          <InstallAppButton />
           <button
             onClick={toggleDarkMode}
             className="flex items-center gap-3 px-3 py-2 w-full rounded-lg text-sm text-sidebar-accent-foreground hover:bg-sidebar-accent hover:text-sidebar-foreground transition-colors"

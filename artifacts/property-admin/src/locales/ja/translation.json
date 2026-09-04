@@ -244,7 +244,11 @@
     "stat_uptime": "稼働率",
     "copyright": "© {{year}} {{appName}} · 無断複製禁止",
     "secure_footer": "セキュアアクセス · {{appName}} Admin v2",
-    "privacy_policy": "プライバシーポリシー"
+    "privacy_policy": "プライバシーポリシー",
+    "passkey_sign_in": "パスキーでログイン",
+    "passkey_or": "または",
+    "passkey_hint": "Face ID・指紋・端末のPINでログインします。",
+    "passkey_failed": "パスキーでのログインに失敗しました"
   },
   "common": {
     "columns": "列",
@@ -1855,7 +1859,8 @@
     "dispatch_auto": "カテゴリ自動マッチング",
     "btn_dispatch_confirm": "割当",
     "photos_caption_hint": "撮影日・物件/部屋番号とこの説明が写真に透かしとして焼き込まれます。",
-    "review_apply_taxes": "税額を再計算"
+    "review_apply_taxes": "税額を再計算",
+    "photos_take": "写真を撮る"
   },
   "csticket": {
     "search_placeholder": "チケットを検索...",
@@ -5918,7 +5923,9 @@
     "inspection_template_title": "点検表の様式",
     "inspection_template_desc": "住戸点検表に含める項目の構成",
     "ai_ops_title": "AI と使用量",
-    "ai_ops_desc": "プロバイダーのキー、作業ごとのモデル、使用量メーター"
+    "ai_ops_desc": "プロバイダーのキー、作業ごとのモデル、使用量メーター",
+    "passkeys_title": "パスキー",
+    "passkeys_desc": "パスワードの代わりに Face ID・指紋でログインします。"
   },
   "settings_org": {
     "page_subtitle": "会社プロフィールと連絡先",
@@ -7292,5 +7299,21 @@
     "toast_removed": "削除しました",
     "error_seed": "標準資料を取り込めませんでした",
     "error_save": "保存できませんでした"
+  },
+  "passkeys": {
+    "title": "パスキー",
+    "subtitle": "パスワードの代わりに Face ID・指紋・端末のPINでログインします。",
+    "add": "この端末を登録",
+    "unsupported": "このブラウザはパスキーに対応していません。",
+    "empty": "登録済みのパスキーはありません。よく使う端末を登録してください。",
+    "unnamed": "パスキー",
+    "added_on": "登録",
+    "last_used": "最終使用",
+    "synced": "同期済み",
+    "remove": "削除",
+    "remove_confirm": "このパスキーを削除しますか？その端末は再びパスワードでのログインになります。",
+    "toast_added_title": "パスキーを登録しました",
+    "toast_add_failed": "パスキーを登録できませんでした",
+    "toast_remove_failed": "パスキーを削除できませんでした"
   }
 }

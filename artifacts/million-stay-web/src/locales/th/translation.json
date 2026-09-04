@@ -662,7 +662,19 @@
       "toast_contact_updated": "อัปเดตผู้ติดต่อฉุกเฉินแล้ว",
       "toast_failed_delete": "ลบไม่สำเร็จ",
       "toast_contact_removed": "ลบผู้ติดต่อฉุกเฉินแล้ว",
-      "toast_could_not_delete": "ไม่สามารถลบผู้ติดต่อได้"
+      "toast_could_not_delete": "ไม่สามารถลบผู้ติดต่อได้",
+      "passkeys_title": "พาสคีย์",
+      "passkeys_desc": "ลงชื่อเข้าใช้ด้วย Face ID ลายนิ้วมือ หรือ PIN แทนรหัสผ่าน",
+      "passkey_add": "เพิ่มอุปกรณ์นี้",
+      "passkey_adding": "กำลังเพิ่ม…",
+      "passkey_added": "เพิ่มพาสคีย์แล้ว",
+      "passkey_add_failed": "เพิ่มพาสคีย์ไม่สำเร็จ",
+      "passkey_remove": "ลบ",
+      "passkey_remove_confirm": "ลบพาสคีย์นี้หรือไม่ อุปกรณ์นั้นจะต้องกลับไปใช้รหัสผ่าน",
+      "passkey_remove_failed": "ลบพาสคีย์ไม่สำเร็จ",
+      "passkey_unnamed": "พาสคีย์",
+      "passkey_last_used": "ใช้ล่าสุด {{date}}",
+      "passkey_never_used": "ยังไม่ได้ใช้"
     },
     "booking_detail": {
       "back": "กลับสู่การจอง",
@@ -1074,7 +1086,10 @@
     "set_new_password": "ตั้งรหัสผ่านใหม่",
     "forgot_title": "รีเซ็ตรหัสผ่าน",
     "sending": "กำลังส่ง…",
-    "send_reset_link": "ส่งลิงก์รีเซ็ต"
+    "send_reset_link": "ส่งลิงก์รีเซ็ต",
+    "passkey_or": "หรือ",
+    "passkey_log_in": "ลงชื่อเข้าใช้ด้วยพาสคีย์",
+    "passkey_failed": "ลงชื่อเข้าใช้ด้วยพาสคีย์ไม่สำเร็จ"
   },
   "errors": {
     "not_found": "ไม่พบหน้าที่คุณต้องการ",

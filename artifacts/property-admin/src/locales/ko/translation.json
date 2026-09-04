@@ -247,7 +247,11 @@
     "stat_uptime": "가동률",
     "copyright": "© {{year}} {{appName}} · 모든 권리 보유",
     "secure_footer": "보안 접속 · {{appName}} Admin v2",
-    "privacy_policy": "개인정보 처리방침"
+    "privacy_policy": "개인정보 처리방침",
+    "passkey_sign_in": "패스키로 로그인",
+    "passkey_or": "또는",
+    "passkey_hint": "Face ID·지문·기기 PIN으로 로그인합니다.",
+    "passkey_failed": "패스키 로그인에 실패했습니다"
   },
   "common": {
     "columns": "열",
@@ -1873,7 +1877,8 @@
     "dispatch_auto": "카테고리 자동 매칭",
     "btn_dispatch_confirm": "배정",
     "photos_caption_hint": "촬영일, 매물/호수와 이 설명이 사진에 워터마크로 새겨집니다.",
-    "review_apply_taxes": "세액 다시 계산"
+    "review_apply_taxes": "세액 다시 계산",
+    "photos_take": "사진 촬영"
   },
   "csticket": {
     "search_placeholder": "티켓 검색...",
@@ -5961,7 +5966,9 @@
     "inspection_template_title": "점검표 양식",
     "inspection_template_desc": "세대점검표에 들어갈 항목 구성",
     "ai_ops_title": "AI · 사용량",
-    "ai_ops_desc": "프로바이더 키, 작업별 모델, 사용량 미터"
+    "ai_ops_desc": "프로바이더 키, 작업별 모델, 사용량 미터",
+    "passkeys_title": "패스키",
+    "passkeys_desc": "비밀번호 대신 Face ID·지문으로 로그인합니다."
   },
   "settings_org": {
     "page_subtitle": "회사 프로필 및 연락처 정보",
@@ -7337,5 +7344,21 @@
     "toast_removed": "지웠습니다",
     "error_seed": "기본 자료를 채우지 못했습니다",
     "error_save": "저장하지 못했습니다"
+  },
+  "passkeys": {
+    "title": "패스키",
+    "subtitle": "비밀번호 대신 Face ID·지문·기기 PIN으로 로그인합니다.",
+    "add": "이 기기 등록",
+    "unsupported": "이 브라우저는 패스키를 지원하지 않습니다.",
+    "empty": "등록된 패스키가 없습니다. 자주 쓰는 기기를 등록하세요.",
+    "unnamed": "패스키",
+    "added_on": "등록",
+    "last_used": "마지막 사용",
+    "synced": "동기화됨",
+    "remove": "삭제",
+    "remove_confirm": "이 패스키를 삭제할까요? 해당 기기는 다시 비밀번호로 로그인해야 합니다.",
+    "toast_added_title": "패스키를 등록했습니다",
+    "toast_add_failed": "패스키를 등록하지 못했습니다",
+    "toast_remove_failed": "패스키를 삭제하지 못했습니다"
   }
 }

@@ -245,7 +245,11 @@
     "stat_uptime": "正常运行时间",
     "copyright": "© {{year}} {{appName}} · 版权所有",
     "secure_footer": "安全访问 · {{appName}} Admin v2",
-    "privacy_policy": "隐私政策"
+    "privacy_policy": "隐私政策",
+    "passkey_sign_in": "使用通行密钥登录",
+    "passkey_or": "或",
+    "passkey_hint": "使用 Face ID、指纹或设备 PIN 登录。",
+    "passkey_failed": "通行密钥登录失败"
   },
   "common": {
     "columns": "列",
@@ -1857,7 +1861,8 @@
     "dispatch_auto": "按类别自动匹配",
     "btn_dispatch_confirm": "指派",
     "photos_caption_hint": "拍摄日期、房源/房号以及该说明会以水印形式写入每张照片。",
-    "review_apply_taxes": "重新计算税额"
+    "review_apply_taxes": "重新计算税额",
+    "photos_take": "拍照"
   },
   "csticket": {
     "search_placeholder": "搜索工单...",
@@ -5922,7 +5927,9 @@
     "inspection_template_title": "点检表样式",
     "inspection_template_desc": "房屋点检表包含的项目配置",
     "ai_ops_title": "AI 与用量",
-    "ai_ops_desc": "供应商密钥、各任务模型与用量计量"
+    "ai_ops_desc": "供应商密钥、各任务模型与用量计量",
+    "passkeys_title": "通行密钥",
+    "passkeys_desc": "用 Face ID 或指纹代替密码登录。"
   },
   "settings_org": {
     "page_subtitle": "公司资料和联系方式",
@@ -7296,5 +7303,21 @@
     "toast_removed": "已删除",
     "error_seed": "未能填入标准资料",
     "error_save": "未能保存"
+  },
+  "passkeys": {
+    "title": "通行密钥",
+    "subtitle": "用 Face ID、指纹或设备 PIN 代替密码登录。",
+    "add": "添加此设备",
+    "unsupported": "此浏览器不支持通行密钥。",
+    "empty": "尚未注册通行密钥。添加你最常用的设备。",
+    "unnamed": "通行密钥",
+    "added_on": "添加",
+    "last_used": "最近使用",
+    "synced": "已同步",
+    "remove": "删除",
+    "remove_confirm": "删除此通行密钥？该设备将需要重新使用密码登录。",
+    "toast_added_title": "已添加通行密钥",
+    "toast_add_failed": "无法添加通行密钥",
+    "toast_remove_failed": "无法删除通行密钥"
   }
 }

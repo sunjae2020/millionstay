@@ -74,6 +74,7 @@
     "zod": "catalog:"
   },
   "dependencies": {
+    "@simplewebauthn/browser": "^14.0.0",
     "@tiptap/extension-link": "^3.26.1",
     "@tiptap/extension-placeholder": "^3.26.1",
     "@tiptap/react": "^3.26.1",

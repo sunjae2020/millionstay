@@ -6,8 +6,10 @@ import session from "express-session";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { existsSync } from "node:fs";
+import { isOriginAllowed } from "./lib/allowedOrigins";
 import router from "./routes";
 import authRouter from "./routes/auth";
+import passkeysRouter from "./routes/passkeys";
 import healthRouter from "./routes/health";
 import publicRouter from "./routes/public";
 import spaceImagesRouter from "./routes/space-images";
@@ -74,36 +76,9 @@ const SESSION_SECRET = process.env["SESSION_SECRET"]!;
 // ─── CORS allow-list (Sprint A-2) ───
 // Production: only origins listed in ALLOWED_ORIGINS (comma-separated) are allowed.
 // Development: also allow localhost so the local workspace works.
+// The predicate itself lives in lib/allowedOrigins so WebAuthn can pin its
+// expected origins to exactly the same set.
 const isProduction = process.env["NODE_ENV"] === "production";
-const ALLOWED_ORIGINS = (process.env["ALLOWED_ORIGINS"] ?? "")
-  .split(",")
-  .map((s) => s.trim())
-  .filter(Boolean);
-
-// Per-instance apex domain. Owner landing sites create arbitrary
-// {slug}.<ROOT_DOMAIN> origins, so the apex + all its subdomains are trusted
-// over https. Defaults to millionstay.com for the primary instance; white-label
-// instances set ROOT_DOMAIN to their own apex (spec §2.1/§2.5).
-const ROOT_DOMAIN = (process.env["ROOT_DOMAIN"] ?? "millionstay.com").trim().toLowerCase();
-
-function isOriginAllowed(origin: string): boolean {
-  if (ALLOWED_ORIGINS.includes(origin)) return true;
-  try {
-    const { hostname, protocol } = new URL(origin);
-    // Always allow our own apex + ANY subdomain over https. Authenticated routes
-    // are still gated by JWT, so trusting the apex + subdomains here is safe.
-    if (protocol === "https:" && (hostname === ROOT_DOMAIN || hostname.endsWith(`.${ROOT_DOMAIN}`))) {
-      return true;
-    }
-    if (isProduction) return false;
-    // Dev-only allowances
-    if (protocol !== "http:" && protocol !== "https:") return false;
-    if (hostname === "localhost" || hostname === "127.0.0.1") return true;
-    return false;
-  } catch {
-    return false;
-  }
-}
 
 const app: Express = express();
 
@@ -179,7 +154,10 @@ app.use((_req, res, next) => {
   // Permissions-Policy: deny features unless explicitly needed
   res.setHeader(
     "Permissions-Policy",
-    "camera=(), microphone=(), geolocation=(self), payment=(self), interest-cohort=()",
+    // camera=(self): the field web app photographs work orders in-browser
+    // (작업 전/후 사진). Denying it here would break capture on the SPAs this
+    // server also hosts. Third parties stay denied.
+    "camera=(self), microphone=(), geolocation=(self), payment=(self), interest-cohort=()",
   );
   // Referrer-Policy: don't leak full URLs to external sites
   res.setHeader("Referrer-Policy", "strict-origin-when-cross-origin");
@@ -223,6 +201,10 @@ app.use([
   "/api/v1/auth/reset-password",
   "/api/v1/auth/guest/reset-password",
   "/api/v1/auth/partner/reset-password",
+  // Passkey sign-in is unauthenticated and hands out session tokens — same
+  // budget as password login.
+  "/api/v1/auth/passkey/login/options",
+  "/api/v1/auth/passkey/login/verify",
 ], loginLimiter);
 app.use([
   "/api/v1/public/owner-applications",
@@ -267,6 +249,10 @@ app.use("/api/v1/public/chat", chatLimiter);
 app.use("/api/", generalLimiter);
 
 app.use("/api", authRouter);
+// Passkeys — the login half is anonymous and the register half authenticates
+// itself against whichever token scope the caller presents, so this must sit
+// before the admin requireAuth guard.
+app.use("/api", passkeysRouter);
 app.use("/api", healthRouter);
 app.use("/api", publicRouter);
 // Public homestay host application submission (no auth, rate-limited above).

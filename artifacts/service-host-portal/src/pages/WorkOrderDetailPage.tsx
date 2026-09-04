@@ -3,6 +3,7 @@ import { Link, useRoute } from "wouter";
 import { useTranslation } from "react-i18next";
 import { Layout } from "@/components/Layout";
 import { apiGet, apiPost, apiFetch, ApiError } from "@/lib/api";
+import { PhotoCapture } from "@/components/PhotoCapture";
 import { formatDateTime } from "@/lib/dateFormat";
 import { formatMoney } from "@/lib/money";
 import {
@@ -116,20 +117,24 @@ export default function WorkOrderDetailPage() {
     } finally { setSavingNotes(false); }
   }
 
-  async function onFile(file: File) {
-    if (!wo) return;
+  // 서버는 사진 한 장마다 워터마크를 태우므로 한 장씩 올린다. 여러 장을 고르면
+  // 순서대로 이어서 올라간다.
+  async function onFiles(files: File[], kind: "before" | "after") {
+    if (!wo || files.length === 0) return;
     setError("");
     setUploading(true);
     try {
-      const fd = new FormData();
-      fd.append("image", file);
-      fd.append("kind", "after");
-      // 촬영일·매물/호수와 함께 사진에 워터마크로 새겨진다.
-      if (photoCaption.trim()) fd.append("caption", photoCaption.trim());
-      const res = await apiFetch(`/v1/service-host/work-orders/${wo.id}/photos`, { method: "POST", body: fd });
-      if (!res.ok) {
-        const body = await res.json().catch(() => null);
-        throw new ApiError(res.status, "UPLOAD", (body as any)?.error?.message ?? t("workorders.photo_upload_failed", "Upload failed"));
+      for (const file of files) {
+        const fd = new FormData();
+        fd.append("image", file);
+        fd.append("kind", kind);
+        // 촬영일·매물/호수와 함께 사진에 워터마크로 새겨진다.
+        if (photoCaption.trim()) fd.append("caption", photoCaption.trim());
+        const res = await apiFetch(`/v1/service-host/work-orders/${wo.id}/photos`, { method: "POST", body: fd });
+        if (!res.ok) {
+          const body = await res.json().catch(() => null);
+          throw new ApiError(res.status, "UPLOAD", (body as any)?.error?.message ?? t("workorders.photo_upload_failed", "Upload failed"));
+        }
       }
       setPhotoCaption("");
       await loadPhotos();
@@ -245,21 +250,11 @@ export default function WorkOrderDetailPage() {
                   <Camera className="w-4 h-4 text-primary" /> {t("workorders.photos_title", "Service result photos")}
                   <span className="text-xs font-normal text-muted-foreground">{photos.length}/{MAX_PHOTOS}</span>
                 </h2>
-                <input
-                  ref={fileRef}
-                  type="file"
-                  accept="image/*"
-                  className="hidden"
-                  onChange={(e) => { const f = e.target.files?.[0]; if (f) void onFile(f); }}
-                />
-                <button
-                  onClick={() => fileRef.current?.click()}
-                  disabled={uploading || photos.length >= MAX_PHOTOS}
-                  className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground disabled:opacity-60"
-                >
-                  {uploading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <UploadCloud className="w-3.5 h-3.5" />}
-                  {uploading ? t("workorders.photo_uploading", "Uploading…") : t("workorders.photo_add", "Add photo")}
-                </button>
+                {uploading && (
+                  <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" /> {t("workorders.photo_uploading", "Uploading…")}
+                  </span>
+                )}
               </div>
               <div className="mb-3">
                 <input
@@ -272,27 +267,42 @@ export default function WorkOrderDetailPage() {
                   {t("workorders.photo_caption_hint", "The date, property/unit and this note are burned onto the photo as a watermark.")}
                 </p>
               </div>
-              {photos.length === 0 ? (
-                <p className="text-sm text-muted-foreground py-6 text-center">{t("workorders.photos_empty", "No photos yet. Upload photos of the completed work.")}</p>
-              ) : (
-                <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
-                  {photos.map((p) => (
-                    <div key={p.id} className="relative group aspect-square rounded-lg overflow-hidden border border-border">
-                      <a href={p.url} target="_blank" rel="noopener">
-                        <img src={p.url} alt={p.caption ?? t("workorders.photo_alt", "Service photo")} className="w-full h-full object-cover" />
-                      </a>
-                      <button
-                        onClick={() => void removePhoto(p.id)}
-                        disabled={delPhoto === p.id}
-                        className="absolute top-1 right-1 p-1 rounded-md bg-black/55 text-white opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity disabled:opacity-100"
-                        aria-label={t("workorders.photo_delete", "Delete photo")}
-                      >
-                        {delPhoto === p.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              )}
+              {/* 작업 전 / 작업 후 — 한 방문이 남기는 두 회차의 증빙. 각 구역에서
+                  바로 촬영해 올린다. */}
+              {([["before", t("photos.before", "Before work")], ["after", t("photos.after", "After work")]] as const).map(([kind, label]) => {
+                const rows = photos.filter((p) => (kind === "before" ? p.kind === "before" : p.kind !== "before"));
+                return (
+                  <div key={kind} className="mb-4 last:mb-0">
+                    <p className="text-xs font-medium text-muted-foreground mb-2">{label} · {rows.length}</p>
+                    {rows.length === 0 ? (
+                      <p className="text-sm text-muted-foreground py-4 text-center">{t("photos.none", "No photos yet")}</p>
+                    ) : (
+                      <div className="grid grid-cols-3 sm:grid-cols-4 gap-2 mb-2">
+                        {rows.map((p) => (
+                          <div key={p.id} className="relative group aspect-square rounded-lg overflow-hidden border border-border">
+                            <a href={p.url} target="_blank" rel="noopener">
+                              <img src={p.url} alt={p.caption ?? t("workorders.photo_alt", "Service photo")} className="w-full h-full object-cover" />
+                            </a>
+                            <button
+                              onClick={() => void removePhoto(p.id)}
+                              disabled={delPhoto === p.id}
+                              className="absolute top-1 right-1 p-1 rounded-md bg-black/55 text-white opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity disabled:opacity-100"
+                              aria-label={t("workorders.photo_delete", "Delete photo")}
+                            >
+                              {delPhoto === p.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    <PhotoCapture
+                      disabled={uploading}
+                      remaining={MAX_PHOTOS - photos.length}
+                      onFiles={(files) => onFiles(files, kind)}
+                    />
+                  </div>
+                );
+              })}
             </div>
 
             {/* Work notes */}
