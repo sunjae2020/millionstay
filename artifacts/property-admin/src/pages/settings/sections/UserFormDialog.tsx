@@ -19,6 +19,7 @@ import { useToast } from "@/hooks/use-toast";
 import { apiFetch } from "@/lib/apiFetch";
 import { useAuth } from "@/contexts/AuthContext";
 import { formatDateTime } from "@/lib/date";
+import { CameraInput } from "@/components/CameraButton";
 
 /** Every editable field of an admin user, flat — the same shape drives create
  *  and edit; `mode` only decides which of them are required or read-only. */
@@ -453,6 +454,8 @@ export function UserFormDialog({ open, onOpenChange, userId, onSaved }: Props) {
                   </div>
                   <input ref={photoInput} type="file" accept="image/*" className="hidden"
                     onChange={(e) => { const f = e.target.files?.[0]; if (f) uploadImage("photo", f); e.target.value = ""; }} />
+                  {/* 폰에서는 찍는 것이 곧 첨부다. 같은 핸들러로 들어간다. */}
+                  <CameraInput onChange={(e) => { const f = e.target.files?.[0]; if (f) uploadImage("photo", f); e.target.value = ""; }} multiple={false} />
                 </div>
 
                 {/* Card front / back */}
@@ -489,6 +492,8 @@ export function UserFormDialog({ open, onOpenChange, userId, onSaved }: Props) {
                       </div>
                       <input ref={ref} type="file" accept="image/*" className="hidden"
                         onChange={(e) => { const f = e.target.files?.[0]; if (f) uploadImage(side, f); e.target.value = ""; }} />
+                      {/* 폰에서는 찍는 것이 곧 첨부다. 같은 핸들러로 들어간다. */}
+                      <CameraInput onChange={(e) => { const f = e.target.files?.[0]; if (f) uploadImage(side, f); e.target.value = ""; }} multiple={false} />
                     </div>
                   );
                 })}

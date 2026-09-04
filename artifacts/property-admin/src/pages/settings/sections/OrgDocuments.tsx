@@ -9,6 +9,7 @@ import { apiFetch, apiJson } from "@/lib/apiFetch";
 import { formatDate } from "@/lib/date";
 
 import { ExportableTable } from "@/components/ui/ExportCsvButton";
+import { CameraInput } from "@/components/CameraButton";
 /**
  * Settings → Organisation → Company documents.
  *
@@ -89,6 +90,8 @@ export function OrgDocuments() {
       <div className="mb-3 flex flex-wrap items-center gap-3">
         <input ref={fileRef} type="file" multiple className="hidden"
           onChange={(e) => void handleUpload(e.target.files)} />
+        {/* 폰에서는 찍는 것이 곧 첨부다. 같은 핸들러로 들어간다. */}
+        <CameraInput onChange={(e) => void handleUpload(e.target.files)} />
         <input ref={folderRef} type="file" multiple className="hidden"
           {...DIRECTORY_INPUT_PROPS}
           onChange={(e) => void handleUpload(e.target.files)} />

@@ -25,6 +25,7 @@ import { useToast } from "@/hooks/use-toast";
 import { FolderUp, Upload } from "lucide-react";
 import EntityDocuments, { entityDocumentsKey } from "@/components/EntityDocuments";
 import { FileDropZone, DIRECTORY_INPUT_PROPS } from "@/components/FileDropZone";
+import { CameraInput } from "@/components/CameraButton";
 
 /** 오늘 날짜를 YYYY-MM-DD 로. 날인일 기본값. */
 function today(): string {
@@ -153,6 +154,8 @@ export default function ContractDocuments({ contractId }: { contractId: number }
           accept="application/pdf,image/png,image/jpeg,image/tiff"
           onChange={(e) => void handleUpload(e.target.files)}
         />
+        {/* 폰에서는 찍는 것이 곧 첨부다. 같은 핸들러로 들어간다. */}
+        <CameraInput onChange={(e) => void handleUpload(e.target.files)} />
         <input
           ref={folderRef} type="file" multiple className="hidden"
           {...DIRECTORY_INPUT_PROPS}

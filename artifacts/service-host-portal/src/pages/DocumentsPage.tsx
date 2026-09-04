@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { Layout } from "@/components/Layout";
 import { apiGet, apiFetch, ApiError } from "@/lib/api";
 import { formatDate } from "@/lib/dateFormat";
+import { CameraInput } from "@/components/CameraButton";
 import {
   FolderOpen, FileText, Image as ImageIcon, Download, Trash2,
   UploadCloud, X, Loader2,
@@ -144,6 +145,8 @@ export default function DocumentsPage() {
                 className="hidden"
                 onChange={(e) => { const f = e.target.files?.[0]; if (f) void onFile(f); }}
               />
+              {/* 폰에서는 찍는 것이 곧 첨부다. 같은 핸들러로 들어간다. */}
+              <CameraInput onChange={(e) => { const f = e.target.files?.[0]; if (f) void onFile(f); }} multiple={false} />
               <button
                 onClick={() => fileRef.current?.click()}
                 disabled={uploading}

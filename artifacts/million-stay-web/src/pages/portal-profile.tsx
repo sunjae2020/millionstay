@@ -21,6 +21,7 @@ import {
   type PasskeyCredential,
 } from "@/lib/passkey";
 import { DateInput } from "@/components/ui/date-input";
+import { CameraInput } from "@/components/CameraButton";
 
 const API_BASE = getApiBase();
 
@@ -468,6 +469,8 @@ export default function PortalProfile() {
                 className="hidden"
                 onChange={handleAvatarChange}
               />
+              {/* 폰에서는 찍는 것이 곧 첨부다. 같은 핸들러로 들어간다. */}
+              <CameraInput onChange={handleAvatarChange} multiple={false} />
             </div>
           </div>
         </motion.div>

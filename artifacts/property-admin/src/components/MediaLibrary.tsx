@@ -23,6 +23,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { apiFetch, apiJson } from "@/lib/apiFetch";
+import { CameraInput } from "@/components/CameraButton";
 import {
   ImagePreviewDialog,
   useImagePreview,
@@ -269,6 +270,11 @@ export function MediaGrid({
               e.target.value = "";
             }}
           />
+          {/* 폰에서는 찍는 것이 곧 첨부다. 같은 핸들러로 들어간다. */}
+          <CameraInput onChange={(e) => {
+              handleUpload(e.target.files);
+              e.target.value = "";
+            }} />
           <Button size="sm" onClick={() => fileRef.current?.click()} disabled={uploading}>
             {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
             <span className="ml-1.5">{t("media.upload")}</span>

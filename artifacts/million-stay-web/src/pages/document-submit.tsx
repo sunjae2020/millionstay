@@ -15,6 +15,7 @@ import { Footer } from "@/components/footer";
 import { DevNavbar, DevFooter } from "@/components/development/DevLayout";
 import { isDevelopmentSite } from "@/lib/site-mode";
 import { Button } from "@/components/ui/button";
+import { CameraInput } from "@/components/CameraButton";
 import {
   getDocRequest, submitDocuments, uploadDocument, TenantLinkError,
   type DocRequestItem, type DocRequestView,
@@ -136,6 +137,7 @@ export default function DocumentSubmit() {
             item={item}
             busy={uploading === item.key}
             onPick={() => { targetRef.current = item.key; fileInputRef.current?.click(); }}
+            onCapture={(file) => void upload(file, item.key)}
           />
         ))}
       </ul>
@@ -168,7 +170,12 @@ export default function DocumentSubmit() {
   );
 }
 
-function DocRow({ item, busy, onPick }: { item: DocRequestItem; busy: boolean; onPick: () => void }) {
+function DocRow({ item, busy, onPick, onCapture }: {
+  item: DocRequestItem;
+  busy: boolean;
+  onPick: () => void;
+  onCapture: (file: File) => void;
+}) {
   const { t } = useTranslation();
   return (
     <li className="rounded-xl border bg-card p-4 flex items-center gap-3">
@@ -184,6 +191,17 @@ function DocRow({ item, busy, onPick }: { item: DocRequestItem; busy: boolean; o
           <p className="truncate text-xs text-muted-foreground">{item.files.map((f) => f.file_name).join(", ")}</p>
         )}
       </div>
+      {/* 제출 서류는 대개 종이다 — 폰에서는 이 행에서 바로 찍어 올린다. */}
+      <CameraInput
+        disabled={busy}
+        multiple={false}
+        className="inline-flex shrink-0 cursor-pointer items-center gap-1.5 rounded-md border px-3 py-1.5 text-xs font-medium hover:bg-accent"
+        onChange={(e) => {
+          const file = e.target.files?.[0];
+          e.target.value = "";
+          if (file) onCapture(file);
+        }}
+      />
       <Button size="sm" variant={item.submitted ? "outline" : "default"} onClick={onPick} disabled={busy}>
         {busy
           ? <Loader2 className="w-4 h-4 animate-spin" />

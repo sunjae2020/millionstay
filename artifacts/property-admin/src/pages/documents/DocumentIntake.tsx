@@ -12,6 +12,7 @@ import { useToast } from "@/hooks/use-toast";
 import { formatDate } from "@/lib/date";
 import { DocumentPreviewDialog, useDocumentPreview } from "@/components/DocumentPreviewDialog";
 import { FileDropZone, chunkFiles, DIRECTORY_INPUT_PROPS } from "@/components/FileDropZone";
+import { CameraInput } from "@/components/CameraButton";
 
 /**
  * Bulk document intake — 서류 일괄 업로드 & 검토.
@@ -360,6 +361,8 @@ export default function DocumentIntake() {
           className="hidden"
           onChange={(e) => void handleUpload(e.target.files)}
         />
+        {/* 폰에서는 찍는 것이 곧 첨부다. 같은 핸들러로 들어간다. */}
+        <CameraInput onChange={(e) => void handleUpload(e.target.files)} />
         <input
           ref={folderRef}
           type="file"

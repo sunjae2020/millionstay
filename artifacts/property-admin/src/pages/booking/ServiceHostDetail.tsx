@@ -21,6 +21,7 @@ import { LookupSelect } from "@/components/LookupSelect";
 import { ProductLookupSelect } from "@/components/ProductLookupSelect";
 import { AccountLookupSelect } from "@/components/AccountLookupSelect";
 import { apiJson } from "@/lib/apiFetch";
+import { CameraInput } from "@/components/CameraButton";
 
 const BASE = import.meta.env.BASE_URL;
 
@@ -281,6 +282,8 @@ export default function ServiceHostDetail() {
               ref={pendingRef} type="file" accept="image/*" multiple className="hidden"
               onChange={(e) => { if (e.target.files?.length) setPendingPhotos((prev) => [...prev, ...Array.from(e.target.files!)]); e.target.value = ""; }}
             />
+            {/* 폰에서는 찍는 것이 곧 첨부다. 같은 핸들러로 들어간다. */}
+            <CameraInput onChange={(e) => { if (e.target.files?.length) setPendingPhotos((prev) => [...prev, ...Array.from(e.target.files!)]); e.target.value = ""; }} />
             <Button type="button" size="sm" variant="outline" onClick={() => pendingRef.current?.click()}>
               <Upload className="w-3.5 h-3.5 mr-1" />{t("service_host_photos.upload", "사진 업로드")}
             </Button>

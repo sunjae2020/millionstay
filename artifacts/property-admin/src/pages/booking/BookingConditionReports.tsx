@@ -5,6 +5,7 @@ import { apiFetch, apiJson } from "@/lib/apiFetch";
 import { Button } from "@/components/ui/button";
 import { Plus, ShieldCheck, Upload, CheckCircle2, AlertTriangle, Lock, Trash2 } from "lucide-react";
 import { ImagePreviewDialog, useImagePreview } from "@/components/ImagePreviewDialog";
+import { CameraInput } from "@/components/CameraButton";
 
 // Admin management of booking condition reports (move-in / interim / move-out):
 // build the item set, attach hashed evidence photos, publish (freezes a
@@ -211,10 +212,18 @@ function ItemEditor({ item, reportId, editable, onChanged }: { item: Item; repor
       {item.responses[0]?.comment && <p className="mt-2 text-sm bg-red-50 border border-red-100 rounded px-2 py-1 text-red-800">{item.responses[0].comment}</p>}
 
       {editable && (
-        <label className="inline-flex items-center gap-1.5 mt-2 text-xs text-primary cursor-pointer">
-          <Upload className="w-3.5 h-3.5" /> {uploading ? t("condition_report.uploading") : t("condition_report.add_photo")}
-          <input type="file" accept="image/*" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) void uploadPhoto(f); }} />
-        </label>
+        <div className="mt-2 flex items-center gap-3">
+          <label className="inline-flex items-center gap-1.5 text-xs text-primary cursor-pointer">
+            <Upload className="w-3.5 h-3.5" /> {uploading ? t("condition_report.uploading") : t("condition_report.add_photo")}
+            <input type="file" accept="image/*" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) void uploadPhoto(f); }} />
+          </label>
+          {/* 입·퇴실 증빙은 현장에서 찍는다. */}
+          <CameraInput
+            className="inline-flex cursor-pointer items-center gap-1.5 text-xs text-primary"
+            onChange={(e) => { const f = e.target.files?.[0]; if (f) void uploadPhoto(f); }}
+            multiple={false}
+          />
+        </div>
       )}
     </div>
   );

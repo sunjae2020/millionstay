@@ -24,6 +24,7 @@ import { ImagePreviewDialog, useImagePreview } from "@/components/ImagePreviewDi
 import { MediaPickerDialog } from "@/components/MediaLibrary";
 import { Images } from "lucide-react";
 import { WEBSITE_PAGES, getSiteForPage, SITES } from "./WebsiteContentList";
+import { CameraInput } from "@/components/CameraButton";
 
 // ─── Page Section Definitions ───────────────────────────────────────────────
 
@@ -764,6 +765,12 @@ function LanguageTab({
                           if (f) handleImageUpload(field.key, f);
                         }}
                       />
+                      {/* 폰에서는 찍는 것이 곧 첨부다. 같은 핸들러로 들어간다. */}
+                      <CameraInput onChange={(e) => {
+                          const f = e.target.files?.[0];
+                          e.target.value = "";
+                          if (f) handleImageUpload(field.key, f);
+                        }} multiple={false} disabled={uploadingKey === field.key} />
                     </label>
                     <button
                       type="button"

@@ -20,6 +20,7 @@ import { useToast } from "@/hooks/use-toast";
 import { FileDropZone } from "@/components/FileDropZone";
 import { apiFetch } from "@/lib/apiFetch";
 import { ImagePreviewDialog, useImagePreview } from "@/components/ImagePreviewDialog";
+import { CameraInput } from "@/components/CameraButton";
 
 // Non-English locales the guest site (million-stay-web) ships. English is the
 // source of truth, edited in the Content tab; these are the Translations tab.
@@ -303,6 +304,8 @@ export default function SaleListingDetail() {
                 </div>
                 <div className="space-y-2">
                   <input ref={coverInputRef} type="file" accept="image/*" className="hidden" onChange={onCoverSelected} />
+                  {/* 폰에서는 찍는 것이 곧 첨부다. 같은 핸들러로 들어간다. */}
+                  <CameraInput onChange={onCoverSelected} multiple={false} />
                   <Button type="button" variant="outline" size="sm" disabled={uploading} onClick={() => coverInputRef.current?.click()}>
                     {uploading ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" /> : <ImagePlus className="h-3.5 w-3.5 mr-1.5" />}
                     {t("listings.upload_cover")}
@@ -346,6 +349,8 @@ export default function SaleListingDetail() {
                   <span className="text-xs">{t("listings.add_images")}</span>
                 </button>
                 <input ref={galleryInputRef} type="file" accept="image/*" multiple className="hidden" onChange={onGallerySelected} />
+                {/* 폰에서는 찍는 것이 곧 첨부다. 같은 핸들러로 들어간다. */}
+                <CameraInput onChange={onGallerySelected} />
               </div>
               </FileDropZone>
             </div>

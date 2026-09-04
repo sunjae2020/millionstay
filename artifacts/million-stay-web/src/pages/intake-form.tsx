@@ -20,6 +20,7 @@ import { isDevelopmentSite } from "@/lib/site-mode";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { CameraInput } from "@/components/CameraButton";
 import {
   getIntake, submitIntake, uploadIntakePhoto, TenantLinkError, type IntakeView,
 } from "@/lib/tenant-link-api";
@@ -200,6 +201,17 @@ export default function IntakeForm() {
             : <div className="flex h-28 w-22 items-center justify-center rounded-lg border border-dashed text-muted-foreground" style={{ width: "5.5rem" }}>
                 <Camera className="h-6 w-6" />
               </div>}
+          {/* 증명사진은 그 자리에서 찍는 편이 빠르다. */}
+          <CameraInput
+            disabled={photoBusy}
+            multiple={false}
+            className="inline-flex cursor-pointer items-center gap-1.5 rounded-md border px-3 py-2 text-sm font-medium hover:bg-accent"
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              e.target.value = "";
+              if (file) void pickPhoto(file);
+            }}
+          />
           <Button variant="outline" onClick={() => fileRef.current?.click()} disabled={photoBusy}>
             {photoBusy ? <Loader2 className="w-4 h-4 mr-1.5 animate-spin" /> : <Camera className="w-4 h-4 mr-1.5" />}
             {values["profile_photo_url"] ? t("intake.photo_replace") : t("intake.photo_upload")}
