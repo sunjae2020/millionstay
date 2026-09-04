@@ -153,7 +153,7 @@ async function safeReadJson(res: Response): Promise<unknown> {
 }
 
 function isLoginPath(path: string): boolean {
-  return /\/auth\/(partner\/login|partner\/refresh)/.test(path);
+  return /\/auth\/(partner\/login|partner\/refresh|passkey\/login)/.test(path);
 }
 
 function endSession(): void {

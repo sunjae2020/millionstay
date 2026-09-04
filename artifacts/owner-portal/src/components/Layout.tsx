@@ -8,8 +8,7 @@ import { APP_NAME } from "@/lib/appName";
 import { OWNER_SITE_ENABLED } from "@/lib/flags";
 import {
   LayoutDashboard, Building2, BookOpen, TrendingUp,
-  LogOut, User, ChevronRight, Menu, X, Sun, Moon, Globe, Inbox, LifeBuoy, FileText,
-} from "lucide-react";
+  LogOut, User, ChevronRight, Menu, X, Sun, Moon, Globe, Inbox, LifeBuoy, FileText, ShieldCheck, } from "lucide-react";
 import { formatPersonName } from "@/lib/nameFormat";
 
 // White-label tenants (VITE_LOGO_URL set) render their own logo. On the dark
@@ -37,6 +36,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         ]
       : []),
     { href: "/support", icon: LifeBuoy, label: t("nav.support", "Support") },
+    { href: "/security", icon: ShieldCheck, label: t("nav.security", "Security") },
   ];
 
   useEffect(() => {

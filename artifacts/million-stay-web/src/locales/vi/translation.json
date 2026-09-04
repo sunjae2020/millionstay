@@ -571,7 +571,19 @@
       "toast_contact_updated": "Đã cập nhật liên hệ khẩn cấp",
       "toast_failed_delete": "Xóa thất bại",
       "toast_contact_removed": "Đã xóa liên hệ khẩn cấp",
-      "toast_could_not_delete": "Không thể xóa liên hệ."
+      "toast_could_not_delete": "Không thể xóa liên hệ.",
+      "passkeys_title": "Passkey",
+      "passkeys_desc": "Đăng nhập bằng Face ID, vân tay hoặc mã PIN thay cho mật khẩu.",
+      "passkey_add": "Thêm thiết bị này",
+      "passkey_adding": "Đang thêm…",
+      "passkey_added": "Đã thêm passkey",
+      "passkey_add_failed": "Không thể thêm passkey",
+      "passkey_remove": "Xóa",
+      "passkey_remove_confirm": "Xóa passkey này? Thiết bị đó sẽ phải dùng lại mật khẩu.",
+      "passkey_remove_failed": "Không thể xóa passkey",
+      "passkey_unnamed": "Passkey",
+      "passkey_last_used": "Dùng lần cuối {{date}}",
+      "passkey_never_used": "Chưa dùng"
     },
     "booking_detail": {
       "back": "Quay lại danh sách đặt phòng",
@@ -1247,7 +1259,10 @@
     "forgot_title": "Đặt lại mật khẩu",
     "sending": "Đang gửi…",
     "send_reset_link": "Gửi liên kết đặt lại",
-    "email_placeholder": "you@example.com"
+    "email_placeholder": "you@example.com",
+    "passkey_or": "hoặc",
+    "passkey_log_in": "Đăng nhập bằng passkey",
+    "passkey_failed": "Đăng nhập bằng passkey thất bại"
   },
   "contact_page": {
     "hero_tagline": "Chúng tôi rất mong nhận được phản hồi từ bạn",

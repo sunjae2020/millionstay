@@ -19,7 +19,10 @@
     "dark_mode": "深色模式",
     "light_mode": "浅色模式",
     "work_orders": "工单",
-    "documents": "文档"
+    "documents": "文档",
+    "security": "安全",
+    "install_app": "安装应用",
+    "install_ios_hint": "点按分享，然后选择“添加到主屏幕”。"
   },
   "common": {
     "loading": "加载中...",
@@ -64,7 +67,11 @@
     "apply_cta": "申请成为服务承包方",
     "forgot_password": "忘记密码？",
     "identifier": "邮箱或手机号",
-    "identifier_placeholder": "you@example.com 或 010-0000-0000"
+    "identifier_placeholder": "you@example.com 或 010-0000-0000",
+    "passkey_sign_in": "使用通行密钥登录",
+    "passkey_or": "或",
+    "passkey_hint": "使用 Face ID、指纹或设备 PIN 登录。",
+    "passkey_failed": "通行密钥登录失败"
   },
   "trigger": {
     "at_checkin": "入住时",
@@ -335,7 +342,11 @@
     "cat_landscaping": "园艺",
     "cat_security": "安保",
     "photo_caption_ph": "照片说明（例：马桶白水泥修补）",
-    "photo_caption_hint": "拍摄日期、房源/房号以及该说明会以水印形式写入照片。"
+    "photo_caption_hint": "拍摄日期、房源/房号以及该说明会以水印形式写入照片。",
+    "btn_photos": "照片与详情",
+    "scheduled": "预定",
+    "access": "进入方式",
+    "load_failed": "无法加载工单"
   },
   "documents": {
     "title": "文档",
@@ -418,5 +429,34 @@
     "err_mismatch": "两次输入的密码不一致。",
     "err_reset_failed": "重置失败，链接可能已过期。",
     "err_network": "网络错误。"
+  },
+  "security": {
+    "title": "安全",
+    "subtitle": "用 Face ID、指纹或设备 PIN 代替密码登录。",
+    "passkeys": "通行密钥",
+    "add": "添加此设备",
+    "added": "已添加通行密钥：{{name}}",
+    "add_failed": "无法添加通行密钥",
+    "remove": "删除",
+    "remove_confirm": "删除此通行密钥？该设备将需要重新使用密码登录。",
+    "remove_failed": "无法删除通行密钥",
+    "empty": "尚未注册通行密钥。",
+    "unnamed": "通行密钥",
+    "unsupported": "此浏览器不支持通行密钥。",
+    "added_on": "添加",
+    "last_used": "最近使用",
+    "synced": "已同步"
+  },
+  "photos": {
+    "take": "拍照",
+    "choose": "选择",
+    "before": "施工前",
+    "after": "施工后",
+    "none": "暂无照片",
+    "remaining": "还可上传 {{n}} 张",
+    "delete": "删除照片",
+    "delete_confirm": "删除这张照片？",
+    "delete_failed": "无法删除照片",
+    "upload_failed": "上传失败"
   }
 }

@@ -19,7 +19,10 @@
     "dark_mode": "Dark mode",
     "light_mode": "Light mode",
     "work_orders": "Work Orders",
-    "documents": "Documents"
+    "documents": "Documents",
+    "security": "Security",
+    "install_app": "Install app",
+    "install_ios_hint": "Tap Share, then “Add to Home Screen”."
   },
   "common": {
     "loading": "Loading...",
@@ -64,7 +67,11 @@
     "apply_cta": "Apply to become a service host",
     "forgot_password": "Forgot password?",
     "identifier": "Email or mobile",
-    "identifier_placeholder": "you@example.com or 010-0000-0000"
+    "identifier_placeholder": "you@example.com or 010-0000-0000",
+    "passkey_sign_in": "Sign in with a passkey",
+    "passkey_or": "or",
+    "passkey_hint": "Use Face ID, a fingerprint or your device PIN.",
+    "passkey_failed": "Passkey sign-in failed"
   },
   "trigger": {
     "at_checkin": "At Check-In",
@@ -335,7 +342,11 @@
     "cat_landscaping": "Landscaping",
     "cat_security": "Security",
     "photo_caption_ph": "Photo note (e.g. toilet re-cemented)",
-    "photo_caption_hint": "The date, property/unit and this note are burned onto the photo as a watermark."
+    "photo_caption_hint": "The date, property/unit and this note are burned onto the photo as a watermark.",
+    "btn_photos": "Photos & detail",
+    "scheduled": "Scheduled",
+    "access": "Access",
+    "load_failed": "Could not load this work order"
   },
   "documents": {
     "title": "Documents",
@@ -418,5 +429,34 @@
     "err_mismatch": "Passwords do not match.",
     "err_reset_failed": "Reset failed. The link may have expired.",
     "err_network": "Network error."
+  },
+  "security": {
+    "title": "Security",
+    "subtitle": "Sign in with Face ID, a fingerprint or your device PIN instead of a password.",
+    "passkeys": "Passkeys",
+    "add": "Add this device",
+    "added": "Passkey added: {{name}}",
+    "add_failed": "Could not add the passkey",
+    "remove": "Remove",
+    "remove_confirm": "Remove this passkey? That device will have to use its password again.",
+    "remove_failed": "Could not remove the passkey",
+    "empty": "No passkeys registered yet.",
+    "unnamed": "Passkey",
+    "unsupported": "This browser does not support passkeys.",
+    "added_on": "Added",
+    "last_used": "Last used",
+    "synced": "Synced"
+  },
+  "photos": {
+    "take": "Take photo",
+    "choose": "Choose",
+    "before": "Before work",
+    "after": "After work",
+    "none": "No photos yet",
+    "remaining": "{{n}} left",
+    "delete": "Delete photo",
+    "delete_confirm": "Delete this photo?",
+    "delete_failed": "Could not delete the photo",
+    "upload_failed": "Upload failed"
   }
 }

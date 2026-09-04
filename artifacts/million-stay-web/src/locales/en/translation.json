@@ -579,7 +579,19 @@
       "toast_contact_updated": "Emergency contact updated",
       "toast_failed_delete": "Failed to delete",
       "toast_contact_removed": "Emergency contact removed",
-      "toast_could_not_delete": "Could not delete contact."
+      "toast_could_not_delete": "Could not delete contact.",
+      "passkeys_title": "Passkeys",
+      "passkeys_desc": "Sign in with Face ID, a fingerprint or your device PIN instead of a password.",
+      "passkey_add": "Add this device",
+      "passkey_adding": "Adding…",
+      "passkey_added": "Passkey added",
+      "passkey_add_failed": "Could not add the passkey",
+      "passkey_remove": "Remove",
+      "passkey_remove_confirm": "Remove this passkey? That device will have to use its password again.",
+      "passkey_remove_failed": "Could not remove the passkey",
+      "passkey_unnamed": "Passkey",
+      "passkey_last_used": "Last used {{date}}",
+      "passkey_never_used": "Not used yet"
     },
     "booking_detail": {
       "back": "Back to bookings",
@@ -1274,7 +1286,10 @@
     "set_new_password": "Set new password",
     "forgot_title": "Reset your password",
     "sending": "Sending…",
-    "send_reset_link": "Send reset link"
+    "send_reset_link": "Send reset link",
+    "passkey_or": "or",
+    "passkey_log_in": "Sign in with a passkey",
+    "passkey_failed": "Passkey sign-in failed"
   },
   "contact_page": {
     "hero_tagline": "We'd love to hear from you",

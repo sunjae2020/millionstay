@@ -11,6 +11,7 @@ import {
   apiJson,
   ApiError,
 } from "@/lib/apiFetch";
+import { passkeySignIn } from "@/lib/passkey";
 
 export interface AuthUser {
   id: number;
@@ -26,6 +27,8 @@ interface AuthContextValue {
   token: string | null;
   isLoading: boolean;
   login: (email: string, password: string) => Promise<void>;
+  /** Passkey sign-in — the authenticator names the user, nothing is typed. */
+  loginWithPasskey: () => Promise<void>;
   logout: () => void;
   refreshNow: () => Promise<boolean>;
 }
@@ -172,8 +175,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(data.user);
   }, []);
 
+  const loginWithPasskey = useCallback(async () => {
+    const data = await passkeySignIn();
+    storeSession(data.token, data.refresh_token ?? undefined);
+    rememberLoginEmail(data.user.email);
+    setUser(data.user as AuthUser);
+  }, []);
+
   return (
-    <AuthContext.Provider value={{ user, token, isLoading, login, logout, refreshNow }}>
+    <AuthContext.Provider value={{ user, token, isLoading, login, loginWithPasskey, logout, refreshNow }}>
       {children}
     </AuthContext.Provider>
   );

@@ -247,7 +247,11 @@
     "stat_uptime": "Uptime",
     "copyright": "© {{year}} {{appName}} · All rights reserved",
     "secure_footer": "Secure access · {{appName}} Admin v2",
-    "privacy_policy": "Privacy Policy"
+    "privacy_policy": "Privacy Policy",
+    "passkey_sign_in": "Sign in with a passkey",
+    "passkey_or": "or",
+    "passkey_hint": "Use Face ID, a fingerprint or your device PIN.",
+    "passkey_failed": "Passkey sign-in failed"
   },
   "common": {
     "columns": "Columns",
@@ -1873,7 +1877,8 @@
     "dispatch_auto": "Auto-match by category",
     "btn_dispatch_confirm": "Dispatch",
     "photos_caption_hint": "The date, property/unit and this note are burned onto each photo as a watermark.",
-    "review_apply_taxes": "Recalculate taxes"
+    "review_apply_taxes": "Recalculate taxes",
+    "photos_take": "Take a photo"
   },
   "csticket": {
     "search_placeholder": "Search tickets...",
@@ -5961,7 +5966,9 @@
     "inspection_template_title": "Inspection form",
     "inspection_template_desc": "Rows carried by every unit inspection checklist",
     "ai_ops_title": "AI & usage",
-    "ai_ops_desc": "Provider keys, per-task models and the usage meter"
+    "ai_ops_desc": "Provider keys, per-task models and the usage meter",
+    "passkeys_title": "Passkeys",
+    "passkeys_desc": "Sign in with Face ID or a fingerprint instead of a password."
   },
   "settings_org": {
     "page_subtitle": "Company profile and contact details",
@@ -7337,5 +7344,21 @@
     "toast_removed": "Removed",
     "error_seed": "Could not fill the library",
     "error_save": "Could not save"
+  },
+  "passkeys": {
+    "title": "Passkeys",
+    "subtitle": "Sign in with Face ID, a fingerprint or your device PIN instead of a password.",
+    "add": "Add this device",
+    "unsupported": "This browser does not support passkeys.",
+    "empty": "No passkeys registered yet. Add the device you use most.",
+    "unnamed": "Passkey",
+    "added_on": "Added",
+    "last_used": "Last used",
+    "synced": "Synced",
+    "remove": "Remove",
+    "remove_confirm": "Remove this passkey? That device will have to use its password again.",
+    "toast_added_title": "Passkey added",
+    "toast_add_failed": "Could not add the passkey",
+    "toast_remove_failed": "Could not remove the passkey"
   }
 }

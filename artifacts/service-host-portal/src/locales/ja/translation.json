@@ -19,7 +19,10 @@
     "dark_mode": "ダークモード",
     "light_mode": "ライトモード",
     "work_orders": "作業指示",
-    "documents": "書類"
+    "documents": "書類",
+    "security": "セキュリティ",
+    "install_app": "アプリをインストール",
+    "install_ios_hint": "共有ボタンから「ホーム画面に追加」を選びます。"
   },
   "common": {
     "loading": "読み込み中...",
@@ -64,7 +67,11 @@
     "apply_cta": "サービスホストへ申請する",
     "forgot_password": "パスワードをお忘れですか？",
     "identifier": "メールアドレスまたは携帯番号",
-    "identifier_placeholder": "you@example.com または 010-0000-0000"
+    "identifier_placeholder": "you@example.com または 010-0000-0000",
+    "passkey_sign_in": "パスキーでログイン",
+    "passkey_or": "または",
+    "passkey_hint": "Face ID・指紋・端末のPINでログインします。",
+    "passkey_failed": "パスキーでのログインに失敗しました"
   },
   "trigger": {
     "at_checkin": "チェックイン時",
@@ -335,7 +342,11 @@
     "cat_landscaping": "造園",
     "cat_security": "警備",
     "photo_caption_ph": "写真の説明（例: 便器のセメント補修）",
-    "photo_caption_hint": "撮影日・物件/部屋番号とこの説明が写真に透かしとして焼き込まれます。"
+    "photo_caption_hint": "撮影日・物件/部屋番号とこの説明が写真に透かしとして焼き込まれます。",
+    "btn_photos": "写真・詳細",
+    "scheduled": "予定",
+    "access": "入室方法",
+    "load_failed": "作業指示を読み込めませんでした"
   },
   "documents": {
     "title": "書類",
@@ -418,5 +429,34 @@
     "err_mismatch": "パスワードが一致しません。",
     "err_reset_failed": "再設定に失敗しました。リンクの有効期限が切れている可能性があります。",
     "err_network": "ネットワークエラーです。"
+  },
+  "security": {
+    "title": "セキュリティ",
+    "subtitle": "パスワードの代わりに Face ID・指紋・端末のPINでログインします。",
+    "passkeys": "パスキー",
+    "add": "この端末を登録",
+    "added": "パスキーを登録しました：{{name}}",
+    "add_failed": "パスキーを登録できませんでした",
+    "remove": "削除",
+    "remove_confirm": "このパスキーを削除しますか？その端末は再びパスワードでのログインになります。",
+    "remove_failed": "パスキーを削除できませんでした",
+    "empty": "登録済みのパスキーはありません。",
+    "unnamed": "パスキー",
+    "unsupported": "このブラウザはパスキーに対応していません。",
+    "added_on": "登録",
+    "last_used": "最終使用",
+    "synced": "同期済み"
+  },
+  "photos": {
+    "take": "写真を撮る",
+    "choose": "選択",
+    "before": "作業前",
+    "after": "作業後",
+    "none": "写真がありません",
+    "remaining": "あと{{n}}枚",
+    "delete": "写真を削除",
+    "delete_confirm": "この写真を削除しますか？",
+    "delete_failed": "写真を削除できませんでした",
+    "upload_failed": "アップロードに失敗しました"
   }
 }

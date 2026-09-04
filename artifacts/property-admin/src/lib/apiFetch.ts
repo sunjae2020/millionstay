@@ -171,7 +171,7 @@ function clearAuthAndRedirect(): void {
 }
 
 function isLoginPath(path: string): boolean {
-  return /\/auth\/(login|guest\/login|partner\/login|refresh)/.test(path);
+  return /\/auth\/(login|guest\/login|partner\/login|refresh|passkey\/login)/.test(path);
 }
 
 /**

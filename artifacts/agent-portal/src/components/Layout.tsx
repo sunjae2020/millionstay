@@ -7,8 +7,7 @@ import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { APP_NAME } from "@/lib/appName";
 import {
   LayoutDashboard, FileSignature, FolderOpen, DollarSign,
-  LogOut, User, ChevronRight, Menu, X, Sun, Moon, LifeBuoy,
-} from "lucide-react";
+  LogOut, User, ChevronRight, Menu, X, Sun, Moon, LifeBuoy, ShieldCheck, } from "lucide-react";
 import { formatPersonName } from "@/lib/nameFormat";
 
 // White-label tenants (VITE_LOGO_URL set) render their own logo — white-inverted
@@ -30,6 +29,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
     { href: "/documents", icon: FolderOpen, label: t("nav.documents") },
     { href: "/commission", icon: DollarSign, label: t("nav.commission") },
     { href: "/support", icon: LifeBuoy, label: t("nav.support", "Support") },
+    { href: "/security", icon: ShieldCheck, label: t("nav.security", "Security") },
   ];
 
   useEffect(() => { setSidebarOpen(false); }, [location]);

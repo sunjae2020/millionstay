@@ -6,11 +6,12 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useGuestLogin } from "@/lib/guest-api";
 import { useAuthStore, rememberLoginEmail, getRememberedLoginEmail } from "@/lib/store";
+import { passkeysSupported, isPasskeyCancel, passkeySignIn } from "@/lib/passkey";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Link } from "wouter";
-import { Eye, EyeOff, Lock, Mail } from "lucide-react";
+import { Eye, EyeOff, Lock, Mail, KeyRound, Loader2 } from "lucide-react";
 import { AuthLayout } from "../components/auth-layout";
 
 export default function Login() {
@@ -38,6 +39,26 @@ export default function Login() {
     // Signing back in after a session ends shouldn't mean retyping the address.
     defaultValues: { email: getRememberedLoginEmail(), password: "" },
   });
+
+  // Passkey sign-in — the device names the guest, so nothing above is filled in.
+  // A dismissed OS prompt is a no-op, not an error.
+  const [passkeyBusy, setPasskeyBusy] = useState(false);
+  async function handlePasskey() {
+    setPasskeyBusy(true);
+    try {
+      const res = await passkeySignIn();
+      setAuth(res.token, res.user, res.refresh_token);
+      rememberLoginEmail(res.user.email);
+      setLocation(redirectTo);
+    } catch (err: unknown) {
+      if (!isPasskeyCancel(err)) {
+        const e = err as { message?: string };
+        form.setError("password", { message: e?.message ?? t("auth.passkey_failed", "Passkey sign-in failed") });
+      }
+    } finally {
+      setPasskeyBusy(false);
+    }
+  }
 
   const onSubmit = (data: LoginFormData) => {
     loginMutation.mutate(
@@ -145,6 +166,30 @@ export default function Login() {
                 </Button>
               </form>
             </Form>
+
+            {passkeysSupported() && (
+              <>
+                <div className="relative">
+                  <div className="absolute inset-0 flex items-center">
+                    <div className="w-full border-t border-border" />
+                  </div>
+                  <div className="relative flex justify-center text-xs text-muted-foreground">
+                    <span className="bg-card px-3">{t("auth.passkey_or", "or")}</span>
+                  </div>
+                </div>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={handlePasskey}
+                  disabled={passkeyBusy}
+                  className="w-full h-11 font-semibold rounded-xl gap-2"
+                >
+                  {passkeyBusy
+                    ? <><Loader2 className="h-4 w-4 animate-spin" /> {t("auth.signing_in")}</>
+                    : <><KeyRound className="h-4 w-4" /> {t("auth.passkey_log_in", "Sign in with a passkey")}</>}
+                </Button>
+              </>
+            )}
 
       <div className="relative">
         <div className="absolute inset-0 flex items-center">

@@ -663,7 +663,19 @@
       "toast_contact_updated": "緊急連絡先を更新しました",
       "toast_failed_delete": "削除に失敗しました",
       "toast_contact_removed": "緊急連絡先を削除しました",
-      "toast_could_not_delete": "連絡先を削除できませんでした。"
+      "toast_could_not_delete": "連絡先を削除できませんでした。",
+      "passkeys_title": "パスキー",
+      "passkeys_desc": "パスワードの代わりに Face ID・指紋・端末のPINでログインします。",
+      "passkey_add": "この端末を登録",
+      "passkey_adding": "登録中…",
+      "passkey_added": "パスキーを登録しました",
+      "passkey_add_failed": "パスキーを登録できませんでした",
+      "passkey_remove": "削除",
+      "passkey_remove_confirm": "このパスキーを削除しますか？その端末は再びパスワードでのログインになります。",
+      "passkey_remove_failed": "パスキーを削除できませんでした",
+      "passkey_unnamed": "パスキー",
+      "passkey_last_used": "最終使用 {{date}}",
+      "passkey_never_used": "未使用"
     },
     "booking_detail": {
       "back": "予約一覧に戻る",
@@ -1075,7 +1087,10 @@
     "set_new_password": "パスワードを変更",
     "forgot_title": "パスワードの再設定",
     "sending": "送信中…",
-    "send_reset_link": "再設定リンクを送信"
+    "send_reset_link": "再設定リンクを送信",
+    "passkey_or": "または",
+    "passkey_log_in": "パスキーでログイン",
+    "passkey_failed": "パスキーでのログインに失敗しました"
   },
   "errors": {
     "not_found": "ページが見つかりません",

@@ -2,17 +2,18 @@ import { useState, FormEvent } from "react";
 import { Link } from "wouter";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "@/lib/auth";
+import { passkeysSupported, isPasskeyCancel } from "@/lib/passkey";
 import { getRememberedLoginEmail } from "@/lib/api";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { APP_NAME } from "@/lib/appName";
-import { Eye, EyeOff, Loader2 } from "lucide-react";
+import { Eye, EyeOff, Loader2, KeyRound } from "lucide-react";
 
 const BRAND = "hsl(var(--brand-orange))";
 // White + enlarged logo only for white-label tenants (VITE_LOGO_URL set).
 const HAS_TENANT_LOGO = Boolean(import.meta.env.VITE_LOGO_URL);
 
 export default function LoginPage() {
-  const { login } = useAuth();
+  const { login, loginWithPasskey } = useAuth();
   const { t } = useTranslation();
   // Signing back in after a session ends shouldn't mean retyping the address.
   const [email, setEmail] = useState(getRememberedLoginEmail);
@@ -30,6 +31,21 @@ export default function LoginPage() {
       setError(err.message ?? t("login.invalid"));
     } finally {
       setLoading(false);
+    }
+  }
+
+  // Passkey sign-in. The device already knows who this is, so nothing above is
+  // filled in; a dismissed OS prompt is a no-op, not an error.
+  const [passkeyBusy, setPasskeyBusy] = useState(false);
+  async function handlePasskey() {
+    setError("");
+    setPasskeyBusy(true);
+    try {
+      await loginWithPasskey();
+    } catch (err: any) {
+      if (!isPasskeyCancel(err)) setError(err?.message ?? t("login.passkey_failed", "Passkey sign-in failed"));
+    } finally {
+      setPasskeyBusy(false);
     }
   }
 
@@ -165,6 +181,30 @@ export default function LoginPage() {
                 }
               </button>
             </form>
+
+            {passkeysSupported() && (
+              <>
+                <div className="flex items-center gap-3 my-5">
+                  <span className="h-px flex-1 bg-slate-200" />
+                  <span className="text-xs text-slate-400">{t("login.passkey_or", "or")}</span>
+                  <span className="h-px flex-1 bg-slate-200" />
+                </div>
+                <button
+                  type="button"
+                  onClick={handlePasskey}
+                  disabled={passkeyBusy || loading}
+                  className="w-full h-11 rounded-lg border border-slate-200 bg-white text-sm font-semibold text-slate-700 hover:bg-slate-50 transition-colors disabled:opacity-60 flex items-center justify-center gap-2"
+                >
+                  {passkeyBusy
+                    ? <><Loader2 className="h-4 w-4 animate-spin" /> {t("login.signing_in")}</>
+                    : <><KeyRound className="h-4 w-4" /> {t("login.passkey_sign_in", "Sign in with a passkey")}</>
+                  }
+                </button>
+                <p className="mt-2 text-center text-xs text-slate-400">
+                  {t("login.passkey_hint", "Use Face ID, a fingerprint or your device PIN.")}
+                </p>
+              </>
+            )}
 
             <div className="mt-3 text-right">
               <Link href="/forgot-password">

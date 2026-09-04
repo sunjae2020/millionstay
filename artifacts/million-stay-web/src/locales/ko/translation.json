@@ -579,7 +579,19 @@
       "toast_contact_updated": "비상 연락처가 업데이트되었습니다",
       "toast_failed_delete": "삭제에 실패했습니다",
       "toast_contact_removed": "비상 연락처가 삭제되었습니다",
-      "toast_could_not_delete": "연락처를 삭제할 수 없습니다."
+      "toast_could_not_delete": "연락처를 삭제할 수 없습니다.",
+      "passkeys_title": "패스키",
+      "passkeys_desc": "비밀번호 대신 Face ID·지문·기기 PIN으로 로그인합니다.",
+      "passkey_add": "이 기기 등록",
+      "passkey_adding": "등록 중…",
+      "passkey_added": "패스키를 등록했습니다",
+      "passkey_add_failed": "패스키를 등록하지 못했습니다",
+      "passkey_remove": "삭제",
+      "passkey_remove_confirm": "이 패스키를 삭제할까요? 해당 기기는 다시 비밀번호로 로그인해야 합니다.",
+      "passkey_remove_failed": "패스키를 삭제하지 못했습니다",
+      "passkey_unnamed": "패스키",
+      "passkey_last_used": "마지막 사용 {{date}}",
+      "passkey_never_used": "아직 사용하지 않음"
     },
     "booking_detail": {
       "back": "예약 목록으로",
@@ -1274,7 +1286,10 @@
     "set_new_password": "비밀번호 변경",
     "forgot_title": "비밀번호 재설정",
     "sending": "전송 중…",
-    "send_reset_link": "재설정 링크 보내기"
+    "send_reset_link": "재설정 링크 보내기",
+    "passkey_or": "또는",
+    "passkey_log_in": "패스키로 로그인",
+    "passkey_failed": "패스키 로그인에 실패했습니다"
   },
   "contact_page": {
     "hero_tagline": "여러분의 의견을 듣고 싶습니다",

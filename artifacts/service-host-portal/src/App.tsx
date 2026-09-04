@@ -17,6 +17,7 @@ import DocumentsPage from "@/pages/DocumentsPage";
 import SupportPage from "@/pages/SupportPage";
 import SupportDetailPage from "@/pages/SupportDetailPage";
 import NotFound from "@/pages/not-found";
+import SecurityPage from "@/pages/SecurityPage";
 
 function PortalRoutes() {
   const { t } = useTranslation();
@@ -53,6 +54,7 @@ function PortalRoutes() {
       <Route path="/documents" component={DocumentsPage} />
       <Route path="/support" component={SupportPage} />
       <Route path="/support/:id" component={SupportDetailPage} />
+      <Route path="/security" component={SecurityPage} />
       <Route component={NotFound} />
     </Switch>
   );

@@ -19,7 +19,10 @@
     "dark_mode": "다크 모드",
     "light_mode": "라이트 모드",
     "work_orders": "작업지시",
-    "documents": "문서함"
+    "documents": "문서함",
+    "security": "보안",
+    "install_app": "앱 설치",
+    "install_ios_hint": "공유 버튼을 누른 뒤 ‘홈 화면에 추가’를 선택하세요."
   },
   "common": {
     "loading": "로딩 중...",
@@ -64,7 +67,11 @@
     "apply_cta": "서비스 호스트 신청하기",
     "forgot_password": "비밀번호를 잊으셨나요?",
     "identifier": "이메일 또는 휴대폰 번호",
-    "identifier_placeholder": "you@example.com 또는 010-0000-0000"
+    "identifier_placeholder": "you@example.com 또는 010-0000-0000",
+    "passkey_sign_in": "패스키로 로그인",
+    "passkey_or": "또는",
+    "passkey_hint": "Face ID·지문·기기 PIN으로 로그인합니다.",
+    "passkey_failed": "패스키 로그인에 실패했습니다"
   },
   "trigger": {
     "at_checkin": "체크인 시",
@@ -335,7 +342,11 @@
     "cat_landscaping": "조경",
     "cat_security": "보안",
     "photo_caption_ph": "사진 설명 (예: 변기 백시멘트 보수)",
-    "photo_caption_hint": "촬영일, 매물/호수와 이 설명이 사진에 워터마크로 새겨집니다."
+    "photo_caption_hint": "촬영일, 매물/호수와 이 설명이 사진에 워터마크로 새겨집니다.",
+    "btn_photos": "사진·상세",
+    "scheduled": "예정",
+    "access": "출입",
+    "load_failed": "작업지시를 불러오지 못했습니다"
   },
   "documents": {
     "title": "문서함",
@@ -418,5 +429,34 @@
     "err_mismatch": "비밀번호가 일치하지 않습니다.",
     "err_reset_failed": "재설정에 실패했습니다. 링크가 만료되었을 수 있습니다.",
     "err_network": "네트워크 오류입니다."
+  },
+  "security": {
+    "title": "보안",
+    "subtitle": "비밀번호 대신 Face ID·지문·기기 PIN으로 로그인합니다.",
+    "passkeys": "패스키",
+    "add": "이 기기 등록",
+    "added": "패스키를 등록했습니다: {{name}}",
+    "add_failed": "패스키를 등록하지 못했습니다",
+    "remove": "삭제",
+    "remove_confirm": "이 패스키를 삭제할까요? 해당 기기는 다시 비밀번호로 로그인해야 합니다.",
+    "remove_failed": "패스키를 삭제하지 못했습니다",
+    "empty": "등록된 패스키가 없습니다.",
+    "unnamed": "패스키",
+    "unsupported": "이 브라우저는 패스키를 지원하지 않습니다.",
+    "added_on": "등록",
+    "last_used": "마지막 사용",
+    "synced": "동기화됨"
+  },
+  "photos": {
+    "take": "사진 촬영",
+    "choose": "불러오기",
+    "before": "작업 전",
+    "after": "작업 후",
+    "none": "사진이 없습니다",
+    "remaining": "{{n}}장 더 가능",
+    "delete": "사진 삭제",
+    "delete_confirm": "이 사진을 삭제할까요?",
+    "delete_failed": "사진을 삭제하지 못했습니다",
+    "upload_failed": "업로드에 실패했습니다"
   }
 }

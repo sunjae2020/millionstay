@@ -10,6 +10,7 @@ import {
   msUntilTokenExpiry,
   rememberLoginEmail,
 } from "./api";
+import { passkeySignIn } from "./passkey";
 
 // Renew well before the access token (1h) expires, so a slow network or a
 // sleeping laptop still has room to recover before anything 401s.
@@ -30,6 +31,8 @@ interface AuthContextType {
   user: PartnerUser | null;
   loading: boolean;
   login: (email: string, password: string) => Promise<void>;
+  /** Passkey sign-in — no identifier typed; the authenticator names the user. */
+  loginWithPasskey: () => Promise<void>;
   logout: () => void;
 }
 
@@ -119,6 +122,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(d.user);
   }
 
+  async function loginWithPasskey() {
+    const d = await passkeySignIn();
+    storeSession(d.token, d.refresh_token ?? undefined);
+    rememberLoginEmail(d.user.email);
+    setUser(d.user);
+  }
+
   function logout() {
     const rt = getStoredRefreshToken();
     if (rt) void apiPost("/v1/auth/partner/logout", { refresh_token: rt }).catch(() => {});
@@ -126,7 +136,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(null);
   }
 
-  return <AuthContext.Provider value={{ user, loading, login, logout }}>{children}</AuthContext.Provider>;
+  return <AuthContext.Provider value={{ user, loading, login, loginWithPasskey, logout }}>{children}</AuthContext.Provider>;
 }
 
 export function useAuth() {

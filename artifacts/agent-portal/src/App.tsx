@@ -13,6 +13,7 @@ import DocumentsPage from "@/pages/DocumentsPage";
 import CommissionPage from "@/pages/CommissionPage";
 import SupportPage from "@/pages/SupportPage";
 import SupportDetailPage from "@/pages/SupportDetailPage";
+import SecurityPage from "@/pages/SecurityPage";
 
 function PortalRoutes() {
   const { user, loading } = useAuth();
@@ -46,6 +47,7 @@ function PortalRoutes() {
       <Route path="/commission" component={CommissionPage} />
       <Route path="/support" component={SupportPage} />
       <Route path="/support/:id" component={SupportDetailPage} />
+      <Route path="/security" component={SecurityPage} />
       <Route>
         <div className="p-8 text-muted-foreground">{t("common.page_not_found")}</div>
       </Route>
