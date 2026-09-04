@@ -3,7 +3,8 @@ import { useTranslation } from "react-i18next";
 import { Link, useSearch } from "wouter";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
-  ArrowDownLeft, ArrowRightLeft, ArrowUpRight, BookOpen, CheckCircle2, Loader2, Plus, XCircle,
+  ArrowDownLeft, ArrowRightLeft, ArrowUpRight, BookOpen, CheckCircle2, ChevronLeft, ChevronRight,
+  Loader2, Plus, XCircle,
 } from "lucide-react";
 import { Layout } from "@/components/Layout";
 import { Button } from "@/components/ui/button";
@@ -75,7 +76,7 @@ interface Transaction {
 
 interface TxnListResponse {
   data: Transaction[];
-  meta: { total: number; income: number; expense: number; net: number };
+  meta: { total: number; page: number; limit: number; pages: number; income: number; expense: number; net: number };
 }
 
 const TYPE_META: Record<string, { icon: typeof ArrowDownLeft; cls: string }> = {
@@ -129,6 +130,8 @@ export default function TransactionList() {
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
   const [showDeleted, setShowDeleted] = useState(false);
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(100);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [form, setForm] = useState<FormState>(emptyForm);
 
@@ -147,8 +150,14 @@ export default function TransactionList() {
     if (to) p.set("to", to);
     if (scheduleFilter) p.set("payment_schedule_id", String(scheduleFilter));
     if (showDeleted) p.set("deleted", "only");
+    p.set("page", String(page));
+    p.set("limit", String(limit));
     return p.toString();
-  }, [q, type, status, from, to, scheduleFilter, showDeleted]);
+  }, [q, type, status, from, to, scheduleFilter, showDeleted, page, limit]);
+
+  // 필터가 바뀌면 1페이지로 되돌린다 — 3페이지를 보던 중 필터를 좁히면 결과가
+  // 한 페이지뿐인데 빈 화면이 나온다.
+  useEffect(() => { setPage(1); }, [q, type, status, from, to, scheduleFilter, showDeleted, limit]);
 
   const { data, isLoading } = useQuery<TxnListResponse>({
     queryKey: ["transactions", params],
@@ -372,6 +381,7 @@ export default function TransactionList() {
           columns={columns}
           data={rows}
           isLoading={isLoading}
+          defaultPageSize={limit}
           rowKey={(r) => r.id}
           emptyText={t("transaction.empty")}
           selection={{ enable: true, resource: "transactions", onChanged: invalidate }}
@@ -406,6 +416,32 @@ export default function TransactionList() {
               </Select>
               <DateInput value={from} onChange={setFrom} className="w-40" />
               <DateInput value={to} onChange={setTo} className="w-40" min={from || undefined} />
+
+              {/* 서버 페이지 이동. DataTable 자체 페이징은 defaultPageSize={limit} 로
+                  한 페이지에 다 담아, 두 겹으로 나뉘어 보이지 않게 한다. */}
+              <div className="flex items-center gap-1 ml-auto">
+                <span className="text-xs text-muted-foreground tabular-nums">
+                  {t("transaction.page_of", { page: meta?.page ?? 1, pages: meta?.pages ?? 1, total: meta?.total ?? 0 })}
+                </span>
+                <Button variant="outline" size="sm" className="h-8 w-8 p-0"
+                  disabled={(meta?.page ?? 1) <= 1}
+                  onClick={() => setPage((p) => Math.max(1, p - 1))}>
+                  <ChevronLeft className="h-4 w-4" />
+                </Button>
+                <Button variant="outline" size="sm" className="h-8 w-8 p-0"
+                  disabled={(meta?.page ?? 1) >= (meta?.pages ?? 1)}
+                  onClick={() => setPage((p) => p + 1)}>
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+                <Select value={String(limit)} onValueChange={(v) => setLimit(Number(v))}>
+                  <SelectTrigger className="w-24 h-8"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {[50, 100, 200, 500].map((n) => (
+                      <SelectItem key={n} value={String(n)}>{t("transaction.per_page", { n })}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
           }
         />
@@ -448,7 +484,12 @@ function TransactionDialog({
   const brand = useBrand();
 
   const { data: scheduleResp } = usePaymentSchedule(form.contract_id);
-  const scheduleRows: PaymentScheduleRow[] = scheduleResp?.data ?? [];
+  // 거래 방향에 맞는 회차만 보여준다. 수입은 받을 돈(AR), 지출은 줄 돈(AP)을
+  // 정산한다 — 반대쪽을 고를 수 있게 두면 미납이 줄어든 것처럼 보이는 오류가
+  // 정산 단계까지 드러나지 않는다(서버도 같은 규칙으로 한 번 더 막는다).
+  const wantDir = form.txn_type === "expense" ? "ap" : "ar";
+  const scheduleRows: PaymentScheduleRow[] = (scheduleResp?.data ?? [])
+    .filter((r) => (r.direction ?? "ar") === wantDir);
 
   const { data: bankAccounts } = useQuery<{ data: { id: number; name: string; currency: string }[] }>({
     queryKey: ["bank-accounts"],
@@ -471,11 +512,11 @@ function TransactionDialog({
   // 계약이 바뀌면 이전 계약의 회차를 그대로 들고 있지 않도록 끊는다.
   useEffect(() => {
     if (!form.payment_schedule_id) return;
-    if (scheduleRows.length && !scheduleRows.some((r) => r.id === form.payment_schedule_id)) {
+    if (!scheduleRows.some((r) => r.id === form.payment_schedule_id)) {
       setForm({ ...form, payment_schedule_id: null });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [form.contract_id, scheduleRows.length]);
+  }, [form.contract_id, form.txn_type, scheduleRows.length]);
 
   function pickSchedule(id: string) {
     if (id === "_none") {
@@ -609,6 +650,11 @@ function TransactionDialog({
               </Select>
               {!form.contract_id && (
                 <p className="text-xs text-muted-foreground mt-1">{t("transaction.pick_contract_first")}</p>
+              )}
+              {form.contract_id && scheduleRows.length === 0 && (
+                <p className="text-xs text-muted-foreground mt-1">
+                  {t(wantDir === "ap" ? "transaction.no_ap_lines" : "transaction.no_ar_lines")}
+                </p>
               )}
               {selectedSchedule && (
                 <p className="text-xs text-muted-foreground mt-1">

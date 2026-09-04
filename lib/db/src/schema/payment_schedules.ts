@@ -32,6 +32,15 @@ export const paymentSchedulesTable = pgTable("payment_schedules", {
   //   rent             월세/기간 임대료 (period 로 회차를 구분)
   //   advance          선급금 (단기 요금형)
   //   other            기타(입주청소비 등 일회성)
+  // 돈의 방향. 'ar' 받을 돈(세입자 → 우리) / 'ap' 줄 돈(우리 → 집주인·업체).
+  // 한 행에 AR·AP 를 겹쳐 넣지 않는 이유는 0080 주석에 있다 — 부분납 로직을
+  // 양쪽이 그대로 공유하기 위해서다.
+  direction: text("direction").notNull().default("ar"),
+  // 이 회차의 상대방. AR 이면 세입자, AP 면 집주인·업체.
+  counterparty_account_id: integer("counterparty_account_id"),
+  // AP 행이 파생된 AR 행(월세를 받아 집주인에게 넘기는 짝).
+  source_schedule_id: integer("source_schedule_id"),
+
   kind: text("kind").notNull().default("rent"),
   // 표시 순서. 같은 due_date 안에서 계약금 → 중도금 → 잔금 순서를 고정한다.
   seq: integer("seq").notNull().default(0),
@@ -65,8 +74,12 @@ export const paymentSchedulesTable = pgTable("payment_schedules", {
   updated_at: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),
 });
 
+export const PAYMENT_SCHEDULE_DIRECTIONS = ["ar", "ap"] as const;
 export const PAYMENT_SCHEDULE_KINDS = [
-  "deposit", "down_payment", "interim_payment", "balance", "rent", "advance", "other",
+  "deposit", "down_payment", "interim_payment", "balance", "rent", "advance",
+  // AP 전용 — 집주인에게 넘기는 임대료, 파트너·업체 대금.
+  "owner_rent", "payout",
+  "other",
 ] as const;
 export const PAYMENT_SCHEDULE_STATUSES = [
   "pending", "invoiced", "partial", "paid", "waived",

@@ -7,7 +7,7 @@
 //
 // 금액 컬럼은 numeric → 문자열. 읽을 때 Number(), 쓸 때 String().
 import { and, eq, inArray, isNull, sql } from "drizzle-orm";
-import { db, contractsTable, paymentSchedulesTable, transactionsTable } from "@workspace/db";
+import { db, contractsTable, contractPayoutTermsTable, paymentSchedulesTable, transactionsTable } from "@workspace/db";
 import { DEFAULT_CURRENCY } from "../currency";
 
 const round2 = (n: number): number => Math.round(n * 100) / 100;
@@ -27,6 +27,8 @@ function parseYmd(value: string | null | undefined): { y: number; m: number; d: 
 }
 
 export type ScheduleDraft = {
+  /** 'ar' 받을 돈 / 'ap' 줄 돈. */
+  direction: "ar" | "ap";
   kind: string;
   seq: number;
   period: string | null;
@@ -34,6 +36,8 @@ export type ScheduleDraft = {
   period_end: string | null;
   due_date: string | null;
   amount: number;
+  /** AP 행의 수취인(집주인·업체). AR 행에서는 쓰지 않는다. */
+  counterparty_account_id?: number | null;
 };
 
 /** 월세 회차를 무한히 만들지 않기 위한 상한(장기 계약 + 잘못된 종료일 방어). */
@@ -54,6 +58,7 @@ export function buildScheduleDrafts(contract: typeof contractsTable.$inferSelect
     const n = Number(amount ?? 0);
     if (!Number.isFinite(n) || n <= 0) return;
     drafts.push({
+      direction: "ar",
       kind, seq, period: null, period_start: null, period_end: null,
       due_date: (date ?? contract.start_date ?? null)?.slice(0, 10) ?? null,
       amount: round2(n),
@@ -87,6 +92,7 @@ export function buildScheduleDrafts(contract: typeof contractsTable.$inferSelect
       // 납기로 찍히는 것을 막는다.
       const due = ymd(y, m, dueDay);
       drafts.push({
+        direction: "ar",
         kind: "rent",
         seq: seq++,
         period: `${y}-${String(m + 1).padStart(2, "0")}`,
@@ -101,6 +107,69 @@ export function buildScheduleDrafts(contract: typeof contractsTable.$inferSelect
   }
 
   return drafts;
+}
+
+/**
+ * 집주인·파트너에게 **줄 돈**(AP) 회차를 만든다.
+ *
+ * 근거는 `contract_payout_terms` 다 — 계약마다 "월세의 몇 %를 집주인에게" 같은
+ * 조건이 이미 등록돼 있다. 그 조건을 AR 월세 회차에 곱해 같은 달의 AP 회차를
+ * 만든다. 즉 **AR 이 먼저 있어야 AP 가 나온다**(받을 근거 없는 지급은 만들지 않는다).
+ *
+ * `source_schedule_id` 로 짝을 기록하므로 "받았는데 아직 안 보냈다"를 찾을 수 있다.
+ * 납기는 받는 날보다 며칠 뒤로 미룬다 — 받기 전에 보내라고 재촉하면 안 된다.
+ */
+const AP_DUE_LAG_DAYS = 5;
+
+function addDays(ymdStr: string, days: number): string {
+  const d = new Date(`${ymdStr}T00:00:00Z`);
+  d.setUTCDate(d.getUTCDate() + days);
+  return d.toISOString().slice(0, 10);
+}
+
+export async function buildPayoutDrafts(
+  contractId: number,
+  arRows: Array<{ id: number; period: string | null; period_start: string | null; period_end: string | null; due_date: string | null; amount: string; currency: string; kind: string }>,
+): Promise<Array<ScheduleDraft & { counterparty_account_id: number | null; source_schedule_id: number }>> {
+  const terms = await db.select().from(contractPayoutTermsTable).where(and(
+    eq(contractPayoutTermsTable.contract_id, contractId),
+    eq(contractPayoutTermsTable.status, "Active"),
+    isNull(contractPayoutTermsTable.deleted_at),
+  ));
+  if (terms.length === 0) return [];
+
+  const out: Array<ScheduleDraft & { counterparty_account_id: number | null; source_schedule_id: number }> = [];
+  // 월세 회차만 대상으로 한다. 보증금은 나중에 돌려주는 돈이지 집주인에게 넘기는
+  // 돈이 아니고(2100 예수 부채), 계약금·잔금은 payout 조건의 기준이 아니다.
+  const rentRows = arRows.filter((r) => r.kind === "rent");
+
+  for (const term of terms) {
+    for (const ar of rentRows) {
+      // 적용 기간 밖이면 건너뛴다.
+      if (term.effective_from && ar.due_date && ar.due_date < term.effective_from) continue;
+      if (term.effective_to && ar.due_date && ar.due_date > term.effective_to) continue;
+
+      const base = Number(ar.amount ?? 0);
+      const amount = term.basis === "percent_of_rent" && term.rate != null
+        ? round2(base * (Number(term.rate) / 100))
+        : Number(term.amount ?? 0);
+      if (!(amount > 0)) continue;
+
+      out.push({
+        direction: "ap",
+        kind: term.party_type === "landlord" ? "owner_rent" : "payout",
+        seq: 500,
+        period: ar.period,
+        period_start: ar.period_start,
+        period_end: ar.period_end,
+        due_date: ar.due_date ? addDays(ar.due_date, AP_DUE_LAG_DAYS) : null,
+        amount,
+        counterparty_account_id: term.payee_account_id ?? null,
+        source_schedule_id: ar.id,
+      });
+    }
+  }
+  return out;
 }
 
 export type GenerateResult = { created: number; skipped: number; total: number };
@@ -132,21 +201,24 @@ export async function generateContractSchedule(
   }
 
   const existing = await db.select({
+    direction: paymentSchedulesTable.direction,
     kind: paymentSchedulesTable.kind,
     period: paymentSchedulesTable.period,
   }).from(paymentSchedulesTable).where(and(
     eq(paymentSchedulesTable.contract_id, contractId),
     isNull(paymentSchedulesTable.deleted_at),
   ));
-  const seen = new Set(existing.map((r) => `${r.kind}|${r.period ?? ""}`));
+  const seen = new Set(existing.map((r) => `${r.direction}|${r.kind}|${r.period ?? ""}`));
 
   const drafts = buildScheduleDrafts(contract);
   const currency = contract.currency || DEFAULT_CURRENCY;
-  const rows = drafts.filter((d) => !seen.has(`${d.kind}|${d.period ?? ""}`));
+  const rows = drafts.filter((d) => !seen.has(`${d.direction}|${d.kind}|${d.period ?? ""}`));
 
   if (rows.length > 0) {
     await db.insert(paymentSchedulesTable).values(rows.map((d) => ({
       contract_id: contractId,
+      direction: d.direction,
+      counterparty_account_id: d.direction === "ap" ? d.counterparty_account_id ?? null : contract.tenant_account_id,
       kind: d.kind,
       seq: d.seq,
       period: d.period,
@@ -159,7 +231,45 @@ export async function generateContractSchedule(
     }))).onConflictDoNothing();
   }
 
-  return { created: rows.length, skipped: drafts.length - rows.length, total: drafts.length };
+  // AR 회차가 자리를 잡은 뒤에 AP 회차를 만든다(AP 는 AR 을 참조한다).
+  const arRows = await db.select({
+    id: paymentSchedulesTable.id,
+    period: paymentSchedulesTable.period,
+    period_start: paymentSchedulesTable.period_start,
+    period_end: paymentSchedulesTable.period_end,
+    due_date: paymentSchedulesTable.due_date,
+    amount: paymentSchedulesTable.amount,
+    currency: paymentSchedulesTable.currency,
+    kind: paymentSchedulesTable.kind,
+  }).from(paymentSchedulesTable).where(and(
+    eq(paymentSchedulesTable.contract_id, contractId),
+    eq(paymentSchedulesTable.direction, "ar"),
+    isNull(paymentSchedulesTable.deleted_at),
+  ));
+
+  const apDrafts = await buildPayoutDrafts(contractId, arRows);
+  const apNew = apDrafts.filter((d) => !seen.has(`ap|${d.kind}|${d.period ?? ""}`));
+  if (apNew.length > 0) {
+    await db.insert(paymentSchedulesTable).values(apNew.map((d) => ({
+      contract_id: contractId,
+      direction: "ap",
+      counterparty_account_id: d.counterparty_account_id,
+      source_schedule_id: d.source_schedule_id,
+      kind: d.kind,
+      seq: d.seq,
+      period: d.period,
+      period_start: d.period_start,
+      period_end: d.period_end,
+      due_date: d.due_date,
+      amount: String(d.amount),
+      currency,
+      source: "auto",
+    }))).onConflictDoNothing();
+  }
+
+  const created = rows.length + apNew.length;
+  const total = drafts.length + apDrafts.length;
+  return { created, skipped: total - created, total };
 }
 
 /**

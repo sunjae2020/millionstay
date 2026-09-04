@@ -7414,7 +7414,11 @@
     "field_description": "적요",
     "field_notes": "메모",
     "gl_auto": "자동(유형 기준)",
-    "receipt_after_save": "거래를 먼저 저장하면 영수증을 첨부할 수 있습니다."
+    "receipt_after_save": "거래를 먼저 저장하면 영수증을 첨부할 수 있습니다.",
+    "page_of": "{{page}} / {{pages}} · 총 {{total}}건",
+    "per_page": "{{n}}건씩",
+    "no_ar_lines": "이 계약에 미정산 받을 돈 회차가 없습니다.",
+    "no_ap_lines": "이 계약에 미정산 줄 돈 회차가 없습니다."
   },
   "payment_schedule": {
     "title": "결제 일정",
@@ -7448,7 +7452,12 @@
     "status_paid": "완납",
     "status_waived": "면제",
     "field_label": "표시 이름",
-    "field_label_hint": "비우면 항목 종류로 표시됩니다"
+    "field_label_hint": "비우면 항목 종류로 표시됩니다",
+    "dir_ar": "받을 돈",
+    "dir_ap": "줄 돈",
+    "empty_ap": "줄 돈 회차가 없습니다 — 계약의 정산 조건에서 생성됩니다.",
+    "kind_owner_rent": "집주인 임대료",
+    "kind_payout": "파트너 정산금"
   },
   "photos": {
     "take": "사진 촬영"

@@ -7414,7 +7414,11 @@
     "field_description": "Description",
     "field_notes": "Notes",
     "gl_auto": "Auto (by type)",
-    "receipt_after_save": "Save the transaction first, then attach its receipt."
+    "receipt_after_save": "Save the transaction first, then attach its receipt.",
+    "page_of": "{{page}} / {{pages}} · {{total}} total",
+    "per_page": "{{n}} / page",
+    "no_ar_lines": "No unsettled receivable items on this contract.",
+    "no_ap_lines": "No unsettled payable items on this contract."
   },
   "payment_schedule": {
     "title": "Payment schedule",
@@ -7448,7 +7452,12 @@
     "status_paid": "Paid",
     "status_waived": "Waived",
     "field_label": "Label",
-    "field_label_hint": "Leave blank to use the item type"
+    "field_label_hint": "Leave blank to use the item type",
+    "dir_ar": "Receivable",
+    "dir_ap": "Payable",
+    "empty_ap": "No payables — they are generated from the contract's payout terms.",
+    "kind_owner_rent": "Rent to owner",
+    "kind_payout": "Partner payout"
   },
   "photos": {
     "take": "Take photo"

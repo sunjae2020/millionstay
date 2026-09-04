@@ -638,6 +638,8 @@ export async function postTransaction(args: {
   txnType: string; // income | expense | transfer
   amount: number;
   taxAmount?: number;
+  /** 이 거래가 정산하는 청구서. 있으면 매출/비용 대신 AR/AP 를 상계한다. */
+  invoiceId?: number | null;
   currency: string;
   txnDate: string; // YYYY-MM-DD
   glAccountCode?: string | null;
@@ -647,20 +649,35 @@ export async function postTransaction(args: {
   const gross = round2(args.amount || 0);
   if (gross <= 0) return null;
   const tax = Math.min(round2(args.taxAmount || 0), gross);
-  const net = round2(gross - tax);
   const entryDate = (args.txnDate || sydneyToday()).slice(0, 10);
   const description = args.description?.trim() || `Transaction #${args.id}`;
 
   const income = args.txnType === "income";
-  const fallback = income ? ACCOUNTS.REVENUE : ACCOUNTS.CONTRACTOR_EXPENSE;
+
+  // ── 청구서에 붙은 거래는 매출/비용이 아니라 채권·채무를 **상계**한다 ──────
+  // 청구서 발행 시 이미 Dr 1100 AR / Cr 4000 매출 이 올라가 있다(postInvoiceIssued).
+  // 그 입금을 다시 매출로 잡으면 **매출이 두 번 계상되고 AR 은 영원히 남는다.**
+  // postInvoicePaid 와 똑같은 규칙을 쓴다: 발행 분개가 있으면 AR/AP 상계, 없으면
+  // (발행 전기 없이 수납만 하는 옛 경로) 종전대로 매출/비용으로 간다.
+  // 사용자가 계정과목을 직접 골랐으면 그 의도를 존중해 건드리지 않는다.
+  const settlesInvoice = args.invoiceId != null && !args.glAccountCode?.trim()
+    ? await hasIssuedEntry(args.invoiceId)
+    : false;
+
+  const fallback = settlesInvoice
+    ? (income ? ACCOUNTS.ACCOUNTS_RECEIVABLE : ACCOUNTS.CONTRACTOR_PAYABLE)
+    : (income ? ACCOUNTS.REVENUE : ACCOUNTS.CONTRACTOR_EXPENSE);
   const counter = {
     code: args.glAccountCode?.trim() || fallback.code,
     name: args.glAccountName?.trim() || fallback.name,
   };
   // 부가세: 수입이면 예수금(부채), 지출이면 매입세액(자산).
+  // 부가세: 수입이면 예수금(부채), 지출이면 매입세액(자산). 단, 채권·채무 상계일
+  // 때는 발행 시점에 이미 분리돼 AR 총액에 포함돼 있으므로 다시 떼면 안 된다.
   const vat = income
-    ? { code: "2300", name: "VAT Payable" }
+    ? { code: ACCOUNTS.VAT_PAYABLE.code, name: ACCOUNTS.VAT_PAYABLE.name }
     : { code: "1500", name: "VAT Input Credit" };
+  const taxSplit = settlesInvoice ? 0 : tax;
 
   let lines: PostingLine[];
   if (args.txnType === "transfer") {
@@ -671,13 +688,13 @@ export async function postTransaction(args: {
   } else if (income) {
     lines = [
       { account_code: ACCOUNTS.CASH.code, account_name: ACCOUNTS.CASH.name, debit: gross, credit: 0 },
-      { account_code: counter.code, account_name: counter.name, debit: 0, credit: net },
-      ...(tax > 0 ? [{ account_code: vat.code, account_name: vat.name, debit: 0, credit: tax }] : []),
+      { account_code: counter.code, account_name: counter.name, debit: 0, credit: round2(gross - taxSplit) },
+      ...(taxSplit > 0 ? [{ account_code: vat.code, account_name: vat.name, debit: 0, credit: taxSplit }] : []),
     ];
   } else {
     lines = [
-      { account_code: counter.code, account_name: counter.name, debit: net, credit: 0 },
-      ...(tax > 0 ? [{ account_code: vat.code, account_name: vat.name, debit: tax, credit: 0 }] : []),
+      { account_code: counter.code, account_name: counter.name, debit: round2(gross - taxSplit), credit: 0 },
+      ...(taxSplit > 0 ? [{ account_code: vat.code, account_name: vat.name, debit: taxSplit, credit: 0 }] : []),
       { account_code: ACCOUNTS.CASH.code, account_name: ACCOUNTS.CASH.name, debit: 0, credit: gross },
     ];
   }

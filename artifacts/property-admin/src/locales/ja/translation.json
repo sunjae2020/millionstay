@@ -7369,7 +7369,11 @@
     "field_description": "摘要",
     "field_notes": "メモ",
     "gl_auto": "自動（種別で判定）",
-    "receipt_after_save": "取引を保存すると領収書を添付できます。"
+    "receipt_after_save": "取引を保存すると領収書を添付できます。",
+    "page_of": "{{page}} / {{pages}} · 全{{total}}件",
+    "per_page": "{{n}}件ずつ",
+    "no_ar_lines": "この契約に未精算の受取回次がありません。",
+    "no_ap_lines": "この契約に未精算の支払回次がありません。"
   },
   "payment_schedule": {
     "title": "支払スケジュール",
@@ -7403,7 +7407,12 @@
     "status_paid": "完了",
     "status_waived": "免除",
     "field_label": "表示名",
-    "field_label_hint": "空欄なら項目の種別で表示されます"
+    "field_label_hint": "空欄なら項目の種別で表示されます",
+    "dir_ar": "受取",
+    "dir_ap": "支払",
+    "empty_ap": "支払回次がありません — 契約の精算条件から生成されます。",
+    "kind_owner_rent": "オーナーへの賃料",
+    "kind_payout": "パートナー精算金"
   },
   "photos": {
     "take": "写真を撮る"

@@ -7373,7 +7373,11 @@
     "field_description": "摘要",
     "field_notes": "备注",
     "gl_auto": "自动（按类型）",
-    "receipt_after_save": "先保存交易，然后即可附加收据。"
+    "receipt_after_save": "先保存交易，然后即可附加收据。",
+    "page_of": "{{page}} / {{pages}} · 共 {{total}} 条",
+    "per_page": "每页 {{n}} 条",
+    "no_ar_lines": "该合同没有未结的应收期次。",
+    "no_ap_lines": "该合同没有未结的应付期次。"
   },
   "payment_schedule": {
     "title": "付款计划",
@@ -7407,7 +7411,12 @@
     "status_paid": "已结清",
     "status_waived": "已豁免",
     "field_label": "显示名称",
-    "field_label_hint": "留空则按项目类型显示"
+    "field_label_hint": "留空则按项目类型显示",
+    "dir_ar": "应收",
+    "dir_ap": "应付",
+    "empty_ap": "暂无应付期次——由合同的结算条件生成。",
+    "kind_owner_rent": "付业主租金",
+    "kind_payout": "合作方结算款"
   },
   "photos": {
     "take": "拍照"

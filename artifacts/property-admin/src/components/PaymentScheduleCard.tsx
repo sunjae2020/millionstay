@@ -28,11 +28,16 @@ import { formatDate } from "@/lib/date";
  */
 
 export type ScheduleKind =
-  | "deposit" | "down_payment" | "interim_payment" | "balance" | "rent" | "advance" | "other";
+  | "deposit" | "down_payment" | "interim_payment" | "balance" | "rent" | "advance"
+  | "owner_rent" | "payout" | "other";
 
 export interface PaymentScheduleRow {
   id: number;
   contract_id: number;
+  /** 'ar' 받을 돈 / 'ap' 줄 돈. */
+  direction: "ar" | "ap";
+  counterparty_account_id: number | null;
+  source_schedule_id: number | null;
   kind: ScheduleKind;
   seq: number;
   label: string | null;
@@ -56,6 +61,8 @@ export interface PaymentScheduleRow {
 export const SCHEDULE_KINDS: ScheduleKind[] = [
   "deposit", "down_payment", "interim_payment", "balance", "rent", "advance", "other",
 ];
+/** AP 회차에서 고를 수 있는 종류 — 받을 돈의 종류를 줄 돈에 쓰면 뜻이 안 맞는다. */
+export const SCHEDULE_KINDS_AP: ScheduleKind[] = ["owner_rent", "payout", "other"];
 
 const STATUS_CLASS: Record<string, string> = {
   pending:  "bg-gray-100 text-gray-600",
@@ -78,7 +85,13 @@ export function scheduleLabel(row: PaymentScheduleRow, t: (k: string) => string)
 }
 
 export function usePaymentSchedule(contractId: number | null | undefined) {
-  return useQuery<{ data: PaymentScheduleRow[]; meta: { total: number; paid: number; outstanding: number; count: number } }>({
+  return useQuery<{
+    data: PaymentScheduleRow[];
+    meta: {
+      total: number; paid: number; outstanding: number; count: number;
+      ap_total: number; ap_paid: number; ap_outstanding: number;
+    };
+  }>({
     queryKey: ["payment-schedule", contractId],
     enabled: !!contractId,
     queryFn: async () => {
@@ -108,9 +121,14 @@ export function PaymentScheduleCard({
   const qc = useQueryClient();
   const brand = useBrand();
   const [addOpen, setAddOpen] = useState(false);
+  // 받을 돈과 줄 돈은 탭으로 가른다. 한 표에 섞으면 합계가 순액이 되어 어느 쪽도
+  // 읽히지 않는다(미납 300만인지, 미지급 300만인지가 뒤섞인다).
+  const [dir, setDir] = useState<"ar" | "ap">("ar");
 
   const { data, isLoading } = usePaymentSchedule(contractId);
-  const rows = data?.data ?? [];
+  const allRows = data?.data ?? [];
+  const rows = allRows.filter((r) => (r.direction ?? "ar") === dir);
+  const apCount = allRows.filter((r) => r.direction === "ap").length;
   const meta = data?.meta;
   const cur = currency || rows[0]?.currency || brand.currency;
   const money = (n: number) => formatMoney(n, cur, brand.currencyPosition);
@@ -160,11 +178,10 @@ export function PaymentScheduleCard({
     onSuccess: invalidate,
   });
 
-  const totals = useMemo(() => ({
-    total: meta?.total ?? 0,
-    paid: meta?.paid ?? 0,
-    outstanding: meta?.outstanding ?? 0,
-  }), [meta]);
+  const totals = useMemo(() => (dir === "ap"
+    ? { total: meta?.ap_total ?? 0, paid: meta?.ap_paid ?? 0, outstanding: meta?.ap_outstanding ?? 0 }
+    : { total: meta?.total ?? 0, paid: meta?.paid ?? 0, outstanding: meta?.outstanding ?? 0 }
+  ), [meta, dir]);
 
   return (
     <div className="border rounded-lg bg-card">
@@ -172,6 +189,20 @@ export function PaymentScheduleCard({
         <div className="flex items-center gap-2">
           <CalendarClock className="h-4 w-4 text-muted-foreground" />
           <h3 className="font-semibold">{t("payment_schedule.title")}</h3>
+          <div className="flex rounded-md border overflow-hidden">
+            {(["ar", "ap"] as const).map((d) => (
+              <button
+                key={d}
+                onClick={() => setDir(d)}
+                className={`px-2.5 py-1 text-xs font-medium transition-colors ${
+                  dir === d ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-muted"
+                }`}
+              >
+                {t(`payment_schedule.dir_${d}`)}
+                {d === "ap" && apCount > 0 ? ` (${apCount})` : ""}
+              </button>
+            ))}
+          </div>
           {rows.length > 0 && (
             <span className="text-xs text-muted-foreground">
               {t("payment_schedule.summary", {
@@ -200,7 +231,7 @@ export function PaymentScheduleCard({
         <div className="px-4 py-8 text-center text-sm text-muted-foreground">{t("common.loading")}</div>
       ) : rows.length === 0 ? (
         <div className="px-4 py-8 text-center text-sm text-muted-foreground">
-          {t("payment_schedule.empty")}
+          {t(dir === "ap" ? "payment_schedule.empty_ap" : "payment_schedule.empty")}
         </div>
       ) : (
         <div className="overflow-x-auto">
@@ -289,6 +320,7 @@ export function PaymentScheduleCard({
         open={addOpen}
         onOpenChange={setAddOpen}
         contractId={contractId}
+        direction={dir}
         currency={cur}
         onSaved={invalidate}
       />
@@ -297,17 +329,18 @@ export function PaymentScheduleCard({
 }
 
 function AddScheduleRowDialog({
-  open, onOpenChange, contractId, currency, onSaved,
+  open, onOpenChange, contractId, direction, currency, onSaved,
 }: {
   open: boolean;
   onOpenChange: (v: boolean) => void;
   contractId: number;
+  direction: "ar" | "ap";
   currency: string;
   onSaved: () => void;
 }) {
   const { t } = useTranslation();
   const { toast } = useToast();
-  const [kind, setKind] = useState<ScheduleKind>("other");
+  const [kind, setKind] = useState<ScheduleKind>(direction === "ap" ? "owner_rent" : "other");
   const [label, setLabel] = useState("");
   const [dueDate, setDueDate] = useState("");
   const [amount, setAmount] = useState("");
@@ -319,6 +352,7 @@ function AddScheduleRowDialog({
         method: "POST",
         body: JSON.stringify({
           contract_id: contractId,
+          direction,
           kind,
           label: label || null,
           due_date: dueDate || null,
@@ -350,7 +384,7 @@ function AddScheduleRowDialog({
             <Select value={kind} onValueChange={(v) => setKind(v as ScheduleKind)}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
-                {SCHEDULE_KINDS.map((k) => (
+                {(direction === "ap" ? SCHEDULE_KINDS_AP : SCHEDULE_KINDS).map((k) => (
                   <SelectItem key={k} value={k}>{t(`payment_schedule.kind_${k}`)}</SelectItem>
                 ))}
               </SelectContent>

@@ -171,24 +171,44 @@ router.get("/v1/transactions", async (req, res): Promise<void> => {
       )`);
     }
 
-    const rows = await db
-      .select()
-      .from(transactionsTable)
-      .where(and(...conditions))
-      .orderBy(desc(transactionsTable.txn_date), desc(transactionsTable.id))
-      .limit(500);
+    // 서버 페이지네이션. 예전에는 `limit(500)` 하드 상한이었는데, 501번째 거래부터는
+    // 화면에서 아예 사라진다 — 운영 몇 달이면 닿는 수치라 실질적인 데이터 유실이었다.
+    const page = Math.max(1, Number(req.query.page) || 1);
+    const limit = Math.min(500, Math.max(1, Number(req.query.limit) || 100));
+    const where = and(...conditions);
+
+    // 요약과 총건수는 **페이지가 아니라 필터 전체**를 대상으로 집계한다. 페이지 합계를
+    // 총액처럼 보여주면 "이번 달 수입"을 잘못 읽게 된다. 확정·전기된 거래만 센다.
+    const [rows, [agg]] = await Promise.all([
+      db.select()
+        .from(transactionsTable)
+        .where(where)
+        .orderBy(desc(transactionsTable.txn_date), desc(transactionsTable.id))
+        .limit(limit)
+        .offset((page - 1) * limit),
+      db.select({
+        total: sql<number>`count(*)::int`,
+        income: sql<string>`COALESCE(SUM(CASE WHEN ${transactionsTable.txn_type} = 'income' AND ${transactionsTable.status} IN ('confirmed','posted') THEN ${transactionsTable.amount} ELSE 0 END), 0)`,
+        expense: sql<string>`COALESCE(SUM(CASE WHEN ${transactionsTable.txn_type} = 'expense' AND ${transactionsTable.status} IN ('confirmed','posted') THEN ${transactionsTable.amount} ELSE 0 END), 0)`,
+      }).from(transactionsTable).where(where),
+    ]);
 
     const data = await enrichTransactions(rows);
-    // 화면 상단 요약. 취소·초안을 뺀 확정 거래만 센다.
-    const settled = data.filter((r) => r.status === "confirmed" || r.status === "posted");
-    const sum = (t: string) => round2(settled.filter((r) => r.txn_type === t).reduce((s, r) => s + r.amount, 0));
-    const income = sum("income");
-    const expense = sum("expense");
+    const income = round2(Number(agg?.income ?? 0));
+    const expense = round2(Number(agg?.expense ?? 0));
 
     res.json({
       success: true,
       data,
-      meta: { total: data.length, income, expense, net: round2(income - expense) },
+      meta: {
+        total: agg?.total ?? 0,
+        page,
+        limit,
+        pages: Math.max(1, Math.ceil((agg?.total ?? 0) / limit)),
+        income,
+        expense,
+        net: round2(income - expense),
+      },
     });
   } catch (err) {
     console.error("[GET /v1/transactions]", err);
@@ -240,6 +260,12 @@ async function inheritFromSchedule(body: z.infer<typeof TxnBody>) {
   const [sch] = await db.select().from(paymentSchedulesTable)
     .where(eq(paymentSchedulesTable.id, body.payment_schedule_id)).limit(1);
   if (!sch) return body;
+  // 방향이 어긋난 연결은 조용히 끊는다. 지출을 "받을 돈" 회차에 붙이면 미납이
+  // 줄어든 것처럼 보이고, 그 오류는 정산 단계까지 아무도 눈치채지 못한다.
+  const wants = body.txn_type === "expense" ? "ap" : body.txn_type === "income" ? "ar" : null;
+  if (wants && sch.direction !== wants) {
+    return { ...body, payment_schedule_id: null };
+  }
   return {
     ...body,
     contract_id: sch.contract_id,
@@ -379,6 +405,8 @@ router.post("/v1/transactions/:id/post", async (req, res): Promise<void> => {
     txnType: row.txn_type,
     amount: Number(row.amount ?? 0),
     taxAmount: Number(row.tax_amount ?? 0),
+    // 청구서에 붙은 입금이면 매출이 아니라 미수금을 상계한다(이중 계상 방지).
+    invoiceId: row.invoice_id,
     currency: row.currency,
     txnDate: row.txn_date,
     glAccountCode: row.gl_account_code,
@@ -509,7 +537,9 @@ router.post("/v1/payment-schedules/generate", async (req, res): Promise<void> =>
 
 const ScheduleBody = z.object({
   contract_id: z.number().int().positive(),
-  kind: z.enum(["deposit", "down_payment", "interim_payment", "balance", "rent", "advance", "other"]).default("other"),
+  direction: z.enum(["ar", "ap"]).default("ar"),
+  counterparty_account_id: z.number().int().positive().nullish(),
+  kind: z.enum(["deposit", "down_payment", "interim_payment", "balance", "rent", "advance", "owner_rent", "payout", "other"]).default("other"),
   seq: z.number().int().optional(),
   label: z.string().nullish(),
   period: z.string().nullish(),
@@ -530,6 +560,8 @@ router.post("/v1/payment-schedules", async (req, res): Promise<void> => {
   try {
     const [row] = await db.insert(paymentSchedulesTable).values({
       contract_id: b.contract_id,
+      direction: b.direction,
+      counterparty_account_id: b.counterparty_account_id ?? null,
       kind: b.kind,
       seq: b.seq ?? 100,
       label: b.label ?? null,
@@ -560,6 +592,8 @@ router.put("/v1/payment-schedules/:id", async (req, res): Promise<void> => {
   const b = parsed.data;
   const set: Record<string, unknown> = { updated_at: new Date() };
   if (b.kind != null) set.kind = b.kind;
+  if (b.direction != null) set.direction = b.direction;
+  if (b.counterparty_account_id !== undefined) set.counterparty_account_id = b.counterparty_account_id ?? null;
   if (b.seq != null) set.seq = b.seq;
   if (b.label !== undefined) set.label = b.label ?? null;
   if (b.period !== undefined) set.period = b.period ?? null;
@@ -599,6 +633,33 @@ router.delete("/v1/payment-schedules/:id", async (req, res): Promise<void> => {
   res.status(204).send();
 });
 
+/**
+ * 이 계약에서 아직 정산되지 않은 회차를 방향별로 내려준다.
+ *
+ * 거래 입력 화면이 "이 입금(지출)이 어느 회차인가"를 고를 때 쓴다. 완납·면제된
+ * 회차는 빼고, 납기 순으로 준다 — 대개 가장 오래된 미납부터 채우기 때문이다.
+ */
+router.get("/v1/contracts/:id/settle-lines", async (req, res): Promise<void> => {
+  const contractId = Number(req.params.id);
+  if (!Number.isFinite(contractId)) { res.status(400).json({ error: "Invalid id" }); return; }
+  const rows = await db.select().from(paymentSchedulesTable).where(and(
+    eq(paymentSchedulesTable.contract_id, contractId),
+    isNull(paymentSchedulesTable.deleted_at),
+    sql`${paymentSchedulesTable.status} NOT IN ('paid', 'waived')`,
+  )).orderBy(paymentSchedulesTable.due_date, paymentSchedulesTable.seq);
+
+  const data = await enrichSchedules(rows);
+  res.json({
+    success: true,
+    ar: data.filter((r) => r.direction === "ar"),
+    ap: data.filter((r) => r.direction === "ap"),
+    meta: {
+      ar_outstanding: round2(data.filter((r) => r.direction === "ar").reduce((s, r) => s + r.outstanding, 0)),
+      ap_outstanding: round2(data.filter((r) => r.direction === "ap").reduce((s, r) => s + r.outstanding, 0)),
+    },
+  });
+});
+
 /** 한 청구서가 정산하는 회차들. 청구서 상세가 결제 일정을 보여줄 때 쓴다. */
 router.get("/v1/invoices/:id/payment-schedule", async (req, res): Promise<void> => {
   const invoiceId = Number(req.params.id);
@@ -621,6 +682,8 @@ router.get("/v1/payment-schedules", async (req, res): Promise<void> => {
   if (byContract) conditions.push(eq(paymentSchedulesTable.contract_id, contractId));
   const status = String(req.query.status ?? "").trim();
   if (status) conditions.push(eq(paymentSchedulesTable.status, status));
+  const direction = String(req.query.direction ?? "").trim();
+  if (direction === "ar" || direction === "ap") conditions.push(eq(paymentSchedulesTable.direction, direction));
   if (req.query.outstanding === "1") {
     conditions.push(sql`${paymentSchedulesTable.status} NOT IN ('paid', 'waived')`);
   }
@@ -645,9 +708,13 @@ router.get("/v1/payment-schedules", async (req, res): Promise<void> => {
     data,
     meta: {
       count: data.length,
-      total: round2(data.reduce((s, r) => s + r.amount, 0)),
-      paid: round2(data.reduce((s, r) => s + r.paid_amount, 0)),
-      outstanding: round2(data.reduce((s, r) => s + r.outstanding, 0)),
+      total: round2(data.filter((r) => r.direction === "ar").reduce((s, r) => s + r.amount, 0)),
+      paid: round2(data.filter((r) => r.direction === "ar").reduce((s, r) => s + r.paid_amount, 0)),
+      outstanding: round2(data.filter((r) => r.direction === "ar").reduce((s, r) => s + r.outstanding, 0)),
+      // 줄 돈은 받을 돈과 섞으면 안 된다 — 합치면 순액이 되어 어느 쪽도 못 읽는다.
+      ap_total: round2(data.filter((r) => r.direction === "ap").reduce((s, r) => s + r.amount, 0)),
+      ap_paid: round2(data.filter((r) => r.direction === "ap").reduce((s, r) => s + r.paid_amount, 0)),
+      ap_outstanding: round2(data.filter((r) => r.direction === "ap").reduce((s, r) => s + r.outstanding, 0)),
     },
   });
 });
