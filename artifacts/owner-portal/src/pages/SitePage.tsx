@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { Layout } from "@/components/Layout";
 import { apiGet, apiPut, apiUpload, ApiError } from "@/lib/api";
 import { Globe, ExternalLink, Check, X, Loader2, Save, Upload, Image as ImageIcon, Trash2 } from "lucide-react";
+import { CameraInput } from "@/components/CameraButton";
 
 // Mirror of owner_sites: the editable shape of an owner's landing site.
 interface OwnerSite {
@@ -296,6 +297,8 @@ function ImageField({ label, value, onChange, aspect }: { label: string; value: 
         </div>
         <div className="flex flex-col gap-1.5">
           <input ref={inputRef} type="file" accept="image/*" onChange={onPick} className="hidden" />
+          {/* 폰에서는 찍는 것이 곧 첨부다. 같은 핸들러로 들어간다. */}
+          <CameraInput onChange={onPick} multiple={false} disabled={uploading} />
           <button
             type="button"
             onClick={() => inputRef.current?.click()}

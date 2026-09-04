@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { CheckCircle2, AlertTriangle, ShieldCheck, Camera, Loader2, Wallet } from "lucide-react";
 import { formatCurrencyAmount } from "@/contexts/DisplayCurrencyContext";
+import { CameraInput } from "@/components/CameraButton";
 
 // Tenant-facing move-in/move-out condition report: read the admin-published
 // property condition, then agree or dispute each item. A dispute lets the
@@ -336,6 +337,13 @@ function ItemRow({
               />
               <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) void uploadPhoto(f); }} />
               <div className="flex gap-2">
+                {/* 입·퇴실 증빙은 현장에서 찍는다. */}
+                <CameraInput
+                  disabled={busy}
+                  multiple={false}
+                  className="inline-flex cursor-pointer items-center gap-1.5 rounded-md border px-3 py-1.5 text-sm font-medium hover:bg-accent"
+                  onChange={(e) => { const f = e.target.files?.[0]; if (f) void uploadPhoto(f); }}
+                />
                 <Button size="sm" variant="outline" disabled={busy} onClick={() => fileRef.current?.click()} className="gap-1.5">
                   <Camera className="h-3.5 w-3.5" /> Add photo
                 </Button>

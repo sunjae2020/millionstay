@@ -18,6 +18,7 @@ import {
 } from "@/lib/homestay-api";
 import { formatPersonName } from "@/lib/nameFormat";
 import { DateInput } from "@/components/ui/date-input";
+import { CameraInput } from "@/components/CameraButton";
 
 const STATUS_META: Record<string, { color: string; icon: typeof CheckCircle2; key: string }> = {
   Draft: { color: "text-gray-700 bg-gray-50 border-gray-200", icon: FileEdit, key: "draft" },
@@ -336,12 +337,20 @@ export default function HostPortal() {
                         {fulfilled ? (
                           <span className="text-xs text-green-600 font-medium">{t("homestay.portal.fulfilled")}</span>
                         ) : (
-                          <label className="text-xs font-medium text-primary cursor-pointer hover:underline flex items-center gap-1">
-                            <Upload className="h-3.5 w-3.5" />
-                            {uploadingType === rd ? t("homestay.portal.uploading") : t("homestay.portal.upload")}
-                            <input type="file" className="hidden" accept=".jpg,.jpeg,.png,.pdf"
-                              onChange={(e) => { if (e.target.files?.[0]) handleUpload(rd, e.target.files[0]); }} />
-                          </label>
+                          <span className="flex items-center gap-2">
+                            <label className="text-xs font-medium text-primary cursor-pointer hover:underline flex items-center gap-1">
+                              <Upload className="h-3.5 w-3.5" />
+                              {uploadingType === rd ? t("homestay.portal.uploading") : t("homestay.portal.upload")}
+                              <input type="file" className="hidden" accept=".jpg,.jpeg,.png,.pdf"
+                                onChange={(e) => { if (e.target.files?.[0]) handleUpload(rd, e.target.files[0]); }} />
+                            </label>
+                            {/* 폰에서는 찍는 것이 곧 첨부다. 같은 핸들러로 들어간다. */}
+                            <CameraInput
+                              className="flex cursor-pointer items-center gap-1 text-xs font-medium text-primary hover:underline"
+                              onChange={(e) => { if (e.target.files?.[0]) handleUpload(rd, e.target.files[0]); }}
+                              multiple={false}
+                            />
+                          </span>
                         )}
                       </div>
                     );
@@ -355,13 +364,21 @@ export default function HostPortal() {
               <h3 className="font-semibold text-gray-800 mb-4">{t("homestay.portal.documents_title")}</h3>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                 {GENERAL_DOC_TYPES.map((type) => (
-                  <label key={type}
-                    className="flex flex-col items-center gap-2 p-4 border-2 border-dashed border-gray-200 rounded-xl cursor-pointer hover:border-primary hover:bg-primary/10 transition-all text-center">
-                    <Plus className="h-5 w-5 text-gray-400" />
-                    <span className="text-xs font-medium text-gray-600">{t(`homestay.portal.doc_type.${type}`)}</span>
-                    <input type="file" className="hidden" accept=".jpg,.jpeg,.png,.pdf"
-                      onChange={(e) => { if (e.target.files?.[0]) handleUpload(type, e.target.files[0]); }} />
-                  </label>
+                  <div key={type} className="flex flex-col gap-1.5">
+                    <label
+                      className="flex flex-col items-center gap-2 p-4 border-2 border-dashed border-gray-200 rounded-xl cursor-pointer hover:border-primary hover:bg-primary/10 transition-all text-center">
+                      <Plus className="h-5 w-5 text-gray-400" />
+                      <span className="text-xs font-medium text-gray-600">{t(`homestay.portal.doc_type.${type}`)}</span>
+                      <input type="file" className="hidden" accept=".jpg,.jpeg,.png,.pdf"
+                        onChange={(e) => { if (e.target.files?.[0]) handleUpload(type, e.target.files[0]); }} />
+                    </label>
+                    {/* 서류 대부분은 종이다 — 폰에서는 찍는 것이 곧 첨부다. */}
+                    <CameraInput
+                      className="flex cursor-pointer items-center justify-center gap-1 text-xs font-medium text-primary"
+                      onChange={(e) => { if (e.target.files?.[0]) handleUpload(type, e.target.files[0]); }}
+                      multiple={false}
+                    />
+                  </div>
                 ))}
               </div>
               {uploadingType && <p className="text-xs text-primary mt-3 animate-pulse">{t("homestay.portal.uploading")}</p>}

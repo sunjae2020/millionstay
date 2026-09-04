@@ -11,6 +11,7 @@ import { FileImage, CheckCircle2, Clock, AlertCircle, Plus } from "lucide-react"
 import { formatDate } from "@/lib/dateFormat";
 import { useToast } from "@/hooks/use-toast";
 import { getApiBase } from "@/lib/api-base";
+import { CameraInput } from "@/components/CameraButton";
 
 const DOC_STATUS: Record<string, { color: string; icon: typeof CheckCircle2; label: string }> = {
   Pending: { color: "text-amber-600 bg-amber-50", icon: Clock, label: "Pending review" },
@@ -85,16 +86,24 @@ export default function PortalDocuments() {
               </p>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                 {["id_card", "employment", "lease", "deposit", "other"].map((type) => (
-                  <label key={type} className="flex flex-col items-center gap-2 p-4 border-2 border-dashed border-gray-200 rounded-xl cursor-pointer hover:border-primary hover:bg-primary/10 transition-all text-center">
-                    <Plus className="h-5 w-5 text-gray-400" />
-                    <span className="text-xs font-medium text-gray-600">{t(`portal.documents.type_${type}`)}</span>
-                    <input
-                      type="file"
-                      className="hidden"
-                      accept=".jpg,.jpeg,.png,.pdf"
+                  <div key={type} className="flex flex-col gap-1.5">
+                    <label className="flex flex-col items-center gap-2 p-4 border-2 border-dashed border-gray-200 rounded-xl cursor-pointer hover:border-primary hover:bg-primary/10 transition-all text-center">
+                      <Plus className="h-5 w-5 text-gray-400" />
+                      <span className="text-xs font-medium text-gray-600">{t(`portal.documents.type_${type}`)}</span>
+                      <input
+                        type="file"
+                        className="hidden"
+                        accept=".jpg,.jpeg,.png,.pdf"
+                        onChange={(e) => { if (e.target.files?.[0]) handleUpload(type, e.target.files[0]); }}
+                      />
+                    </label>
+                    {/* 제출 서류는 대개 종이다 — 폰에서는 찍는 것이 곧 첨부다. */}
+                    <CameraInput
+                      className="flex cursor-pointer items-center justify-center gap-1 text-xs font-medium text-primary"
                       onChange={(e) => { if (e.target.files?.[0]) handleUpload(type, e.target.files[0]); }}
+                      multiple={false}
                     />
-                  </label>
+                  </div>
                 ))}
               </div>
               {uploading && <p className="text-xs text-primary mt-3 animate-pulse">{t("portal.documents.uploading")}</p>}

@@ -42,6 +42,7 @@ import { DocumentPreviewDialog, useDocumentPreview } from "@/components/Document
 import { AccountRentalBusiness } from "@/components/AccountRentalBusiness";
 
 import { ExportableTable } from "@/components/ui/ExportCsvButton";
+import { CameraInput } from "@/components/CameraButton";
 const ACCOUNT_TYPES_WITH_FINANCE = ["SpaceOwner", "Agent", "ServiceHost", "Partner", "HomestayHost"];
 // 임대사업자 등록증은 임대인·소유주에게만 붙는 문서다 — 임차인·게스트 계정에는
 // 탭 자체를 내지 않는다(계약서의 임대사업자등록번호도 임대인 계정에서만 고른다).
@@ -1145,6 +1146,8 @@ export default function AccountDetail() {
               <div className="max-w-4xl mb-3 flex items-center gap-3">
                 <input ref={docInputRef} type="file" multiple className="hidden"
                   onChange={(e) => void handleDocUpload(e.target.files)} />
+                {/* 폰에서는 찍는 것이 곧 첨부다. 같은 핸들러로 들어간다. */}
+                <CameraInput onChange={(e) => void handleDocUpload(e.target.files)} />
                 <input ref={docFolderRef} type="file" multiple className="hidden"
                   {...DIRECTORY_INPUT_PROPS}
                   onChange={(e) => void handleDocUpload(e.target.files)} />
