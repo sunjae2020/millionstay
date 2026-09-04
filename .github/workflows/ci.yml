@@ -46,6 +46,18 @@ jobs:
           --filter "!@workspace/mockup-sandbox"
           --if-present run build
 
+      # ── 런타임 회귀 방지 ────────────────────────────────────────────────
+      # 위 두 스텝은 타입과 번들만 본다. 2026-09-04 프로덕션이 전면 중단됐을 때
+      # CI 는 green 이었다 — @simplewebauthn/server@14 가 모듈 로드 시점에
+      # globalThis.SubtleCrypto 를 읽는데 Railway 의 Node 18 에는 그 전역이 없어
+      # 부팅 즉시 크래시 루프에 빠졌다. tsc 도 esbuild 도 프로세스를 띄우지
+      # 않으므로 이 부류는 아래 두 스텝만이 잡는다.
+      - name: Check Node version pin (runtime == CI)
+        run: node scripts/check-node-pin.mjs
+
+      - name: Boot smoke test (api-server actually starts)
+        run: node scripts/smoke-boot.mjs
+
   # Auto-deploy property-admin to Vercel on merge to main.
   #
   # api-server (→ Railway) and million-stay-web (→ Vercel) auto-deploy via their
