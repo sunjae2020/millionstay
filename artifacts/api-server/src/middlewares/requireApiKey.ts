@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from "express";
 import { db, apiCredentialsTable } from "@workspace/db";
 import { eq } from "drizzle-orm";
 import { verifySecret, parseScopes, type ApiScope } from "../lib/apiKey";
+import { setRequestActor } from "../lib/requestContext";
 
 // What requireApiKey attaches to the request once a credential authenticates.
 export interface ApiClient {
@@ -72,6 +73,9 @@ export async function requireApiKey(req: Request, res: Response, next: NextFunct
     name: row.name,
     scopes: parseScopes(row.scopes),
   } satisfies ApiClient;
+
+  // 외부 API 키 호출도 감사 로그에 남을 때 "누가"가 비지 않도록 키 이름을 남긴다.
+  setRequestActor({ id: null, email: row.name ?? null, role: null, type: "ApiClient" });
 
   touchLastUsed(row.id);
   next();
