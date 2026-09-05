@@ -14,6 +14,7 @@ import {
 import { validatePassword } from "../utils/passwordPolicy";
 import { checkLockout, recordAttempt } from "../lib/loginLockout";
 import { formatPersonName } from "../lib/nameFormat";
+import { logAuthEvent } from "../middlewares/activityLogger";
 
 function clientMeta(req: any) {
   const ip =
@@ -66,6 +67,16 @@ router.post("/v1/auth/login", async (req, res): Promise<void> => {
     // password is wrong. ALL these branches return the same 401 + same error.
     if (!user || user.deleted_at || !passwordMatches) {
       await recordAttempt(email, "admin", false, meta0.ipAddress);
+      // 활동 로그 — 실패한 로그인은 사용자가 특정되지 않을 수 있으므로 이메일만 남긴다.
+      void logAuthEvent({
+        action: "LOGIN_FAILED",
+        actorId: user?.id ?? null,
+        actorEmail: email.toLowerCase().trim(),
+        actorRole: user?.role ?? null,
+        ipAddress: meta0.ipAddress,
+        userAgent: meta0.userAgent,
+        metadata: { reason: !user ? "no_such_user" : user.deleted_at ? "deleted" : "bad_password" },
+      });
       res.status(401).json({ success: false, error: "Invalid credentials" });
       return;
     }
@@ -91,6 +102,15 @@ router.post("/v1/auth/login", async (req, res): Promise<void> => {
       .update(usersTable)
       .set({ last_login_at: new Date() })
       .where(eq(usersTable.id, user.id));
+
+    void logAuthEvent({
+      action: "LOGIN",
+      actorId: user.id,
+      actorEmail: user.email,
+      actorRole: user.role,
+      ipAddress: meta0.ipAddress,
+      userAgent: meta0.userAgent,
+    });
 
     const payload = { id: user.id, email: user.email, role: user.role };
     const token = signJWT(payload);
@@ -361,6 +381,15 @@ router.post("/v1/auth/logout", async (req, res): Promise<void> => {
       const { verifyJWT } = await import("../middlewares/requireAuth");
       const payload = verifyJWT(auth.slice(7));
       if (payload?.id) {
+        const m = clientMeta(req);
+        void logAuthEvent({
+          action: "LOGOUT",
+          actorId: payload.id,
+          actorEmail: payload.email ?? null,
+          actorRole: payload.role ?? null,
+          ipAddress: m.ipAddress,
+          userAgent: m.userAgent,
+        });
         await db.update(usersTable).set({ tokens_invalid_after: new Date() }).where(eq(usersTable.id, payload.id));
         invalidateUserCache(payload.id);
         try { await revokeAllForUser(payload.id, "admin"); } catch {}

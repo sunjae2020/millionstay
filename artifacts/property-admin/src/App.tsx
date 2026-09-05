@@ -155,6 +155,8 @@ import AiOpsPage from "@/pages/settings/sub/AiOps";
 import AddonServicesPage from "@/pages/settings/sub/AddonServices";
 import PasskeysPage from "@/pages/settings/sub/Passkeys";
 import ApiKeysPage from "@/pages/settings/sub/ApiKeys";
+import SystemLogPage from "@/pages/settings/sub/SystemLog";
+import ActivityAnalyticsPage from "@/pages/settings/sub/ActivityAnalytics";
 import ApplicationEmailsPage from "@/pages/settings/sub/ApplicationEmails";
 import DbSyncPage from "@/pages/settings/DbSync";
 import SystemMapPage from "@/pages/settings/SystemMap";
@@ -440,9 +442,8 @@ function Router() {
       <Route path="/settings/suburbs/new" component={SuburbDetail} />
       <Route path="/settings/suburbs/:id" component={SuburbDetail} />
 
-      <Route path="/settings/system-log">
-        {() => <ComingSoonPage title={t("nav.system_log")} subtitle={t("coming_soon.sub_system_log")} />}
-      </Route>
+      <Route path="/settings/system-log" component={SystemLogPage} />
+      <Route path="/settings/activity-analytics" component={ActivityAnalyticsPage} />
 
       <Route path="/settings/reports/bookings" component={BookingReportPage} />
       <Route path="/settings/reports/revenue">

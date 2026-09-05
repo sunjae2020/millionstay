@@ -74,6 +74,8 @@ const PREFIX_MAP: Array<[string, Resource]> = [
   ["/v1/page-contents", "content"],
   ["/v1/blog", "content"],
   ["/v1/knowledge", "content"],
+  // 시스템 로그(감사 원장 + 활동 로그) — Settings 하위 화면이고 관리자 전용이다.
+  ["/v1/system-logs", "settings"],
   ["/v1/branding", "settings"],
   ["/v1/settings", "settings"],
 ];

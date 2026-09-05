@@ -48,6 +48,7 @@ import { conditionReportsAdminRouter, conditionReportsGuestRouter } from "./rout
 import { depositSettlementsAdminRouter, depositSettlementsGuestRouter } from "./routes/deposit-settlements";
 import { logger } from "./lib/logger";
 import { requireAuth } from "./middlewares/requireAuth";
+import { activityLogger } from "./middlewares/activityLogger";
 import { originGuard } from "./middlewares/originGuard";
 import { loginLimiter, applicationLimiter, generalLimiter, privacyExportLimiter, chatLimiter } from "./middlewares/rateLimit";
 
@@ -251,6 +252,11 @@ app.use([
 ], privacyExportLimiter);
 app.use("/api/v1/public/chat", chatLimiter);
 app.use("/api/", generalLimiter);
+
+// 사용자 활동 로그 — 열람·다운로드·내보내기·AI/OCR·서류 발행을 응답 종료 후
+// 비동기로 남긴다. 라우터보다 먼저 걸어 두지만 실제 기록은 res.on("finish")
+// 시점이라 requireAuth 가 채운 req.user 를 그대로 읽는다. (CUD 는 system_log.)
+app.use("/api", activityLogger);
 
 app.use("/api", authRouter);
 // Passkeys — the login half is anonymous and the register half authenticates
