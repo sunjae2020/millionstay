@@ -7803,7 +7803,9 @@
     "user_agent": "客户端",
     "detail_title": "日志详情",
     "view_detail": "详情",
-    "footnote": "变更记录来自审计台账；登录、查看、下载、导出和 AI 调用来自活动日志。"
+    "footnote": "变更记录来自审计台账；登录、查看、下载、导出和 AI 调用来自活动日志。",
+    "ip_region_note": "根据 IP 地址推测的地区。使用 VPN 或运营商网络时可能与实际位置不同。",
+    "ip_region_prefix": "推测地区"
   },
   "activity_analytics": {
     "title": "活动分析",

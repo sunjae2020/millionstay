@@ -7844,7 +7844,9 @@
     "user_agent": "접속 기기",
     "detail_title": "로그 상세",
     "view_detail": "상세",
-    "footnote": "변경 이력은 감사 원장에서, 로그인·열람·다운로드·내보내기·AI 호출은 활동 로그에서 옵니다."
+    "footnote": "변경 이력은 감사 원장에서, 로그인·열람·다운로드·내보내기·AI 호출은 활동 로그에서 옵니다.",
+    "ip_region_note": "IP 주소로 추정한 지역입니다. VPN·통신사망이면 실제 위치와 다를 수 있습니다.",
+    "ip_region_prefix": "예상 지역"
   },
   "activity_analytics": {
     "title": "활동 분석",

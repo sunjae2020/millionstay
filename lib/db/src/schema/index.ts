@@ -24,6 +24,7 @@ export * from "./space_term_calendar";
 export * from "./recurring_schedules";
 export * from "./system_logs";
 export * from "./user_activity_logs";
+export * from "./ip_geo_cache";
 export * from "./email_templates";
 export * from "./email_logs";
 export * from "./contract_types";

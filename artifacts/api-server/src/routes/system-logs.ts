@@ -2,6 +2,7 @@ import { Router, type IRouter, type Request, type Response, type NextFunction } 
 import { db, usersTable, branchesTable, teamsTable } from "@workspace/db";
 import { sql, eq, and, isNull, asc } from "drizzle-orm";
 import { parseListPage, sendList } from "../utils/pagination";
+import { resolveIpGeos } from "../lib/geoip";
 
 /**
  * 시스템 로그 — "누가 언제 무엇을 했나"를 한 화면에서 본다.
@@ -257,6 +258,19 @@ router.get("/v1/system-logs", async (req, res): Promise<void> => {
       ORDER BY ${sortCol} ${dir}, f.id ${dir}
       LIMIT ${p.limit} OFFSET ${p.offset}
     `));
+
+    // IP 옆에 예상 지역을 붙인다. 조회는 캐시 우선이고, 실패해도 목록은 그대로 나간다 —
+    // 부가 정보 하나 때문에 로그 화면이 죽으면 안 된다.
+    try {
+      const geos = await resolveIpGeos(rows.map((r) => r.ip_address as string | null));
+      for (const row of rows) {
+        const g = row.ip_address ? geos.get(String(row.ip_address).trim()) : undefined;
+        row.ip_geo = g ?? null;
+      }
+    } catch (err) {
+      console.warn("[GET /v1/system-logs] ip geo lookup failed:", (err as Error)?.message ?? err);
+      for (const row of rows) row.ip_geo = null;
+    }
 
     sendList(res, rows, Number(countRow?.total ?? rows.length), p);
   } catch (err) {

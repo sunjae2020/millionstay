@@ -7744,7 +7744,9 @@
     "user_agent": "Thiết bị truy cập",
     "detail_title": "Chi tiết nhật ký",
     "view_detail": "Chi tiết",
-    "footnote": "Thay đổi lấy từ sổ kiểm toán; đăng nhập, xem, tải xuống, xuất dữ liệu và gọi AI lấy từ nhật ký hoạt động."
+    "footnote": "Thay đổi lấy từ sổ kiểm toán; đăng nhập, xem, tải xuống, xuất dữ liệu và gọi AI lấy từ nhật ký hoạt động.",
+    "ip_region_note": "Khu vực ước tính từ địa chỉ IP. VPN hoặc mạng nhà mạng có thể làm sai lệch.",
+    "ip_region_prefix": "Khu vực ước tính"
   },
   "activity_analytics": {
     "title": "Phân tích hoạt động",
