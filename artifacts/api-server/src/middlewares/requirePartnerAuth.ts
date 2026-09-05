@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
 import { db, partnerUsersTable } from "@workspace/db";
 import { eq, isNull, and } from "drizzle-orm";
+import { setRequestActor } from "../lib/requestContext";
 
 const PARTNER_JWT_SECRET = process.env["PARTNER_JWT_SECRET"];
 const SESSION_SECRET = process.env["SESSION_SECRET"];
@@ -118,6 +119,13 @@ export async function requirePartnerAuth(req: Request, res: Response, next: Next
   }
 
   (req as any).partner = payload;
+  // 파트너 id 는 partner_users 의 것이라 system_log.actor_id(admin_users)에 넣지 않는다.
+  setRequestActor({
+    id: null,
+    email: (payload as any).email ?? null,
+    role: (payload as any).portal_type ?? null,
+    type: "Partner",
+  });
   next();
 }
 

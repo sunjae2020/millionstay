@@ -3,6 +3,7 @@ import jwt from "jsonwebtoken";
 import { db, usersTable } from "@workspace/db";
 import { eq, isNull, and } from "drizzle-orm";
 import { isAllowed } from "../lib/rbac";
+import { setRequestActor } from "../lib/requestContext";
 
 // SECURITY: distinct secret per token scope (admin / guest / partner). Refuse
 // to fall back across scopes — sharing the session-cookie HMAC key with the
@@ -176,5 +177,7 @@ export async function requireAuth(req: Request, res: Response, next: NextFunctio
   }
 
   (req as any).user = payload;
+  // 감사 로그가 호출부의 인자 없이도 "누가"를 알 수 있게 요청 컨텍스트에 심는다.
+  setRequestActor({ id: payload.id, email: payload.email ?? null, role: payload.role ?? null, type: "User" });
   next();
 }

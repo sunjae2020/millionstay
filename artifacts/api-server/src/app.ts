@@ -49,6 +49,7 @@ import { depositSettlementsAdminRouter, depositSettlementsGuestRouter } from "./
 import { logger } from "./lib/logger";
 import { requireAuth } from "./middlewares/requireAuth";
 import { activityLogger } from "./middlewares/activityLogger";
+import { requestContext } from "./lib/requestContext";
 import { originGuard } from "./middlewares/originGuard";
 import { loginLimiter, applicationLimiter, generalLimiter, privacyExportLimiter, chatLimiter } from "./middlewares/rateLimit";
 
@@ -252,6 +253,10 @@ app.use([
 ], privacyExportLimiter);
 app.use("/api/v1/public/chat", chatLimiter);
 app.use("/api/", generalLimiter);
+
+// 요청 컨텍스트 — 인증 미들웨어가 심는 행위자와 IP 를 감사 로그가 인자 없이도
+// 읽게 한다. 라우터·인증보다 먼저 걸려 있어야 컨텍스트가 요청 전 구간을 덮는다.
+app.use("/api", requestContext);
 
 // 사용자 활동 로그 — 열람·다운로드·내보내기·AI/OCR·서류 발행을 응답 종료 후
 // 비동기로 남긴다. 라우터보다 먼저 걸어 두지만 실제 기록은 res.on("finish")

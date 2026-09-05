@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
 import { db, guestUsersTable } from "@workspace/db";
 import { eq, isNull, and } from "drizzle-orm";
+import { setRequestActor } from "../lib/requestContext";
 
 const GUEST_JWT_SECRET = process.env["GUEST_JWT_SECRET"];
 const SESSION_SECRET = process.env["SESSION_SECRET"];
@@ -100,5 +101,12 @@ export async function requireGuestAuth(req: Request, res: Response, next: NextFu
   }
 
   (req as any).guest = payload;
+  // 게스트 id 는 guest_users 의 것이라 actor_id 에 넣지 않는다(이메일·유형만 남긴다).
+  setRequestActor({
+    id: null,
+    email: (payload as any).email ?? null,
+    role: null,
+    type: "Guest",
+  });
   next();
 }

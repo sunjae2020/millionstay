@@ -22,6 +22,22 @@ activity-analytics 를 참고해 이 저장소의 규약(공용 DataTable, 서�
 누가 무엇을 봤는지가 중요하다. 한 테이블에 섞으면 컬럼의 절반이 항상 비어 있다.
 화면에서는 SQL `UNION ALL` 로 하나의 피드로 합쳐 보여 준다.
 
+## "누가" 는 요청 컨텍스트가 채운다
+
+`logAction()` 호출부는 214곳인데 절반이 `actorId` 를 넘기지 않아 `system_log` 의 행위자가
+비어 있었다(2026-09-05 기준 MillionStay 309행 중 47행, Metheim 440행 중 203행만 보유).
+호출부를 전부 고치는 대신 **요청 컨텍스트**(`lib/requestContext.ts`, `AsyncLocalStorage`)를
+두고 인증 미들웨어가 행위자와 IP 를 한 번 심는다. `logAction` 은 인자가 없을 때 그 값을 쓴다.
+
+- 호출부가 명시한 `actorId` / `actorEmail` / `ipAddress` 가 **항상 우선**한다.
+- 관리자(`requireAuth`)만 `actor_id` 에 들어간다 — 파트너·게스트 id 는 다른 테이블이라
+  섞으면 안 된다. 이들은 `actor_type` 이 `Partner` / `Guest`, 외부 API 키는 `ApiClient`,
+  요청 밖(크론·스크립트)은 종전대로 `System` 이다.
+- 앞으로 새로 생기는 호출부도 자동으로 채워진다. 사람이 매번 기억해야 하는 규칙은
+  결국 지켜지지 않는다.
+
+이미 쌓인 과거 행은 정보가 없어 채울 수 없다 — 적용 시점부터 이름이 남는다.
+
 ## 무엇을 남기고 무엇을 안 남기나
 
 `activityLogger` 는 **규칙에 걸리는 경로만** 남긴다(`TRACKED` 배열). 모든 GET 을
