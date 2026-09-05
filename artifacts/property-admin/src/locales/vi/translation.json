@@ -5825,6 +5825,17 @@
     "col_weeks": "Số tuần",
     "col_rate": "Đơn giá"
   },
+  "system_map": {
+    "title": "Sơ đồ hệ thống",
+    "subtitle": "Ảnh chụp trực tiếp của nền tảng — stack, cơ sở dữ liệu, engine, tích hợp, tác vụ và API.",
+    "tab_overview": "Tổng quan",
+    "tab_integrations": "Tích hợp",
+    "tab_jobs": "Tác vụ",
+    "tab_api": "API",
+    "tab_schema": "Lược đồ",
+    "refresh": "Làm mới",
+    "refreshing": "Đang làm mới…"
+  },
   "settings_hub": {
     "page_subtitle": "Quản trị, dữ liệu tham chiếu và báo cáo",
     "section_admin_title": "Quản trị",
@@ -5858,6 +5869,8 @@
     "system_log_desc": "Nhật ký kiểm tra hoạt động hệ thống",
     "db_sync_title": "Đồng bộ DB",
     "db_sync_desc": "Chụp nhanh DB phát triển và áp dụng cho môi trường sản xuất",
+    "system_map_title": "Sơ đồ hệ thống",
+    "system_map_desc": "Ảnh chụp trực tiếp nền tảng — stack, DB, engine, tích hợp",
     "contract_types_title": "Loại hợp đồng",
     "contract_types_desc": "Định nghĩa các danh mục loại hợp đồng",
     "product_groups_title": "Nhóm sản phẩm",

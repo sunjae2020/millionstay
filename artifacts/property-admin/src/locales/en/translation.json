@@ -5917,6 +5917,17 @@
     "col_weeks": "Weeks",
     "col_rate": "Rate"
   },
+  "system_map": {
+    "title": "System Map",
+    "subtitle": "A live snapshot of the platform — stack, database, engines, integrations, jobs and API.",
+    "tab_overview": "Overview",
+    "tab_integrations": "Integrations",
+    "tab_jobs": "Jobs",
+    "tab_api": "API",
+    "tab_schema": "Schema",
+    "refresh": "Refresh",
+    "refreshing": "Refreshing…"
+  },
   "settings_hub": {
     "page_subtitle": "Administration, reference data and reports",
     "section_admin_title": "Administration",
@@ -5950,6 +5961,8 @@
     "system_log_desc": "Audit trail of system activity",
     "db_sync_title": "DB Sync",
     "db_sync_desc": "Snapshot dev DB and apply to production",
+    "system_map_title": "System Map",
+    "system_map_desc": "Live platform snapshot — stack, DB, engines, integrations",
     "contract_types_title": "Contract Types",
     "contract_types_desc": "Define contract type categories",
     "product_groups_title": "Product Groups",

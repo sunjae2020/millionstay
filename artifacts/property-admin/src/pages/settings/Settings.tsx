@@ -27,7 +27,7 @@ import {
   Package,
   MailCheck,
   ClipboardList,
-  Bot, Building2 } from "lucide-react";
+  Bot, Building2, Cpu } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 
 type CardDef = {
@@ -125,6 +125,12 @@ const ADMIN_CARDS: CardDef[] = [
 ];
 
 const SUPER_ADMIN_CARDS: CardDef[] = [
+  {
+    title: "settings_hub.system_map_title",
+    description: "settings_hub.system_map_desc",
+    icon: Cpu,
+    href: "/settings/system-map",
+  },
   {
     title: "settings_hub.db_sync_title",
     description: "settings_hub.db_sync_desc",

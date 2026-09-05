@@ -157,6 +157,7 @@ import PasskeysPage from "@/pages/settings/sub/Passkeys";
 import ApiKeysPage from "@/pages/settings/sub/ApiKeys";
 import ApplicationEmailsPage from "@/pages/settings/sub/ApplicationEmails";
 import DbSyncPage from "@/pages/settings/DbSync";
+import SystemMapPage from "@/pages/settings/SystemMap";
 import PaymentInfoList from "@/pages/crm/PaymentInfoList";
 import PaymentInfoDetail from "@/pages/crm/PaymentInfoDetail";
 
@@ -422,6 +423,7 @@ function Router() {
       <Route path="/settings/passkeys" component={PasskeysPage} />
       <Route path="/settings/application-emails" component={ApplicationEmailsPage} />
       <Route path="/settings/db-sync" component={DbSyncPage} />
+      <Route path="/settings/system-map" component={SystemMapPage} />
 
       <Route path="/settings/contract-types" component={ContractTypesPage} />
       <Route path="/settings/product-groups" component={ProductGroupsPage} />

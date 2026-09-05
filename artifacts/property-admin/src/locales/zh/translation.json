@@ -5878,6 +5878,17 @@
     "col_weeks": "周数",
     "col_rate": "费率"
   },
+  "system_map": {
+    "title": "系统地图",
+    "subtitle": "平台的实时快照 — 技术栈、数据库、引擎、集成、任务和 API。",
+    "tab_overview": "概览",
+    "tab_integrations": "集成",
+    "tab_jobs": "任务",
+    "tab_api": "API",
+    "tab_schema": "架构",
+    "refresh": "刷新",
+    "refreshing": "刷新中…"
+  },
   "settings_hub": {
     "page_subtitle": "管理、参考数据和报表",
     "section_admin_title": "管理",
@@ -5911,6 +5922,8 @@
     "system_log_desc": "系统活动的审计跟踪",
     "db_sync_title": "数据库同步",
     "db_sync_desc": "对开发数据库快照并应用到生产环境",
+    "system_map_title": "系统地图",
+    "system_map_desc": "平台实时快照 — 技术栈、数据库、引擎、集成",
     "contract_types_title": "合同类型",
     "contract_types_desc": "定义合同类型分类",
     "product_groups_title": "产品组",

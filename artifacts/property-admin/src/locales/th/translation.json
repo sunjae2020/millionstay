@@ -5860,6 +5860,17 @@
     "col_weeks": "จำนวนสัปดาห์",
     "col_rate": "อัตรา"
   },
+  "system_map": {
+    "title": "แผนผังระบบ",
+    "subtitle": "ภาพรวมแบบเรียลไทม์ของแพลตฟอร์ม — สแตก ฐานข้อมูล เอนจิน การเชื่อมต่อ งาน และ API",
+    "tab_overview": "ภาพรวม",
+    "tab_integrations": "การเชื่อมต่อ",
+    "tab_jobs": "งาน",
+    "tab_api": "API",
+    "tab_schema": "สคีมา",
+    "refresh": "รีเฟรช",
+    "refreshing": "กำลังรีเฟรช…"
+  },
   "settings_hub": {
     "page_subtitle": "การดูแลระบบ ข้อมูลอ้างอิง และรายงาน",
     "section_admin_title": "การดูแลระบบ",
@@ -5893,6 +5904,8 @@
     "system_log_desc": "บันทึกการตรวจสอบกิจกรรมของระบบ",
     "db_sync_title": "ซิงค์ฐานข้อมูล",
     "db_sync_desc": "สแนปช็อตฐานข้อมูล dev และนำไปใช้กับ production",
+    "system_map_title": "แผนผังระบบ",
+    "system_map_desc": "ภาพรวมแบบเรียลไทม์ของแพลตฟอร์ม — สแตก DB เอนจิน การเชื่อมต่อ",
     "contract_types_title": "ประเภทสัญญา",
     "contract_types_desc": "กำหนดหมวดหมู่ประเภทสัญญา",
     "product_groups_title": "กลุ่มผลิตภัณฑ์",

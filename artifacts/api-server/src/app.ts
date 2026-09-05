@@ -19,6 +19,7 @@ import guestPortalRouter from "./routes/guest-portal";
 import guestCsRouter from "./routes/guest-cs";
 import devMigrationRouter from "./routes/dev-migration";
 import dbSyncRouter from "./routes/db-sync";
+import systemMapRouter from "./routes/system-map";
 import stripeRouter from "./routes/stripe";
 import adminUsersRouter from "./routes/admin-users";
 import partnerAuthRouter from "./routes/partner-auth";
@@ -321,6 +322,10 @@ app.use("/api/v1", requireAuth);
 // Super Admin only — DB snapshot & sync (auth enforced by requireAuth above,
 // role enforced by requireSuperAdmin inside the router)
 app.use("/api/v1/admin", dbSyncRouter);
+
+// Super Admin only — System Map: live platform snapshot (DB shape, integrations,
+// jobs, API census, schema browser). Role enforced by requireSuperAdmin inside.
+app.use("/api/v1/admin", systemMapRouter);
 
 app.use("/api", spaceImagesRouter);
 app.use("/api", propertyImagesRouter);

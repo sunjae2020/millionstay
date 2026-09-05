@@ -5917,6 +5917,17 @@
     "col_weeks": "주 수",
     "col_rate": "요금"
   },
+  "system_map": {
+    "title": "시스템 맵",
+    "subtitle": "플랫폼 실시간 스냅숏 — 스택·데이터베이스·엔진·연동·잡·API.",
+    "tab_overview": "개요",
+    "tab_integrations": "연동",
+    "tab_jobs": "잡",
+    "tab_api": "API",
+    "tab_schema": "스키마",
+    "refresh": "새로고침",
+    "refreshing": "새로고침 중…"
+  },
   "settings_hub": {
     "page_subtitle": "관리, 참조 데이터 및 리포트",
     "section_admin_title": "관리",
@@ -5950,6 +5961,8 @@
     "system_log_desc": "시스템 활동 감사 추적",
     "db_sync_title": "DB 동기화",
     "db_sync_desc": "개발 DB 스냅샷을 운영에 적용",
+    "system_map_title": "시스템 맵",
+    "system_map_desc": "플랫폼 실시간 스냅숏 — 스택·DB·엔진·연동",
     "contract_types_title": "계약 유형",
     "contract_types_desc": "계약 유형 카테고리 정의",
     "product_groups_title": "상품 그룹",

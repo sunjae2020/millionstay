@@ -5874,6 +5874,17 @@
     "col_weeks": "週数",
     "col_rate": "料金"
   },
+  "system_map": {
+    "title": "システムマップ",
+    "subtitle": "プラットフォームのライブスナップショット — スタック、データベース、エンジン、連携、ジョブ、API。",
+    "tab_overview": "概要",
+    "tab_integrations": "連携",
+    "tab_jobs": "ジョブ",
+    "tab_api": "API",
+    "tab_schema": "スキーマ",
+    "refresh": "更新",
+    "refreshing": "更新中…"
+  },
   "settings_hub": {
     "page_subtitle": "管理・参照データ・レポート",
     "section_admin_title": "管理",
@@ -5907,6 +5918,8 @@
     "system_log_desc": "システムアクティビティの監査証跡",
     "db_sync_title": "DB同期",
     "db_sync_desc": "開発DBをスナップショットして本番に適用",
+    "system_map_title": "システムマップ",
+    "system_map_desc": "プラットフォームのライブスナップショット — スタック、DB、エンジン、連携",
     "contract_types_title": "契約タイプ",
     "contract_types_desc": "契約タイプのカテゴリを定義",
     "product_groups_title": "商品グループ",
