@@ -243,6 +243,7 @@ function getNav(
       defaultOpen: false,
       items: [
         { href: "/settings/organisation", label: t("nav.organisation"), icon: Building },
+        { href: "/settings/org-units", label: t("nav.org_units"), icon: Building2 },
         { href: "/settings/users", label: t("nav.users"), icon: UserCog },
         { href: "/settings/contract-types", label: t("nav.contract_types"), icon: FileText },
         { href: "/settings/product-groups", label: t("nav.product_groups"), icon: Layers },

@@ -138,7 +138,8 @@
     "cms": "CMS",
     "tenant_links": "세입자 링크",
     "help_docs": "내부 문서함",
-    "more": "더보기"
+    "more": "더보기",
+    "org_units": "지점·팀"
   },
   "dashboard": {
     "title": "대시보드",

@@ -138,7 +138,8 @@
     "campaigns": "Campaigns",
     "tenant_links": "Tenant links",
     "help_docs": "Internal library",
-    "more": "More"
+    "more": "More",
+    "org_units": "Branches & teams"
   },
   "dashboard": {
     "title": "Dashboard",

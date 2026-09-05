@@ -136,7 +136,8 @@
     "campaigns": "Chiến dịch",
     "tenant_links": "Liên kết người thuê",
     "help_docs": "Thư viện nội bộ",
-    "more": "Thêm"
+    "more": "Thêm",
+    "org_units": "Chi nhánh & nhóm"
   },
   "dashboard": {
     "title": "Bảng điều khiển",

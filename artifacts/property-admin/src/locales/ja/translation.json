@@ -137,7 +137,8 @@
     "campaigns": "キャンペーン",
     "tenant_links": "入居者リンク",
     "help_docs": "社内資料室",
-    "more": "もっと見る"
+    "more": "もっと見る",
+    "org_units": "支店・チーム"
   },
   "dashboard": {
     "title": "ダッシュボード",
