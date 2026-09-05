@@ -135,7 +135,8 @@
     "marketing_lists": "Danh sách",
     "campaigns": "Chiến dịch",
     "tenant_links": "Liên kết người thuê",
-    "help_docs": "Thư viện nội bộ"
+    "help_docs": "Thư viện nội bộ",
+    "more": "Thêm"
   },
   "dashboard": {
     "title": "Bảng điều khiển",
@@ -7442,5 +7443,12 @@
     "scope_desc": "Khi bật, nhân viên chỉ thấy giao dịch thuộc nhóm mình (hoặc chi nhánh mình và các nhóm bên dưới). Quản trị viên và nhân sự trụ sở vẫn thấy tất cả; bản ghi được chia sẻ riêng vẫn hiển thị.",
     "scope_off_hint": "Đang tắt — mọi người thấy toàn bộ kế toán như trước. Hãy lập chi nhánh, nhóm và gán nhân sự trước rồi mới bật.",
     "scope_no_hq": "Chưa có chi nhánh nào được đặt làm trụ sở. Người không phải quản trị viên sẽ chỉ thấy chi nhánh hoặc nhóm của mình."
+  },
+  "mobile_tabs": {
+    "title": "Tùy chỉnh thanh tab dưới",
+    "desc": "Chọn tối đa {{max}} trang để truy cập nhanh ở thanh dưới. Nhấn giữ một tab để chỉnh sửa bất cứ lúc nào.",
+    "count": "Đã chọn {{n}}/{{max}}",
+    "reset": "Khôi phục mặc định",
+    "edit": "Chỉnh sửa thanh tab dưới"
   }
 }

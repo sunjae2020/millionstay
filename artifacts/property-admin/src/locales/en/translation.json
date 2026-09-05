@@ -137,7 +137,8 @@
     "marketing_lists": "Lists",
     "campaigns": "Campaigns",
     "tenant_links": "Tenant links",
-    "help_docs": "Internal library"
+    "help_docs": "Internal library",
+    "more": "More"
   },
   "dashboard": {
     "title": "Dashboard",
@@ -7542,5 +7543,12 @@
     "scope_desc": "When on, staff see only the transactions attributed to their own team (or their branch and the teams under it). Admins and HQ staff still see everything, and records shared explicitly stay visible.",
     "scope_off_hint": "Off — everyone sees all accounting, exactly as before. Set up branches, teams and staff membership first, then turn this on.",
     "scope_no_hq": "No branch is marked HQ. Anyone who is not an Admin will be limited to their own branch or team."
+  },
+  "mobile_tabs": {
+    "title": "Customize bottom tabs",
+    "desc": "Pick up to {{max}} pages for quick access at the bottom. Long-press a tab any time to edit.",
+    "count": "{{n}} of {{max}} selected",
+    "reset": "Reset to default",
+    "edit": "Edit bottom tabs"
   }
 }

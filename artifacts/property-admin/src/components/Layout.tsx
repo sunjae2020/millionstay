@@ -72,18 +72,20 @@ import {
   Images,
   Megaphone,
   Target,
+  LayoutGrid,
 } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
+import { MobileTabBar, CUSTOMIZE_TABS_EVENT } from "@/components/MobileTabBar";
 import { formatPersonName } from "@/lib/nameFormat";
 
-type NavChild = {
+export type NavChild = {
   href: string;
   label: string;
   icon: React.ComponentType<{ className?: string }>;
   children?: NavChild[];
 };
 
-type NavSection = {
+export type NavSection = {
   label: string;
   icon: React.ComponentType<{ className?: string }>;
   items: NavChild[];
@@ -325,14 +327,15 @@ function NavLeaf({
       ref={ref}
       href={href}
       className={cn(
-        "flex items-center gap-2 rounded-md text-xs font-medium transition-colors",
-        indent ? "py-1.5 ml-6 pl-4 pr-3" : "py-1.5 pl-5 pr-3",
+        /* Mobile: 40px-tall rows with readable labels; desktop keeps the dense look */
+        "flex items-center gap-2 rounded-md text-sm md:text-xs font-medium transition-colors",
+        indent ? "py-2.5 md:py-1.5 ml-6 pl-4 pr-3" : "py-2.5 md:py-1.5 pl-5 pr-3",
         active
           ? "bg-sidebar-primary/10 text-sidebar-primary font-semibold"
           : "text-sidebar-foreground/40 hover:text-sidebar-foreground/70 hover:bg-sidebar-accent"
       )}
     >
-      <Icon className={cn("h-3 w-3 flex-shrink-0", active && "text-sidebar-primary")} />
+      <Icon className={cn("h-4 w-4 md:h-3 md:w-3 flex-shrink-0", active && "text-sidebar-primary")} />
       {label}
       {active && (
         <span className="ml-auto w-1 h-1 rounded-full bg-sidebar-primary flex-shrink-0" />
@@ -375,13 +378,13 @@ function NavItemWithChildren({ item, collapsed }: { item: NavChild; collapsed?: 
       <button
         onClick={() => setOpen((o) => !o)}
         className={cn(
-          "flex items-center gap-2 w-full py-1.5 pl-5 pr-3 rounded-md text-xs font-medium transition-colors",
+          "flex items-center gap-2 w-full py-2.5 md:py-1.5 pl-5 pr-3 rounded-md text-sm md:text-xs font-medium transition-colors",
           selfActive || anyChildActive
             ? "bg-sidebar-primary/10 text-sidebar-primary"
             : "text-sidebar-foreground/40 hover:text-sidebar-foreground/70 hover:bg-sidebar-accent"
         )}
       >
-        <item.icon className="h-3 w-3 flex-shrink-0" />
+        <item.icon className="h-4 w-4 md:h-3 md:w-3 flex-shrink-0" />
         <span className="flex-1 text-left">{item.label}</span>
         {open ? (
           <ChevronDown className="h-3 w-3 opacity-60" />
@@ -451,7 +454,7 @@ function SectionToggle({
       <button
         type="button"
         className={cn(
-          "flex items-center gap-1.5 w-full px-2 py-1.5 text-sm font-semibold uppercase tracking-wider transition-colors",
+          "flex items-center gap-1.5 w-full px-2 py-2.5 md:py-1.5 text-sm font-semibold uppercase tracking-wider transition-colors",
           anyActive
             ? "text-sidebar-primary"
             : "text-sidebar-foreground/70 hover:text-sidebar-foreground"
@@ -461,8 +464,8 @@ function SectionToggle({
           setOpen((o) => !o);
         }}
       >
-        {open ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />}
-        <section.icon className="h-3 w-3" />
+        {open ? <ChevronDown className="h-4 w-4 md:h-3 md:w-3" /> : <ChevronRight className="h-4 w-4 md:h-3 md:w-3" />}
+        <section.icon className="h-4 w-4 md:h-3 md:w-3" />
         {section.label}
         {anyActive && <span className="ml-auto w-1.5 h-1.5 rounded-full bg-sidebar-primary flex-shrink-0" />}
       </button>
@@ -515,11 +518,12 @@ function HeaderLanguageSwitcher() {
     <div className="relative" ref={ref}>
       <button
         onClick={() => setOpen((o) => !o)}
-        className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md border border-border bg-background text-xs font-medium text-foreground hover:bg-muted transition-colors"
+        className="flex items-center gap-1.5 px-2 sm:px-2.5 py-2 sm:py-1.5 rounded-md border border-border bg-background text-xs font-medium text-foreground hover:bg-muted transition-colors"
+        aria-label={current.label}
       >
-        <Globe className="h-3.5 w-3.5 text-muted-foreground" />
-        <span>{current.label}</span>
-        <ChevronDown className={cn("h-3 w-3 text-muted-foreground transition-transform", open && "rotate-180")} />
+        <Globe className="h-4 w-4 sm:h-3.5 sm:w-3.5 text-muted-foreground" />
+        <span className="hidden sm:inline whitespace-nowrap">{current.label}</span>
+        <ChevronDown className={cn("hidden sm:block h-3 w-3 text-muted-foreground transition-transform", open && "rotate-180")} />
       </button>
       {open && (
         <div className="absolute right-0 top-full mt-1 z-50 bg-popover border border-border rounded-md shadow-md py-1 min-w-[130px]">
@@ -774,10 +778,10 @@ export function Layout({ children }: { children: React.ReactNode }) {
           "fixed inset-y-0 left-0 z-50 bg-sidebar flex flex-col overflow-hidden",
           "transition-all duration-200 ease-in-out",
           "md:static md:z-auto md:flex-shrink-0 md:translate-x-0 md:opacity-100 md:visible md:pointer-events-auto",
-          /* Mobile: always full width when open */
-          "w-56",
+          /* Mobile: near-full-width sheet so labels and touch targets fit */
+          "w-[82vw] max-w-[19rem]",
           /* Desktop: collapsed = narrow, expanded = w-56 */
-          collapsed ? "md:w-14" : "md:w-56",
+          collapsed ? "md:w-14" : "md:w-56 md:max-w-none",
           sidebarOpen
             ? "translate-x-0 opacity-100 visible pointer-events-auto"
             : "-translate-x-full opacity-0 invisible pointer-events-none"
@@ -830,13 +834,13 @@ export function Layout({ children }: { children: React.ReactNode }) {
                     <Link
                       href="/dashboard"
                       className={cn(
-                        "flex items-center gap-2 rounded-md text-xs font-medium transition-colors py-1.5 pl-5 pr-3",
+                        "flex items-center gap-2 rounded-md text-sm md:text-xs font-medium transition-colors py-2.5 md:py-1.5 pl-5 pr-3",
                         onDashboard
                           ? "bg-sidebar-primary/10 text-sidebar-primary font-semibold"
                           : "text-sidebar-foreground/40 hover:text-sidebar-foreground/70 hover:bg-sidebar-accent"
                       )}
                     >
-                      <LayoutDashboard className="h-3 w-3 flex-shrink-0" />
+                      <LayoutDashboard className="h-4 w-4 md:h-3 md:w-3 flex-shrink-0" />
                       {t("nav.dashboard")}
                     </Link>
                   );
@@ -851,6 +855,19 @@ export function Layout({ children }: { children: React.ReactNode }) {
           ))}
         </nav>
 
+        {/* Bottom-tab customizer — mobile drawer only */}
+        <button
+          type="button"
+          onClick={() => {
+            setSidebarOpen(false);
+            window.dispatchEvent(new Event(CUSTOMIZE_TABS_EVENT));
+          }}
+          className="md:hidden mx-2 mb-2 flex items-center gap-2 rounded-md border border-sidebar-border px-3 py-2.5 text-sm font-medium text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground transition-colors"
+        >
+          <LayoutGrid className="h-4 w-4 flex-shrink-0" />
+          {t("mobile_tabs.edit")}
+        </button>
+
         {/* Footer */}
         <SidebarFooter collapsed={collapsed} />
       </aside>
@@ -858,11 +875,11 @@ export function Layout({ children }: { children: React.ReactNode }) {
       {/* ── Main content area ─────────────────────────────────── */}
       <div className="flex-1 flex flex-col overflow-hidden min-w-0">
         {/* Top bar */}
-        <header className="h-14 flex items-center gap-3 px-4 border-b bg-card flex-shrink-0">
+        <header className="h-14 flex items-center gap-2 sm:gap-3 px-2 sm:px-4 border-b bg-card flex-shrink-0">
           {/* Mobile hamburger */}
           <button
             onClick={() => setSidebarOpen(true)}
-            className="p-2 rounded-md hover:bg-muted transition-colors text-foreground/70 hover:text-foreground md:hidden"
+            className="p-2 -ml-0.5 rounded-md hover:bg-muted transition-colors text-foreground/70 hover:text-foreground md:hidden"
             aria-label={t("common.open_menu")}
           >
             <Menu className="h-5 w-5" />
@@ -874,7 +891,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
             : <img
                 src={effectiveLogo ?? `${import.meta.env.BASE_URL}millionstay-logo.png`}
                 alt={brandName}
-                className="max-h-[2.625rem] max-w-[210px] object-contain md:hidden"
+                className="max-h-9 sm:max-h-[2.625rem] max-w-[140px] sm:max-w-[210px] object-contain md:hidden"
               />}
 
           {/* Spacer */}
@@ -894,11 +911,14 @@ export function Layout({ children }: { children: React.ReactNode }) {
           <HeaderLanguageSwitcher />
         </header>
 
-        {/* Page content */}
-        <main className="flex-1 overflow-auto">
+        {/* Page content — extra bottom room for the mobile tab bar */}
+        <main className="flex-1 overflow-auto pb-[calc(3.5rem+env(safe-area-inset-bottom))] md:pb-0">
           <ErrorBoundary>{children}</ErrorBoundary>
         </main>
       </div>
+
+      {/* ── Mobile bottom tab bar (4 pinned + More) ───────────── */}
+      <MobileTabBar sections={NAV} onMore={() => setSidebarOpen(true)} />
     </div>
   );
 }
