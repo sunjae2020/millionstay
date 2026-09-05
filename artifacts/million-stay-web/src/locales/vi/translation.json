@@ -2265,7 +2265,8 @@
       "field_move_in": "Ngày muốn dọn vào",
       "field_move_in_ph": "vd: tháng sau",
       "field_duration": "Thời gian",
-      "field_duration_ph": "vd: 6 tháng"
+      "field_duration_ph": "vd: 6 tháng",
+      "cta_process": "Quy trình thuê nhà"
     },
     "owner": {
       "eyebrow": "Dành cho chủ sở hữu",
@@ -2345,7 +2346,8 @@
       "homepage_label": "Trang web",
       "privacy_officer_label": "Người phụ trách bảo vệ TTCN",
       "privacy_officer": "Hong Gildong (metheim.yeosu@gmail.com)",
-      "company_col": "Công ty"
+      "company_col": "Công ty",
+      "for_tenant": "Quy trình thuê nhà"
     },
     "home": {
       "hero_eyebrow": "Một tòa nhà, ba khả năng",

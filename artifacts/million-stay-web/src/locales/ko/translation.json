@@ -1847,7 +1847,8 @@
       "field_move_in": "희망 입주일",
       "field_move_in_ph": "예: 다음 달",
       "field_duration": "이용 기간",
-      "field_duration_ph": "예: 6개월"
+      "field_duration_ph": "예: 6개월",
+      "cta_process": "임차 진행 안내"
     },
     "owner": {
       "eyebrow": "소유주 안내",
@@ -1933,7 +1934,8 @@
       "homepage": "www.metheim.com",
       "privacy_officer_label": "개인정보 보호책임자",
       "privacy_officer": "홍길동 (metheim.yeosu@gmail.com)",
-      "company_col": "회사"
+      "company_col": "회사",
+      "for_tenant": "임차 진행 안내"
     },
     "home": {
       "hero_eyebrow": "하나의 건물, 세 가지 가능성",

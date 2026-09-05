@@ -1806,7 +1806,8 @@
       "field_move_in": "意向入住时间",
       "field_move_in_ph": "例如：下个月",
       "field_duration": "入住时长",
-      "field_duration_ph": "例如：6个月"
+      "field_duration_ph": "例如：6个月",
+      "cta_process": "租赁办理流程"
     },
     "owner": {
       "eyebrow": "致业主",
@@ -1892,7 +1893,8 @@
       "homepage": "www.metheim.com",
       "privacy_officer_label": "个人信息保护负责人",
       "privacy_officer": "洪吉童 (metheim.yeosu@gmail.com)",
-      "company_col": "公司"
+      "company_col": "公司",
+      "for_tenant": "租赁办理流程"
     },
     "home": {
       "hero_eyebrow": "一栋建筑，三种可能",

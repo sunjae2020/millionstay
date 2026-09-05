@@ -41,6 +41,11 @@ export default function DevForResident() {
             <a href="#inquiry" className="px-6 py-3 rounded-full font-semibold border border-white/60 bg-white/10 text-white inline-flex items-center gap-2 transition hover:bg-white/20">
               {t("dev.resident.cta_inquiry")}
             </a>
+            {/* 이 페이지는 "왜 여기 사는가"를 말한다. 실제 진행 절차 — 어떤 링크가
+                언제 오고 무엇을 준비하는지 — 는 /for-tenant 가 맡는다. */}
+            <Link href="/for-tenant" className="px-6 py-3 rounded-full font-semibold border border-white/60 bg-white/10 text-white inline-flex items-center gap-2 transition hover:bg-white/20">
+              {t("dev.resident.cta_process")}
+            </Link>
           </div>
         </div>
       </section>

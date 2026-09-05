@@ -1953,7 +1953,8 @@
       "field_move_in": "ご希望の入居時期",
       "field_move_in_ph": "例: 来月",
       "field_duration": "ご利用期間",
-      "field_duration_ph": "例: 6か月"
+      "field_duration_ph": "例: 6か月",
+      "cta_process": "ご入居手続きのご案内"
     },
     "owner": {
       "eyebrow": "オーナーの方へ",
@@ -2039,7 +2040,8 @@
       "homepage": "www.metheim.com",
       "privacy_officer_label": "個人情報保護責任者",
       "privacy_officer": "ホン・ギルドン (metheim.yeosu@gmail.com)",
-      "company_col": "会社"
+      "company_col": "会社",
+      "for_tenant": "ご入居手続きのご案内"
     },
     "home": {
       "hero_eyebrow": "ひとつの建物、三つの可能性",

@@ -133,8 +133,6 @@ function Router() {
       <Route path="/for-homestay-host" component={ForHomestayHost} />
       <Route path="/for-short-term" component={ForShortTerm} />
       <Route path="/for-tenant" component={ForTenant} />
-      {/* Metheim 푸터가 예전부터 가리키던 주소 — 같은 안내 페이지를 연다. */}
-      <Route path="/for-resident" component={ForTenant} />
       <Route path="/host-login" component={HostLogin} />
       <Route path="/host-portal" component={HostPortal} />
       <Route path="/portal-login" component={PortalLogin} />

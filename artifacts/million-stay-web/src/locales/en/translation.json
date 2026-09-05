@@ -2321,7 +2321,8 @@
       "field_move_in": "Preferred move-in",
       "field_move_in_ph": "e.g. next month",
       "field_duration": "How long",
-      "field_duration_ph": "e.g. 6 months"
+      "field_duration_ph": "e.g. 6 months",
+      "cta_process": "How renting works"
     },
     "owner": {
       "eyebrow": "For Owners",
@@ -2407,7 +2408,8 @@
       "homepage": "www.metheim.com",
       "privacy_officer_label": "Privacy officer",
       "privacy_officer": "Gildong Hong (metheim.yeosu@gmail.com)",
-      "company_col": "Company"
+      "company_col": "Company",
+      "for_tenant": "How renting works"
     },
     "home": {
       "hero_eyebrow": "One building, three possibilities",

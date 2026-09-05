@@ -342,6 +342,7 @@ export function DevFooter() {
           <div>
             <h4 className="text-white font-semibold text-sm mb-3">{t("dev.footer.audience_heading")}</h4>
             <Link href="/for-resident" className="block text-sm py-1 hover:text-white">{t("dev.footer.for_resident")}</Link>
+            <Link href="/for-tenant" className="block text-sm py-1 hover:text-white">{t("dev.footer.for_tenant")}</Link>
             <Link href="/for-owner" className="block text-sm py-1 hover:text-white">{t("dev.footer.for_owner")}</Link>
             <Link href="/for-partner" className="block text-sm py-1 hover:text-white">{t("dev.footer.for_partner")}</Link>
           </div>

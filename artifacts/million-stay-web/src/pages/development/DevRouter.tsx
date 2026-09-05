@@ -43,6 +43,8 @@ import WorkOrderSign from "@/pages/work-order-sign";
 import InvoicePay from "@/pages/invoice-pay";
 import DocumentSubmit from "@/pages/document-submit";
 import IntakeForm from "@/pages/intake-form";
+import TenantApply from "@/pages/tenant-apply";
+import ForTenant from "@/pages/for-tenant";
 import PaymentResult from "@/pages/payment-result";
 import NotFound from "@/pages/not-found";
 
@@ -130,6 +132,13 @@ export default function DevRouter() {
       <Route path="/pay/:token" component={InvoicePay} />
       <Route path="/documents/:token" component={DocumentSubmit} />
       <Route path="/intake/:token" component={IntakeForm} />
+      {/* 임차 신청서 — 토큰 링크와 상시 공개 폼, 그리고 전 과정 안내 페이지.
+          단일 건물 인스턴스는 이 라우터만 타므로 여기에도 반드시 건다.
+          `/for-resident` 는 Metheim 자체 소개 페이지라 건드리지 않는다 —
+          그쪽이 "왜 여기 사는가", `/for-tenant` 가 "어떻게 진행되는가"다. */}
+      <Route path="/apply/:token" component={TenantApply} />
+      <Route path="/apply" component={TenantApply} />
+      <Route path="/for-tenant" component={ForTenant} />
       <Route path="/payment-result" component={PaymentResult} />
 
       <Route component={NotFound} />

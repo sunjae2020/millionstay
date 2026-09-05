@@ -1952,7 +1952,8 @@
       "field_move_in": "วันที่ต้องการเข้าอยู่",
       "field_move_in_ph": "เช่น เดือนหน้า",
       "field_duration": "ระยะเวลา",
-      "field_duration_ph": "เช่น 6 เดือน"
+      "field_duration_ph": "เช่น 6 เดือน",
+      "cta_process": "ขั้นตอนการเช่า"
     },
     "owner": {
       "eyebrow": "สำหรับเจ้าของห้อง",
@@ -2038,7 +2039,8 @@
       "homepage": "www.metheim.com",
       "privacy_officer_label": "ผู้รับผิดชอบการคุ้มครองข้อมูลส่วนบุคคล",
       "privacy_officer": "ฮง กิลดง (metheim.yeosu@gmail.com)",
-      "company_col": "บริษัท"
+      "company_col": "บริษัท",
+      "for_tenant": "ขั้นตอนการเช่า"
     },
     "home": {
       "hero_eyebrow": "อาคารเดียว สามความเป็นไปได้",
