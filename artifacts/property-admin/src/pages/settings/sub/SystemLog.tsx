@@ -45,6 +45,15 @@ export interface LogRow {
   notes: string | null;
   branch_name: string | null;
   team_name: string | null;
+  /** IP 기반 예상 지역. 조회 실패·사설망이면 null. */
+  ip_geo: IpGeo | null;
+}
+
+export interface IpGeo {
+  country_code: string | null;
+  country: string | null;
+  region: string | null;
+  city: string | null;
 }
 
 interface Facets {
@@ -93,6 +102,26 @@ export function changedFields(row: Pick<LogRow, "old_value" | "new_value">): str
   return [...keys].filter((k) => JSON.stringify(before[k]) !== JSON.stringify(after[k]));
 }
 
+/**
+ * 예상 지역 한 줄. 국가 이름은 브라우저의 지역 이름표(Intl.DisplayNames)로 현재 언어에
+ * 맞춰 옮기고, 도시는 조회 서비스가 준 표기를 그대로 쓴다 — 도시명까지 번역할 사전이
+ * 없는데 억지로 옮기면 틀린 이름이 나온다.
+ */
+export function formatIpRegion(geo: IpGeo | null | undefined, lang: string): string | null {
+  if (!geo) return null;
+  let country = geo.country ?? null;
+  if (geo.country_code) {
+    try {
+      country = new Intl.DisplayNames([lang], { type: "region" }).of(geo.country_code) ?? country;
+    } catch {
+      // 지원하지 않는 언어 태그 — 조회 서비스가 준 영문 국가명을 그대로 쓴다.
+    }
+  }
+  const city = geo.city ?? geo.region ?? null;
+  const parts = [country, city].filter(Boolean);
+  return parts.length > 0 ? parts.join(" · ") : null;
+}
+
 const SORTABLE_KEYS = ["logged_at", "action", "actor_email", "resource_type", "source"];
 
 function todayISO() {
@@ -105,7 +134,7 @@ function daysAgoISO(n: number) {
 }
 
 export default function SystemLogPage() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [q, setQ] = useState("");
   const [source, setSource] = useState(ALL);
   const [action, setAction] = useState(ALL);
@@ -292,13 +321,26 @@ export default function SystemLogPage() {
       {
         key: "ip_address",
         header: "system_log.col_ip",
-        defaultWidth: 130,
+        defaultWidth: 150,
         sortable: false,
         defaultHidden: true,
-        cell: (r) => <span className="text-[11px] text-muted-foreground">{r.ip_address ?? "—"}</span>,
+        cell: (r) => {
+          const region = formatIpRegion(r.ip_geo, i18n.language);
+          return (
+            <div className="min-w-0">
+              <div className="truncate text-[11px] text-muted-foreground">{r.ip_address ?? "—"}</div>
+              {region && (
+                <div className="truncate text-[11px] text-muted-foreground/80" title={t("system_log.ip_region_note")}>
+                  {region}
+                </div>
+              )}
+            </div>
+          );
+        },
+        csv: (r) => [r.ip_address, formatIpRegion(r.ip_geo, i18n.language)].filter(Boolean).join(" "),
       },
     ],
-    [t],
+    [t, i18n.language],
   );
 
   const chartData = (summary?.by_day ?? []).map((d) => ({ ...d, label: d.date.slice(5) }));
@@ -429,8 +471,9 @@ export default function SystemLogPage() {
 /* ── 상세 다이얼로그 ──────────────────────────────────────────────────────── */
 
 export function LogDetailDialog({ row, onClose }: { row: LogRow | null; onClose: () => void }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const fields = row ? changedFields(row) : [];
+  const ipRegion = formatIpRegion(row?.ip_geo, i18n.language);
 
   return (
     <Dialog open={!!row} onOpenChange={(v) => { if (!v) onClose(); }}>
@@ -447,7 +490,19 @@ export function LogDetailDialog({ row, onClose }: { row: LogRow | null; onClose:
               <Field label={t("system_log.col_role")} value={row.actor_role ?? row.actor_type ?? "—"} />
               <Field label={t("system_log.col_resource")} value={`${row.resource_type ?? "—"}${row.resource_id != null ? ` #${row.resource_id}` : ""}`} />
               <Field label={t("system_log.col_org")} value={[row.branch_name, row.team_name].filter(Boolean).join(" · ") || "—"} />
-              <Field label={t("system_log.col_ip")} value={row.ip_address ?? "—"} />
+              <Field
+                label={t("system_log.col_ip")}
+                value={
+                  <>
+                    <div>{row.ip_address ?? "—"}</div>
+                    {ipRegion && (
+                      <div className="text-muted-foreground" title={t("system_log.ip_region_note")}>
+                        {t("system_log.ip_region_prefix")} {ipRegion}
+                      </div>
+                    )}
+                  </>
+                }
+              />
               <Field label={t("system_log.col_action")} value={<ActionBadge action={row.action} />} />
             </div>
 

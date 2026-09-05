@@ -7844,7 +7844,9 @@
     "user_agent": "User agent",
     "detail_title": "Log entry",
     "view_detail": "Detail",
-    "footnote": "Changes come from the audit ledger; logins, views, downloads, exports and AI calls come from the activity log."
+    "footnote": "Changes come from the audit ledger; logins, views, downloads, exports and AI calls come from the activity log.",
+    "ip_region_note": "Estimated region from the IP address; a VPN or carrier network can shift it.",
+    "ip_region_prefix": "Estimated region"
   },
   "activity_analytics": {
     "title": "Activity Analytics",
