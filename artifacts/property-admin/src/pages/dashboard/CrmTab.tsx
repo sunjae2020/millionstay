@@ -117,7 +117,7 @@ export default function CrmTab() {
         </Link>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         <KpiCard icon={Users} accent="blue" label={t("dash_crm.total_contacts")} value={contacts?.length ?? "—"} sublabel={t("dash_crm.people_in_crm")} />
         <KpiCard icon={Briefcase} accent="purple" label={t("dash_crm.accounts")} value={accounts?.length ?? "—"} sublabel={t("dash_crm.occupants_owners", { occupants: occupantAccounts, owners: ownerAccounts })} />
         <KpiCard icon={TrendingUp} accent="brand" label={t("dash_crm.active_leads")} value={activeLeads} sublabel={t("dash_crm.conversion_rate_pct", { rate: conversionRate })} progress={conversionRate} trend={convertedLeads > 0 ? t("dash_crm.count_won", { count: convertedLeads }) : undefined} trendType="up" />

@@ -60,21 +60,21 @@ export function KpiCard({
     <div
       onClick={onClick}
       className={cn(
-        "relative bg-card rounded-xl border p-4 overflow-hidden transition-all duration-200",
+        "relative bg-card rounded-xl border p-3 sm:p-4 overflow-hidden transition-all duration-200",
         "hover:shadow-md hover:-translate-y-0.5",
         onClick && "cursor-pointer",
       )}
     >
       <span className="absolute inset-y-0 left-0 w-[3px]" style={{ background: a.bar }} />
-      <div className="flex items-center justify-between mb-3">
-        <div className="h-10 w-10 rounded-xl flex items-center justify-center shrink-0" style={{ background: a.bg, color: a.fg }}>
-          <Icon className="h-5 w-5" />
+      <div className="flex items-center justify-between gap-1 mb-2 sm:mb-3">
+        <div className="h-8 w-8 sm:h-10 sm:w-10 rounded-xl flex items-center justify-center shrink-0" style={{ background: a.bg, color: a.fg }}>
+          <Icon className="h-4 w-4 sm:h-5 sm:w-5" />
         </div>
         {trend != null && <Trend type={trendType}>{trend}</Trend>}
       </div>
-      <div className="text-[27px] leading-none font-bold tracking-tight text-foreground">{value}</div>
-      <div className="text-[13px] text-muted-foreground mt-1.5 font-medium">{label}</div>
-      {sublabel && <div className="text-[11.5px] text-muted-foreground/70 mt-0.5">{sublabel}</div>}
+      <div className="text-[21px] sm:text-[27px] leading-none font-bold tracking-tight text-foreground truncate">{value}</div>
+      <div className="text-[12px] sm:text-[13px] text-muted-foreground mt-1.5 font-medium truncate">{label}</div>
+      {sublabel && <div className="text-[11px] sm:text-[11.5px] text-muted-foreground/70 mt-0.5 line-clamp-2">{sublabel}</div>}
       {progress !== undefined && (
         <div className="h-1.5 bg-muted rounded-full mt-2.5 overflow-hidden">
           <div className="h-full rounded-full transition-[width] duration-700" style={{ width: `${Math.min(100, Math.max(0, progress))}%`, background: a.bar }} />

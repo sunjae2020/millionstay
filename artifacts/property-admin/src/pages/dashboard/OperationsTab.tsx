@@ -146,7 +146,7 @@ export default function OperationsTab() {
         </Link>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         <KpiCard label={t("dash_operations.open_workorders")} value={kpis?.open_count ?? "—"} icon={Wrench} accent="blue" sublabel={t("dash_operations.kpi_open_sub")} />
         <KpiCard label={t("dash_operations.in_progress_workorders")} value={kpis?.in_progress_count ?? "—"} icon={Clock} accent="amber" sublabel={t("dash_operations.kpi_in_progress_sub")} />
         <KpiCard label={t("dash_operations.urgent_issues")} value={kpis?.urgent_count ?? "—"} icon={AlertTriangle} accent={kpis?.urgent_count ? "red" : "slate"} sublabel={t("dash_operations.kpi_urgent_sub")} trend={kpis?.urgent_count ? t("dash_operations.trend_now") : undefined} trendType="down" />

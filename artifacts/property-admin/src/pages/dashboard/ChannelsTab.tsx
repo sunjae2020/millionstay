@@ -155,7 +155,7 @@ export default function ChannelsTab() {
 
       {/* Per-channel portals */}
       <DashCard title={t("dash_channels.channel_portals")} icon={ExternalLink}>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
           {Object.entries(CHANNEL_PORTAL).map(([code, p]) => {
             const ch = byChannel[code];
             return (

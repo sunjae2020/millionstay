@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useLocation } from "wouter";
 import { useTranslation } from "react-i18next";
-import { Check, MoreHorizontal } from "lucide-react";
+import { Check, LayoutDashboard, MoreHorizontal } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { cn } from "@/lib/utils";
 import {
@@ -77,6 +77,7 @@ export function MobileTabBar({
       seen.add(item.href);
       out.push({ href: item.href, label: item.label, icon: item.icon });
     };
+    push({ href: "/dashboard", label: t("nav.dashboard"), icon: LayoutDashboard });
     for (const section of sections) {
       for (const item of section.items) {
         push(item);
@@ -84,7 +85,7 @@ export function MobileTabBar({
       }
     }
     return out;
-  }, [sections]);
+  }, [sections, t]);
 
   const byHref = useMemo(() => new Map(pool.map((p) => [p.href, p])), [pool]);
 
@@ -104,8 +105,15 @@ export function MobileTabBar({
   const tabs: NavChild[] = useMemo(() => {
     const valid = (prefs ?? []).filter((h) => byHref.has(h)).slice(0, MAX_TABS);
     if (valid.length) return valid.map((h) => byHref.get(h)!);
+    // Default: the four staples, topped up from the nav order if any is missing,
+    // so the bar always renders four tabs + More (five buttons).
     const fallback = DEFAULT_HREFS.filter((h) => byHref.has(h)).map((h) => byHref.get(h)!);
-    return (fallback.length ? fallback : pool).slice(0, MAX_TABS);
+    const taken = new Set(fallback.map((it) => it.href));
+    for (const item of pool) {
+      if (fallback.length >= MAX_TABS) break;
+      if (!taken.has(item.href)) { taken.add(item.href); fallback.push(item); }
+    }
+    return fallback.slice(0, MAX_TABS);
   }, [prefs, byHref, pool]);
 
   const anyActive = tabs.some((tb) => matchHref(location, tb.href));
@@ -140,7 +148,7 @@ export function MobileTabBar({
     <>
       <nav
         className="md:hidden fixed bottom-0 inset-x-0 z-30 flex items-stretch border-t bg-card shadow-[0_-2px_12px_rgba(0,0,0,0.06)]"
-        style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
+        style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 0.625rem)", paddingTop: "0.125rem" }}
         aria-label={t("nav.dashboard")}
       >
         {tabs.map((tb) => (

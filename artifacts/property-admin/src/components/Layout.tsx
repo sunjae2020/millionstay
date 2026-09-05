@@ -913,7 +913,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         </header>
 
         {/* Page content — extra bottom room for the mobile tab bar */}
-        <main className="flex-1 overflow-auto pb-[calc(3.5rem+env(safe-area-inset-bottom))] md:pb-0">
+        <main className="flex-1 overflow-auto pb-[calc(4.25rem+env(safe-area-inset-bottom))] md:pb-0">
           <ErrorBoundary>{children}</ErrorBoundary>
         </main>
       </div>

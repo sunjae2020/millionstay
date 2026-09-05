@@ -205,7 +205,7 @@ export default function OverviewTab() {
   return (
     <div className="space-y-6">
       {/* Primary KPIs */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         <KpiCard
           icon={BedDouble} accent="brand" label={t("dash_overview.kpi_occupancy")}
           value={`${occupancyPct}%`} sublabel={t("dash_overview.kpi_occupancy_sub", { active: activeBookings, total: totalSpaces })}

@@ -606,7 +606,7 @@ export default function ReservationsTab() {
         </Button>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         <KpiCard label={t("dash_reservations.active_bookings")} value={activeCount} icon={CheckCircle} accent="green" sublabel={t("dash_reservations.kpi_currently_checked_in")} />
         <KpiCard label={t("dash_reservations.kpi_pending_approval")} value={pendingCount} icon={Clock} accent={pendingCount > 0 ? "amber" : "slate"} sublabel={t("dash_reservations.kpi_awaiting_signoff")} trend={pendingCount > 0 ? t("dash_reservations.kpi_action") : undefined} trendType="warning" />
         <KpiCard label={t("dash_reservations.kpi_new_this_week")} value={newThisWeek} icon={CalendarDays} accent="blue" sublabel={t("dash_reservations.kpi_created_last_7_days")} />
