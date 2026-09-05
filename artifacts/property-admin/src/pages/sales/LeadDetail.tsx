@@ -16,6 +16,7 @@ import {
   getListLeadsQueryKey, getGetLeadQueryKey,
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
+import { TenantLinkCard } from "@/components/TenantLinkCard";
 import { useBrand } from "@/contexts/ThemeContext";
 import { ArrowLeft, Save, TrendingDown, ArrowUpRight } from "lucide-react";
 import { Link } from "wouter";
@@ -458,6 +459,17 @@ export default function LeadDetail() {
               )}
             </div>
           </div>
+
+          {/* 임차 신청서 — 계약보다 먼저 서는 단계라 문의에 붙는다. 승인하면
+              연락처가 만들어지고, 그 연락처를 계약의 임차인 자리에 물린다. */}
+          {!isNew && id && (
+            <TenantLinkCard
+              kind="application"
+              issuePath={`/api/v1/leads/${id}/apply-link`}
+              listPath={`/api/v1/leads/${id}/apply-link`}
+              defaultEmail={lead?.email ?? null}
+            />
+          )}
         </div>
       </div>
 

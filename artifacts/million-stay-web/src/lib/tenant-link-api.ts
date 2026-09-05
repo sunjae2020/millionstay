@@ -3,12 +3,16 @@
 // signing-api.ts / inspection-api.ts 와 같은 자급자족 구조: 이 링크를 여는
 // 사람은 계정도 게스트 JWT 도 없이 문자·메일로 받은 주소를 누른 세입자다.
 //
-// 세 화면: 청구서(/pay), 서류 제출(/documents), 입주 신청서(/intake).
+// 네 화면: 임차 신청서(/apply), 청구서(/pay), 서류 제출(/documents),
+// 입주 신청서(/intake). 임차 신청서만 계약보다 먼저 서고, 토큰 없이 열리는
+// 상시 공개 폼(/apply)도 같은 API 를 쓴다.
 import { getApiBase } from "./api-base";
 
 const PAY = `${getApiBase()}/api/v1/public/invoice-pay`;
 const DOCS = `${getApiBase()}/api/v1/public/doc-requests`;
 const INTAKE = `${getApiBase()}/api/v1/public/intake`;
+const APPLY = `${getApiBase()}/api/v1/public/apply`;
+const APPLICATIONS = `${getApiBase()}/api/v1/public/tenant-applications`;
 
 export interface InvoiceLine {
   label: string;
@@ -164,4 +168,46 @@ export async function submitIntake(token: string, answers: Record<string, string
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(answers),
   });
+}
+
+/* ── 임차 신청서 (계약 전) ───────────────────────────────────────────────── */
+
+export interface ApplicationView {
+  status: string;
+  lead_ref: string | null;
+  tenant_name: string | null;
+  note: string | null;
+  /** 담당자가 미리 채운 값 + 이미 제출한 값(제출본이 위에 덮인다). */
+  values: Record<string, string | null>;
+  submitted: boolean;
+}
+
+export async function getApplication(token: string): Promise<ApplicationView> {
+  const body = await request(`${APPLY}/${encodeURIComponent(token)}`);
+  return body.data as ApplicationView;
+}
+
+/** 담당자가 보낸 링크로 낸다. */
+export async function submitApplication(
+  token: string,
+  answers: Record<string, string>,
+): Promise<{ message: string }> {
+  return request(`${APPLY}/${encodeURIComponent(token)}/submit`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ ...answers, consent: true }),
+  });
+}
+
+/** 홈페이지의 상시 공개 폼으로 낸다 — 문의가 아직 없는 사람의 경로. */
+export async function submitPublicApplication(
+  answers: Record<string, string>,
+  lang?: string,
+): Promise<{ lead_ref: string }> {
+  const body = await request(APPLICATIONS, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ ...answers, consent: true, lang }),
+  });
+  return body.data as { lead_ref: string };
 }

@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Link2, Copy, Send, Ban, CheckCircle2, Clock, Upload, Banknote, ClipboardList, UserCheck } from "lucide-react";
+import { Link2, Copy, Send, Ban, CheckCircle2, Clock, Upload, Banknote, ClipboardList, UserCheck, UserPlus } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiFetch } from "@/lib/apiFetch";
 import { formatDateTime, formatDate } from "@/lib/date";
@@ -31,10 +31,13 @@ export interface TenantLink {
 interface DocPreset { key: string; doc_type: string; label: string; required: boolean }
 
 /**
- * 세입자에게 보내는 무로그인 링크 카드 — 청구서 결제(`invoice_pay`), 서류
- * 제출(`doc_request`), 입주 신청서(`intake`)가 같은 카드를 쓴다. 발급·복사·
- * 재발송·회수, 그리고 세입자가 남긴 것(입금 통보 · 제출 서류 · 기입한 인적사항)
- * 까지 한자리에서 본다.
+ * 세입자에게 보내는 무로그인 링크 카드 — 임차 신청서(`application`), 청구서
+ * 결제(`invoice_pay`), 서류 제출(`doc_request`), 입주 신청서(`intake`)가 같은
+ * 카드를 쓴다. 발급·복사·재발송·회수, 그리고 세입자가 남긴 것(입금 통보 ·
+ * 제출 서류 · 기입한 인적사항)까지 한자리에서 본다.
+ *
+ * `application` 만 계약이 아니라 문의(lead)에 붙는다 — 계약보다 먼저 서는
+ * 단계여서, 승인하면 계약이 아니라 **연락처**가 만들어진다.
  *
  * 링크는 대상당 하나만 살아 있다(재발급하면 이전 것이 취소된다). 그래서 카드는
  * 최신 링크 하나를 크게 보여 주고 지난 것은 이력으로만 남긴다 — 화면에 링크가
@@ -46,7 +49,7 @@ export function TenantLinkCard({
   listPath,
   defaultEmail,
 }: {
-  kind: "invoice_pay" | "doc_request" | "intake";
+  kind: "application" | "invoice_pay" | "doc_request" | "intake";
   /** POST — 링크 발급 (예: /api/v1/invoices/12/pay-link) */
   issuePath: string;
   /** GET — 이 대상에 달린 링크들 */
@@ -140,7 +143,10 @@ export function TenantLinkCard({
     toast({ title: t("tenantLink.toast_copied") });
   }
 
-  const Icon = kind === "invoice_pay" ? Banknote : kind === "intake" ? ClipboardList : Upload;
+  const Icon = kind === "application" ? UserPlus
+    : kind === "invoice_pay" ? Banknote
+    : kind === "intake" ? ClipboardList
+    : Upload;
 
   return (
     <div className="border rounded-lg overflow-hidden">
@@ -188,6 +194,7 @@ export function TenantLinkCard({
             {kind === "doc_request" && <RequestedDocs link={live} />}
             {kind === "invoice_pay" && <PaidNotices link={live} />}
             {kind === "intake" && <IntakeAnswers link={live} onApplied={() => refetch()} />}
+            {kind === "application" && <ApplicationAnswers link={live} onApplied={() => refetch()} />}
           </>
         )}
 
@@ -369,6 +376,89 @@ function IntakeAnswers({ link, onApplied }: { link: TenantLink; onApplied: () =>
           <UserCheck className="h-3.5 w-3.5" /> {apply.isPending ? t("common.saving") : t("tenantLink.btn_apply")}
         </Button>
         <span className="text-xs text-muted-foreground">{t("tenantLink.apply_hint")}</span>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * 임차 신청서에 신청인이 적어 보낸 값 + 연락처로 앉히는 버튼.
+ *
+ * 입주 신청서와 달리 반영 대상이 계약이 아니라 **연락처**다. 계약이 아직 없기
+ * 때문이고, 승인하면 여기서 만들어진 연락처를 계약의 임차인 자리에 물린다.
+ * 이미 있는 연락처라면 비어 있는 칸만 채운다 — 심사 전에 급히 적힌 값이 이미
+ * 검증된 연락처를 덮으면 되돌릴 방법이 없다.
+ */
+const APPLICATION_GROUPS: Array<{ title: string; fields: string[] }> = [
+  { title: "본인 정보", fields: ["first_name", "last_name", "mobile_number", "email", "sns_type", "sns_id", "date_of_birth", "nationality"] },
+  { title: "재직 · 재학", fields: ["company_name", "job_title"] },
+  { title: "주소", fields: ["address_line1", "suburb", "state", "postcode", "country"] },
+  { title: "희망 조건", fields: ["preferred_move_in_date", "preferred_duration_months", "preferred_space_type", "preferred_budget"] },
+  { title: "거주 구성", fields: ["household_size", "has_vehicle", "has_pet"] },
+];
+
+/** 신청서와 입주 신청서가 겹치는 칸은 기존 번역 키를 그대로 쓴다. */
+const SHARED_FIELD_KEYS = new Set([
+  "first_name", "last_name", "mobile_number", "email", "sns_type", "sns_id",
+  "date_of_birth", "nationality", "address_line1", "suburb", "state", "postcode", "country",
+]);
+
+function ApplicationAnswers({ link, onApplied }: { link: TenantLink; onApplied: () => void }) {
+  const { t } = useTranslation();
+  const { toast } = useToast();
+  const subs = Array.isArray(link.submissions) ? link.submissions : [];
+  const latest = [...subs].reverse().find((s: any) => s?.event === "application") as any;
+
+  const apply = useMutation({
+    mutationFn: async () => {
+      const res = await apiFetch(`${API}/${link.id}/apply`, { method: "POST", body: "{}" });
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(body?.error?.message ?? t("tenantLink.error_apply"));
+      return body;
+    },
+    onSuccess: (body: any) => {
+      onApplied();
+      toast({
+        title: body?.data?.created ? t("tenantLink.toast_contact_created") : t("tenantLink.toast_contact_updated"),
+      });
+    },
+    onError: (e: any) => toast({ title: t("tenantLink.error_apply"), description: e.message, variant: "destructive" }),
+  });
+
+  if (!latest) return <p className="text-sm text-muted-foreground">{t("tenantLink.application_waiting")}</p>;
+  const a = (latest.answers ?? {}) as Record<string, string>;
+  const label = (f: string) =>
+    SHARED_FIELD_KEYS.has(f) ? t(`tenantLink.intake_f_${f}`, f) : t(`tenantLink.application_f_${f}`, f);
+  const value = (f: string) =>
+    f === "has_vehicle" || f === "has_pet" ? t(`tenantLink.yn_${a[f]}`, a[f]!) : a[f];
+
+  return (
+    <div className="space-y-3">
+      <div className="grid gap-3 sm:grid-cols-2">
+        {APPLICATION_GROUPS.map((g) => {
+          const rows = g.fields.filter((f) => a[f]);
+          if (!rows.length) return null;
+          return (
+            <div key={g.title}>
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">{t(`tenantLink.application_group_${g.title}`, g.title)}</p>
+              <dl className="mt-1 space-y-0.5 text-sm">
+                {rows.map((f) => (
+                  <div key={f} className="flex gap-2">
+                    <dt className="w-28 shrink-0 text-muted-foreground">{label(f)}</dt>
+                    <dd className="min-w-0 break-words">{value(f)}</dd>
+                  </div>
+                ))}
+              </dl>
+            </div>
+          );
+        })}
+      </div>
+      {a["note"] && <p className="rounded-md bg-muted/50 p-2 text-sm whitespace-pre-line">{a["note"]}</p>}
+      <div className="flex items-center gap-3">
+        <Button type="button" size="sm" className="gap-1.5" onClick={() => apply.mutate()} disabled={apply.isPending}>
+          <UserCheck className="h-3.5 w-3.5" /> {apply.isPending ? t("common.saving") : t("tenantLink.btn_apply_contact")}
+        </Button>
+        <span className="text-xs text-muted-foreground">{t("tenantLink.apply_contact_hint")}</span>
       </div>
     </div>
   );

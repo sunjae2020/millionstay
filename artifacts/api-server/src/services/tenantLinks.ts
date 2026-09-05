@@ -2,8 +2,10 @@
 //
 // 로그인 없이 열리는 링크의 발급·해석·감사기록을 한자리에 모은다. 전자서명
 // (`services/contractSigning.ts`)과 같은 규칙을 따르되, 서명이 아닌 세 종류를
-// 다룬다: 청구서 조회 + 입금 통보(`invoice_pay`), 서류 제출 요청(`doc_request`),
-// 입주 신청서(`intake`).
+// 다룬다: 임차 신청서(`application`), 청구서 조회 + 입금 통보(`invoice_pay`),
+// 서류 제출 요청(`doc_request`), 입주 신청서(`intake`).
+//
+// `application` 만 계약보다 먼저 선다 — 계약이 아직 없는 단계라 대상이 문의(lead)다.
 //
 // 토큰 하나가 (kind, context_type, context_id) 한 쌍을 가리키고, 같은 대상에
 // 살아 있는 링크는 언제나 하나다 — 재발급하면 이전 것이 취소된다. 링크를 두 개
@@ -13,14 +15,15 @@ import { and, desc, eq, inArray, sql } from "drizzle-orm";
 import { db, tenantAccessLinksTable, type TenantAccessLink } from "@workspace/db";
 import { signingBaseUrl } from "./contractSigning.js";
 
-export type TenantLinkKind = "invoice_pay" | "doc_request" | "intake";
-export type TenantLinkContextType = "invoice" | "contract" | "booking";
+export type TenantLinkKind = "application" | "invoice_pay" | "doc_request" | "intake";
+export type TenantLinkContextType = "lead" | "invoice" | "contract" | "booking";
 
 /** 링크가 살아 있지 않을 때 공개 화면이 그대로 보여 줄 사유. */
 export type TenantLinkFailure = "not_found" | "expired" | "cancelled" | "completed";
 
 /** kind → 공개 웹 경로. 토큰 하나로 어느 화면을 열지가 여기서 갈린다. */
 export function tenantLinkPath(kind: string, token: string): string {
+  if (kind === "application") return `/apply/${token}`;
   if (kind === "invoice_pay") return `/pay/${token}`;
   if (kind === "intake") return `/intake/${token}`;
   return `/documents/${token}`;

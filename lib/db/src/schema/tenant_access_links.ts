@@ -17,6 +17,8 @@ import { pgTable, serial, integer, text, jsonb, timestamp, index } from "drizzle
  * 의미(= 서명된 문서의 증거)가 흐려지기 때문이다.
  *
  * 링크 종류(kind)
+ *   application  임차 신청서(계약 전)   (context: lead)
+ *   intake       입주 신청서           (context: contract)
  *   invoice_pay  청구서 조회 + 입금 통보 (context: invoice)
  *   doc_request  서류 제출 요청        (context: contract | booking)
  *
@@ -31,8 +33,8 @@ export const tenantAccessLinksTable = pgTable(
     id: serial("id").primaryKey(),
     /** 공개 링크 토큰. 추측 불가능해야 하므로 randomBytes(32) 16진수. */
     token: text("token").notNull().unique(),
-    kind: text("kind").notNull(), // invoice_pay | doc_request
-    context_type: text("context_type").notNull(), // invoice | contract | booking
+    kind: text("kind").notNull(), // application | intake | invoice_pay | doc_request
+    context_type: text("context_type").notNull(), // lead | invoice | contract | booking
     context_id: integer("context_id").notNull(),
 
     /** 링크를 받은 사람 — 있으면 이름·연락처를 그대로 화면에 쓴다. */

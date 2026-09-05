@@ -57,6 +57,8 @@ import WorkOrderSign from "@/pages/work-order-sign";
 import InvoicePay from "@/pages/invoice-pay";
 import DocumentSubmit from "@/pages/document-submit";
 import IntakeForm from "@/pages/intake-form";
+import TenantApply from "@/pages/tenant-apply";
+import ForTenant from "@/pages/for-tenant";
 import PaymentResult from "@/pages/payment-result";
 import { getApiBase } from "@/lib/api-base";
 import { getOwnerSiteSlug } from "@/lib/owner-site";
@@ -97,6 +99,9 @@ function Router() {
       <Route path="/pay/:token" component={InvoicePay} />
       <Route path="/documents/:token" component={DocumentSubmit} />
       <Route path="/intake/:token" component={IntakeForm} />
+      {/* 임차 신청서 — 토큰 링크와 상시 공개 폼이 같은 화면을 쓴다. */}
+      <Route path="/apply/:token" component={TenantApply} />
+      <Route path="/apply" component={TenantApply} />
       <Route path="/search" component={Search} />
       <Route path="/spaces/:id" component={SpaceDetail} />
       <Route path="/booking/new" component={BookingNew} />
@@ -127,6 +132,9 @@ function Router() {
       <Route path="/for-agent" component={ForAgent} />
       <Route path="/for-homestay-host" component={ForHomestayHost} />
       <Route path="/for-short-term" component={ForShortTerm} />
+      <Route path="/for-tenant" component={ForTenant} />
+      {/* Metheim 푸터가 예전부터 가리키던 주소 — 같은 안내 페이지를 연다. */}
+      <Route path="/for-resident" component={ForTenant} />
       <Route path="/host-login" component={HostLogin} />
       <Route path="/host-portal" component={HostPortal} />
       <Route path="/portal-login" component={PortalLogin} />

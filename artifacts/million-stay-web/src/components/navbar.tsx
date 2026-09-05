@@ -21,6 +21,7 @@ const NAV_HREFS = [
   { key: "links.stayPlans", href: "/stay-plan" },
   { key: "links.aboutUs", href: "/about" },
   { key: "links.forStudents", href: "/for-student" },
+  { key: "links.forTenant", href: "/for-tenant" },
   { key: "links.forAgent", href: "/for-agent" },
   { key: "links.forHomestayHost", href: "/for-homestay-host" },
 ];

@@ -1524,7 +1524,7 @@ export async function sendAppointmentConfirmationEmail(
 // 때문이다 — "이걸 열어서 하나만 해 주세요"라는 카드 한 장. 종류마다 다른 것은
 // 제목·설명·버튼 문구와 요약 상자에 들어갈 줄뿐이라, 그 셋만 kind 로 갈라 둔다.
 
-export type TenantLinkEmailKind = "invoice_pay" | "doc_request" | "settlement_sign" | "intake";
+export type TenantLinkEmailKind = "application" | "invoice_pay" | "doc_request" | "settlement_sign" | "intake";
 
 export interface TenantLinkEmailOptions {
   kind: TenantLinkEmailKind;
@@ -1565,10 +1565,12 @@ const TENANT_LINK_COPY: Record<DocLang, TenantLinkCopy> = {
     subject: {
       invoice_pay: (brand, ref) => `[${brand}] Invoice ${ref} — view and pay`,
       doc_request: (brand, ref) => `[${brand}] Documents needed for ${ref}`,
+      application: (brand, ref) => `[${brand}] Rental application ${ref}`,
       intake: (brand, ref) => `[${brand}] Move-in form for ${ref}`,
       settlement_sign: (brand, ref) => `[${brand}] Move-out settlement ${ref} — please confirm`,
     },
     tag: {
+      application: "Rental application",
       intake: "Move-in form",
       invoice_pay: "Invoice",
       doc_request: "Document request",
@@ -1576,12 +1578,14 @@ const TENANT_LINK_COPY: Record<DocLang, TenantLinkCopy> = {
     },
     greeting: (name) => (name ? `Dear ${name},` : "Hello,"),
     intro: {
+      application: "Thank you for your interest. Please fill in the short application below so we can check availability and prepare your tenancy. It takes a few minutes and needs no login. We do not ask for your ID or resident registration number here — those are requested later, when the contract is prepared.",
       intake: "Before you move in, please confirm your details and fill in what we still need — your emergency contact and a photo. It takes a couple of minutes and needs no login.",
       invoice_pay: "Your invoice is ready. Open the link below to see the amount, the bank details, and to let us know once you have transferred the payment. No login is required.",
       doc_request: "To finish setting up your tenancy we still need the documents listed below. You can photograph or upload them straight from your phone — no login required.",
       settlement_sign: "Your move-out settlement is ready for review. Please open the link, check each line, and sign to confirm. No login is required.",
     },
     refLabel: {
+      application: "Enquiry no.",
       intake: "Contract no.",
       invoice_pay: "Invoice no.",
       doc_request: "Contract no.",
@@ -1592,6 +1596,7 @@ const TENANT_LINK_COPY: Record<DocLang, TenantLinkCopy> = {
     dueLabel: "Due date",
     itemsLabel: "What we need",
     cta: {
+      application: "Fill in the application",
       intake: "Fill in the form",
       invoice_pay: "Open the invoice",
       doc_request: "Submit documents",
@@ -1605,10 +1610,12 @@ const TENANT_LINK_COPY: Record<DocLang, TenantLinkCopy> = {
     subject: {
       invoice_pay: (brand, ref) => `[${brand}] 청구서 ${ref} 안내`,
       doc_request: (brand, ref) => `[${brand}] 제출 서류 안내 (${ref})`,
+      application: (brand, ref) => `[${brand}] 임차 신청서 작성 안내 (${ref})`,
       intake: (brand, ref) => `[${brand}] 입주 신청서 작성 안내 (${ref})`,
       settlement_sign: (brand, ref) => `[${brand}] 퇴거 정산 확인 요청 (${ref})`,
     },
     tag: {
+      application: "임차 신청서",
       intake: "입주 신청서",
       invoice_pay: "청구서",
       doc_request: "서류 제출",
@@ -1616,12 +1623,14 @@ const TENANT_LINK_COPY: Record<DocLang, TenantLinkCopy> = {
     },
     greeting: (name) => (name ? `${name}님 안녕하세요,` : "안녕하세요,"),
     intro: {
+      application: "문의해 주셔서 감사합니다. 아래 신청서를 작성해 주시면 조건 확인과 계약 준비를 시작하겠습니다. 몇 분이면 되고 로그인은 필요 없습니다. 신분증과 주민등록번호는 이 단계에서 받지 않으며, 계약 준비 단계에서 따로 요청드립니다.",
       intake: "입주 전에 인적사항을 한 번 확인해 주시고, 아직 없는 정보(비상 연락처, 증명사진)를 채워 주세요. 몇 분이면 되고 로그인은 필요 없습니다.",
       invoice_pay: "이번 청구서가 발행되었습니다. 아래 링크를 열면 금액과 입금 계좌를 확인하고, 입금하신 뒤에는 그 사실을 바로 알려주실 수 있습니다. 로그인은 필요 없습니다.",
       doc_request: "입주 준비를 마치려면 아래 서류가 필요합니다. 링크를 열어 휴대폰으로 찍은 사진이나 파일을 그대로 올려주시면 됩니다. 로그인은 필요 없습니다.",
       settlement_sign: "퇴거 정산 내역이 준비되었습니다. 링크를 열어 항목을 확인하시고 서명해 주세요. 로그인은 필요 없습니다.",
     },
     refLabel: {
+      application: "문의번호",
       intake: "계약번호",
       invoice_pay: "청구번호",
       doc_request: "계약번호",
@@ -1632,6 +1641,7 @@ const TENANT_LINK_COPY: Record<DocLang, TenantLinkCopy> = {
     dueLabel: "납부 기한",
     itemsLabel: "필요한 서류",
     cta: {
+      application: "신청서 작성하기",
       intake: "신청서 작성하기",
       invoice_pay: "청구서 열기",
       doc_request: "서류 제출하기",
@@ -1645,10 +1655,12 @@ const TENANT_LINK_COPY: Record<DocLang, TenantLinkCopy> = {
     subject: {
       invoice_pay: (brand, ref) => `[${brand}] 請求書 ${ref} のご案内`,
       doc_request: (brand, ref) => `[${brand}] ご提出書類のお願い (${ref})`,
+      application: (brand, ref) => `[${brand}] 賃貸申込書ご記入のお願い (${ref})`,
       intake: (brand, ref) => `[${brand}] 入居申込書のご記入のお願い (${ref})`,
       settlement_sign: (brand, ref) => `[${brand}] 退去精算のご確認 (${ref})`,
     },
     tag: {
+      application: "賃貸申込書",
       intake: "入居申込書",
       invoice_pay: "請求書",
       doc_request: "書類のご提出",
@@ -1656,12 +1668,14 @@ const TENANT_LINK_COPY: Record<DocLang, TenantLinkCopy> = {
     },
     greeting: (name) => (name ? `${name} 様` : "こんにちは、"),
     intro: {
+      application: "お問い合わせいただきありがとうございます。下記の申込書にご記入いただければ、空室状況の確認と契約準備を進めます。数分で終わり、ログインは不要です。身分証明書と住民登録番号はこの段階では収集せず、契約準備の際に改めてお願いいたします。",
       intake: "ご入居前に、お客様情報のご確認と、まだ頂いていない項目（緊急連絡先・お写真）のご記入をお願いいたします。数分で終わり、ログインは不要です。",
       invoice_pay: "今回の請求書を発行いたしました。下のリンクから金額とお振込先をご確認いただけます。お振込み後はそのままご連絡いただけます。ログインは不要です。",
       doc_request: "ご入居の手続きを完了するため、下記の書類が必要です。リンクを開き、スマートフォンで撮影した画像やファイルをそのままアップロードしてください。ログインは不要です。",
       settlement_sign: "退去精算の内容をご確認いただける状態になりました。リンクを開き、各項目をご確認のうえご署名ください。ログインは不要です。",
     },
     refLabel: {
+      application: "お問い合わせ番号",
       intake: "契約番号",
       invoice_pay: "請求番号",
       doc_request: "契約番号",
@@ -1672,6 +1686,7 @@ const TENANT_LINK_COPY: Record<DocLang, TenantLinkCopy> = {
     dueLabel: "お支払期限",
     itemsLabel: "必要書類",
     cta: {
+      application: "申込書に記入する",
       intake: "申込書を記入する",
       invoice_pay: "請求書を開く",
       doc_request: "書類を提出する",
@@ -1685,10 +1700,12 @@ const TENANT_LINK_COPY: Record<DocLang, TenantLinkCopy> = {
     subject: {
       invoice_pay: (brand, ref) => `[${brand}] 账单 ${ref} 通知`,
       doc_request: (brand, ref) => `[${brand}] 需要提交的材料 (${ref})`,
+      application: (brand, ref) => `[${brand}] 租赁申请表填写通知 (${ref})`,
       intake: (brand, ref) => `[${brand}] 请填写入住申请表 (${ref})`,
       settlement_sign: (brand, ref) => `[${brand}] 退租结算确认 (${ref})`,
     },
     tag: {
+      application: "租赁申请表",
       intake: "入住申请表",
       invoice_pay: "账单",
       doc_request: "材料提交",
@@ -1696,12 +1713,14 @@ const TENANT_LINK_COPY: Record<DocLang, TenantLinkCopy> = {
     },
     greeting: (name) => (name ? `${name} 您好，` : "您好，"),
     intro: {
+      application: "感谢您的咨询。请填写以下申请表，我们将据此确认房源并着手准备合同。只需几分钟，无需登录。本阶段不收集身份证件与身份证号，这些将在准备合同时另行索取。",
       intake: "入住前请确认您的个人信息，并补充我们尚未获得的内容（紧急联系人、证件照）。只需几分钟，无需登录。",
       invoice_pay: "本期账单已开具。打开下面的链接即可查看金额与收款账户，转账后也可以直接告知我们。无需登录。",
       doc_request: "为完成入住手续，还需要以下材料。打开链接后，用手机拍照或直接上传文件即可。无需登录。",
       settlement_sign: "退租结算明细已准备好。请打开链接核对各项内容并签名确认。无需登录。",
     },
     refLabel: {
+      application: "咨询编号",
       intake: "合同编号",
       invoice_pay: "账单编号",
       doc_request: "合同编号",
@@ -1712,6 +1731,7 @@ const TENANT_LINK_COPY: Record<DocLang, TenantLinkCopy> = {
     dueLabel: "付款期限",
     itemsLabel: "所需材料",
     cta: {
+      application: "填写申请表",
       intake: "填写申请表",
       invoice_pay: "查看账单",
       doc_request: "提交材料",
@@ -1725,10 +1745,12 @@ const TENANT_LINK_COPY: Record<DocLang, TenantLinkCopy> = {
     subject: {
       invoice_pay: (brand, ref) => `[${brand}] ใบแจ้งหนี้ ${ref}`,
       doc_request: (brand, ref) => `[${brand}] เอกสารที่ต้องส่ง (${ref})`,
+      application: (brand, ref) => `[${brand}] แบบฟอร์มขอเช่า ${ref}`,
       intake: (brand, ref) => `[${brand}] กรุณากรอกแบบฟอร์มเข้าอยู่ (${ref})`,
       settlement_sign: (brand, ref) => `[${brand}] ยืนยันการคืนเงินประกัน (${ref})`,
     },
     tag: {
+      application: "แบบฟอร์มขอเช่า",
       intake: "แบบฟอร์มเข้าอยู่",
       invoice_pay: "ใบแจ้งหนี้",
       doc_request: "ส่งเอกสาร",
@@ -1736,12 +1758,14 @@ const TENANT_LINK_COPY: Record<DocLang, TenantLinkCopy> = {
     },
     greeting: (name) => (name ? `เรียน คุณ${name}` : "สวัสดีค่ะ"),
     intro: {
+      application: "ขอบคุณที่ให้ความสนใจ กรุณากรอกแบบฟอร์มขอเช่าด้านล่าง เพื่อให้เราตรวจสอบห้องว่างและเตรียมสัญญาให้ท่าน ใช้เวลาไม่กี่นาทีและไม่ต้องเข้าสู่ระบบ เราไม่ขอบัตรประจำตัวและเลขประจำตัวประชาชนในขั้นตอนนี้ แต่จะขอในขั้นตอนเตรียมสัญญา",
       intake: "ก่อนเข้าอยู่ กรุณาตรวจสอบข้อมูลส่วนตัวและกรอกส่วนที่ยังขาด (ผู้ติดต่อฉุกเฉินและรูปถ่าย) ใช้เวลาเพียงไม่กี่นาที และไม่ต้องเข้าสู่ระบบ",
       invoice_pay: "ใบแจ้งหนี้ของคุณพร้อมแล้ว เปิดลิงก์ด้านล่างเพื่อดูยอดเงินและเลขบัญชี และแจ้งให้เราทราบได้ทันทีหลังโอนเงิน ไม่ต้องเข้าสู่ระบบ",
       doc_request: "เพื่อให้การเข้าอยู่เสร็จสมบูรณ์ เรายังต้องการเอกสารตามรายการด้านล่าง เปิดลิงก์แล้วถ่ายรูปหรืออัปโหลดไฟล์จากมือถือได้เลย ไม่ต้องเข้าสู่ระบบ",
       settlement_sign: "สรุปยอดเมื่อย้ายออกพร้อมให้ตรวจสอบแล้ว กรุณาเปิดลิงก์ ตรวจแต่ละรายการ แล้วลงลายเซ็นยืนยัน ไม่ต้องเข้าสู่ระบบ",
     },
     refLabel: {
+      application: "เลขที่สอบถาม",
       intake: "เลขที่สัญญา",
       invoice_pay: "เลขที่ใบแจ้งหนี้",
       doc_request: "เลขที่สัญญา",
@@ -1752,6 +1776,7 @@ const TENANT_LINK_COPY: Record<DocLang, TenantLinkCopy> = {
     dueLabel: "กำหนดชำระ",
     itemsLabel: "เอกสารที่ต้องใช้",
     cta: {
+      application: "กรอกแบบฟอร์ม",
       intake: "กรอกแบบฟอร์ม",
       invoice_pay: "เปิดใบแจ้งหนี้",
       doc_request: "ส่งเอกสาร",
@@ -1765,10 +1790,12 @@ const TENANT_LINK_COPY: Record<DocLang, TenantLinkCopy> = {
     subject: {
       invoice_pay: (brand, ref) => `[${brand}] Hóa đơn ${ref}`,
       doc_request: (brand, ref) => `[${brand}] Giấy tờ cần nộp (${ref})`,
+      application: (brand, ref) => `[${brand}] Đơn xin thuê ${ref}`,
       intake: (brand, ref) => `[${brand}] Phiếu thông tin nhận nhà (${ref})`,
       settlement_sign: (brand, ref) => `[${brand}] Xác nhận quyết toán trả phòng (${ref})`,
     },
     tag: {
+      application: "Đơn xin thuê",
       intake: "Phiếu nhận nhà",
       invoice_pay: "Hóa đơn",
       doc_request: "Nộp giấy tờ",
@@ -1776,12 +1803,14 @@ const TENANT_LINK_COPY: Record<DocLang, TenantLinkCopy> = {
     },
     greeting: (name) => (name ? `Kính gửi ${name},` : "Xin chào,"),
     intro: {
+      application: "Cảm ơn quý khách đã quan tâm. Vui lòng điền đơn xin thuê dưới đây để chúng tôi kiểm tra phòng trống và chuẩn bị hợp đồng. Chỉ mất vài phút và không cần đăng nhập. Chúng tôi không thu thập giấy tờ tùy thân và số định danh ở bước này — những giấy tờ đó sẽ được yêu cầu khi chuẩn bị hợp đồng.",
       intake: "Trước khi nhận nhà, vui lòng xác nhận thông tin cá nhân và bổ sung những mục còn thiếu (người liên hệ khẩn cấp và ảnh chân dung). Chỉ mất vài phút và không cần đăng nhập.",
       invoice_pay: "Hóa đơn của bạn đã sẵn sàng. Mở liên kết bên dưới để xem số tiền, thông tin tài khoản ngân hàng và báo cho chúng tôi ngay sau khi bạn chuyển khoản. Không cần đăng nhập.",
       doc_request: "Để hoàn tất thủ tục thuê nhà, chúng tôi còn cần các giấy tờ dưới đây. Mở liên kết rồi chụp ảnh hoặc tải tệp lên trực tiếp từ điện thoại. Không cần đăng nhập.",
       settlement_sign: "Bảng quyết toán khi trả phòng đã sẵn sàng. Vui lòng mở liên kết, kiểm tra từng khoản và ký xác nhận. Không cần đăng nhập.",
     },
     refLabel: {
+      application: "Số yêu cầu",
       intake: "Số hợp đồng",
       invoice_pay: "Số hóa đơn",
       doc_request: "Số hợp đồng",
@@ -1792,6 +1821,7 @@ const TENANT_LINK_COPY: Record<DocLang, TenantLinkCopy> = {
     dueLabel: "Hạn thanh toán",
     itemsLabel: "Giấy tờ cần nộp",
     cta: {
+      application: "Điền đơn xin thuê",
       intake: "Điền phiếu",
       invoice_pay: "Mở hóa đơn",
       doc_request: "Nộp giấy tờ",
