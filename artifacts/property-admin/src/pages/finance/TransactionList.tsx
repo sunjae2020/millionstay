@@ -4,7 +4,7 @@ import { Link, useSearch } from "wouter";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   ArrowDownLeft, ArrowRightLeft, ArrowUpRight, BookOpen, CheckCircle2, ChevronLeft, ChevronRight,
-  Landmark, Loader2, Plus, ScanLine, XCircle,
+  FileUp, Landmark, Loader2, Plus, ScanLine, XCircle,
 } from "lucide-react";
 import { Layout } from "@/components/Layout";
 import { Button } from "@/components/ui/button";
@@ -21,6 +21,7 @@ import {
 import { DataTable, useServerList, ACTIONS_KEY, type ColumnDef } from "@/components/ui/data-table";
 import { LookupSelect } from "@/components/LookupSelect";
 import { useDocumentRowActions } from "@/components/DocumentRowActions";
+import { BankStatementImportDialog } from "@/components/BankStatementImportDialog";
 import { apiFetch } from "@/lib/apiFetch";
 import { useToast } from "@/hooks/use-toast";
 import { useBrand } from "@/contexts/ThemeContext";
@@ -155,6 +156,7 @@ export default function TransactionList() {
   const [bucket, setBucket] = useState("_all");
 
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [importOpen, setImportOpen] = useState(false);
   const [form, setForm] = useState<FormState>(emptyForm);
 
   // 결제 일정 카드에서 "입금 3건" 링크로 넘어오면 그 회차만 걸러 보여준다.
@@ -435,9 +437,16 @@ export default function TransactionList() {
             <h1 className="text-2xl font-bold tracking-tight">{t("nav.transaction")}</h1>
             <p className="text-sm text-muted-foreground">{t("transaction.subtitle")}</p>
           </div>
-          <Button onClick={openCreate}>
-            <Plus className="h-4 w-4 mr-1" />{t("transaction.new")}
-          </Button>
+          <div className="flex items-center gap-2">
+            {/* 통장 명세서를 통째로 가져오는 경로. 한 건씩 입력하는 것보다 이쪽이
+                실제 업무의 기본 동선이라 신규 등록 옆에 나란히 둔다. */}
+            <Button variant="outline" onClick={() => setImportOpen(true)}>
+              <FileUp className="h-4 w-4 mr-1" />{t("transaction.import_statement")}
+            </Button>
+            <Button onClick={openCreate}>
+              <Plus className="h-4 w-4 mr-1" />{t("transaction.new")}
+            </Button>
+          </div>
         </div>
 
         {/* 요약 — 확정·전기된 거래만 센다(초안과 취소는 빠진다). */}
@@ -580,6 +589,12 @@ export default function TransactionList() {
       </div>
 
       {documentPreview}
+
+      <BankStatementImportDialog
+        open={importOpen}
+        onOpenChange={setImportOpen}
+        onImported={invalidate}
+      />
 
       <TransactionDialog
         open={dialogOpen}

@@ -70,6 +70,7 @@ import contentTranslationsRouter from "./content-translations";
 import tablePrefsRouter from "./table-prefs";
 import transactionsRouter from "./transactions";
 import orgUnitsRouter from "./org-units";
+import bankImportRouter from "./bank-import";
 const router: IRouter = Router();
 
 router.use(healthRouter);
@@ -146,6 +147,8 @@ router.use(tablePrefsRouter);
 router.use(transactionsRouter);
 // 지점·팀 + 회계 접근 범위(HQ/지점/팀).
 router.use(orgUnitsRouter);
+// 은행 명세서 가져오기(붙여넣기 · 파일 · Google 링크).
+router.use(bankImportRouter);
 // Note: partnerAuthRouter, agentPortalRouter, ownerPortalRouter are registered in app.ts
 // BEFORE the requireAuth middleware to allow partner JWT auth to bypass the admin auth guard.
 

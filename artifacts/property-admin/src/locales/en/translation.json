@@ -7478,7 +7478,8 @@
     "ocr_confidence": "Confidence about {{pct}}%",
     "split_suggest": "Suggest split",
     "split_suggest_none": "Nothing to suggest — add the contract's payout terms first.",
-    "bank_gl_shared": "Several accounts share this ledger code — balance reconciliation needs one code per account"
+    "bank_gl_shared": "Several accounts share this ledger code — balance reconciliation needs one code per account",
+    "import_statement": "Import bank statement"
   },
   "payment_schedule": {
     "title": "Payment schedule",

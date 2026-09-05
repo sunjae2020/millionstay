@@ -7478,7 +7478,8 @@
     "ocr_confidence": "확신도 약 {{pct}}%",
     "split_suggest": "분할 제안",
     "split_suggest_none": "제안할 것이 없습니다 — 계약의 정산 조건을 먼저 등록하세요.",
-    "bank_gl_shared": "여러 통장이 같은 계정과목을 써서 잔액 대사를 할 수 없습니다 — 통장마다 계정과목을 나누세요"
+    "bank_gl_shared": "여러 통장이 같은 계정과목을 써서 잔액 대사를 할 수 없습니다 — 통장마다 계정과목을 나누세요",
+    "import_statement": "은행 명세서 가져오기"
   },
   "payment_schedule": {
     "title": "결제 일정",

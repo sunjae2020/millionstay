@@ -7437,7 +7437,8 @@
     "ocr_confidence": "置信度约 {{pct}}%",
     "split_suggest": "建议拆分",
     "split_suggest_none": "无可建议内容——请先登记合同的结算条件。",
-    "bank_gl_shared": "多个账户共用同一会计科目，无法进行余额核对——请为每个账户分设科目"
+    "bank_gl_shared": "多个账户共用同一会计科目，无法进行余额核对——请为每个账户分设科目",
+    "import_statement": "导入银行对账单"
   },
   "payment_schedule": {
     "title": "付款计划",
