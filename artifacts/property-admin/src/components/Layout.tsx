@@ -74,6 +74,7 @@ import {
   Megaphone,
   Target,
   LayoutGrid,
+  Cpu,
 } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { MobileTabBar, CUSTOMIZE_TABS_EVENT } from "@/components/MobileTabBar";
@@ -103,9 +104,10 @@ const HOMESTAY_NAV_HREFS = new Set([
 
 function getNav(
   t: (k: string) => string,
-  opts?: { homestayEnabled?: boolean },
+  opts?: { homestayEnabled?: boolean; isSuperAdmin?: boolean },
 ): NavSection[] {
   const homestayEnabled = opts?.homestayEnabled ?? true;
+  const isSuperAdmin = opts?.isSuperAdmin ?? false;
   const sections: NavSection[] = [
     {
       label: t("nav.account"),
@@ -262,6 +264,10 @@ function getNav(
         { href: "/settings/integrations", label: t("nav.integrations"), icon: Plug },
         { href: "/settings/api-keys", label: t("nav.api_keys"), icon: KeyRound },
         { href: "/settings/system-log", label: t("nav.system_log"), icon: ScrollText },
+        // Super Admin only — live platform snapshot (DB shape, integrations, jobs, API, schema).
+        ...(isSuperAdmin
+          ? [{ href: "/settings/system-map", label: t("system_map.title"), icon: Cpu }]
+          : []),
         { href: "/settings/design", label: t("nav.design"), icon: Palette },
         {
           href: "/settings/reports",
@@ -733,8 +739,11 @@ export function Layout({ children }: { children: React.ReactNode }) {
   const { logo, logoDark, brandName, darkMode, toggleDarkMode } = useBrand();
   const effectiveLogo = darkMode && logoDark ? logoDark : logo;
   const { t } = useTranslation();
+  const { user } = useAuth();
+  const isSuperAdmin =
+    !!user && ["Super Admin", "SuperAdmin", "superadmin", "super_admin"].includes(user.role);
   const { homestayEnabled } = useModules();
-  const NAV = getNav(t, { homestayEnabled });
+  const NAV = getNav(t, { homestayEnabled, isSuperAdmin });
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(() => {
     try {
