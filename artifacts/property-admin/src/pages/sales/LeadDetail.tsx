@@ -17,6 +17,7 @@ import {
 } from "@workspace/api-client-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { TenantLinkCard } from "@/components/TenantLinkCard";
+import { LeadViewingsCard } from "@/components/LeadViewingsCard";
 import { apiFetch } from "@/lib/apiFetch";
 import { FileSignature, FileText } from "lucide-react";
 import { DocumentPreviewDialog, useDocumentPreview } from "@/components/DocumentPreviewDialog";
@@ -525,6 +526,10 @@ export default function LeadDetail() {
             </div>
           </div>
 
+          {/* 방문 예약 — 상담 단계의 현장 방문. 신청서보다 먼저 오는 일이 많아
+              화면에서도 위에 둔다. */}
+          {!isNew && id && <LeadViewingsCard leadId={Number(id)} />}
+
           {/* 임차 신청서 — 계약보다 먼저 서는 단계라 문의에 붙는다. 승인하면
               연락처가 만들어지고, 그 연락처를 계약의 임차인 자리에 물린다. */}
           {!isNew && id && (
@@ -543,9 +548,10 @@ export default function LeadDetail() {
       {/* 계약으로 전환 — 만드는 것은 초안이다. 서식·결제조건·특약은 계약 상세에서
           정한다. 여기서 묻는 것은 초안을 세우는 데 꼭 필요한 세 칸뿐이다. */}
       <Dialog open={contractOpen} onOpenChange={setContractOpen}>
-        <DialogContent className="max-w-md">
-          <DialogHeader><DialogTitle>{t("lead.contract_title")}</DialogTitle></DialogHeader>
-          <div className="grid gap-4 py-2">
+        {/* 좁으면 고른 세대 이름이 잘려 무엇을 고른 건지 확인할 수 없다. */}
+        <DialogContent className="max-w-2xl">
+          <DialogHeader><DialogTitle className="text-lg">{t("lead.contract_title")}</DialogTitle></DialogHeader>
+          <div className="grid gap-5 py-3">
             <p className="text-sm text-muted-foreground">{t("lead.contract_desc")}</p>
             <div className="grid gap-1.5">
               <Label>{t("lead.label_space")}</Label>
@@ -581,7 +587,7 @@ export default function LeadDetail() {
 
       {/* Convert to Booking Dialog */}
       <Dialog open={convertOpen} onOpenChange={setConvertOpen}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle>{t("lead.convert_title")}</DialogTitle>
           </DialogHeader>

@@ -142,16 +142,20 @@ router.get("/v1/calendar/events", async (req, res): Promise<void> => {
       lte(tasksTable.due_date, to),
     ));
     for (const r of rows) {
+      // 시각이 있는 업무(방문 예약 등)는 그 시각에 놓는다. 마감일만 있는 업무는
+      // 지금까지대로 종일 일정이다 — 오후 3시 방문이 종일 칸에 누워 있으면
+      // 하루 일정을 짤 수 없다.
+      const timed = !!r.scheduled_start_at;
       events.push({
-        id: `tasks:${r.id}:due`,
+        id: `tasks:${r.id}:${timed ? "appointment" : "due"}`,
         source: "tasks",
-        kind: "due",
+        kind: r.task_category === "Viewing" ? "viewing" : timed ? "appointment" : "due",
         title: r.name,
-        start: r.due_date!,
-        end: null,
-        all_day: true,
+        start: timed ? new Date(r.scheduled_start_at!).toISOString() : r.due_date!,
+        end: timed && r.scheduled_end_at ? new Date(r.scheduled_end_at).toISOString() : null,
+        all_day: !timed,
         status: r.task_status,
-        url: `/account/tasks/${r.id}`,
+        url: r.lead_id ? `/account/leads/${r.lead_id}` : `/account/tasks/${r.id}`,
         ref: null,
       });
     }

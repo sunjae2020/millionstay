@@ -1,6 +1,6 @@
 import { Router, type IRouter } from "express";
 import { eq, ilike, and, or, isNull, inArray, SQL } from "drizzle-orm";
-import { db, leadsTable, suburbsTable, bookingsTable, contractsTable, documentsTable } from "@workspace/db";
+import { db, leadsTable, suburbsTable, bookingsTable, contractsTable, documentsTable, tasksTable, spacesTable } from "@workspace/db";
 import { deletedFilter, makeBulkDelete, makeBulkRestore } from "../lib/softDelete";
 import {
   ListLeadsQueryParams,
@@ -15,6 +15,7 @@ import { insertLeadWithGeneratedRef } from "../lib/leadRef.js";
 import { formatFirstName, formatLastName } from "../lib/nameFormat.js";
 
 import { keywordCondition } from "../lib/listSearch";
+import { desc, isNull as isNullCol } from "drizzle-orm";
 import { ensureLeadParty } from "../services/leadConversion.js";
 import { generateBookingRef } from "./bookings.js";
 import { nextContractRef } from "./contracts.js";
@@ -192,6 +193,114 @@ router.delete("/v1/leads/:id", async (req, res): Promise<void> => {
       .where(eq(leadsTable.id, parsed.data.id));
   }
   res.status(204).end();
+});
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   방문 예약 — 상담 단계에서 잡는 일정
+   ═══════════════════════════════════════════════════════════════════════════
+   계약 전에 세대를 보러 오는 약속이다. 새 표를 만들지 않고 업무(tasks)에 앉힌다 —
+   업무는 이미 담당자·연락처·계정·상태·우선순위를 갖고 있고 캘린더가 읽는 소스이기도
+   하다. 새 표를 파면 그 넷을 다시 만들고 캘린더 소스가 하나 더 늘어난다.
+
+   업무의 `due_date` 는 날짜뿐이라 "10월 2일 오후 3시" 를 담지 못한다. 그래서 시각이
+   있는 일정만 `scheduled_start_at/end_at` 을 쓰고, 마감일만 있는 업무는 지금까지대로
+   둔다(0088). */
+
+const VIEWING_CATEGORY = "Viewing";
+
+/** 이 문의에 잡힌 방문 예약. 지난 것도 함께 준다 — 몇 번 왔는지가 상담 이력이다. */
+router.get("/v1/leads/:id/viewings", async (req, res): Promise<void> => {
+  const parsed = GetLeadParams.safeParse(req.params);
+  if (!parsed.success) { res.status(400).json({ error: parsed.error.message }); return; }
+  const rows = await db
+    .select({
+      id: tasksTable.id,
+      name: tasksTable.name,
+      task_status: tasksTable.task_status,
+      scheduled_start_at: tasksTable.scheduled_start_at,
+      scheduled_end_at: tasksTable.scheduled_end_at,
+      space_id: tasksTable.space_id,
+      location: tasksTable.location,
+      description: tasksTable.description,
+      assigned_to: tasksTable.assigned_to,
+      completed_at: tasksTable.completed_at,
+      space_name: spacesTable.name,
+    })
+    .from(tasksTable)
+    .leftJoin(spacesTable, eq(tasksTable.space_id, spacesTable.id))
+    .where(and(eq(tasksTable.lead_id, parsed.data.id), isNullCol(tasksTable.deleted_at)))
+    .orderBy(desc(tasksTable.scheduled_start_at));
+  res.json(rows);
+});
+
+/** 방문 예약을 잡는다. 끝 시각을 안 주면 1시간으로 둔다(현장 방문의 실제 길이). */
+router.post("/v1/leads/:id/viewings", async (req, res): Promise<void> => {
+  const parsed = GetLeadParams.safeParse(req.params);
+  if (!parsed.success) { res.status(400).json({ error: parsed.error.message }); return; }
+  const [lead] = await db.select().from(leadsTable).where(eq(leadsTable.id, parsed.data.id));
+  if (!lead) { res.status(404).json({ error: "Not found" }); return; }
+
+  const body = (req.body ?? {}) as Record<string, unknown>;
+  const startRaw = typeof body["scheduled_start_at"] === "string" ? body["scheduled_start_at"] : "";
+  const start = startRaw ? new Date(startRaw) : null;
+  if (!start || Number.isNaN(start.getTime())) {
+    res.status(400).json({ error: "scheduled_start_at is required" });
+    return;
+  }
+  const endRaw = typeof body["scheduled_end_at"] === "string" ? body["scheduled_end_at"] : "";
+  const parsedEnd = endRaw ? new Date(endRaw) : null;
+  const end = parsedEnd && !Number.isNaN(parsedEnd.getTime())
+    ? parsedEnd
+    : new Date(start.getTime() + 60 * 60 * 1000);
+
+  const spaceId = Number.isFinite(Number(body["space_id"])) ? Number(body["space_id"]) : null;
+  const who = formatPersonName(lead.first_name, lead.last_name) || lead.lead_ref;
+
+  const [row] = await db.insert(tasksTable).values({
+    name: typeof body["name"] === "string" && body["name"].trim()
+      ? body["name"].trim().slice(0, 200)
+      : `방문 예약 — ${who}`,
+    task_category: VIEWING_CATEGORY,
+    task_status: "Todo",
+    lead_id: lead.id,
+    space_id: spaceId,
+    location: typeof body["location"] === "string" ? body["location"].trim().slice(0, 300) || null : null,
+    scheduled_start_at: start,
+    scheduled_end_at: end,
+    // 목록·캘린더가 날짜만 보는 자리들이 있어 같은 날짜를 함께 적어 둔다.
+    due_date: start.toISOString().slice(0, 10),
+    assigned_to: typeof body["assigned_to"] === "string" ? body["assigned_to"].trim().slice(0, 120) || null : null,
+    description: typeof body["description"] === "string" ? body["description"].trim().slice(0, 2000) || null : null,
+    manual_input: false,
+    status: "Active",
+  } as never).returning({ id: tasksTable.id });
+
+  void logAction({
+    entityType: "lead", entityId: lead.id, action: "UPDATE",
+    actorId: (req as any).user?.id ?? null,
+    newValue: { viewing_scheduled: row!.id, at: start.toISOString() },
+  });
+
+  res.status(201).json({ id: row!.id });
+});
+
+/** 방문 결과를 닫는다 — 다녀왔는지 / 취소됐는지. */
+router.patch("/v1/leads/:leadId/viewings/:id", async (req, res): Promise<void> => {
+  const id = Number(req.params["id"]);
+  if (!Number.isFinite(id)) { res.status(400).json({ error: "Bad id" }); return; }
+  const body = (req.body ?? {}) as Record<string, unknown>;
+  const next = typeof body["task_status"] === "string" ? body["task_status"] : null;
+  if (!next || !["Todo", "InProgress", "Done", "Cancelled"].includes(next)) {
+    res.status(400).json({ error: "Bad task_status" });
+    return;
+  }
+  const [row] = await db.update(tasksTable).set({
+    task_status: next,
+    completed_at: next === "Done" ? new Date() : null,
+    updated_at: new Date(),
+  }).where(eq(tasksTable.id, id)).returning({ id: tasksTable.id });
+  if (!row) { res.status(404).json({ error: "Not found" }); return; }
+  res.json({ id: row.id, task_status: next });
 });
 
 /* ═══════════════════════════════════════════════════════════════════════════
