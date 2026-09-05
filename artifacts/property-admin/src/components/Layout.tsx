@@ -45,6 +45,7 @@ import {
   Mail,
   MailCheck,
   ScrollText,
+  Activity,
   KeyRound,
   BarChart3,
   Palette,
@@ -264,6 +265,7 @@ function getNav(
         { href: "/settings/integrations", label: t("nav.integrations"), icon: Plug },
         { href: "/settings/api-keys", label: t("nav.api_keys"), icon: KeyRound },
         { href: "/settings/system-log", label: t("nav.system_log"), icon: ScrollText },
+        { href: "/settings/activity-analytics", label: t("nav.activity_analytics"), icon: Activity },
         // Super Admin only — live platform snapshot (DB shape, integrations, jobs, API, schema).
         ...(isSuperAdmin
           ? [{ href: "/settings/system-map", label: t("system_map.title"), icon: Cpu }]

@@ -27,7 +27,7 @@ import {
   Package,
   MailCheck,
   ClipboardList,
-  Bot, Building2, Cpu } from "lucide-react";
+  Bot, Building2, Cpu, Activity } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 
 type CardDef = {
@@ -121,6 +121,12 @@ const ADMIN_CARDS: CardDef[] = [
     description: "settings_hub.system_log_desc",
     icon: ScrollText,
     href: "/settings/system-log",
+  },
+  {
+    title: "settings_hub.activity_analytics_title",
+    description: "settings_hub.activity_analytics_desc",
+    icon: Activity,
+    href: "/settings/activity-analytics",
   },
 ];
 
