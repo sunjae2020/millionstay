@@ -2,7 +2,8 @@ import { useCallback, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Printer, Download, X, ExternalLink } from "lucide-react";
+import { Printer, Download, Mail, X, ExternalLink, Loader2, Check } from "lucide-react";
+import { apiFetch } from "@/lib/api";
 
 export interface DocumentPreviewConfig {
   /** Dialog heading — usually the file name or document ref. */
@@ -20,13 +21,45 @@ interface Props {
 }
 
 /**
- * Shared read-only document viewer for the owner portal: preview inline, then
- * print, download or close. Owners never send documents, so there is no email
- * action here.
+ * 오너 포털의 공용 문서 뷰어 — 미리보기 후 인쇄 · 다운로드 · **내 메일로 받기** · 닫기.
+ *
+ * 메일은 로그인한 오너 **본인의 등록 주소로만** 간다. 포털에서 임의 주소로 문서를
+ * 보낼 수 있으면 그 자체가 유출 경로이기 때문이다. 서버(`/v1/partner/documents/
+ * email-copy`)가 화면이 보낸 주소를 무시하고 토큰의 주소를 쓴다.
  */
 export function DocumentPreviewDialog({ config, onClose }: Props) {
   const { t } = useTranslation();
   const frameRef = useRef<HTMLIFrameElement>(null);
+  const [emailBusy, setEmailBusy] = useState(false);
+  const [emailSent, setEmailSent] = useState(false);
+  const [emailError, setEmailError] = useState<string | null>(null);
+
+  const handleEmail = useCallback(async () => {
+    if (!config) return;
+    setEmailError(null);
+    setEmailBusy(true);
+    try {
+      const blob = await (await fetch(config.href)).blob();
+      const form = new FormData();
+      form.append("file", new File([blob], config.filename, { type: blob.type || "application/pdf" }));
+      form.append("filename", config.filename);
+      form.append("doc_type_label", config.title);
+      const res = await apiFetch("/v1/partner/documents/email-copy", { method: "POST", body: form });
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(body?.error?.message ?? t("doc_preview.email_failed", "Could not send the email."));
+      setEmailSent(true);
+    } catch (err) {
+      setEmailError(err instanceof Error ? err.message : t("doc_preview.email_failed", "Could not send the email."));
+    } finally {
+      setEmailBusy(false);
+    }
+  }, [config, t]);
+
+  const close = useCallback(() => {
+    setEmailSent(false);
+    setEmailError(null);
+    onClose();
+  }, [onClose]);
 
   const handlePrint = useCallback(() => {
     const frame = frameRef.current;
@@ -43,7 +76,7 @@ export function DocumentPreviewDialog({ config, onClose }: Props) {
   }, [config]);
 
   return (
-    <Dialog open={config !== null} onOpenChange={(v) => { if (!v) onClose(); }}>
+    <Dialog open={config !== null} onOpenChange={(v) => { if (!v) close(); }}>
       <DialogContent className="max-w-5xl w-[95vw] h-[92vh] p-0 gap-0 flex flex-col">
         <DialogHeader className="px-5 py-3 border-b shrink-0">
           <DialogTitle className="text-base truncate pr-8">
@@ -62,6 +95,9 @@ export function DocumentPreviewDialog({ config, onClose }: Props) {
           )}
         </div>
 
+        {emailError && (
+          <p className="px-5 pt-2 text-sm text-red-600 shrink-0">{emailError}</p>
+        )}
         <div className="px-5 py-3 border-t flex flex-wrap items-center justify-end gap-2 shrink-0">
           {config && (
             <Button variant="ghost" size="sm" asChild>
@@ -83,7 +119,15 @@ export function DocumentPreviewDialog({ config, onClose }: Props) {
               </a>
             </Button>
           )}
-          <Button size="sm" onClick={onClose}>
+          {config && (
+            <Button variant="outline" size="sm" onClick={() => void handleEmail()} disabled={emailBusy || emailSent}>
+              {emailBusy
+                ? <Loader2 className="w-4 h-4 mr-1.5 animate-spin" />
+                : emailSent ? <Check className="w-4 h-4 mr-1.5" /> : <Mail className="w-4 h-4 mr-1.5" />}
+              {emailSent ? t("doc_preview.email_sent", "Sent") : t("doc_preview.email_me", "Email me a copy")}
+            </Button>
+          )}
+          <Button size="sm" onClick={close}>
             <X className="w-4 h-4 mr-1.5" />
             {t("doc_preview.close", "Close")}
           </Button>

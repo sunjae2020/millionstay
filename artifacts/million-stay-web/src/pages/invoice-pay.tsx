@@ -215,6 +215,7 @@ export default function InvoicePay() {
         title: inv.invoice_ref,
         filename: `${inv.invoice_ref}.pdf`,
         href: invoicePdfUrl(token, i18n.language),
+        token,
       })}>
         <FileText className="w-4 h-4 mr-1.5" /> {t("invoicePay.view_pdf")}
       </Button>

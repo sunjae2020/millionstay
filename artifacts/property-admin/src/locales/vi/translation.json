@@ -6248,7 +6248,11 @@
     "new_tab": "Mở trong tab mới",
     "open_record": "Đến bản ghi",
     "no_inline": "Không thể xem trước định dạng tệp này trong trình duyệt.",
-    "no_inline_hint": "Chỉ PDF và hình ảnh hiển thị được ở đây. Tải xuống để mở tệp — {{name}}"
+    "no_inline_hint": "Chỉ PDF và hình ảnh hiển thị được ở đây. Tải xuống để mở tệp — {{name}}",
+    "email_me": "Gửi vào email của tôi",
+    "email_sent": "Đã gửi",
+    "email_failed": "Không gửi được email.",
+    "email_not_ready": "Tài liệu đang được tải."
   },
   "error_boundary": {
     "title": "Đã xảy ra lỗi",

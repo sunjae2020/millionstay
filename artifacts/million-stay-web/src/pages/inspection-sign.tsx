@@ -174,6 +174,7 @@ export default function InspectionSign() {
           title: t("inspectionSign.download_pdf"),
           filename: `${token}.pdf`,
           href: inspectionPdfUrl(token, i18n.language),
+          token,
         })}>
           <FileText className="w-4 h-4 mr-1.5" />{t("inspectionSign.download_pdf")}
         </Button>

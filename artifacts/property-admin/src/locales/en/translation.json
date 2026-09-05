@@ -6341,7 +6341,11 @@
     "new_tab": "Open in new tab",
     "open_record": "Go to record",
     "no_inline": "This file type cannot be previewed in the browser.",
-    "no_inline_hint": "Only PDFs and images render here. Download it to open the file — {{name}}"
+    "no_inline_hint": "Only PDFs and images render here. Download it to open the file — {{name}}",
+    "email_me": "Email me a copy",
+    "email_sent": "Sent",
+    "email_failed": "Could not send the email.",
+    "email_not_ready": "The document is still loading."
   },
   "error_boundary": {
     "title": "Something went wrong",

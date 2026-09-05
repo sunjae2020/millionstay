@@ -33,6 +33,10 @@ import { homestayPublicRouter, homestayPortalRouter } from "./routes/homestay";
 import { contractSigningPublicRouter, contractSigningAdminRouter } from "./routes/contract-signing";
 import { unitInspectionsAdminRouter, unitInspectionsPublicRouter } from "./routes/unit-inspections";
 import { tenantLinksAdminRouter, tenantLinksPublicRouter, tenantLinksGuestRouter } from "./routes/tenant-links";
+import {
+  documentEmailAdminRouter, documentEmailGuestRouter, documentEmailPartnerRouter,
+  documentEmailPublicRouter,
+} from "./routes/document-email";
 import helpDocsRouter from "./routes/help-docs";
 import { homestayStudentPublicRouter } from "./routes/homestay-students";
 import { shortTermPublicRouter } from "./routes/short-term";
@@ -284,6 +288,8 @@ app.use("/api", shortTermPublicRouter);
 // 세입자 온보딩 링크 — 청구서 조회·입금 통보 / 서류 제출 (토큰, 로그인 없음).
 // requireAuth 앞에 있어야 한다.
 app.use("/api", tenantLinksPublicRouter);
+// 토큰 링크 화면의 "내 메일로 받기" — 받는 주소는 서버가 원장에서 고른다.
+app.use("/api", documentEmailPublicRouter);
 app.use("/api", chatRouter);
 app.use("/api", privacyRouter);
 // Resend campaign event webhook — the caller is Resend, not an admin, so it is
@@ -302,6 +308,10 @@ app.use("/api", conditionReportsGuestRouter);
 app.use("/api", depositSettlementsGuestRouter);
 // 세입자 포털 — 로그인한 세입자의 "해야 할 일"(자기 링크 다시 찾기).
 app.use("/api", tenantLinksGuestRouter);
+// 문서 메일 — 세입자·파트너는 "내 메일로 받기"만 된다(각 라우터가 인증을 직접 건다).
+// 관리자 가드 앞에 있어야 한다.
+app.use("/api", documentEmailGuestRouter);
+app.use("/api", documentEmailPartnerRouter);
 app.use("/api", stripeRouter);
 // dev-migration: NEVER mount in production. CF-004 hard block.
 if (process.env["NODE_ENV"] !== "production") {
@@ -354,6 +364,8 @@ app.use("/api", unitInspectionsAdminRouter);
 app.use("/api", depositSettlementsAdminRouter);
 // 세입자 온보딩 링크 — 관리자 발급·회수·대기열 (requireAuth 뒤).
 app.use("/api", tenantLinksAdminRouter);
+// 문서 메일(관리자) — 전용 발송 경로가 없는 문서를 미리보기에서 그대로 보낸다.
+app.use("/api", documentEmailAdminRouter);
 // 내부 문서함 — 운영 지도·정책 문서·세입자 링크 목록(직원 교육용).
 app.use("/api", helpDocsRouter);
 app.use("/api", router);

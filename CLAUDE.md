@@ -131,9 +131,16 @@ gates it, so keep it green. Two notable classes were fixed:
   (`src/components/DocumentPreviewDialog.tsx`, one copy per app: `property-admin`,
   `million-stay-web`, `owner-portal`; add one to a portal the first time it needs
   a document). It renders the document inline and offers **새 탭 / 인쇄 /
-  다운로드 / 이메일 보내기 / 닫기**; pass `onEmail` only when the document type
-  actually has a send endpoint (invoice, receipt, quote, contract, signed
-  e-sign doc), and omit it otherwise (settlements, checklists, samples).
+  다운로드 / 이메일 보내기 / 닫기** — and **다운로드와 이메일은 문서 종류를 가리지
+  않고 모든 모달에 뜬다**(2026-09-06). 전용 발송 경로가 없는 문서는 지금 화면에 떠
+  있는 바이트를 그대로 첨부하는 공통 경로로 나간다
+  (`POST /v1/documents/email-attachment`, `routes/document-email.ts`). 전용 경로가
+  있는 문서(청구서·영수증·견적서·계약서)는 `email`/`onEmail` 을 계속 넘겨라 —
+  그쪽이 수신자 후보를 레코드에서 뽑아 채워 주고 문서 종류에 맞는 본문을 쓴다.
+  **받는 주소 정책은 화면 성격에 따라 갈린다:** 관리자는 직접 입력, 오너 포털은
+  로그인한 본인 주소, 무로그인 토큰 화면은 **서버가 링크 원장에서 고른 주소**다
+  (화면이 보낸 주소는 무시한다 — 링크가 남의 손에 들어갔을 때 임의 주소로 문서를
+  빼낼 수 있게 되기 때문).
   Sources are `{ kind: "api", path, init? }` for authenticated server-rendered
   PDFs or `{ kind: "url", href }` for signed/public URLs. Do not add a new
   `a.download = …` / `window.open(blobUrl)` path.

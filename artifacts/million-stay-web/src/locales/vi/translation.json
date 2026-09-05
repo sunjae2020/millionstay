@@ -2786,7 +2786,11 @@
     "download": "Tải xuống",
     "email": "Gửi email",
     "close": "Đóng",
-    "new_tab": "Mở trong tab mới"
+    "new_tab": "Mở trong tab mới",
+    "email_me": "Gửi vào email của tôi",
+    "email_sent": "Đã gửi",
+    "email_failed": "Không gửi được email.",
+    "email_not_ready": "Tài liệu đang được tải."
   },
   "condition_report": {
     "empty": "Chưa có báo cáo tình trạng nào.",

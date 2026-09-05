@@ -361,7 +361,11 @@
     "download": "Download",
     "email": "Send email",
     "close": "Close",
-    "new_tab": "Open in new tab"
+    "new_tab": "Open in new tab",
+    "email_me": "Email me a copy",
+    "email_sent": "Sent",
+    "email_failed": "Could not send the email.",
+    "email_not_ready": "The document is still loading."
   },
   "auth": {
     "forgot_title": "Reset your password",

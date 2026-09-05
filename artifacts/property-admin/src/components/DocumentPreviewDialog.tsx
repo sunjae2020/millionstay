@@ -50,8 +50,13 @@ export interface DocumentPreviewConfig {
    */
   mimeType?: string | null;
   /**
-   * Optional — only documents that have a recipient (invoice, quote, contract,
-   * receipt, settlement …) get an email button.
+   * 이메일 버튼은 **모든 문서에** 뜬다. 전용 발송 경로가 없는 문서는 지금 화면에
+   * 떠 있는 바이트를 그대로 첨부해 보내는 공통 경로로 나간다
+   * (`POST /v1/documents/email-attachment`).
+   *
+   * 아래 두 칸은 그 기본 동작을 대신하고 싶을 때만 준다 — 전용 경로가 있는
+   * 문서(청구서·계약서 …)는 수신자 후보를 레코드에서 뽑아 채워 주고 문서
+   * 종류에 맞는 본문을 쓰므로 그쪽이 낫다.
    *
    * Prefer `email`: it opens the recipient editor (prefilled with the
    * customer's / 담당자's address, editable, multiple addresses) before
@@ -215,6 +220,26 @@ export function DocumentPreviewDialog({ config, onClose }: Props) {
     a.remove();
   }, [objectUrl, config, serverFilename]);
 
+  /**
+   * 전용 발송 경로가 없는 문서의 기본 발송. 미리보기가 이미 받아 둔 바이트를
+   * 그대로 되돌려 보내므로, 새 문서 종류가 생겨도 발송 경로를 따로 만들 필요가
+   * 없다. 수신자는 공용 수신자 편집기에서 적는다.
+   */
+  const sendGeneric = useCallback(async (to: string[]) => {
+    if (!objectUrl || !config) throw new Error(t("doc_preview.email_not_ready", "The document is still loading."));
+    const blob = await (await fetch(objectUrl)).blob();
+    const name = serverFilename ?? config.filename;
+    const form = new FormData();
+    form.append("file", new File([blob], name, { type: contentType ?? blob.type ?? "application/pdf" }));
+    form.append("filename", name);
+    form.append("doc_type_label", config.title);
+    form.append("ref", name.replace(/\.[^.]+$/, ""));
+    form.append("to", JSON.stringify(to));
+    const res = await apiFetch("/api/v1/documents/email-attachment", { method: "POST", body: form });
+    const body = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(body?.error?.message ?? t("doc_preview.email_failed", "Could not send the email."));
+  }, [objectUrl, config, serverFilename, contentType, t]);
+
   const handleEmail = useCallback(async () => {
     // Preferred path: let the admin review/edit the recipients first.
     if (config?.email) {
@@ -225,14 +250,19 @@ export function DocumentPreviewDialog({ config, onClose }: Props) {
       });
       return;
     }
-    if (!config?.onEmail) return;
-    setEmailBusy(true);
-    try {
-      await config.onEmail();
-    } finally {
-      setEmailBusy(false);
+    if (config?.onEmail) {
+      setEmailBusy(true);
+      try {
+        await config.onEmail();
+      } finally {
+        setEmailBusy(false);
+      }
+      return;
     }
-  }, [config]);
+    // 전용 경로가 없는 문서 — 같은 수신자 편집기로, 공통 발송을 쓴다.
+    if (!config) return;
+    setEmailTarget({ title: config.title, send: sendGeneric });
+  }, [config, sendGeneric]);
 
   return (
     <>
@@ -323,8 +353,10 @@ export function DocumentPreviewDialog({ config, onClose }: Props) {
             <Download className="h-4 w-4 mr-1.5" />
             {t("doc_preview.download", "Download")}
           </Button>
-          {(config?.email || config?.onEmail) && (
-            <Button variant="outline" size="sm" onClick={() => void handleEmail()} disabled={emailBusy}>
+          {/* 이메일은 문서 종류를 가리지 않는다 — 전용 경로가 없으면 공통 발송. */}
+          {config && (
+            <Button variant="outline" size="sm" onClick={() => void handleEmail()}
+              disabled={emailBusy || (!config.email && !config.onEmail && !objectUrl)}>
               {emailBusy ? <Loader2 className="h-4 w-4 mr-1.5 animate-spin" /> : <Mail className="h-4 w-4 mr-1.5" />}
               {config.emailLabel ?? t("doc_preview.email", "Send email")}
             </Button>

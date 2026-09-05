@@ -6302,7 +6302,11 @@
     "new_tab": "在新标签页中打开",
     "open_record": "前往记录",
     "no_inline": "该文件格式无法在浏览器中预览。",
-    "no_inline_hint": "此处仅能显示 PDF 和图片。请下载后打开 — {{name}}"
+    "no_inline_hint": "此处仅能显示 PDF 和图片。请下载后打开 — {{name}}",
+    "email_me": "发送到我的邮箱",
+    "email_sent": "已发送",
+    "email_failed": "邮件发送失败。",
+    "email_not_ready": "文档仍在加载中。"
   },
   "error_boundary": {
     "title": "出现问题",

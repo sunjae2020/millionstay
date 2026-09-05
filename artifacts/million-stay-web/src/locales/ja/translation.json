@@ -2488,7 +2488,11 @@
     "download": "ダウンロード",
     "email": "メールを送信",
     "close": "閉じる",
-    "new_tab": "新しいタブで開く"
+    "new_tab": "新しいタブで開く",
+    "email_me": "メールで受け取る",
+    "email_sent": "送信しました",
+    "email_failed": "メールを送信できませんでした。",
+    "email_not_ready": "書類を読み込み中です。"
   },
   "condition_report": {
     "empty": "点検表はまだありません。",

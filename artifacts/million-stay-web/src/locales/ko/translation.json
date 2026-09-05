@@ -2382,7 +2382,11 @@
     "download": "다운로드",
     "email": "이메일 보내기",
     "close": "닫기",
-    "new_tab": "새 탭에서 열기"
+    "new_tab": "새 탭에서 열기",
+    "email_me": "내 메일로 받기",
+    "email_sent": "보냈습니다",
+    "email_failed": "메일을 보내지 못했습니다.",
+    "email_not_ready": "문서를 아직 불러오는 중입니다."
   },
   "condition_report": {
     "empty": "아직 등록된 점검표가 없습니다.",

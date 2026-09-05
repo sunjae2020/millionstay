@@ -161,6 +161,7 @@ export default function WorkOrderSign() {
                 title: t("wosign.doc_title", "작업 확인서"),
                 filename: `${wo?.order_ref ?? token}.pdf`,
                 href: signedPdfUrl(token),
+                token,
               })}
             >
               <FileText className="h-4 w-4" /> {t("wosign.view_document", "확인서 보기")}
@@ -187,6 +188,7 @@ export default function WorkOrderSign() {
               title: t("wosign.doc_title", "작업 확인서"),
               filename: `${wo?.order_ref ?? token}.pdf`,
               href: signedPdfUrl(token),
+              token,
             })}
           >
             <FileText className="h-4 w-4" /> {t("wosign.view_document", "확인서 보기")}
@@ -252,6 +254,7 @@ export default function WorkOrderSign() {
               title: t("wosign.doc_title", "작업 확인서"),
               filename: `${wo?.order_ref ?? token}.pdf`,
               href: previewUrl(token),
+              token,
             })}
           >
             <FileText className="h-4 w-4" /> {t("wosign.view_full", "확인서 전문 보기")}

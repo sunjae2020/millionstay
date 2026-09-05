@@ -6341,7 +6341,11 @@
     "new_tab": "새 탭에서 열기",
     "open_record": "레코드로 이동",
     "no_inline": "브라우저에서 미리볼 수 없는 형식입니다.",
-    "no_inline_hint": "PDF와 이미지만 화면에 표시됩니다. 내려받아 확인하세요 — {{name}}"
+    "no_inline_hint": "PDF와 이미지만 화면에 표시됩니다. 내려받아 확인하세요 — {{name}}",
+    "email_me": "내 메일로 받기",
+    "email_sent": "보냈습니다",
+    "email_failed": "메일을 보내지 못했습니다.",
+    "email_not_ready": "문서를 아직 불러오는 중입니다."
   },
   "error_boundary": {
     "title": "문제가 발생했습니다",

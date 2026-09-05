@@ -198,9 +198,14 @@ export interface DocumentEmailOptions {
   amountLabel?: string | null;
   /** Optional extra sentence (e.g. due date / validity), already localised. */
   note?: string | null;
-  /** The rendered PDF to attach. */
+  /** The rendered document to attach. PDF unless `contentType` says otherwise. */
   pdf: Buffer;
   filename: string;
+  /**
+   * 첨부의 MIME 타입. 기본은 PDF다 — 발행 문서는 거의 전부 PDF이므로 호출부가
+   * 매번 적게 하지 않는다. 업로드 스캔처럼 이미지인 첨부만 이 값을 준다.
+   */
+  contentType?: string;
   /** Cover-email + subject language. Defaults to English. */
   lang?: DocLang | string;
   /** Optional subject override; otherwise built from docTypeLabel + ref. */
@@ -251,7 +256,8 @@ export async function sendDocumentEmail(
   // content type 을 추론하므로, 확장자가 없으면 첨부가 PDF 로 인식되지 않아 메일
   // 클라이언트에서 사라진다 — 문서명이 resolveDocFileName()(확장자 없는 기본명)
   // 으로 바뀌면서 생긴 회귀다. contentType 도 함께 명시해 추론에 기대지 않는다.
-  const attachmentName = /\.[A-Za-z0-9]{2,4}$/.test(opts.filename) ? opts.filename : `${opts.filename}.pdf`;
+  const defaultExt = (opts.contentType ?? "application/pdf").split("/")[1]?.split("+")[0] ?? "pdf";
+  const attachmentName = /\.[A-Za-z0-9]{2,4}$/.test(opts.filename) ? opts.filename : `${opts.filename}.${defaultExt}`;
   const payload = {
     ...emailSender(brand.name),
     to: recipients,
@@ -260,7 +266,7 @@ export async function sendDocumentEmail(
     attachments: [{
       filename: attachmentName,
       content: opts.pdf.toString("base64"),
-      contentType: "application/pdf",
+      contentType: opts.contentType ?? "application/pdf",
     }],
   };
 

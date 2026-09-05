@@ -361,7 +361,11 @@
     "download": "下载",
     "email": "发送邮件",
     "close": "关闭",
-    "new_tab": "在新标签页中打开"
+    "new_tab": "在新标签页中打开",
+    "email_me": "发送到我的邮箱",
+    "email_sent": "已发送",
+    "email_failed": "邮件发送失败。",
+    "email_not_ready": "文档仍在加载中。"
   },
   "auth": {
     "forgot_title": "重置密码",
