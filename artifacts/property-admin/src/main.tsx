@@ -4,6 +4,10 @@ import "./i18n";
 import "./index.css";
 import { setupPwa } from "@/lib/pwa";
 import { installPhotoOptimizer } from "@/lib/photo";
+import { installDomGuard } from "@/lib/domGuard";
+
+// Survive browsers that translate the page underneath React (see lib/domGuard).
+installDomGuard();
 
 // Installable web app + offline shell.
 setupPwa();

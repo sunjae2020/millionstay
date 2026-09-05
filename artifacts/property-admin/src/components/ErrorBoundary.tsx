@@ -1,4 +1,4 @@
-import { Component, ErrorInfo, ReactNode } from "react";
+import { Component, ErrorInfo, Fragment, ReactNode } from "react";
 import i18n from "@/i18n";
 import { AlertTriangle, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -10,15 +10,18 @@ interface Props {
 interface State {
   hasError: boolean;
   error: Error | null;
+  // Bumped on reset so "다시 시도" remounts the subtree instead of re-rendering
+  // the same (possibly corrupted) tree straight back into the error.
+  resetKey: number;
 }
 
 export class ErrorBoundary extends Component<Props, State> {
   constructor(props: Props) {
     super(props);
-    this.state = { hasError: false, error: null };
+    this.state = { hasError: false, error: null, resetKey: 0 };
   }
 
-  static getDerivedStateFromError(error: Error): State {
+  static getDerivedStateFromError(error: Error): Partial<State> {
     return { hasError: true, error };
   }
 
@@ -27,7 +30,7 @@ export class ErrorBoundary extends Component<Props, State> {
   }
 
   handleReset = () => {
-    this.setState({ hasError: false, error: null });
+    this.setState((prev) => ({ hasError: false, error: null, resetKey: prev.resetKey + 1 }));
   };
 
   render() {
@@ -58,6 +61,6 @@ export class ErrorBoundary extends Component<Props, State> {
       );
     }
 
-    return this.props.children;
+    return <Fragment key={this.state.resetKey}>{this.props.children}</Fragment>;
   }
 }

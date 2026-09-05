@@ -1,7 +1,11 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" translate="no">
   <head>
     <meta charset="UTF-8" />
+    <!-- Browser page translation (Chrome auto-translate) swaps out the text nodes React is
+         tracking and crashes the app with "Failed to execute 'removeChild' on 'Node'".
+         The app ships its own language switcher, so opt out of it. -->
+    <meta name="google" content="notranslate" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1" />
     <meta name="robots" content="noindex, nofollow" />
     <title>MillionStay Agent Portal</title>

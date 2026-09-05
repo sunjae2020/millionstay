@@ -5,6 +5,10 @@ import "./index.css";
 import { initDarkMode } from "@/lib/darkMode";
 import { setupPwa } from "@/lib/pwa";
 import { installPhotoOptimizer } from "@/lib/photo";
+import { installDomGuard } from "@/lib/domGuard";
+
+// Survive browsers that translate the page underneath React (see lib/domGuard).
+installDomGuard();
 
 initDarkMode();
 // Installable web app + offline shell — the field crew runs this from the

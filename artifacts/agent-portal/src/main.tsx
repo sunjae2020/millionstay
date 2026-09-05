@@ -4,6 +4,10 @@ import App from "./App";
 import "./index.css";
 import { initDarkMode } from "@/lib/darkMode";
 import { installPhotoOptimizer } from "@/lib/photo";
+import { installDomGuard } from "@/lib/domGuard";
+
+// Survive browsers that translate the page underneath React (see lib/domGuard).
+installDomGuard();
 
 initDarkMode();
 
