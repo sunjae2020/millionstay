@@ -15,8 +15,10 @@ import {
   useGetLead, useCreateLead, useUpdateLead, useConvertLead, useMarkLeadLost,
   getListLeadsQueryKey, getGetLeadQueryKey,
 } from "@workspace/api-client-react";
-import { useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { TenantLinkCard } from "@/components/TenantLinkCard";
+import { apiFetch } from "@/lib/apiFetch";
+import { FileSignature } from "lucide-react";
 import { useBrand } from "@/contexts/ThemeContext";
 import { ArrowLeft, Save, TrendingDown, ArrowUpRight } from "lucide-react";
 import { Link } from "wouter";
@@ -79,6 +81,8 @@ export default function LeadDetail() {
   const [, navigate] = useLocation();
   const qc = useQueryClient();
   const [convertOpen, setConvertOpen] = useState(false);
+  const [contractOpen, setContractOpen] = useState(false);
+  const [contractForm, setContractForm] = useState({ space_id: null as number | null, start_date: "", end_date: "" });
   const [convertForm, setConvertForm] = useState<ConvertForm>({
     space_id: null, check_in_date: "", check_out_date: "", agreed_weekly_rate: "",
   });
@@ -154,6 +158,34 @@ export default function LeadDetail() {
     },
   });
 
+  /**
+   * 계약으로 전환 — 연락처 · 계정 · 계약을 한 번에 만들고 계약 상세로 넘어간다.
+   * 계약서의 임차인 칸은 계정을 가리키므로(tenant_account_id) 계정 없이는 계약이
+   * 서지 않는다. 그래서 세 개가 한 동작으로 묶여 있다.
+   */
+  const contractMutation = useMutation({
+    mutationFn: async () => {
+      const res = await apiFetch(`/api/v1/leads/${id}/convert-to-contract`, {
+        method: "POST",
+        body: JSON.stringify({
+          space_id: contractForm.space_id ?? undefined,
+          start_date: contractForm.start_date || undefined,
+          end_date: contractForm.end_date || undefined,
+        }),
+      });
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(body?.error?.message ?? body?.error ?? t("lead.contract_error"));
+      return body as { contract_id: number; contract_ref: string; created_contact: boolean; created_account: boolean };
+    },
+    onSuccess: (data) => {
+      qc.invalidateQueries({ queryKey: getListLeadsQueryKey() });
+      if (id) qc.invalidateQueries({ queryKey: getGetLeadQueryKey(id) });
+      setContractOpen(false);
+      navigate(`/booking/contracts/${data.contract_id}`);
+    },
+    onError: (e: any) => alert(e.message),
+  });
+
   const markLostMutation = useMarkLeadLost({
     mutation: {
       onSuccess: () => {
@@ -192,7 +224,9 @@ export default function LeadDetail() {
     }
   };
 
-  const canConvert = !isNew && lead?.lead_status !== "ConvertedToBooking" && lead?.lead_status !== "Lost";
+  const canConvert = !isNew && !(lead as any)?.converted_booking_id
+    && lead?.lead_status !== "ConvertedToBooking" && lead?.lead_status !== "Lost";
+  const canConvertContract = !isNew && !!lead && !(lead as any)?.converted_contract_id && lead.lead_status !== "Lost";
   const canMarkLost = !isNew && lead?.lead_status !== "Lost" && lead?.lead_status !== "ConvertedToBooking";
 
   if (!isNew && isLoading) return <Layout><p className="p-6 text-sm text-muted-foreground">{t("common.loading")}</p></Layout>;
@@ -227,6 +261,15 @@ export default function LeadDetail() {
               <Button size="sm" variant="outline" className="gap-1.5 text-green-700 border-green-300 hover:bg-green-50"
                 onClick={() => setConvertOpen(true)}>
                 <ArrowUpRight className="h-4 w-4" /> {t("lead.btn_convert")}
+              </Button>
+            )}
+            {canConvertContract && (
+              <Button size="sm" className="gap-1.5"
+                onClick={() => {
+                  setContractForm((f) => ({ ...f, start_date: f.start_date || (lead?.preferred_check_in_date ?? "") }));
+                  setContractOpen(true);
+                }}>
+                <FileSignature className="h-4 w-4" /> {t("lead.btn_convert_contract")}
               </Button>
             )}
             <Button size="sm" className="gap-1.5" onClick={handleSubmit(onSubmit)}
@@ -472,6 +515,45 @@ export default function LeadDetail() {
           )}
         </div>
       </div>
+
+      {/* 계약으로 전환 — 만드는 것은 초안이다. 서식·결제조건·특약은 계약 상세에서
+          정한다. 여기서 묻는 것은 초안을 세우는 데 꼭 필요한 세 칸뿐이다. */}
+      <Dialog open={contractOpen} onOpenChange={setContractOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader><DialogTitle>{t("lead.contract_title")}</DialogTitle></DialogHeader>
+          <div className="grid gap-4 py-2">
+            <p className="text-sm text-muted-foreground">{t("lead.contract_desc")}</p>
+            <div className="grid gap-1.5">
+              <Label>{t("lead.label_space")}</Label>
+              <LookupSelect
+                value={contractForm.space_id}
+                onChange={(val) => setContractForm((f) => ({ ...f, space_id: val }))}
+                lookupUrl="/api/v1/lookup/spaces"
+                placeholder={t("lead.ph_search_spaces")}
+              />
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="grid gap-1.5">
+                <Label>{t("lead.label_start_date")}</Label>
+                <DateInput value={contractForm.start_date}
+                  onChange={(v) => setContractForm((f) => ({ ...f, start_date: v }))} />
+              </div>
+              <div className="grid gap-1.5">
+                <Label>{t("lead.label_end_date")}</Label>
+                <DateInput value={contractForm.end_date}
+                  onChange={(v) => setContractForm((f) => ({ ...f, end_date: v }))} />
+              </div>
+            </div>
+            <p className="text-xs text-muted-foreground">{t("lead.contract_hint")}</p>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setContractOpen(false)}>{t("common.cancel")}</Button>
+            <Button disabled={contractMutation.isPending} onClick={() => contractMutation.mutate()}>
+              {contractMutation.isPending ? t("common.saving") : t("lead.btn_convert_contract")}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Convert to Booking Dialog */}
       <Dialog open={convertOpen} onOpenChange={setConvertOpen}>

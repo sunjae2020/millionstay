@@ -1072,7 +1072,14 @@
     "label_check_out": "退房日期",
     "label_weekly_rate": "约定周租金",
     "ph_weekly_rate": "根据空间自动填充",
-    "btn_confirm_conversion": "确认转化"
+    "btn_confirm_conversion": "确认转化",
+    "btn_convert_contract": "转为合同",
+    "contract_title": "将该咨询转为合同",
+    "contract_desc": "一次性创建联系人、租客账户与合同草稿，随后跳转至合同页面。",
+    "contract_hint": "合同格式、付款条件与特别约定在合同详情中设置。房源未定时可留空。",
+    "contract_error": "无法将该咨询转为合同",
+    "label_start_date": "合同开始日",
+    "label_end_date": "合同结束日"
   },
   "task": {
     "new": "新建任务",

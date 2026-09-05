@@ -349,7 +349,7 @@ async function generateContractInvoicesAndSchedules(
 
 const router = Router();
 
-async function nextContractRef(): Promise<string> {
+export async function nextContractRef(): Promise<string> {
   const year = new Date().getFullYear();
   const rows = await db.select({ id: contractsTable.id }).from(contractsTable)
     .where(ilike(contractsTable.contract_ref, `MS-C-${year}-%`));

@@ -42,6 +42,9 @@ const SNS_TYPES = [
 
 const YES_NO = ["yes", "no"] as const;
 
+/** 비면 접수되지 않는 칸. 서버(parseApplication)와 같은 목록이다. */
+const REQUIRED = ["last_name", "first_name", "mobile_number", "email"] as const;
+
 interface FieldSpec {
   name: string;
   type?: string;
@@ -56,7 +59,7 @@ const SECTIONS: Array<{ key: string; fields: FieldSpec[] }> = [
     key: "person",
     fields: [
       { name: "last_name", required: true },
-      { name: "first_name" },
+      { name: "first_name", required: true },
       { name: "mobile_number", type: "tel", required: true },
       { name: "email", type: "email", required: true },
       { name: "sns_type", options: SNS_TYPES, optionPrefix: "sns" },
@@ -135,6 +138,13 @@ export default function TenantApply() {
   const set = (name: string, value: string) => setValues((v) => ({ ...v, [name]: value }));
 
   async function submit() {
+    // 네 칸은 연락처를 만들 때 그대로 앉는 자리다. 서버도 같은 검사를 하지만,
+    // 여기서 막아야 어느 칸이 비었는지 그 자리에서 알 수 있다.
+    const missing = REQUIRED.filter((f) => !(values[f] ?? "").trim());
+    if (missing.length) {
+      setError(t("apply.error_required", { fields: missing.map((f) => t(`apply.f_${f}`)).join(", ") }));
+      return;
+    }
     if (!consent) { setError(t("apply.error_consent")); return; }
     setSubmitting(true);
     setError(null);

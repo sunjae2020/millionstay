@@ -25,6 +25,11 @@ export const leadsTable = pgTable("leads", {
   budget_max: numeric("budget_max", { precision: 12, scale: 2 }),
   budget_currency: text("budget_currency").default("AUD"),
   converted_booking_id: integer("converted_booking_id"),
+  // 전환 결과물. 연락처·계정은 전환 때 자동 생성되므로, 두 번째 전환은 새로
+  // 만들지 않고 이 칸이 가리키는 것을 재사용한다(0087).
+  converted_contract_id: integer("converted_contract_id"),
+  converted_contact_id: integer("converted_contact_id"),
+  converted_account_id: integer("converted_account_id"),
   converted_at: timestamp("converted_at", { withTimezone: true }),
   assigned_to: text("assigned_to"),
   description: text("description"),

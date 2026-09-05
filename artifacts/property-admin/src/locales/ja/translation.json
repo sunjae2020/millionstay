@@ -1071,7 +1071,14 @@
     "label_check_out": "チェックアウト日",
     "label_weekly_rate": "合意週間料金",
     "ph_weekly_rate": "スペースから自動入力",
-    "btn_confirm_conversion": "転換を確定"
+    "btn_confirm_conversion": "転換を確定",
+    "btn_convert_contract": "契約に変換",
+    "contract_title": "このお問い合わせを契約に変換",
+    "contract_desc": "連絡先・入居者アカウント・契約の下書きを一度に作成し、契約画面へ移動します。",
+    "contract_hint": "書式・支払条件・特約は契約詳細で設定します。住戸が未定の場合は空欄で構いません。",
+    "contract_error": "お問い合わせを契約に変換できませんでした",
+    "label_start_date": "契約開始日",
+    "label_end_date": "契約終了日"
   },
   "task": {
     "new": "新規タスク",

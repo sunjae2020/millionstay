@@ -227,7 +227,7 @@ async function buildBookingResponses(bookings: (typeof bookingsTable.$inferSelec
   });
 }
 
-async function generateBookingRef(): Promise<string> {
+export async function generateBookingRef(): Promise<string> {
   const year = new Date().getFullYear();
   const rows = await db
     .select()

@@ -2843,7 +2843,8 @@
     "next_step": "提交后我们会确认房源并与您联系。证件提交与合同签署将在之后分别通过各自的链接发送。",
     "done_title": "申请已收到",
     "done_desc": "感谢您的申请。我们将尽快审核并与您联系。",
-    "done_ref": "受理编号"
+    "done_ref": "受理编号",
+    "error_required": "请填写以下项目 — {{fields}}"
   },
   "tenantGuide": {
     "eyebrow": "租客须知",

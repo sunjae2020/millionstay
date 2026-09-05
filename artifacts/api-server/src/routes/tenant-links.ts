@@ -277,8 +277,9 @@ interface ParsedApplication {
 }
 
 /**
- * 제출값을 훑어 담는다. 필수는 이름·연락처·이메일과 개인정보 수집 동의뿐이다 —
- * 심사에 꼭 필요한 것만 필수로 두어야 사람들이 나머지를 성의 있게 적는다.
+ * 제출값을 훑어 담는다. 필수는 성·이름·휴대전화·이메일 네 칸과 개인정보 수집
+ * 동의다. 이 넷은 연락처를 만들 때 그대로 앉는 칸이라 하나라도 비면 담당자가
+ * 다시 물어야 한다 — 나머지는 비어 있어도 심사를 시작할 수 있다.
  */
 function parseApplication(body: Record<string, unknown>): ParsedApplication {
   const answers: Record<string, string> = {};
@@ -289,8 +290,11 @@ function parseApplication(body: Record<string, unknown>): ParsedApplication {
   for (const f of ["has_vehicle", "has_pet"]) {
     if (answers[f] && !YES_NO.has(answers[f]!)) delete answers[f];
   }
-  if (!answers["last_name"] && !answers["first_name"]) {
-    return { answers, error: { code: "NO_NAME", message: "이름을 입력해 주세요." } };
+  if (!answers["last_name"]) {
+    return { answers, error: { code: "NO_LAST_NAME", message: "성을 입력해 주세요." } };
+  }
+  if (!answers["first_name"]) {
+    return { answers, error: { code: "NO_FIRST_NAME", message: "이름을 입력해 주세요." } };
   }
   if (!answers["mobile_number"]) {
     return { answers, error: { code: "NO_PHONE", message: "연락처를 입력해 주세요." } };

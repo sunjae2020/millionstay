@@ -1060,7 +1060,14 @@
     "label_check_out": "Ngày trả phòng",
     "label_weekly_rate": "Giá thuê theo tuần đã thỏa thuận",
     "ph_weekly_rate": "Tự động điền từ không gian",
-    "btn_confirm_conversion": "Xác nhận chuyển đổi"
+    "btn_confirm_conversion": "Xác nhận chuyển đổi",
+    "btn_convert_contract": "Chuyển thành hợp đồng",
+    "contract_title": "Chuyển yêu cầu này thành hợp đồng",
+    "contract_desc": "Tạo liên hệ, tài khoản người thuê và bản nháp hợp đồng trong một bước, rồi mở hợp đồng.",
+    "contract_hint": "Mẫu hợp đồng, điều khoản thanh toán và thỏa thuận riêng được đặt trong chi tiết hợp đồng. Có thể để trống căn hộ nếu chưa xác định.",
+    "contract_error": "Không thể chuyển yêu cầu thành hợp đồng",
+    "label_start_date": "Ngày bắt đầu",
+    "label_end_date": "Ngày kết thúc"
   },
   "task": {
     "new": "Tác vụ mới",

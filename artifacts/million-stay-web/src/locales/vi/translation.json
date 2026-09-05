@@ -3288,7 +3288,8 @@
     "next_step": "Sau khi gửi, chúng tôi sẽ kiểm tra phòng trống và liên hệ. Việc nộp giấy tờ và ký hợp đồng sẽ được gửi qua các liên kết riêng sau đó.",
     "done_title": "Đã nhận đơn",
     "done_desc": "Cảm ơn quý khách. Chúng tôi sẽ xem xét và liên hệ sớm.",
-    "done_ref": "Số tiếp nhận"
+    "done_ref": "Số tiếp nhận",
+    "error_required": "Vui lòng điền các mục sau — {{fields}}"
   },
   "tenantGuide": {
     "eyebrow": "Dành cho người thuê",

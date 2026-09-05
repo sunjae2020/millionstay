@@ -3358,7 +3358,8 @@
     "next_step": "After you submit, we check availability and contact you. Documents and the contract come later, each by its own link.",
     "done_title": "Application received",
     "done_desc": "Thank you. We will review it and be in touch shortly.",
-    "done_ref": "Reference"
+    "done_ref": "Reference",
+    "error_required": "Please fill in: {{fields}}"
   },
   "tenantGuide": {
     "eyebrow": "For tenants",

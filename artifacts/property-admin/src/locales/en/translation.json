@@ -1085,7 +1085,14 @@
     "label_check_out": "Check-Out Date",
     "label_weekly_rate": "Agreed Weekly Rate",
     "ph_weekly_rate": "Auto-filled from space",
-    "btn_confirm_conversion": "Confirm Conversion"
+    "btn_confirm_conversion": "Confirm Conversion",
+    "btn_convert_contract": "Convert to contract",
+    "contract_title": "Convert this enquiry into a contract",
+    "contract_desc": "Creates the contact, the tenant account and a draft contract in one step, then opens the contract.",
+    "contract_hint": "The form, payment terms and special clauses are set on the contract itself. Leave the unit blank if it is not decided yet.",
+    "contract_error": "Could not convert this enquiry",
+    "label_start_date": "Start date",
+    "label_end_date": "End date"
   },
   "task": {
     "new": "New Task",
