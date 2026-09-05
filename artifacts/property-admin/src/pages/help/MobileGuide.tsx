@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { APP_NAME } from "@/lib/appName";
 import {
   ArrowLeft, Camera, KeyRound, Smartphone, ShieldCheck, Share, MoreVertical,
-  Check, Info, AlertTriangle,
+  Check, Info, AlertTriangle, LayoutGrid,
 } from "lucide-react";
 
 /**
@@ -122,15 +122,16 @@ export default function MobileGuide() {
           </p>
           <h1 className="mt-1.5 text-2xl font-bold tracking-tight sm:text-3xl">휴대폰에서 쓰는 {APP_NAME}</h1>
           <p className="mt-2 max-w-3xl text-sm text-muted-foreground">
-            비밀번호 없이 여는 패스키 로그인, 홈 화면에 설치하는 웹앱, 현장에서 바로 찍어 붙이는 사진 첨부.
-            세 가지를 한 번에 정리했습니다.
+            홈 화면에 설치하는 웹앱, 한 손으로 옮겨 다니는 하단 탭바, 비밀번호 없이 여는 패스키 로그인,
+            현장에서 바로 찍어 붙이는 사진 첨부. 네 가지를 한 번에 정리했습니다.
           </p>
           <nav className="mt-4 flex flex-wrap gap-1.5">
             {[
               ["#install", "01 · 앱 설치"],
-              ["#passkey", "02 · 패스키 로그인"],
-              ["#camera", "03 · 사진 촬영·첨부"],
-              ["#faq", "04 · 문제 해결"],
+              ["#tabs", "02 · 하단 탭바·메뉴"],
+              ["#passkey", "03 · 패스키 로그인"],
+              ["#camera", "04 · 사진 촬영·첨부"],
+              ["#faq", "05 · 문제 해결"],
             ].map(([href, label]) => (
               <a
                 key={href}
@@ -250,10 +251,89 @@ export default function MobileGuide() {
           </p>
         </Section>
 
-        {/* ── 02 · 패스키 ───────────────────────────────────────── */}
+        {/* ── 02 · 하단 탭바 ───────────────────────────────────── */}
+        <Section
+          id="tabs"
+          num="02"
+          icon={LayoutGrid}
+          title="하단 탭바와 왼쪽 메뉴"
+          lede="휴대폰으로 열면 화면 아래에 탭바가 붙습니다. 자주 쓰는 화면 네 개와 더보기, 모두 다섯 칸입니다. PC에서는 왼쪽 메뉴가 늘 떠 있어 탭바가 나오지 않습니다."
+        >
+          <h3 className="mt-6 text-base font-semibold">탭바 쓰는 법</h3>
+          <p className="mt-2 max-w-3xl text-sm">
+            처음 열면 <Path>대시보드</Path> · <Path>업무 캘린더</Path> · <Path>예약</Path> · <Path>계약</Path> 네 개가
+            들어가 있고 맨 오른쪽이 <strong>더보기</strong>입니다. 탭을 한 번 누르면 그 화면으로 이동합니다.
+            지금 보고 있는 화면의 탭은 아이콘 배경이 브랜드 색으로 켜집니다. 맨 오른쪽 더보기를 누르면
+            왼쪽 전체 메뉴가 열립니다.
+          </p>
+
+          <div className="mt-4 overflow-x-auto rounded-xl border">
+            <table className="w-full min-w-[32rem] text-sm">
+              <thead className="bg-muted/40 text-[0.68rem] uppercase tracking-[0.1em] text-muted-foreground">
+                <tr>
+                  <th className="px-3 py-2 text-left font-medium">하고 싶은 것</th>
+                  <th className="px-3 py-2 text-left font-medium">조작</th>
+                  <th className="px-3 py-2 text-left font-medium">결과</th>
+                </tr>
+              </thead>
+              <tbody className="[&_td]:border-t [&_td]:px-3 [&_td]:py-2 [&_td]:align-top">
+                <tr><td>화면 이동</td><td>탭 한 번 누르기</td><td className="text-muted-foreground">그 화면으로 이동</td></tr>
+                <tr><td>전체 메뉴 열기</td><td>맨 오른쪽 <strong>더보기</strong></td><td className="text-muted-foreground">왼쪽 메뉴가 열림</td></tr>
+                <tr><td>탭 바꾸기</td><td>아무 탭이나 <strong>1초쯤 길게 누르기</strong></td><td className="text-muted-foreground">편집 창이 열림 (짧게 진동)</td></tr>
+                <tr><td>탭 바꾸기 (다른 방법)</td><td>더보기 → <Path>하단 탭 편집</Path></td><td className="text-muted-foreground">같은 편집 창</td></tr>
+                <tr><td>처음으로 되돌리기</td><td>편집 창 → <Path>기본값으로 되돌리기</Path></td><td className="text-muted-foreground">기본 네 개로 복귀</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <h3 className="mt-7 text-base font-semibold">내가 쓰는 화면으로 바꾸기</h3>
+          <ol className="mt-3 grid max-w-3xl gap-3.5">
+            <Step n={1}>
+              아무 탭이나 <strong>1초쯤 길게</strong> 누릅니다.
+              <Hint>짧게 진동하면서 편집 창이 열립니다. 손을 떼도 화면은 이동하지 않으니 편하게 눌러 보세요.</Hint>
+            </Step>
+            <Step n={2}>
+              목록에서 원하는 화면을 <strong>최대 네 개까지</strong> 고릅니다.
+              <Hint>고른 순서가 그대로 왼쪽부터의 배치 순서가 되고, 선택한 항목에는 순번이 표시됩니다.</Hint>
+            </Step>
+            <Step n={3}>
+              <strong>저장</strong>을 누릅니다.
+              <Hint>바로 아래 탭바에 반영됩니다. 처음 상태로 돌리려면 <Path>기본값으로 되돌리기</Path>를 누르세요.</Hint>
+            </Step>
+          </ol>
+          <p className="mt-3 max-w-3xl text-sm text-muted-foreground">
+            더보기를 열어 아래쪽 <Path>하단 탭 편집</Path> 버튼을 눌러도 같은 창이 열립니다.
+          </p>
+
+          <Note tone="info" title="어디에 저장되나">
+            <p>
+              고른 탭은 <strong>계정별로, 그리고 이 브라우저에만</strong> 저장됩니다. 같은 휴대폰을 여러 사람이
+              써도 서로 섞이지 않습니다. 다른 기기에서는 그 기기에서 한 번 더 골라 주세요.
+            </p>
+            <p>
+              편집 창의 목록에는 본인 권한으로 볼 수 있는 화면만 나옵니다. 브라우저 데이터를 지우면 기본값으로 돌아갑니다.
+            </p>
+          </Note>
+
+          <h3 className="mt-7 text-base font-semibold">왼쪽 메뉴 · 상단 · 대시보드</h3>
+          <dl className="mt-3 overflow-hidden rounded-xl border bg-card text-sm">
+            {[
+              ["왼쪽 메뉴", "더보기로 여는 메뉴는 휴대폰에서 화면 폭을 거의 다 차지합니다. 메뉴 줄 높이와 글자를 키워 손가락으로 누르기 쉽게 했습니다. 바깥 어두운 부분을 누르거나 오른쪽 위 닫기를 누르면 닫힙니다."],
+              ["위쪽 언어 버튼", "좁은 화면에서는 지구본 아이콘만 남습니다. 눌러서 고르는 방식은 같습니다."],
+              ["대시보드 숫자 카드", "두 개씩 두 줄로 놓입니다. 점유율과 오늘 체크인·체크아웃, 이달 매출이 스크롤 없이 한눈에 들어옵니다."],
+            ].map(([k, v]) => (
+              <div key={k} className="grid gap-0.5 border-b px-4 py-3 last:border-b-0 sm:grid-cols-[9rem_1fr] sm:items-baseline sm:gap-4">
+                <dt className="font-medium">{k}</dt>
+                <dd className="m-0 text-muted-foreground">{v}</dd>
+              </div>
+            ))}
+          </dl>
+        </Section>
+
+        {/* ── 03 · 패스키 ───────────────────────────────────────── */}
         <Section
           id="passkey"
-          num="02"
+          num="03"
           icon={KeyRound}
           title="패스키로 로그인하기"
           lede="비밀번호 대신 얼굴·지문·기기 잠금번호로 엽니다. 아이디도 비밀번호도 치지 않고 버튼 한 번에 들어갑니다. 기존 비밀번호는 그대로 살아 있습니다."
@@ -314,10 +394,10 @@ export default function MobileGuide() {
           </div>
         </Section>
 
-        {/* ── 03 · 카메라 ───────────────────────────────────────── */}
+        {/* ── 04 · 카메라 ───────────────────────────────────────── */}
         <Section
           id="camera"
-          num="03"
+          num="04"
           icon={Camera}
           title="현장에서 찍어 바로 첨부하기"
           lede="사진을 올리는 화면마다 촬영 버튼이 붙었습니다. 갤러리를 거치지 않고 카메라가 바로 열리고, 찍은 사진은 올라가기 전에 알아서 줄어듭니다. 휴대폰에서만 보이는 버튼이라 PC 화면은 예전 그대로입니다."
@@ -376,16 +456,22 @@ export default function MobileGuide() {
           </Note>
         </Section>
 
-        {/* ── 04 · 문제 해결 ───────────────────────────────────── */}
+        {/* ── 05 · 문제 해결 ───────────────────────────────────── */}
         <Section
           id="faq"
-          num="04"
+          num="05"
           icon={ShieldCheck}
           title="이럴 때는"
           lede="현장에서 실제로 들어오는 질문만 모았습니다."
         >
           <div className="mt-5">
             {[
+              ["탭바가 보이지 않습니다",
+               "화면 폭이 넓은 PC나 태블릿 가로 화면에서는 왼쪽 메뉴가 늘 떠 있어 탭바를 숨깁니다. 폭이 좁은 휴대폰 화면에서만 나옵니다."],
+              ["길게 눌러도 편집 창이 뜨지 않습니다",
+               "누르는 중에 손가락이 움직이면 취소됩니다. 한 자리에서 1초 정도 눌러 보세요. 더보기 안의 ‘하단 탭 편집’ 버튼으로도 같은 창을 열 수 있습니다."],
+              ["다른 휴대폰에서는 탭이 다릅니다",
+               "기기마다 따로 저장되기 때문입니다. 쓰시는 기기에서 각각 한 번씩 골라 주세요."],
               ["아이폰에서 ‘홈 화면에 추가’가 안 보입니다",
                "크롬이나 네이버 앱으로 열었을 때 생기는 일입니다. 주소를 복사해 Safari에서 다시 열면 공유 메뉴에 나타납니다."],
               ["‘패스키로 로그인’ 버튼이 없습니다",
