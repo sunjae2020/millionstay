@@ -30,7 +30,7 @@ type StackLayer = {
 
 const TECH_STACK: StackLayer[] = [
   {
-    icon: Monitor, title: "Frontend",
+    icon: Monitor, title: "stack_frontend",
     items: [
       { name: "React 18 + TypeScript", note: "6 apps: guest web · admin · agent · owner · service-host · sandbox" },
       { name: "Vite + esbuild", note: "per-app build; Vercel deploy for web + admin" },
@@ -40,7 +40,7 @@ const TECH_STACK: StackLayer[] = [
     ],
   },
   {
-    icon: Server, title: "Backend",
+    icon: Server, title: "stack_backend",
     items: [
       { name: "Node 24 + Express 5", note: "single API server, routes under /api/v1/" },
       { name: "Drizzle ORM", note: "typed schema in lib/db (@workspace/db)" },
@@ -50,7 +50,7 @@ const TECH_STACK: StackLayer[] = [
     ],
   },
   {
-    icon: Database, title: "Database",
+    icon: Database, title: "stack_database",
     items: [
       { name: "PostgreSQL (Supabase)", note: "Supavisor session pooler" },
       { name: "Single schema", note: "public — no schema-per-tenant" },
@@ -60,7 +60,7 @@ const TECH_STACK: StackLayer[] = [
     ],
   },
   {
-    icon: Cloud, title: "Hosting & Edge",
+    icon: Cloud, title: "stack_hosting",
     items: [
       { name: "Railway", note: "api-server (Node pinned; auto-deploy on main)" },
       { name: "Vercel", note: "guest web + property-admin (CI-gated deploy)" },
@@ -201,12 +201,8 @@ function MetricTile({ icon: Icon, label, value, sub }: {
   );
 }
 
-const ENTITY_LABELS: Record<string, string> = {
-  properties: "Properties", spaces: "Spaces", accounts: "Accounts", contacts: "Contacts",
-  contracts: "Contracts", bookings: "Bookings", invoices: "Invoices", work_orders: "Work Orders",
-};
-
 function OverviewTab() {
+  const { t } = useTranslation();
   const [showDiagram, setShowDiagram] = useState(false);
   const { data, isLoading } = useQuery<OverviewData>({
     queryKey: ["system-map-overview"],
@@ -218,19 +214,19 @@ function OverviewTab() {
     <div className="space-y-8">
       {/* Live metric strip */}
       <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
-        <MetricTile icon={Database} label="Total Tables"
+        <MetricTile icon={Database} label={t("system_map.metric_total_tables")}
           value={isLoading ? "…" : db?.totalTables ?? "—"}
-          sub={db ? `${db.publicTables} in public` : ""} />
-        <MetricTile icon={GitBranch} label="Migrations"
+          sub={db ? t("system_map.metric_in_public", { n: db.publicTables }) : ""} />
+        <MetricTile icon={GitBranch} label={t("system_map.metric_migrations")}
           value={isLoading ? "…" : db?.migrationCount || "—"}
-          sub={db?.latestMigrationAt ? `latest ${new Date(db.latestMigrationAt).toLocaleDateString()}` : "drizzle ledger"} />
-        <MetricTile icon={Boxes} label="Engines & Modules" value={ENGINES.length} sub="in-house" />
-        <MetricTile icon={Cable} label="Scheduled Jobs" value={8} sub="node-cron" />
+          sub={db?.latestMigrationAt ? t("system_map.metric_latest", { date: new Date(db.latestMigrationAt).toLocaleDateString() }) : t("system_map.metric_ledger")} />
+        <MetricTile icon={Boxes} label={t("system_map.metric_engines")} value={ENGINES.length} sub={t("system_map.metric_inhouse")} />
+        <MetricTile icon={Cable} label={t("system_map.metric_jobs")} value={8} sub={t("system_map.metric_nodecron")} />
       </div>
 
       {/* Technology stack */}
       <div>
-        <SectionTitle icon={Layers}>Technology Stack</SectionTitle>
+        <SectionTitle icon={Layers}>{t("system_map.sec_tech_stack")}</SectionTitle>
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
           {TECH_STACK.map((layer) => (
             <Card key={layer.title} className="p-4">
@@ -238,7 +234,7 @@ function OverviewTab() {
                 <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
                   <layer.icon className="h-4 w-4 text-primary" />
                 </div>
-                <p className="text-sm font-bold text-foreground">{layer.title}</p>
+                <p className="text-sm font-bold text-foreground">{t(`system_map.${layer.title}`)}</p>
               </div>
               <ul className="space-y-2">
                 {layer.items.map((it) => (
@@ -255,24 +251,24 @@ function OverviewTab() {
 
       {/* Database */}
       <div>
-        <SectionTitle icon={Database}>Database</SectionTitle>
+        <SectionTitle icon={Database}>{t("system_map.sec_database")}</SectionTitle>
         <Card className="p-5">
           <div className="flex flex-wrap items-center gap-x-8 gap-y-3 mb-4">
-            <Fact label="Engine" value={db?.engine ?? "PostgreSQL"} />
-            <Fact label="Host" value={db?.host ?? "Supabase"} />
-            <Fact label="ORM" value={db?.orm ?? "Drizzle"} />
-            <Fact label="Tables" value={isLoading ? "…" : String(db?.totalTables ?? "—")} />
-            <Fact label="Migrations" value={isLoading ? "…" : String(db?.migrationCount ?? "—")} />
+            <Fact label={t("system_map.fact_engine")} value={db?.engine ?? "PostgreSQL"} />
+            <Fact label={t("system_map.fact_host")} value={db?.host ?? "Supabase"} />
+            <Fact label={t("system_map.fact_orm")} value={db?.orm ?? "Drizzle"} />
+            <Fact label={t("system_map.fact_tables")} value={isLoading ? "…" : String(db?.totalTables ?? "—")} />
+            <Fact label={t("system_map.fact_migrations")} value={isLoading ? "…" : String(db?.migrationCount ?? "—")} />
           </div>
 
           {/* Live entity counts */}
           {db?.entityCounts && (
             <div className="mb-4">
-              <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide mb-2">Core entities (live row counts)</p>
+              <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide mb-2">{t("system_map.core_entities")}</p>
               <div className="flex flex-wrap gap-2">
                 {Object.entries(db.entityCounts).map(([k, v]) => (
                   <span key={k} className="inline-flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-lg border bg-muted/40">
-                    <span className="font-semibold text-foreground">{ENTITY_LABELS[k] ?? k}</span>
+                    <span className="font-semibold text-foreground">{t(`system_map.ent_${k}`, { defaultValue: k })}</span>
                     <span className="text-muted-foreground">{v == null ? "—" : v.toLocaleString()}</span>
                   </span>
                 ))}
@@ -283,12 +279,12 @@ function OverviewTab() {
           <button onClick={() => setShowDiagram((v) => !v)}
             className="flex items-center gap-1.5 text-[13px] font-medium text-primary hover:underline">
             {showDiagram ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
-            <Network className="h-3.5 w-3.5" /> Domain flow diagram
+            <Network className="h-3.5 w-3.5" /> {t("system_map.diagram_toggle")}
           </button>
           {showDiagram && (
             <div className="mt-4 pt-4 border-t">
               <p className="text-[11px] text-muted-foreground mb-3">
-                Core domain flow — how the main entities connect across the booking → contract → invoice → GL pipeline.
+                {t("system_map.diagram_caption")}
               </p>
               <SchemaDiagram />
             </div>
@@ -298,7 +294,7 @@ function OverviewTab() {
 
       {/* Engines & modules */}
       <div>
-        <SectionTitle icon={Boxes}>In-house Engines & Modules</SectionTitle>
+        <SectionTitle icon={Boxes}>{t("system_map.sec_engines")}</SectionTitle>
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
           {ENGINES.map((e) => (
             <Card key={e.name} className="p-4">
@@ -315,7 +311,7 @@ function OverviewTab() {
 
       {data?.generatedAt && (
         <p className="text-[11px] text-muted-foreground text-center">
-          Live data generated {new Date(data.generatedAt).toLocaleString()} · curated maps maintained in SystemMap.tsx
+          {t("system_map.generated_at", { time: new Date(data.generatedAt).toLocaleString() })}
         </p>
       )}
     </div>

@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 import { apiJson } from "@/lib/apiFetch";
 import { Loader2, ShieldCheck, ShieldAlert, Route } from "lucide-react";
 import { Card } from "./ui";
@@ -20,6 +21,7 @@ const METHOD_COLOR: Record<string, string> = {
 };
 
 export default function SystemApi() {
+  const { t } = useTranslation();
   const { data, isLoading } = useQuery<Census>({
     queryKey: ["system-map-endpoints"],
     queryFn: () => apiJson<Census>("/api/v1/admin/system-map/endpoints"),
@@ -36,7 +38,7 @@ export default function SystemApi() {
     return (
       <Card className="p-6">
         <p className="text-sm text-muted-foreground">
-          API introspection unavailable{data?.reason ? ` — ${data.reason}` : ""}.
+          {t("system_map.api_unavailable")}{data?.reason ? ` — ${data.reason}` : ""}.
         </p>
       </Card>
     );
@@ -49,29 +51,29 @@ export default function SystemApi() {
     <div className="space-y-6">
       <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
         <Card className="p-4">
-          <div className="flex items-center gap-2 text-muted-foreground"><Route className="h-4 w-4" /><p className="text-xs font-medium uppercase tracking-wide">Endpoints</p></div>
+          <div className="flex items-center gap-2 text-muted-foreground"><Route className="h-4 w-4" /><p className="text-xs font-medium uppercase tracking-wide">{t("system_map.api_endpoints")}</p></div>
           <p className="text-3xl font-bold text-foreground mt-1">{data.totalEndpoints}</p>
-          <p className="text-[11px] text-muted-foreground">{data.totalRoutes} route paths</p>
+          <p className="text-[11px] text-muted-foreground">{t("system_map.api_route_paths", { n: data.totalRoutes })}</p>
         </Card>
         <Card className="p-4">
-          <div className="flex items-center gap-2 text-muted-foreground"><ShieldCheck className="h-4 w-4" /><p className="text-xs font-medium uppercase tracking-wide">Guarded</p></div>
+          <div className="flex items-center gap-2 text-muted-foreground"><ShieldCheck className="h-4 w-4" /><p className="text-xs font-medium uppercase tracking-wide">{t("system_map.api_guarded")}</p></div>
           <p className="text-3xl font-bold text-emerald-600 mt-1">{data.guardedRoutes}</p>
-          <p className="text-[11px] text-muted-foreground">{guardPct}% of routes</p>
+          <p className="text-[11px] text-muted-foreground">{t("system_map.api_pct_routes", { n: guardPct })}</p>
         </Card>
         <Card className="p-4">
-          <div className="flex items-center gap-2 text-muted-foreground"><ShieldAlert className="h-4 w-4" /><p className="text-xs font-medium uppercase tracking-wide">Unguarded</p></div>
+          <div className="flex items-center gap-2 text-muted-foreground"><ShieldAlert className="h-4 w-4" /><p className="text-xs font-medium uppercase tracking-wide">{t("system_map.api_unguarded")}</p></div>
           <p className="text-3xl font-bold text-amber-600 mt-1">{data.unguardedRoutes}</p>
-          <p className="text-[11px] text-muted-foreground">public / webhook / in-handler</p>
+          <p className="text-[11px] text-muted-foreground">{t("system_map.api_unguarded_sub")}</p>
         </Card>
         <Card className="p-4">
-          <div className="flex items-center gap-2 text-muted-foreground"><Route className="h-4 w-4" /><p className="text-xs font-medium uppercase tracking-wide">Route groups</p></div>
+          <div className="flex items-center gap-2 text-muted-foreground"><Route className="h-4 w-4" /><p className="text-xs font-medium uppercase tracking-wide">{t("system_map.api_route_groups")}</p></div>
           <p className="text-3xl font-bold text-foreground mt-1">{data.groups.length}</p>
-          <p className="text-[11px] text-muted-foreground">top-level segments</p>
+          <p className="text-[11px] text-muted-foreground">{t("system_map.api_top_segments")}</p>
         </Card>
       </div>
 
       <Card className="p-5">
-        <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide mb-3">By HTTP method</p>
+        <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide mb-3">{t("system_map.api_by_method")}</p>
         <div className="space-y-2">
           {["GET", "POST", "PUT", "PATCH", "DELETE"].filter((m) => data.byMethod[m]).map((m) => (
             <div key={m} className="flex items-center gap-3">
@@ -86,7 +88,7 @@ export default function SystemApi() {
       </Card>
 
       <Card className="p-5">
-        <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide mb-3">By route group (top-level segment)</p>
+        <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide mb-3">{t("system_map.api_by_group")}</p>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-2">
           {data.groups.map((g) => (
             <div key={g.name} className="flex items-center gap-3">
@@ -101,8 +103,7 @@ export default function SystemApi() {
       </Card>
 
       <p className="text-[11px] text-muted-foreground">
-        Live Express router census. “Unguarded” counts routes with no auth middleware on the route stack — includes
-        public/webhook routes and those that check auth inside the handler. Generated {new Date(data.generatedAt).toLocaleString()}
+        {t("system_map.api_footer", { time: new Date(data.generatedAt).toLocaleString() })}
       </p>
     </div>
   );

@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 import { apiJson } from "@/lib/apiFetch";
 import { Loader2, Search, KeyRound, ArrowUpRight, ArrowDownLeft, Table2 } from "lucide-react";
 import { Card } from "./ui";
@@ -20,6 +21,7 @@ type TableDetail = {
 };
 
 export default function SystemSchema({ schemas }: { schemas: string[] }) {
+  const { t } = useTranslation();
   const [schema, setSchema] = useState("public");
   const [search, setSearch] = useState("");
   const [selected, setSelected] = useState<string | null>(null);
@@ -44,7 +46,7 @@ export default function SystemSchema({ schemas }: { schemas: string[] }) {
     <div className="space-y-4">
       {schemas.length > 1 && (
         <div className="flex flex-wrap items-center gap-2">
-          <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide mr-1">Schema</span>
+          <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide mr-1">{t("system_map.schema_label")}</span>
           {schemas.map((s) => (
             <button
               key={s}
@@ -67,11 +69,11 @@ export default function SystemSchema({ schemas }: { schemas: string[] }) {
             <input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Filter tables…"
+              placeholder={t("system_map.schema_filter")}
               className="w-full pl-8 pr-2 py-1.5 text-[13px] rounded-lg border bg-background focus:outline-none focus:border-primary"
             />
           </div>
-          <p className="text-[11px] text-muted-foreground mb-1.5 px-1">{tables.length} tables</p>
+          <p className="text-[11px] text-muted-foreground mb-1.5 px-1">{t("system_map.schema_n_tables", { n: tables.length })}</p>
           <div className="max-h-[560px] overflow-y-auto space-y-0.5">
             {isLoading && (
               <div className="flex justify-center py-6"><Loader2 className="h-4 w-4 animate-spin text-primary" /></div>
@@ -96,7 +98,7 @@ export default function SystemSchema({ schemas }: { schemas: string[] }) {
           {!selected && (
             <Card className="p-10 flex flex-col items-center justify-center text-center h-full">
               <Table2 className="h-7 w-7 text-muted-foreground/40 mb-2" />
-              <p className="text-sm text-muted-foreground">Select a table to see its columns and foreign-key links.</p>
+              <p className="text-sm text-muted-foreground">{t("system_map.schema_select_prompt")}</p>
             </Card>
           )}
           {selected && detailLoading && !detail && (
@@ -107,16 +109,16 @@ export default function SystemSchema({ schemas }: { schemas: string[] }) {
               <Card className="overflow-hidden">
                 <div className="px-4 py-3 border-b bg-muted/50 flex items-center justify-between">
                   <p className="font-mono font-bold text-foreground text-[13px]">{schema}.{detail.table}</p>
-                  <p className="text-[11px] text-muted-foreground">{detail.columns.length} columns</p>
+                  <p className="text-[11px] text-muted-foreground">{t("system_map.schema_n_columns", { n: detail.columns.length })}</p>
                 </div>
                 <div className="overflow-x-auto">
                   <table className="w-full min-w-[560px] text-sm">
                     <thead>
                       <tr className="text-[11px] uppercase tracking-wide text-muted-foreground border-b">
-                        <th className="text-left font-semibold px-4 py-2">Column</th>
-                        <th className="text-left font-semibold px-3 py-2 w-[160px]">Type</th>
-                        <th className="text-left font-semibold px-3 py-2 w-[90px]">Null</th>
-                        <th className="text-left font-semibold px-4 py-2 w-[200px]">References</th>
+                        <th className="text-left font-semibold px-4 py-2">{t("system_map.schema_col_column")}</th>
+                        <th className="text-left font-semibold px-3 py-2 w-[160px]">{t("system_map.schema_col_type")}</th>
+                        <th className="text-left font-semibold px-3 py-2 w-[90px]">{t("system_map.schema_col_null")}</th>
+                        <th className="text-left font-semibold px-4 py-2 w-[200px]">{t("system_map.schema_col_refs")}</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -149,10 +151,10 @@ export default function SystemSchema({ schemas }: { schemas: string[] }) {
 
               <Card className="p-4">
                 <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide mb-2 flex items-center gap-1.5">
-                  <ArrowDownLeft className="h-3 w-3" /> Referenced by ({detail.referencedBy.length})
+                  <ArrowDownLeft className="h-3 w-3" /> {t("system_map.schema_referenced_by", { n: detail.referencedBy.length })}
                 </p>
                 {detail.referencedBy.length === 0 ? (
-                  <p className="text-[12.5px] text-muted-foreground">No inbound foreign keys in this schema.</p>
+                  <p className="text-[12.5px] text-muted-foreground">{t("system_map.schema_no_inbound")}</p>
                 ) : (
                   <div className="flex flex-wrap gap-1.5">
                     {detail.referencedBy.map((r, i) => (

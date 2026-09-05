@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { Clock, Zap } from "lucide-react";
 import { Card } from "./ui";
 
@@ -26,10 +27,11 @@ const JOBS: Job[] = [
 ];
 
 export default function SystemJobs() {
+  const { t } = useTranslation();
   return (
     <div className="space-y-4">
       <p className="text-sm text-muted-foreground">
-        <span className="font-bold text-foreground">{JOBS.length}</span> scheduled jobs registered
+        {t("system_map.jobs_registered", { n: JOBS.length })}
       </p>
 
       <Card className="overflow-hidden">
@@ -37,10 +39,10 @@ export default function SystemJobs() {
           <table className="w-full min-w-[760px] text-sm">
             <thead>
               <tr className="bg-muted/50 border-b text-[11px] uppercase tracking-wide text-muted-foreground">
-                <th className="text-left font-semibold px-4 py-2.5 w-[220px]">Job</th>
-                <th className="text-left font-semibold px-3 py-2.5 w-[130px]">Schedule</th>
-                <th className="text-left font-semibold px-3 py-2.5 w-[150px]">Timezone</th>
-                <th className="text-left font-semibold px-4 py-2.5">Description</th>
+                <th className="text-left font-semibold px-4 py-2.5 w-[220px]">{t("system_map.jobs_col_job")}</th>
+                <th className="text-left font-semibold px-3 py-2.5 w-[130px]">{t("system_map.jobs_col_schedule")}</th>
+                <th className="text-left font-semibold px-3 py-2.5 w-[150px]">{t("system_map.jobs_col_tz")}</th>
+                <th className="text-left font-semibold px-4 py-2.5">{t("system_map.jobs_col_desc")}</th>
               </tr>
             </thead>
             <tbody>
@@ -51,12 +53,12 @@ export default function SystemJobs() {
                     <div className="flex flex-wrap gap-1 mt-1">
                       {j.boot && (
                         <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-1.5 py-0.5 rounded bg-primary/10 text-primary">
-                          <Zap className="h-2.5 w-2.5" /> runs at boot
+                          <Zap className="h-2.5 w-2.5" /> {t("system_map.jobs_badge_boot")}
                         </span>
                       )}
                       {j.gated && (
                         <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-700 font-mono">
-                          {j.gated} · off by default
+                          {j.gated} · {t("system_map.jobs_badge_gated")}
                         </span>
                       )}
                     </div>
@@ -77,9 +79,7 @@ export default function SystemJobs() {
       </Card>
 
       <p className="text-[11px] text-muted-foreground">
-        Schedules run on the single api-server instance (Railway) via node-cron. Self-gated jobs check their setting at
-        run time, so ops can toggle them from Integrations with no redeploy. Curated reference — keep in sync with
-        <span className="font-mono"> index.ts</span>.
+        {t("system_map.jobs_footer")}
       </p>
     </div>
   );

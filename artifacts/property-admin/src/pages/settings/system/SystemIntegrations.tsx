@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 import { apiJson } from "@/lib/apiFetch";
 import { Loader2, Cable, Cpu, CreditCard, Cloud, Mail, MessageSquare, Database } from "lucide-react";
 import { Card, StatusDot } from "./ui";
@@ -20,6 +21,7 @@ function KindIcon({ kind }: { kind: string }) {
 }
 
 export default function SystemIntegrations() {
+  const { t } = useTranslation();
   const { data, isLoading } = useQuery<Payload>({
     queryKey: ["system-map-integrations"],
     queryFn: () => apiJson<Payload>("/api/v1/admin/system-map/integrations"),
@@ -37,7 +39,7 @@ export default function SystemIntegrations() {
   return (
     <div className="space-y-6">
       <p className="text-sm text-muted-foreground">
-        <span className="font-bold text-foreground">{data?.configuredCount ?? 0}</span> / {items.length} configured
+        {t("system_map.configured_of", { n: data?.configuredCount ?? 0, total: items.length })}
       </p>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3">
@@ -58,7 +60,7 @@ export default function SystemIntegrations() {
               <span
                 className={`text-[11px] font-semibold ${i.configured ? "text-emerald-600" : "text-muted-foreground"}`}
               >
-                {i.configured ? "Connected" : "Not set"}
+                {i.configured ? t("system_map.status_connected") : t("system_map.status_not_set")}
               </span>
             </div>
           </Card>
@@ -66,8 +68,7 @@ export default function SystemIntegrations() {
       </div>
 
       <p className="text-[11px] text-muted-foreground">
-        Presence only — secret values never leave the server. Generated{" "}
-        {data?.generatedAt ? new Date(data.generatedAt).toLocaleString() : "—"}
+        {t("system_map.integ_footer", { time: data?.generatedAt ? new Date(data.generatedAt).toLocaleString() : "—" })}
       </p>
     </div>
   );
