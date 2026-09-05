@@ -85,7 +85,7 @@ export function BankStatementImportDialog({
   const [meta, setMeta] = useState<PreviewMeta | null>(null);
   const [include, setInclude] = useState<Record<string, boolean>>({});
   const [settleInvoices, setSettleInvoices] = useState(true);
-  const [result, setResult] = useState<{ created: number; failed: Array<{ memo: string; error: string }> } | null>(null);
+  const [result, setResult] = useState<{ created: number; settled: number; failed: Array<{ memo: string; error: string }> } | null>(null);
 
   const money = (n: number) => formatMoney(n, brand.currency, brand.currencyPosition);
 
@@ -153,7 +153,7 @@ export function BankStatementImportDialog({
       });
       const p = await r.json().catch(() => ({}));
       if (!r.ok) throw new Error(p?.error ?? "실패");
-      return p.data as { created: number; failed: Array<{ memo: string; error: string }> };
+      return p.data as { created: number; settled: number; failed: Array<{ memo: string; error: string }> };
     },
     onSuccess: (d) => { setResult(d); setStep("done"); onImported(); },
     onError: (e: Error) => toast({ title: "등록 실패", description: e.message, variant: "destructive" }),
@@ -373,9 +373,16 @@ export function BankStatementImportDialog({
 
         {step === "done" && result && (
           <div className="space-y-3">
-            <div className="flex items-center gap-2 text-green-700">
-              <CheckCircle2 className="h-5 w-5" />
-              <span className="font-medium">{result.created}건이 거래 원장에 등록됐습니다.</span>
+            <div className="space-y-1">
+              <div className="flex items-center gap-2 text-green-700">
+                <CheckCircle2 className="h-5 w-5" />
+                <span className="font-medium">{result.created}건이 거래 원장에 등록됐습니다.</span>
+              </div>
+              {result.settled > 0 && (
+                <p className="text-sm text-muted-foreground pl-7">
+                  이 중 {result.settled}건은 청구서 수납 처리까지 완료됐습니다(미납 → 완납, 원장 전기 포함).
+                </p>
+              )}
             </div>
             {result.failed.length > 0 && (
               <div className="border border-red-200 bg-red-50 rounded-md px-3 py-2 text-xs">

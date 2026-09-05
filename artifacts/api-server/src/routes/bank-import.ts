@@ -1,6 +1,6 @@
 import { Router, type IRouter } from "express";
 import multer from "multer";
-import { and, asc, eq, isNull, sql } from "drizzle-orm";
+import { and, asc, eq, inArray, isNull, sql } from "drizzle-orm";
 import { z } from "zod";
 import {
   db, bankAccountsTable, chartOfAccountsTable, transactionsTable, paymentSchedulesTable,
@@ -10,6 +10,10 @@ import { parseStatement } from "../lib/banking/parse";
 import { matchStatement, type MatchedRow } from "../lib/banking/match";
 import { resolveCompanyInfo } from "../lib/documents/companyInfo";
 import { generateContractSchedule, recalcSchedulePaid } from "../lib/billing/paymentSchedule";
+import { postInvoicePaid } from "../lib/billing/gl";
+import { generateSettlementsForInvoice } from "../lib/billing/payout";
+import { linkInvoiceToSchedule } from "../lib/billing/scheduleLink";
+import { invoicesTable } from "@workspace/db";
 import { stampBaseAmount } from "../lib/billing/baseAmount";
 import { resolveClassFromOwner } from "../lib/accounting/classOf";
 import { logAction } from "../utils/auditLog";
@@ -20,6 +24,49 @@ import { DEFAULT_CURRENCY } from "../lib/currency";
 // 흐름은 반드시 두 단계다: **미리보기(preview) → 확인 → 확정(commit)**.
 // 회계 데이터를 한 번에 수십 건 밀어 넣는 일이라, 사람이 중복과 애매한 매칭을 보고
 // 내린 판단이 그대로 반영되어야 한다.
+
+/**
+ * 통장 적요에 우리 회사가 어떤 모습으로 찍히는지의 변형들.
+ *
+ * 실제 사례: 회사명은 "(주)HK건설자산관리" 인데 적요에는 "주식회사에이치케이" 로
+ * 찍힌다. 은행 적요는 길이 제한 때문에 잘리고, **로마자를 한글로 음역**하며,
+ * 법인격 표기도 제각각이다. 그래서 이름 하나만 비교하면 자사 이체를 놓치고,
+ * 놓치면 그 돈이 임대 수입으로 잡혀 매출이 부푼다.
+ */
+const ROMAN_TO_HANGUL: Record<string, string> = {
+  A: "에이", B: "비", C: "씨", D: "디", E: "이", F: "에프", G: "지", H: "에이치",
+  I: "아이", J: "제이", K: "케이", L: "엘", M: "엠", N: "엔", O: "오", P: "피",
+  Q: "큐", R: "알", S: "에스", T: "티", U: "유", V: "브이", W: "더블유", X: "엑스",
+  Y: "와이", Z: "지",
+};
+
+export function ownNameVariants(names: Array<string | null | undefined>): string[] {
+  const out = new Set<string>();
+  for (const raw of names) {
+    if (!raw) continue;
+    const base = raw.trim();
+    const noEntity = base.replace(/\(주\)|㈜|주식회사|유한회사/g, "").trim();
+    for (const v of [base, noEntity, base.replace(/\(주\)|㈜/g, "주식회사")]) {
+      if (v) out.add(v);
+    }
+    // 로마자 구간을 한글로 읽어 준다: "HK건설자산관리" → "에이치케이건설자산관리"
+    const say = (run: string) =>
+      run.toUpperCase().split("").map((ch) => ROMAN_TO_HANGUL[ch] ?? ch).join("");
+    const romanised = noEntity.replace(/[A-Za-z]+/g, say);
+    if (romanised !== noEntity) {
+      out.add(romanised);
+      out.add(`주식회사${romanised}`);
+    }
+    // ⚠️ 적요는 길이 제한으로 **잘린다** — 실제로 "(주)HK건설자산관리" 가
+    // "주식회사에이치케이" 로 찍힌다. 그래서 로마자 약칭만 읽은 형태도 넣는다.
+    for (const run of noEntity.match(/[A-Za-z]{2,}/g) ?? []) {
+      const spoken = say(run);
+      if (spoken.length >= 3) { out.add(spoken); out.add(`주식회사${spoken}`); }
+    }
+  }
+  return [...out].filter((s) => s.length >= 3);
+}
+
 const router: IRouter = Router();
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 10 * 1024 * 1024, files: 1 } });
 
@@ -120,10 +167,7 @@ router.post("/v1/bank-import/preview", upload.single("file"), async (req, res): 
   try {
     const parsedRows = parseStatement(text, b.bank);
     const company = await resolveCompanyInfo("ko").catch(() => null);
-    const ownNames = [company?.legalName, company?.tradingName]
-      .filter((x): x is string => !!x)
-      // 법인격 표기는 통장 적요에서 흔히 풀어써진다("주식회사에이치케이").
-      .flatMap((n) => [n, n.replace(/\(주\)/g, "주식회사"), n.replace(/\(주\)|주식회사/g, "")]);
+    const ownNames = ownNameVariants([company?.legalName, company?.tradingName]);
 
     const coa = await db.select({ code: chartOfAccountsTable.code })
       .from(chartOfAccountsTable).where(isNull(chartOfAccountsTable.deleted_at));
@@ -204,6 +248,7 @@ router.post("/v1/bank-import/commit", async (req, res): Promise<void> => {
   const created: number[] = [];
   const failed: Array<{ memo: string; error: string }> = [];
   const touchedSchedules: number[] = [];
+  let settled = 0;
 
   for (const r of b.rows) {
     try {
@@ -248,6 +293,45 @@ router.post("/v1/bank-import/commit", async (req, res): Promise<void> => {
       if (row) {
         created.push(row.id);
         if (scheduleId) touchedSchedules.push(scheduleId);
+
+        // 청구서 수납 처리. 이걸 안 하면 통장에 돈이 들어왔는데 청구서는 계속
+        // 미납으로 남아, 미납 목록과 실제가 어긋난다.
+        //
+        // ⚠️ 분개는 postInvoicePaid 로 **한 번만** 올린다(Dr 현금 / Cr 미수금).
+        // 방금 만든 거래에도 그 분개 id 를 물려줘야 화면에서 다시 전기 버튼이
+        // 뜨지 않고, /post 를 눌러도 같은 돈이 두 번 기록되지 않는다.
+        if (b.settle_invoices && r.invoice_id) {
+          try {
+            const [inv] = await db.update(invoicesTable).set({
+              status: "Paid", payment_method: "BankTransfer",
+              paid_at: new Date(`${r.txn_date}T00:00:00.000Z`), updated_at: new Date(),
+            }).where(and(
+              eq(invoicesTable.id, r.invoice_id),
+              inArray(invoicesTable.status, ["Sent", "Draft", "Overdue", "Unpaid"]),
+            )).returning();
+
+            if (inv) {
+              settled++;
+              const entry = await postInvoicePaid({
+                id: inv.id, amount: Number(inv.amount), currency: inv.currency,
+                tax: Number(inv.tax_amount ?? 0), paidAt: `${r.txn_date}T00:00:00.000Z`,
+              });
+              void generateSettlementsForInvoice(inv.id);
+              const sid = await linkInvoiceToSchedule(inv.id);
+              if (sid) touchedSchedules.push(sid);
+              await db.update(transactionsTable).set({
+                status: entry ? "posted" : "confirmed",
+                journal_entry_id: entry?.id ?? null,
+                posted_at: entry ? new Date() : null,
+                payment_schedule_id: scheduleId ?? sid ?? null,
+                updated_at: new Date(),
+              }).where(eq(transactionsTable.id, row.id));
+            }
+          } catch (err) {
+            // 수납 처리 실패가 거래 등록을 되돌리면 안 된다 — 돈은 이미 들어왔다.
+            console.error("[bank-import settle]", err);
+          }
+        }
       }
     } catch (err) {
       failed.push({ memo: r.memo, error: err instanceof Error ? err.message.slice(0, 160) : "실패" });
@@ -260,7 +344,10 @@ router.post("/v1/bank-import/commit", async (req, res): Promise<void> => {
 
   res.json({
     success: true,
-    data: { created: created.length, failed, schedules_created: schedulesCreated, transaction_ids: created },
+    data: {
+      created: created.length, settled, failed,
+      schedules_created: schedulesCreated, transaction_ids: created,
+    },
   });
 });
 

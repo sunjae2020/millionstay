@@ -77,7 +77,7 @@ export async function matchStatement(rows: StatementRow[], opts: MatchOptions): 
   // 명세서 기간과 겹치는 청구서. 범위를 좁혀야 엉뚱한 달에 붙지 않는다.
   const invoices = await db.select({
     id: invoicesTable.id, ref: invoicesTable.invoice_ref, contract_id: invoicesTable.contract_id,
-    amount: invoicesTable.amount, status: invoicesTable.status,
+    amount: invoicesTable.amount, status: invoicesTable.status, due: invoicesTable.due_date,
     unit: spacesTable.name, tenant: accountsTable.name,
   }).from(invoicesTable)
     .leftJoin(contractsTable, eq(contractsTable.id, invoicesTable.contract_id))
@@ -102,6 +102,30 @@ export async function matchStatement(rows: StatementRow[], opts: MatchOptions): 
   ));
   const dupKey = (d: string, a: number, m: string) => `${d}|${Math.round(a)}|${norm(m)}`;
   const dupMap = new Map(existing.map((e) => [dupKey(e.date, Number(e.amount), e.memo ?? ""), e.ref]));
+
+  /**
+   * 후보가 여럿이면 버리지 말고 **고른다.**
+   *
+   * 같은 호실·같은 금액의 월세 청구서는 달마다 나오므로, 조회 범위를 조금만 넓혀도
+   * 후보가 3~4개가 된다. 예전 구현은 "정확히 하나일 때만" 매칭해서 그 경우를 전부
+   * 버렸고, 결과적으로 청구서 연결이 0건이 됐다.
+   *
+   * 고르는 규칙은 실무를 따른다:
+   *   1) 미납을 먼저 채운다(이미 낸 청구서에 또 붙이지 않는다)
+   *   2) 그 중 납기가 가장 오래된 것부터 — 연체분을 먼저 메우는 것이 회계 관행이다
+   *   3) 그래도 같으면 입금일에 가까운 것
+   */
+  const pickInvoice = <T extends { id: number; status: string | null; due?: string | null }>(
+    cands: T[], onDate: string,
+  ): T | null => {
+    if (cands.length === 0) return null;
+    if (cands.length === 1) return cands[0]!;
+    const unpaid = cands.filter((c) => c.status !== "Paid");
+    const pool = unpaid.length ? unpaid : cands;
+    const dist = (d?: string | null) =>
+      d ? Math.abs(new Date(`${d}T00:00:00Z`).getTime() - new Date(`${onDate}T00:00:00Z`).getTime()) : Number.MAX_SAFE_INTEGER;
+    return pool.sort((a, b) => (a.due ?? "").localeCompare(b.due ?? "") || dist(a.due) - dist(b.due))[0]!;
+  };
 
   const used = new Set<number>();
   const out: MatchedRow[] = [];
@@ -128,7 +152,12 @@ export async function matchStatement(rows: StatementRow[], opts: MatchOptions): 
     });
 
     // 자사 계좌 간 이체 — 임대 수입이 아니다.
-    if (opts.ownNames.some((o) => o && nm.includes(norm(o)))) {
+    // 양방향으로 본다 — 적요가 잘려 회사명보다 짧은 경우가 흔하다.
+    const isOwn = opts.ownNames.some((o) => {
+      const on = norm(o);
+      return on.length >= 3 && (nm.includes(on) || (nm.length >= 5 && on.includes(nm)));
+    });
+    if (isOwn) {
       out.push({ ...base, kind: "internal", confidence: "certain", txn_type: "transfer",
         gl_account_code: null, reason: "자사 계좌 간 이체 — 수입으로 잡지 않는다" });
       return;
@@ -151,22 +180,28 @@ export async function matchStatement(rows: StatementRow[], opts: MatchOptions): 
     }
     // 2) 호실 + 금액이 정확히 맞는 청구서
     let cand = invoices.filter((i) => !used.has(i.id) && unit && i.unit === unit && Number(i.amount) === amt);
-    if (cand.length === 1) {
-      used.add(cand[0]!.id);
-      const c = contracts.find((x) => x.id === cand[0]!.contract_id);
+    let hit = pickInvoice(cand, r.txn_date);
+    if (hit) {
+      used.add(hit.id);
+      const c = contracts.find((x) => x.id === hit!.contract_id);
       out.push({ ...base, ...(c ? withContract(c) : {}), kind: "invoice", confidence: "certain",
-        invoice_id: cand[0]!.id, invoice_ref: cand[0]!.ref, invoice_amount: Number(cand[0]!.amount),
-        reason: "호실+금액 일치" });
+        invoice_id: hit.id, invoice_ref: hit.ref, invoice_amount: Number(hit.amount),
+        reason: cand.length > 1
+          ? `호실+금액 일치 (후보 ${cand.length}건 중 미납·최오래된 납기 ${hit.due ?? "-"})`
+          : "호실+금액 일치" });
       return;
     }
     // 3) 임차인명 + 금액
     cand = invoices.filter((i) => !used.has(i.id) && i.tenant && nm.includes(norm(i.tenant)) && Number(i.amount) === amt);
-    if (cand.length === 1) {
-      used.add(cand[0]!.id);
-      const c = contracts.find((x) => x.id === cand[0]!.contract_id);
+    hit = pickInvoice(cand, r.txn_date);
+    if (hit) {
+      used.add(hit.id);
+      const c = contracts.find((x) => x.id === hit!.contract_id);
       out.push({ ...base, ...(c ? withContract(c) : {}), kind: "invoice", confidence: "certain",
-        invoice_id: cand[0]!.id, invoice_ref: cand[0]!.ref, invoice_amount: Number(cand[0]!.amount),
-        reason: "임차인명+금액 일치" });
+        invoice_id: hit.id, invoice_ref: hit.ref, invoice_amount: Number(hit.amount),
+        reason: cand.length > 1
+          ? `임차인명+금액 일치 (후보 ${cand.length}건 중 미납·최오래된 납기 ${hit.due ?? "-"})`
+          : "임차인명+금액 일치" });
       return;
     }
     // 4) 월세의 정확한 배수 = 여러 달 선납
