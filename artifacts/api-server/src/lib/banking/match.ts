@@ -36,6 +36,24 @@ export interface MatchedRow extends StatementRow {
 const norm = (s: string | null | undefined) =>
   (s ?? "").normalize("NFKC").replace(/[\s()（）]/g, "");
 
+/**
+ * 적요가 가리키는 대상 월. "8월" · "7월8월" 처럼 세입자가 직접 적어 보낸다.
+ * 입금일의 연도를 기준으로 삼되, 12월 입금에 "1월" 이라 적혀 있으면 다음 해로 본다.
+ */
+function monthsInMemo(memo: string, onDate: string): string[] {
+  const year = Number(onDate.slice(0, 4));
+  const payMonth = Number(onDate.slice(5, 7));
+  const out: string[] = [];
+  for (const m of memo.matchAll(/(\d{1,2})\s*월/g)) {
+    const mm = Number(m[1]);
+    if (mm < 1 || mm > 12) continue;
+    // 연말에 다음 해 달을 미리 내는 경우(12월 입금 · "1월분")를 넘긴다.
+    const y = payMonth >= 11 && mm <= 2 ? year + 1 : year;
+    out.push(`${y}-${String(mm).padStart(2, "0")}`);
+  }
+  return [...new Set(out)];
+}
+
 function unitOf(memo: string): string | null {
   const m = /(\d{3,4})\s*호/.exec(memo) ?? /(?<!\d)(\d{3,4})(?!\d)/.exec(memo);
   return m ? `${m[1]}호` : null;
@@ -116,12 +134,18 @@ export async function matchStatement(rows: StatementRow[], opts: MatchOptions): 
    *   3) 그래도 같으면 입금일에 가까운 것
    */
   const pickInvoice = <T extends { id: number; status: string | null; due?: string | null }>(
-    cands: T[], onDate: string,
+    cands: T[], onDate: string, wantMonths: string[] = [],
   ): T | null => {
     if (cands.length === 0) return null;
     if (cands.length === 1) return cands[0]!;
     const unpaid = cands.filter((c) => c.status !== "Paid");
-    const pool = unpaid.length ? unpaid : cands;
+    let pool = unpaid.length ? unpaid : cands;
+    // 적요가 달을 말해 주면 그 말을 따른다. "1308호 8월" 이라고 적어 보낸 돈을
+    // 연체분 우선 규칙으로 7월에 붙이면, 사람이 남긴 가장 분명한 단서를 버리는 것이다.
+    if (wantMonths.length) {
+      const named = pool.filter((c) => c.due && wantMonths.includes(c.due.slice(0, 7)));
+      if (named.length) pool = named;
+    }
     const dist = (d?: string | null) =>
       d ? Math.abs(new Date(`${d}T00:00:00Z`).getTime() - new Date(`${onDate}T00:00:00Z`).getTime()) : Number.MAX_SAFE_INTEGER;
     return pool.sort((a, b) => (a.due ?? "").localeCompare(b.due ?? "") || dist(a.due) - dist(b.due))[0]!;
@@ -135,6 +159,7 @@ export async function matchStatement(rows: StatementRow[], opts: MatchOptions): 
     const isIn = r.deposit > 0;
     const nm = norm(r.memo);
     const unit = unitOf(r.memo);
+    const wantMonths = monthsInMemo(r.memo, r.txn_date);
     const byUnit = contracts.filter((c) => unit && c.unit === unit);
     const byName = contracts.filter((c) => c.tenant && norm(c.tenant) && (norm(c.tenant).includes(nm) || nm.includes(norm(c.tenant))));
     const cur = pickCurrent((byUnit.length ? byUnit : byName) as never[], r.txn_date) as unknown as typeof contracts[number] | null;
@@ -180,27 +205,27 @@ export async function matchStatement(rows: StatementRow[], opts: MatchOptions): 
     }
     // 2) 호실 + 금액이 정확히 맞는 청구서
     let cand = invoices.filter((i) => !used.has(i.id) && unit && i.unit === unit && Number(i.amount) === amt);
-    let hit = pickInvoice(cand, r.txn_date);
+    let hit = pickInvoice(cand, r.txn_date, wantMonths);
     if (hit) {
       used.add(hit.id);
       const c = contracts.find((x) => x.id === hit!.contract_id);
       out.push({ ...base, ...(c ? withContract(c) : {}), kind: "invoice", confidence: "certain",
         invoice_id: hit.id, invoice_ref: hit.ref, invoice_amount: Number(hit.amount),
         reason: cand.length > 1
-          ? `호실+금액 일치 (후보 ${cand.length}건 중 미납·최오래된 납기 ${hit.due ?? "-"})`
+          ? `호실+금액 일치 (후보 ${cand.length}건 중 ${wantMonths.length ? `적요의 ${wantMonths.join("·")} ` : "미납·최오래된 "}납기 ${hit.due ?? "-"})`
           : "호실+금액 일치" });
       return;
     }
     // 3) 임차인명 + 금액
     cand = invoices.filter((i) => !used.has(i.id) && i.tenant && nm.includes(norm(i.tenant)) && Number(i.amount) === amt);
-    hit = pickInvoice(cand, r.txn_date);
+    hit = pickInvoice(cand, r.txn_date, wantMonths);
     if (hit) {
       used.add(hit.id);
       const c = contracts.find((x) => x.id === hit!.contract_id);
       out.push({ ...base, ...(c ? withContract(c) : {}), kind: "invoice", confidence: "certain",
         invoice_id: hit.id, invoice_ref: hit.ref, invoice_amount: Number(hit.amount),
         reason: cand.length > 1
-          ? `임차인명+금액 일치 (후보 ${cand.length}건 중 미납·최오래된 납기 ${hit.due ?? "-"})`
+          ? `임차인명+금액 일치 (후보 ${cand.length}건 중 ${wantMonths.length ? `적요의 ${wantMonths.join("·")} ` : "미납·최오래된 "}납기 ${hit.due ?? "-"})`
           : "임차인명+금액 일치" });
       return;
     }
