@@ -7450,7 +7450,11 @@
     "split_suggest": "分割を提案",
     "split_suggest_none": "提案できるものがありません — 契約の精算条件を先に登録してください。",
     "bank_gl_shared": "複数の口座が同じ勘定科目を使うため残高照合ができません — 口座ごとに科目を分けてください",
-    "import_statement": "銀行明細を取り込む"
+    "import_statement": "銀行明細を取り込む",
+    "split_legs_count": "{{count}}件の内訳",
+    "split_collapse_all": "分割をすべて閉じる",
+    "split_expand_all": "分割をすべて開く",
+    "split_source_hint": "この入金は分割されています — 行き先を開く"
   },
   "payment_schedule": {
     "title": "支払スケジュール",

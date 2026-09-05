@@ -7495,7 +7495,11 @@
     "split_suggest": "Suggest split",
     "split_suggest_none": "Nothing to suggest — add the contract's payout terms first.",
     "bank_gl_shared": "Several accounts share this ledger code — balance reconciliation needs one code per account",
-    "import_statement": "Import bank statement"
+    "import_statement": "Import bank statement",
+    "split_legs_count": "{{count}} legs",
+    "split_collapse_all": "Collapse all splits",
+    "split_expand_all": "Expand all splits",
+    "split_source_hint": "This receipt was split — click to show where the money went"
   },
   "payment_schedule": {
     "title": "Payment schedule",

@@ -7395,7 +7395,11 @@
     "split_suggest": "Gợi ý phân bổ",
     "split_suggest_none": "Không có gợi ý — hãy nhập điều khoản thanh toán của hợp đồng trước.",
     "bank_gl_shared": "Nhiều tài khoản dùng chung mã sổ cái nên không đối chiếu số dư được — hãy tách mã cho từng tài khoản",
-    "import_statement": "Nhập sao kê ngân hàng"
+    "import_statement": "Nhập sao kê ngân hàng",
+    "split_legs_count": "{{count}} dòng phân bổ",
+    "split_collapse_all": "Thu gọn tất cả",
+    "split_expand_all": "Mở rộng tất cả",
+    "split_source_hint": "Khoản thu này đã được phân bổ — bấm để xem tiền đi đâu"
   },
   "payment_schedule": {
     "title": "Lịch thanh toán",

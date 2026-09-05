@@ -3,8 +3,7 @@ import { useTranslation } from "react-i18next";
 import { Link, useSearch } from "wouter";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
-  ArrowDownLeft, ArrowRightLeft, ArrowUpRight, BookOpen, CheckCircle2, ChevronLeft, ChevronRight,
-  FileUp, Landmark, Loader2, Plus, ScanLine, XCircle,
+  ArrowDownLeft, ArrowRightLeft, ArrowUpRight, BookOpen, CheckCircle2, ChevronDown, ChevronLeft, ChevronRight, ChevronsDownUp, ChevronsUpDown, CornerDownRight, FileUp, Landmark, Loader2, Plus, ScanLine, Split, XCircle,
 } from "lucide-react";
 import { Layout } from "@/components/Layout";
 import { Button } from "@/components/ui/button";
@@ -75,6 +74,10 @@ interface Transaction {
   status: string;
   journal_entry_id: number | null;
   workflow_status: string;
+  split_leg_count: number;
+  split_role: string | null;
+  parent_transaction_id: number | null;
+  base_amount: number | null;
 }
 
 /** 서버가 정렬할 수 있는 컬럼(api-server routes/transactions.ts 의 TRANSACTION_SORT 와 1:1). */
@@ -157,6 +160,12 @@ export default function TransactionList() {
 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
+  // ── 분할 legs ─────────────────────────────────────────────────────────────
+  // 원본 아래에 자식을 **끼워 넣어** 보여준다. 목록은 기본적으로 자식을 접으므로
+  // (서버가 parent 가 있는 행을 걸러 준다) 펼칠 때만 따로 받아 온다.
+  const [expanded, setExpanded] = useState<Set<number>>(new Set());
+  const [legs, setLegs] = useState<Record<number, Transaction[]>>({});
+  const [legsLoading, setLegsLoading] = useState<Set<number>>(new Set());
   const [form, setForm] = useState<FormState>(emptyForm);
 
   // 결제 일정 카드에서 "입금 3건" 링크로 넘어오면 그 회차만 걸러 보여준다.
@@ -228,6 +237,45 @@ export default function TransactionList() {
     qc.invalidateQueries({ queryKey: ["payment-schedule"] });
   };
 
+  async function toggleLegs(id: number) {
+    setExpanded((prev) => {
+      const n = new Set(prev);
+      n.has(id) ? n.delete(id) : n.add(id);
+      return n;
+    });
+    if (legs[id] || legsLoading.has(id)) return;
+    setLegsLoading((p) => new Set(p).add(id));
+    try {
+      const res = await apiFetch(`/api/v1/transactions/${id}/split-children`);
+      const payload = await res.json().catch(() => ({}));
+      if (res.ok) setLegs((m) => ({ ...m, [id]: payload.data ?? [] }));
+    } finally {
+      setLegsLoading((p) => { const n = new Set(p); n.delete(id); return n; });
+    }
+  }
+
+  const splitSources = useMemo(() => rows.filter((r) => (r.split_leg_count ?? 0) > 0), [rows]);
+  const allExpanded = splitSources.length > 0 && splitSources.every((r) => expanded.has(r.id));
+
+  function toggleAll() {
+    if (allExpanded) { setExpanded(new Set()); return; }
+    splitSources.forEach((r) => { if (!legs[r.id]) void toggleLegs(r.id); });
+    setExpanded(new Set(splitSources.map((r) => r.id)));
+  }
+
+  // 펼친 원본 바로 아래에 자식을 끼운다. DataTable 은 서버 모드에서 data 를 그대로
+  // 순회하므로, 배열만 조립하면 중첩 행이 그려진다(공용 컴포넌트를 건드리지 않는다).
+  const displayRows = useMemo(() => {
+    const out: Transaction[] = [];
+    for (const r of rows) {
+      out.push(r);
+      if (expanded.has(r.id)) out.push(...(legs[r.id] ?? []));
+    }
+    return out;
+  }, [rows, expanded, legs]);
+
+  const isLeg = (r: Transaction) => r.parent_transaction_id != null;
+
   // 영수증은 공용 미리보기 모달로 연다(bare download 금지 — 문서 규약).
   // 거래 영수증에는 발송 엔드포인트가 없으므로 emailPath 는 주지 않는다.
   const { documentActionsColumn, documentPreview } = useDocumentRowActions<Transaction>((r) =>
@@ -293,19 +341,38 @@ export default function TransactionList() {
       hideable: false,
       cell: (r) => {
         const Icon = TYPE_META[r.txn_type]?.icon ?? ArrowRightLeft;
+        const leg = isLeg(r);
         return (
-          <div className="flex items-center gap-1.5">
-            <Icon className={`h-3.5 w-3.5 shrink-0 ${TYPE_META[r.txn_type]?.cls ?? ""}`} />
+          <div className={`flex items-center gap-1.5 ${leg ? "pl-5" : ""}`}>
+            {leg ? (
+              // 자식 leg — 원본에서 갈라져 나온 돈이라는 것이 한눈에 보여야 한다.
+              <span className="inline-flex items-center gap-0.5 text-[10px] font-medium text-violet-600 shrink-0">
+                <CornerDownRight className="h-3 w-3" />
+                {t(`transaction.leg_${r.split_role ?? "disbursement"}`)}
+              </span>
+            ) : (
+              <Icon className={`h-3.5 w-3.5 shrink-0 ${TYPE_META[r.txn_type]?.cls ?? ""}`} />
+            )}
             <Link href={`/finance/transactions/${r.id}`} className="font-medium text-primary hover:underline">
               {r.txn_ref}
             </Link>
-            <button
-              className="text-xs text-muted-foreground hover:text-foreground"
-              onClick={() => openEdit(r)}
-              title={t("transaction.edit")}
-            >
-              ✎
-            </button>
+            {(r.split_leg_count ?? 0) > 0 && (
+              <button
+                onClick={(e) => { e.stopPropagation(); void toggleLegs(r.id); }}
+                className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[10px] font-medium bg-violet-50 text-violet-600 border border-violet-200 hover:bg-violet-100 shrink-0"
+                title={t("transaction.split_source_hint")}
+              >
+                {legsLoading.has(r.id)
+                  ? <Loader2 className="h-2.5 w-2.5 animate-spin" />
+                  : expanded.has(r.id) ? <ChevronDown className="h-2.5 w-2.5" /> : <ChevronRight className="h-2.5 w-2.5" />}
+                <Split className="h-2.5 w-2.5" />
+                {t("transaction.split_legs_count", { count: r.split_leg_count })}
+              </button>
+            )}
+            {!leg && (
+              <button className="text-xs text-muted-foreground hover:text-foreground"
+                onClick={() => openEdit(r)} title={t("transaction.edit")}>✎</button>
+            )}
           </div>
         );
       },
@@ -319,7 +386,14 @@ export default function TransactionList() {
     {
       key: "txn_type",
       header: "transaction.col_type",
-      cell: (r) => <span className={TYPE_META[r.txn_type]?.cls ?? ""}>{t(`transaction.type_${r.txn_type}`)}</span>,
+      cell: (r) => {
+        const Icon = TYPE_META[r.txn_type]?.icon ?? ArrowRightLeft;
+        return (
+          <span className={`inline-flex items-center gap-1 ${TYPE_META[r.txn_type]?.cls ?? ""}`}>
+            <Icon className="h-3 w-3" />{t(`transaction.type_${r.txn_type}`)}
+          </span>
+        );
+      },
     },
     {
       key: "counterparty_display",
@@ -333,7 +407,14 @@ export default function TransactionList() {
       sortAccessor: (r) => r.amount,
       cell: (r) => (
         <span className={`font-medium tabular-nums ${TYPE_META[r.txn_type]?.cls ?? ""}`}>
-          {r.txn_type === "expense" ? "−" : ""}{money(r.amount, r.currency)}
+          {r.txn_type === "expense" ? "−" : r.txn_type === "income" ? "+" : ""}
+          {money(r.amount, r.currency)}
+          {/* 통화가 섞인 원장에서 합계를 읽으려면 기준통화 환산액이 함께 보여야 한다. */}
+          {r.base_amount != null && r.currency !== brand.currency && (
+            <span className="block text-[10px] font-normal text-muted-foreground">
+              ≈ {money(r.base_amount, brand.currency)}
+            </span>
+          )}
         </span>
       ),
     },
@@ -427,7 +508,7 @@ export default function TransactionList() {
         </div>
       ),
     },
-  ], [t, action, brand.currency, brand.currencyPosition, documentActionsColumn]);
+  ], [t, action, brand.currency, brand.currencyPosition, documentActionsColumn, expanded, legs, legsLoading]);
 
   return (
     <Layout>
@@ -545,7 +626,7 @@ export default function TransactionList() {
         <DataTable
           tableKey="transactions"
           columns={columns}
-          data={rows}
+          data={displayRows}
           isLoading={isLoading}
           server={server}
           rowKey={(r) => r.id}
@@ -580,6 +661,13 @@ export default function TransactionList() {
                   <SelectItem value="void">{t("transaction.status_void")}</SelectItem>
                 </SelectContent>
               </Select>
+              {splitSources.length > 0 && (
+                <Button variant="outline" size="sm" className="h-8" onClick={toggleAll}>
+                  {allExpanded
+                    ? <><ChevronsDownUp className="h-3.5 w-3.5 mr-1" />{t("transaction.split_collapse_all")}</>
+                    : <><ChevronsUpDown className="h-3.5 w-3.5 mr-1" />{t("transaction.split_expand_all")}</>}
+                </Button>
+              )}
               <DateInput value={from} onChange={setFrom} className="w-40" />
               <DateInput value={to} onChange={setTo} className="w-40" min={from || undefined} />
 
