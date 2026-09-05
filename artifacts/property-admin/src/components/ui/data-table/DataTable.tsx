@@ -1,4 +1,5 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useLocation } from "wouter";
 import { useTranslation } from "react-i18next";
 import {
   Archive,
@@ -59,6 +60,12 @@ export interface DataTableProps<T> {
   emptyText?: React.ReactNode;
   defaultSort?: { key: string; dir?: "asc" | "desc" };
   defaultPageSize?: number;
+  /**
+   * 행의 상세 페이지 주소. 주면 **인라인으로 고칠 수 없는 칸**이 상세로 가는
+   * 통로가 된다 — 편집 못 하는 칸을 눌렀을 때 아무 일도 안 일어나는 것보다,
+   * 그 자리에서 상세로 넘어가는 편이 실제 동선에 맞는다.
+   */
+  detailHref?: (row: T) => string | null;
   selection?: DataTableSelection;
   /** Inline cell editing for `editable` columns. Omit for read-only tables. */
   editing?: DataTableEditing<T>;
@@ -133,6 +140,7 @@ export function DataTable<T>({
   emptyText,
   defaultSort,
   defaultPageSize,
+  detailHref,
   selection,
   editing,
   showDeleted = false,
@@ -153,6 +161,7 @@ export function DataTable<T>({
   // SuperAdmin-only. Viewers are read-only, matching the server-side gate.
   const canWrite = !!user && role !== "Viewer";
   const { toast } = useToast();
+  const [, navigate] = useLocation();
 
   // 수정일 · 생성일 컬럼을 리스트 공통으로 덧붙인다(페이지 정의가 있으면 그대로 둔다).
   const columns = useMemo(() => withAuditColumns(pageColumns, data), [pageColumns, data]);
@@ -258,7 +267,26 @@ export function DataTable<T>({
   // PUT/PATCH to /api/v1/<resource>/<id> with the single changed field.
   const inlineEditEnabled = !!editing && canWrite && !showDeleted;
 
+  /**
+   * 방금 고친 값을 화면에 **즉시** 반영해 두는 자리.
+   *
+   * 저장은 왕복 한 번, 그 뒤의 목록 재조회가 또 한 번이다. 그동안 셀이 옛 값을
+   * 보여주면 "안 눌렸나?" 하고 다시 누르게 된다. 저장을 보내는 순간 새 값을
+   * 덮어 보여주고, 실패하면 되돌린다. 새 데이터가 도착하면(=data 참조가 바뀌면)
+   * 덮어쓰기는 버린다 — 서버가 정본이다.
+   */
+  const [pendingEdits, setPendingEdits] = useState<Record<string, Partial<T>>>({});
+  const dataRef = useRef(data);
+  useEffect(() => {
+    if (dataRef.current !== data) {
+      dataRef.current = data;
+      setPendingEdits((p) => (Object.keys(p).length ? {} : p));
+    }
+  }, [data]);
+
   async function saveCell(row: T, field: string, value: EditValue) {
+    const key = String(rowKey(row));
+    setPendingEdits((p) => ({ ...p, [key]: { ...(p[key] ?? {}), [field]: value } as Partial<T> }));
     try {
       if (editing?.save) {
         await editing.save(row, field, value);
@@ -277,6 +305,12 @@ export function DataTable<T>({
       editing?.onEdited?.();
       toast({ title: t("common.saved") });
     } catch (err) {
+      // 실패했으면 덮어쓰기를 걷어내 옛 값으로 되돌린다 — 화면이 저장된 척하면 안 된다.
+      setPendingEdits((p) => {
+        const n = { ...p };
+        delete n[key];
+        return n;
+      });
       toast({
         title: t("common.error"),
         description: err instanceof Error ? err.message : String(err),
@@ -526,8 +560,12 @@ export function DataTable<T>({
                   </td>
                 </tr>
               ) : (
-                pageRows.map((row) => {
-                  const id = rowKey(row);
+                pageRows.map((raw) => {
+                  const id = rowKey(raw);
+                  // 저장 중/직후에는 덮어쓴 값을 보여준다.
+                  const patch = pendingEdits[String(id)];
+                  const row = patch ? ({ ...raw, ...patch } as T) : raw;
+                  const href = detailHref?.(row) ?? null;
                   return (
                     <tr
                       key={id}
@@ -546,13 +584,25 @@ export function DataTable<T>({
                           />
                         </td>
                       )}
-                      {visibleCols.map((col) => (
+                      {visibleCols.map((col) => {
+                        // 인라인으로 고칠 수 없는 칸은 상세로 가는 통로로 쓴다.
+                        // 이미 링크·버튼이 들어 있는 칸은 그쪽이 우선이므로,
+                        // 클릭 지점이 그 안이면 아무것도 하지 않는다.
+                        const openable =
+                          !!href && col.key !== ACTIONS_KEY && !(col.editable && inlineEditEnabled);
+                        return (
                         <td
                           key={col.key}
+                          onClick={openable ? (e) => {
+                            const el = e.target as HTMLElement;
+                            if (el.closest("a,button,input,label,[role='checkbox']")) return;
+                            navigate(href!);
+                          } : undefined}
                           className={cn(
                             "px-4 py-3",
                             col.align === "right" && "text-right",
                             col.align === "center" && "text-center",
+                            openable && "cursor-pointer",
                             col.cellClassName,
                           )}
                         >
@@ -576,7 +626,8 @@ export function DataTable<T>({
                             col.cell(row)
                           )}
                         </td>
-                      ))}
+                        );
+                      })}
                     </tr>
                   );
                 })

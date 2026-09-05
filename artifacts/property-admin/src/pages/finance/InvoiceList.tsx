@@ -105,6 +105,9 @@ export default function InvoiceList() {
       },
       {
         key: "due_date",
+        // 납기일은 목록에서 자주 조정한다. 금액·상태는 회계 결과가 달라지므로
+        // 인라인에서 막고, 그 칸을 누르면 상세로 보낸다.
+        editable: { type: "date", getValue: (inv) => inv.due_date ?? "" },
         header: "invoice.col_due_date",
         cell: (inv) => <span className="text-muted-foreground">{formatDate(inv.due_date)}</span>,
       },
@@ -143,6 +146,8 @@ export default function InvoiceList() {
           server={server}
           isLoading={isLoading}
           rowKey={(inv) => inv.id}
+          editing={{ resource: "invoices", method: "PUT", onEdited: invalidate }}
+          detailHref={(inv) => `/finance/invoices/${inv.id}`}
           emptyText={t("invoice.no_invoices")}
           selection={{
             enable: true,

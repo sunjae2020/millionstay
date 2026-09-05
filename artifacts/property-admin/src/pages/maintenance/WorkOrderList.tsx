@@ -123,6 +123,7 @@ export default function WorkOrderList() {
         // 작업일 — the legacy date-only scheduled_at, falling back to the
         // appointment start (scheduled_start_at) and finally the completion.
         key: "scheduled_at",
+        editable: { type: "date", getValue: (wo) => wo.scheduled_at ?? "" },
         header: "workorder.col_scheduled_at",
         sortAccessor: (wo) => wo.scheduled_at ?? wo.scheduled_start_at ?? wo.completed_at ?? null,
         cell: (wo) => {
@@ -160,6 +161,14 @@ export default function WorkOrderList() {
       {
         key: "priority",
         header: "workorder.col_priority",
+        // 우선순위·상태는 목록에서 가장 자주 바뀐다(현장 보고를 받아 바로 올린다).
+        editable: {
+          type: "select",
+          getValue: (wo) => wo.priority,
+          options: ["Low", "Normal", "High", "Urgent"].map((v) => ({
+            value: v, label: t(`workorder.priority_${v.toLowerCase()}` as any),
+          })),
+        },
         cell: (wo) => (
           <span className={`px-2 py-0.5 rounded text-xs font-medium ${priorityColors[wo.priority] ?? "bg-gray-100 text-gray-600"}`}>
             {t(`workorder.priority_${wo.priority.toLowerCase()}` as any)}
@@ -169,6 +178,17 @@ export default function WorkOrderList() {
       {
         key: "status",
         header: "workorder.col_status",
+        editable: {
+          type: "select",
+          getValue: (wo) => wo.status,
+          options: [
+            { value: "Open", label: t("workorder.status_open") },
+            { value: "InProgress", label: t("workorder.status_in_progress") },
+            { value: "PendingReview", label: t("workorder.status_pending_review") },
+            { value: "Completed", label: t("workorder.status_completed") },
+            { value: "Cancelled", label: t("workorder.status_cancelled") },
+          ],
+        },
         cell: (wo) => (
           <span className={`px-2 py-0.5 rounded text-xs font-medium ${statusColors[wo.status] ?? "bg-gray-100 text-gray-600"}`}>
             {wo.status === "InProgress" ? t("workorder.status_in_progress") : wo.status === "PendingReview" ? t("workorder.status_pending_review") : t(`workorder.status_${wo.status.toLowerCase()}` as any)}
@@ -221,6 +241,8 @@ export default function WorkOrderList() {
           server={server}
           isLoading={isLoading}
           rowKey={(wo) => wo.id}
+          editing={{ resource: "work-orders", onEdited: invalidate }}
+          detailHref={(wo) => `/maintenance/work-orders/${wo.id}`}
           emptyText={t("workorder.no_workorders")}
           selection={{
             enable: true,

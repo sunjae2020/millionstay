@@ -196,6 +196,17 @@ export default function TransactionList() {
       defaultPageSize: 100,
     });
 
+  // 인라인 계정과목 셀렉트의 선택지. 은행 임포트 직후 분류 작업에서 가장 많이 쓴다.
+  const { data: coa } = useQuery<{ data: Array<{ code: string; name: string }> }>({
+    queryKey: ["chart-of-accounts"],
+    queryFn: async () => {
+      const res = await apiFetch("/api/v1/chart-of-accounts");
+      if (!res.ok) throw new Error("Failed");
+      return res.json();
+    },
+    staleTime: 5 * 60_000,
+  });
+
   const { data: bankSummary } = useQuery<{
     data: Array<{
       id: number; name: string; currency: string; review_count: number; categorised_count: number;
@@ -275,6 +286,19 @@ export default function TransactionList() {
   }, [rows, expanded, legs]);
 
   const isLeg = (r: Transaction) => r.parent_transaction_id != null;
+
+  /**
+   * 인라인으로 고칠 수 있는 행인가.
+   *
+   * 전기(posted)된 거래의 금액·날짜는 서버가 이미 거부한다(원장과 어긋나므로
+   * 취소 후 재입력이 유일한 정정 경로). 취소된 건과 분할 자식도 목록에서
+   * 직접 고치지 않는다 — 자식은 원본과 함께 다뤄야 한다.
+   */
+  const editableRow = (r: Transaction) =>
+    r.status !== "void" && !isLeg(r);
+  /** 금액·날짜는 전기 전에만. */
+  const editableAmount = (r: Transaction) => editableRow(r) && r.status !== "posted";
+
 
   // 영수증은 공용 미리보기 모달로 연다(bare download 금지 — 문서 규약).
   // 거래 영수증에는 발송 엔드포인트가 없으므로 emailPath 는 주지 않는다.
@@ -381,6 +405,7 @@ export default function TransactionList() {
       key: "txn_date",
       header: "transaction.col_date",
       sortAccessor: (r) => r.txn_date,
+      editable: { type: "date", getValue: (r) => r.txn_date, canEdit: editableAmount },
       cell: (r) => <span className="text-muted-foreground">{formatDate(r.txn_date)}</span>,
     },
     {
@@ -398,6 +423,13 @@ export default function TransactionList() {
     {
       key: "counterparty_display",
       header: "transaction.col_counterparty",
+      // 계정이 연결된 행은 이름을 여기서 바꾸면 계정과 어긋나므로, 자유 입력
+      // 거래처(counterparty_name)만 고칠 수 있게 둔다.
+      editable: {
+        type: "text", field: "counterparty_name",
+        getValue: (r) => r.counterparty_name ?? "",
+        canEdit: (r) => editableRow(r) && r.account_id == null,
+      },
       cell: (r) => <span>{r.counterparty_display ?? "—"}</span>,
     },
     {
@@ -405,6 +437,7 @@ export default function TransactionList() {
       header: "transaction.col_amount",
       align: "right",
       sortAccessor: (r) => r.amount,
+      editable: { type: "number", getValue: (r) => r.amount, canEdit: editableAmount, min: 0 },
       cell: (r) => (
         <span className={`font-medium tabular-nums ${TYPE_META[r.txn_type]?.cls ?? ""}`}>
           {r.txn_type === "expense" ? "−" : r.txn_type === "income" ? "+" : ""}
@@ -455,6 +488,16 @@ export default function TransactionList() {
     {
       key: "gl_account_code",
       header: "transaction.col_gl_account",
+      // 계정과목은 목록에서 가장 자주 고치는 값이다(은행 임포트 직후 분류 작업).
+      editable: {
+        type: "select",
+        getValue: (r) => r.gl_account_code ?? "",
+        canEdit: editableRow,
+        options: [
+          { value: "", label: t("transaction.gl_auto") },
+          ...(coa?.data ?? []).map((a) => ({ value: a.code, label: `${a.code} · ${a.name}` })),
+        ],
+      },
       cell: (r) => (
         <span className="text-muted-foreground text-xs">
           {r.gl_account_code ? `${r.gl_account_code} ${r.gl_account_name ?? ""}`.trim() : "—"}
@@ -508,7 +551,7 @@ export default function TransactionList() {
         </div>
       ),
     },
-  ], [t, action, brand.currency, brand.currencyPosition, documentActionsColumn, expanded, legs, legsLoading]);
+  ], [t, action, brand.currency, brand.currencyPosition, documentActionsColumn, expanded, legs, legsLoading, coa]);
 
   return (
     <Layout>
@@ -632,6 +675,9 @@ export default function TransactionList() {
           rowKey={(r) => r.id}
           emptyText={t("transaction.empty")}
           selection={{ enable: true, resource: "transactions", onChanged: invalidate }}
+          editing={{ resource: "transactions", onEdited: invalidate }}
+          // 인라인으로 못 고치는 칸을 누르면 상세로 간다.
+          detailHref={(r) => `/finance/transactions/${r.id}`}
           showDeleted={showDeleted}
           onToggleShowDeleted={setShowDeleted}
           toolbarExtra={
