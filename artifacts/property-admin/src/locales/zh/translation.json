@@ -4521,7 +4521,11 @@
     "last_login": "最近登录",
     "created_at": "创建时间",
     "no_activity": "暂无操作记录。",
-    "viewer_readonly": "Viewer 仅有只读权限。"
+    "viewer_readonly": "Viewer 仅有只读权限。",
+    "field_branch": "所属分公司",
+    "field_team": "所属团队",
+    "no_branch": "无所属",
+    "no_team": "无所属"
   },
   "coming_soon": {
     "heading": "敬请期待",
@@ -5929,7 +5933,9 @@
     "ai_ops_title": "AI 与用量",
     "ai_ops_desc": "供应商密钥、各任务模型与用量计量",
     "passkeys_title": "通行密钥",
-    "passkeys_desc": "用 Face ID 或指纹代替密码登录。"
+    "passkeys_desc": "用 Face ID 或指纹代替密码登录。",
+    "org_units_title": "分公司与团队",
+    "org_units_desc": "组织结构与会计访问范围"
   },
   "settings_org": {
     "page_subtitle": "公司资料和联系方式",
@@ -7472,5 +7478,28 @@
   },
   "photos": {
     "take": "拍照"
+  },
+  "org_units": {
+    "title": "分公司与团队",
+    "subtitle": "总部/分公司/团队会计访问范围的组织结构",
+    "branches": "分公司",
+    "teams": "团队",
+    "add_branch": "新增分公司",
+    "add_team": "新增团队",
+    "no_branches": "尚无分公司。",
+    "no_teams": "尚无团队。",
+    "col_branch": "分公司",
+    "col_team": "团队",
+    "col_code": "代码",
+    "col_teams": "团队数",
+    "col_staff": "人数",
+    "hq": "总部",
+    "hq_hint": "设为总部后可查看全部分公司的会计。",
+    "address": "地址",
+    "pick_branch": "请选择分公司",
+    "scope_title": "按分公司/团队限制会计访问",
+    "scope_desc": "开启后，员工只能看到归属于本团队（或本分公司及其下属团队）的交易。管理员与总部人员仍可查看全部，单独共享的记录也仍可见。",
+    "scope_off_hint": "已关闭——与此前一样，所有人可见全部会计。请先建好分公司、团队与员工归属，再开启。",
+    "scope_no_hq": "尚未指定总部分公司。非管理员将只能看到本分公司或本团队。"
   }
 }

@@ -113,6 +113,13 @@ export const transactionsTable = pgTable("transactions", {
   fx_rate: numeric("fx_rate", { precision: 18, scale: 8 }),
   fx_date: text("fx_date"),
 
+  // ── 회계 귀속 Class (0083) ────────────────────────────────────────────────
+  // 담당자(owner_user_id → 없으면 created_by)의 소속에서 파생해 **스탬프**한다.
+  // 조회할 때마다 파생하면 담당자가 부서를 옮긴 순간 과거 장부의 귀속이 통째로
+  // 바뀐다 — 회계는 그때의 사실을 기억해야 한다.
+  branch_id: integer("branch_id"),
+  team_id: integer("team_id"),
+
   created_by: integer("created_by"),
   deleted_at: timestamp("deleted_at", { withTimezone: true }),
   created_at: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),

@@ -27,8 +27,7 @@ import {
   Package,
   MailCheck,
   ClipboardList,
-  Bot,
-} from "lucide-react";
+  Bot, Building2 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 
 type CardDef = {
@@ -56,6 +55,12 @@ const ADMIN_CARDS: CardDef[] = [
     description: "settings_hub.roles_desc",
     icon: ShieldCheck,
     href: "/settings/roles",
+  },
+  {
+    title: "settings_hub.org_units_title",
+    description: "settings_hub.org_units_desc",
+    icon: Building2,
+    href: "/settings/org-units",
   },
   {
     title: "settings_hub.design_title",

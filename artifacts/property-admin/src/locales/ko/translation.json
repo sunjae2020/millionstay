@@ -4552,7 +4552,11 @@
     "last_login": "마지막 로그인",
     "created_at": "생성일",
     "no_activity": "기록된 활동이 아직 없습니다.",
-    "viewer_readonly": "Viewer는 읽기 전용입니다."
+    "viewer_readonly": "Viewer는 읽기 전용입니다.",
+    "field_branch": "소속 지점",
+    "field_team": "소속 팀",
+    "no_branch": "소속 없음",
+    "no_team": "소속 없음"
   },
   "coming_soon": {
     "heading": "준비 중입니다",
@@ -5968,7 +5972,9 @@
     "ai_ops_title": "AI · 사용량",
     "ai_ops_desc": "프로바이더 키, 작업별 모델, 사용량 미터",
     "passkeys_title": "패스키",
-    "passkeys_desc": "비밀번호 대신 Face ID·지문으로 로그인합니다."
+    "passkeys_desc": "비밀번호 대신 Face ID·지문으로 로그인합니다.",
+    "org_units_title": "지점·팀",
+    "org_units_desc": "조직 구조와 회계 접근 범위"
   },
   "settings_org": {
     "page_subtitle": "회사 프로필 및 연락처 정보",
@@ -7513,5 +7519,28 @@
   },
   "photos": {
     "take": "사진 촬영"
+  },
+  "org_units": {
+    "title": "지점·팀",
+    "subtitle": "본사/지점/팀 회계 접근 범위의 조직 구조",
+    "branches": "지점",
+    "teams": "팀",
+    "add_branch": "지점 추가",
+    "add_team": "팀 추가",
+    "no_branches": "등록된 지점이 없습니다.",
+    "no_teams": "등록된 팀이 없습니다.",
+    "col_branch": "지점",
+    "col_team": "팀",
+    "col_code": "코드",
+    "col_teams": "팀 수",
+    "col_staff": "인원",
+    "hq": "본사",
+    "hq_hint": "본사로 지정하면 전 지점의 회계를 봅니다.",
+    "address": "주소",
+    "pick_branch": "지점을 고르세요",
+    "scope_title": "지점·팀별 회계 접근 제한",
+    "scope_desc": "켜면 직원은 자기 팀(또는 자기 지점과 그 아래 팀)에 귀속된 거래만 봅니다. 관리자와 본사 소속은 계속 전부 보고, 따로 공유한 건은 그대로 보입니다.",
+    "scope_off_hint": "꺼짐 — 지금처럼 모두가 전체 회계를 봅니다. 지점·팀과 직원 소속을 먼저 채운 뒤에 켜세요.",
+    "scope_no_hq": "본사로 지정된 지점이 없습니다. 관리자가 아닌 사람은 자기 지점·팀만 보게 됩니다."
   }
 }

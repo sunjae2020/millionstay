@@ -1,4 +1,4 @@
-import { pgTable, serial, text, boolean, timestamp } from "drizzle-orm/pg-core";
+import { pgTable, serial, integer, text, boolean, timestamp } from "drizzle-orm/pg-core";
 
 export const usersTable = pgTable("admin_users", {
   id: serial("id").primaryKey(),
@@ -24,6 +24,10 @@ export const usersTable = pgTable("admin_users", {
   business_card_back_id: text("business_card_back_id"),
   notes: text("notes"),
   department: text("department"),
+  // 회계 접근 범위(HQ/지점/팀)의 소속. team_id 만 있으면 팀의 지점을 따른다.
+  // `department` 는 표시용 자유 텍스트라 권한 판단에 쓸 수 없어 따로 둔다.
+  branch_id: integer("branch_id"),
+  team_id: integer("team_id"),
   job_title: text("job_title"),
   employee_no: text("employee_no"),
   joined_on: text("joined_on"),

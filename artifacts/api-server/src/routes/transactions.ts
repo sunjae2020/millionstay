@@ -20,6 +20,8 @@ import { DEFAULT_CURRENCY } from "../lib/currency";
 import { logAction } from "../utils/auditLog";
 import { deletedFilter, makeBulkDelete, makeBulkRestore } from "../lib/softDelete";
 import { postTransaction } from "../lib/billing/gl";
+import { resolveAccountingScope, accountingScopeSql } from "../lib/accounting/scope";
+import { resolveClassFromOwner } from "../lib/accounting/classOf";
 import { stampBaseAmount } from "../lib/billing/baseAmount";
 import { getAiClient, isTaskConfigured } from "../lib/ai/client";
 import { extractReceipt } from "../lib/billing/receiptOcr";
@@ -261,6 +263,17 @@ router.get("/v1/transactions", async (req, res): Promise<void> => {
     // 화면에서 아예 사라진다 — 운영 몇 달이면 닿는 수치라 실질적인 데이터 유실이었다.
     // page/limit(기존) 과 limit/offset(useServerList) 을 모두 받는다. 페이징
     // 파라미터가 아예 없으면 종전대로 100건 — 전량 반환은 원장 규모상 위험하다.
+    // HQ/지점/팀 접근 범위. 게이트가 꺼져 있으면 undefined 라 아무 영향이 없다.
+    const scope = await resolveAccountingScope(req);
+    const scopeSql = accountingScopeSql(
+      scope,
+      sql`${transactionsTable.branch_id}`,
+      sql`${transactionsTable.team_id}`,
+      sql`${transactionsTable.id}`,
+      "transaction",
+    );
+    if (scopeSql) conditions.push(scopeSql);
+
     const { limit, offset, page } = parseListPage(req.query, {
       defaultLimit: 100, maxLimit: 500, unpagedLimit: 100,
     });
@@ -403,7 +416,18 @@ router.get("/v1/transactions/bank-summary", async (req, res): Promise<void> => {
 router.get("/v1/transactions/:id", async (req, res): Promise<void> => {
   const id = Number(req.params.id);
   if (!Number.isFinite(id)) { res.status(400).json({ error: "Invalid id" }); return; }
-  const [row] = await db.select().from(transactionsTable).where(eq(transactionsTable.id, id)).limit(1);
+  const scope = await resolveAccountingScope(req);
+  const scopeSql = accountingScopeSql(
+    scope,
+    sql`${transactionsTable.branch_id}`,
+    sql`${transactionsTable.team_id}`,
+    sql`${transactionsTable.id}`,
+    "transaction",
+  );
+  // 목록에서 숨기고 상세는 열어 두면 접근 통제가 아니다 — id 만 바꾸면 다 보인다.
+  const [row] = await db.select().from(transactionsTable)
+    .where(scopeSql ? and(eq(transactionsTable.id, id), scopeSql) : eq(transactionsTable.id, id))
+    .limit(1);
   if (!row) { res.status(404).json({ error: "Not found" }); return; }
   const [data] = await enrichTransactions([row]);
   res.json({ success: true, data });
@@ -491,9 +515,13 @@ router.post("/v1/transactions", async (req, res): Promise<void> => {
     const b = await inheritFromSchedule(parsed.data);
     const userId = (req as any).user?.id ?? null;
     const fx = await stampBaseAmount(round2(Math.abs(b.amount)), b.currency || DEFAULT_CURRENCY, b.txn_date);
+    // 귀속을 만들 때 한 번 박는다 — 담당자가 부서를 옮겨도 과거 장부는 그대로다.
+    const cls = await resolveClassFromOwner(userId);
     const [row] = await db.insert(transactionsTable).values({
       ...txnValues(b),
       ...fx,
+      ...cls,
+      owner_user_id: userId,
       txn_ref: await nextTxnRef(),
       status: b.status ?? "draft",
       confirmed_at: b.status === "confirmed" || b.status === "posted" ? new Date() : null,

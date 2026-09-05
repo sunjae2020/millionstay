@@ -37,6 +37,9 @@ export interface UserFormValues {
   address_detail: string;
   locale: string;
   department: string;
+  /** 회계 접근 범위의 소속. `department`(표시용 자유 텍스트)와 다르다. */
+  branch_id: string;
+  team_id: string;
   job_title: string;
   employee_no: string;
   joined_on: string;
@@ -52,7 +55,7 @@ export interface UserFormValues {
 export const EMPTY_USER_FORM: UserFormValues = {
   last_name: "", first_name: "", email: "", role: "Admin", is_active: true, password: "",
   phone: "", date_of_birth: "", postcode: "", address_line1: "", address_detail: "", locale: "",
-  department: "", job_title: "", employee_no: "", joined_on: "",
+  department: "", branch_id: "", team_id: "", job_title: "", employee_no: "", joined_on: "",
   emergency_contact_name: "", emergency_contact_relation: "", emergency_contact_phone: "",
   profile_photo_url: "", business_card_front_id: "", business_card_back_id: "", notes: "",
 };
@@ -76,6 +79,29 @@ interface Props {
 const LOCALES = ["en", "ko", "ja", "zh", "th", "vi"];
 
 export function UserFormDialog({ open, onOpenChange, userId, onSaved }: Props) {
+  // 지점·팀 목록. 조직이 없으면 셀렉터는 "소속 없음"만 남고, 그건 스코프를 아직
+  // 켜지 않은 인스턴스의 정상 상태다.
+  const { data: branchResp } = useQuery<{ data: Array<{ id: number; name: string }> }>({
+    queryKey: ["branches"],
+    enabled: open,
+    queryFn: async () => {
+      const res = await apiFetch("/api/v1/branches");
+      if (!res.ok) throw new Error("Failed");
+      return res.json();
+    },
+  });
+  const { data: teamResp } = useQuery<{ data: Array<{ id: number; name: string; branch_id: number }> }>({
+    queryKey: ["teams"],
+    enabled: open,
+    queryFn: async () => {
+      const res = await apiFetch("/api/v1/teams");
+      if (!res.ok) throw new Error("Failed");
+      return res.json();
+    },
+  });
+  const branches = branchResp?.data;
+  const teams = teamResp?.data;
+
   const { t } = useTranslation();
   const { toast } = useToast();
   const { user: currentUser } = useAuth();
@@ -126,6 +152,8 @@ export function UserFormDialog({ open, onOpenChange, userId, onSaved }: Props) {
       address_detail: u.address_detail ?? "",
       locale: u.locale ?? "",
       department: u.department ?? "",
+      branch_id: u.branch_id != null ? String(u.branch_id) : "",
+      team_id: u.team_id != null ? String(u.team_id) : "",
       job_title: u.job_title ?? "",
       employee_no: u.employee_no ?? "",
       joined_on: u.joined_on ?? "",
@@ -200,6 +228,12 @@ export function UserFormDialog({ open, onOpenChange, userId, onSaved }: Props) {
           ...profilePayload(),
         };
         const u = detail?.user;
+        // 소속은 바뀐 때만 보낸다 — 서버가 관리자 권한을 요구하므로, 안 바뀌었는데
+        // 실어 보내면 일반 직원의 프로필 저장이 403 으로 막힌다.
+        const curBranch = u?.branch_id != null ? String(u.branch_id) : "";
+        const curTeam = u?.team_id != null ? String(u.team_id) : "";
+        if (form.branch_id !== curBranch) payload["branch_id"] = form.branch_id ? Number(form.branch_id) : null;
+        if (form.team_id !== curTeam) payload["team_id"] = form.team_id ? Number(form.team_id) : null;
         if (isSuperAdmin && u) {
           const email = form.email.trim().toLowerCase();
           if (email !== String(u.email ?? "").toLowerCase()) payload["email"] = email;
@@ -378,6 +412,40 @@ export function UserFormDialog({ open, onOpenChange, userId, onSaved }: Props) {
                 <div className="space-y-1.5">
                   <Label htmlFor="uf-dept">{t("settings_users.field_department")}</Label>
                   <Input id="uf-dept" value={form.department} onChange={(e) => set("department", e.target.value)} />
+                </div>
+                {/* 소속(지점·팀)은 표시용 부서명과 다르다 — 회계에서 무엇을 볼 수
+                    있는지를 정한다. 팀을 고르면 지점은 서버가 팀의 지점으로 맞춘다. */}
+                <div>
+                  <Label>{t("settings_users.field_branch")}</Label>
+                  <Select
+                    value={form.branch_id || "_none"}
+                    onValueChange={(v) => { set("branch_id", v === "_none" ? "" : v); set("team_id", ""); }}
+                  >
+                    <SelectTrigger><SelectValue placeholder={t("settings_users.no_branch")} /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="_none">{t("settings_users.no_branch")}</SelectItem>
+                      {(branches ?? []).map((b) => (
+                        <SelectItem key={b.id} value={String(b.id)}>{b.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label>{t("settings_users.field_team")}</Label>
+                  <Select
+                    value={form.team_id || "_none"}
+                    onValueChange={(v) => set("team_id", v === "_none" ? "" : v)}
+                  >
+                    <SelectTrigger><SelectValue placeholder={t("settings_users.no_team")} /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="_none">{t("settings_users.no_team")}</SelectItem>
+                      {(teams ?? [])
+                        .filter((tm) => !form.branch_id || String(tm.branch_id) === form.branch_id)
+                        .map((tm) => (
+                          <SelectItem key={tm.id} value={String(tm.id)}>{tm.name}</SelectItem>
+                        ))}
+                    </SelectContent>
+                  </Select>
                 </div>
                 <div className="space-y-1.5">
                   <Label htmlFor="uf-title">{t("settings_users.field_job_title")}</Label>

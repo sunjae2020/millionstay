@@ -4519,7 +4519,11 @@
     "last_login": "最終ログイン",
     "created_at": "作成日",
     "no_activity": "記録された操作はまだありません。",
-    "viewer_readonly": "Viewer は閲覧のみ可能です。"
+    "viewer_readonly": "Viewer は閲覧のみ可能です。",
+    "field_branch": "所属支店",
+    "field_team": "所属チーム",
+    "no_branch": "所属なし",
+    "no_team": "所属なし"
   },
   "coming_soon": {
     "heading": "近日公開予定",
@@ -5925,7 +5929,9 @@
     "ai_ops_title": "AI と使用量",
     "ai_ops_desc": "プロバイダーのキー、作業ごとのモデル、使用量メーター",
     "passkeys_title": "パスキー",
-    "passkeys_desc": "パスワードの代わりに Face ID・指紋でログインします。"
+    "passkeys_desc": "パスワードの代わりに Face ID・指紋でログインします。",
+    "org_units_title": "支店・チーム",
+    "org_units_desc": "組織構造と会計アクセス範囲"
   },
   "settings_org": {
     "page_subtitle": "会社プロフィールと連絡先",
@@ -7468,5 +7474,28 @@
   },
   "photos": {
     "take": "写真を撮る"
+  },
+  "org_units": {
+    "title": "支店・チーム",
+    "subtitle": "本社/支店/チームの会計アクセス範囲の組織構造",
+    "branches": "支店",
+    "teams": "チーム",
+    "add_branch": "支店を追加",
+    "add_team": "チームを追加",
+    "no_branches": "支店がありません。",
+    "no_teams": "チームがありません。",
+    "col_branch": "支店",
+    "col_team": "チーム",
+    "col_code": "コード",
+    "col_teams": "チーム数",
+    "col_staff": "人数",
+    "hq": "本社",
+    "hq_hint": "本社に指定すると全支店の会計を閲覧できます。",
+    "address": "住所",
+    "pick_branch": "支店を選択",
+    "scope_title": "支店・チーム別の会計アクセス制限",
+    "scope_desc": "オンにすると、担当者は自分のチーム（または自支店とその配下チーム）に帰属する取引のみを見ます。管理者と本社所属は引き続き全件、個別共有した分もそのまま見えます。",
+    "scope_off_hint": "オフ — 今までどおり全員が全会計を見ます。支店・チームと所属を先に整えてからオンにしてください。",
+    "scope_no_hq": "本社に指定された支店がありません。管理者以外は自支店・自チームのみになります。"
   }
 }

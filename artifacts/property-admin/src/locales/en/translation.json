@@ -4552,7 +4552,11 @@
     "last_login": "Last sign-in",
     "created_at": "Created",
     "no_activity": "No recorded activity yet.",
-    "viewer_readonly": "Viewers have read-only access."
+    "viewer_readonly": "Viewers have read-only access.",
+    "field_branch": "Branch",
+    "field_team": "Team",
+    "no_branch": "No branch",
+    "no_team": "No team"
   },
   "coming_soon": {
     "heading": "Coming Soon",
@@ -5968,7 +5972,9 @@
     "ai_ops_title": "AI & usage",
     "ai_ops_desc": "Provider keys, per-task models and the usage meter",
     "passkeys_title": "Passkeys",
-    "passkeys_desc": "Sign in with Face ID or a fingerprint instead of a password."
+    "passkeys_desc": "Sign in with Face ID or a fingerprint instead of a password.",
+    "org_units_title": "Branches & teams",
+    "org_units_desc": "Organisation structure and the accounting access scope"
   },
   "settings_org": {
     "page_subtitle": "Company profile and contact details",
@@ -7513,5 +7519,28 @@
   },
   "photos": {
     "take": "Take photo"
+  },
+  "org_units": {
+    "title": "Branches & teams",
+    "subtitle": "Organisation structure behind the HQ / branch / team accounting scope",
+    "branches": "Branches",
+    "teams": "Teams",
+    "add_branch": "Add branch",
+    "add_team": "Add team",
+    "no_branches": "No branches yet.",
+    "no_teams": "No teams yet.",
+    "col_branch": "Branch",
+    "col_team": "Team",
+    "col_code": "Code",
+    "col_teams": "Teams",
+    "col_staff": "Staff",
+    "hq": "HQ",
+    "hq_hint": "An HQ branch sees every branch's accounting.",
+    "address": "Address",
+    "pick_branch": "Pick a branch",
+    "scope_title": "Restrict accounting by branch / team",
+    "scope_desc": "When on, staff see only the transactions attributed to their own team (or their branch and the teams under it). Admins and HQ staff still see everything, and records shared explicitly stay visible.",
+    "scope_off_hint": "Off — everyone sees all accounting, exactly as before. Set up branches, teams and staff membership first, then turn this on.",
+    "scope_no_hq": "No branch is marked HQ. Anyone who is not an Admin will be limited to their own branch or team."
   }
 }

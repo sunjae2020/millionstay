@@ -4481,7 +4481,11 @@
     "created_at": "Ngày tạo",
     "no_activity": "Chưa có hoạt động nào được ghi nhận.",
     "viewer_readonly": "Viewer chỉ có quyền xem.",
-    "field_email": "Email"
+    "field_email": "Email",
+    "field_branch": "Chi nhánh",
+    "field_team": "Nhóm",
+    "no_branch": "Không thuộc chi nhánh",
+    "no_team": "Không thuộc nhóm"
   },
   "coming_soon": {
     "heading": "Sắp ra mắt",
@@ -5876,7 +5880,9 @@
     "ai_ops_title": "AI & mức sử dụng",
     "ai_ops_desc": "Khoá nhà cung cấp, mô hình theo tác vụ và đồng hồ sử dụng",
     "passkeys_title": "Passkey",
-    "passkeys_desc": "Đăng nhập bằng Face ID hoặc vân tay thay cho mật khẩu."
+    "passkeys_desc": "Đăng nhập bằng Face ID hoặc vân tay thay cho mật khẩu.",
+    "org_units_title": "Chi nhánh & nhóm",
+    "org_units_desc": "Cơ cấu tổ chức và phạm vi truy cập kế toán"
   },
   "settings_org": {
     "page_subtitle": "Hồ sơ công ty và thông tin liên hệ",
@@ -7413,5 +7419,28 @@
   },
   "photos": {
     "take": "Chụp ảnh"
+  },
+  "org_units": {
+    "title": "Chi nhánh & nhóm",
+    "subtitle": "Cơ cấu tổ chức cho phạm vi truy cập kế toán Trụ sở/Chi nhánh/Nhóm",
+    "branches": "Chi nhánh",
+    "teams": "Nhóm",
+    "add_branch": "Thêm chi nhánh",
+    "add_team": "Thêm nhóm",
+    "no_branches": "Chưa có chi nhánh.",
+    "no_teams": "Chưa có nhóm.",
+    "col_branch": "Chi nhánh",
+    "col_team": "Nhóm",
+    "col_code": "Mã",
+    "col_teams": "Số nhóm",
+    "col_staff": "Nhân sự",
+    "hq": "Trụ sở",
+    "hq_hint": "Chi nhánh đặt làm trụ sở sẽ xem được kế toán của mọi chi nhánh.",
+    "address": "Địa chỉ",
+    "pick_branch": "Chọn chi nhánh",
+    "scope_title": "Giới hạn kế toán theo chi nhánh/nhóm",
+    "scope_desc": "Khi bật, nhân viên chỉ thấy giao dịch thuộc nhóm mình (hoặc chi nhánh mình và các nhóm bên dưới). Quản trị viên và nhân sự trụ sở vẫn thấy tất cả; bản ghi được chia sẻ riêng vẫn hiển thị.",
+    "scope_off_hint": "Đang tắt — mọi người thấy toàn bộ kế toán như trước. Hãy lập chi nhánh, nhóm và gán nhân sự trước rồi mới bật.",
+    "scope_no_hq": "Chưa có chi nhánh nào được đặt làm trụ sở. Người không phải quản trị viên sẽ chỉ thấy chi nhánh hoặc nhóm của mình."
   }
 }

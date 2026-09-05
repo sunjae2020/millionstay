@@ -69,6 +69,7 @@ import saleListingsRouter from "./sale-listings";
 import contentTranslationsRouter from "./content-translations";
 import tablePrefsRouter from "./table-prefs";
 import transactionsRouter from "./transactions";
+import orgUnitsRouter from "./org-units";
 const router: IRouter = Router();
 
 router.use(healthRouter);
@@ -143,6 +144,8 @@ router.use(contentTranslationsRouter);
 router.use(tablePrefsRouter);
 // 거래 원장 + 계약 결제 일정 (/finance/transactions).
 router.use(transactionsRouter);
+// 지점·팀 + 회계 접근 범위(HQ/지점/팀).
+router.use(orgUnitsRouter);
 // Note: partnerAuthRouter, agentPortalRouter, ownerPortalRouter are registered in app.ts
 // BEFORE the requireAuth middleware to allow partner JWT auth to bypass the admin auth guard.
 

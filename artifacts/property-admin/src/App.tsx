@@ -132,6 +132,7 @@ import Settings from "@/pages/settings/Settings";
 import OrganisationPage from "@/pages/settings/sub/Organisation";
 import UsersPage from "@/pages/settings/sub/Users";
 import RolesPage from "@/pages/settings/sub/Roles";
+import OrgUnitsPage from "@/pages/settings/sub/OrgUnits";
 import CommissionPlansPage from "@/pages/settings/sub/CommissionPlans";
 import EmailTemplatesPage from "@/pages/settings/sub/EmailTemplates";
 import DocumentTemplatesPage from "@/pages/settings/sub/DocumentTemplates";
@@ -399,6 +400,7 @@ function Router() {
       <Route path="/settings/organisation" component={OrganisationPage} />
       <Route path="/settings/users" component={UsersPage} />
       <Route path="/settings/roles" component={RolesPage} />
+      <Route path="/settings/org-units" component={OrgUnitsPage} />
       <Route path="/settings/commission-plans" component={CommissionPlansPage} />
       <Route path="/settings/rental-fee-schedules" component={RentalFeeSchedulesPage} />
       {/* 세대점검표 양식 — which rows every checklist carries. */}

@@ -1,7 +1,7 @@
 import { Router, type IRouter } from "express";
 import bcrypt from "bcryptjs";
 import multer from "multer";
-import { db, usersTable, systemLogsTable } from "@workspace/db";
+import { db, teamsTable, usersTable, systemLogsTable } from "@workspace/db";
 import { eq, or, desc, isNull, inArray } from "drizzle-orm";
 import {
   isCloudinaryConfigured,
@@ -80,6 +80,36 @@ function profileUpdates(body: Record<string, unknown>): Record<string, unknown> 
   return out;
 }
 
+
+/**
+ * 소속(지점·팀) 변경분. **일반 프로필 필드와 같이 두지 않는다** — 소속은 표시용
+ * 정보가 아니라 회계 접근 범위를 정하는 값이라, 바꾸는 순간 그 사람이 볼 수 있는
+ * 장부가 달라진다. 그래서 관리자만 건드릴 수 있고 감사 로그에 남는다.
+ *
+ * 팀을 지정하면 지점은 팀의 지점으로 맞춘다 — 둘을 따로 받으면 "A지점 소속인데
+ * B지점 팀"이라는 모순이 저장된다.
+ */
+async function membershipUpdates(body: Record<string, unknown>): Promise<Record<string, unknown>> {
+  const out: Record<string, unknown> = {};
+  const num = (v: unknown): number | null => {
+    if (v === null || v === "" || v === undefined) return null;
+    const n = Number(v);
+    return Number.isFinite(n) && n > 0 ? n : null;
+  };
+  if ("team_id" in body) {
+    const teamId = num(body.team_id);
+    out.team_id = teamId;
+    if (teamId) {
+      const [team] = await db.select({ branch_id: teamsTable.branch_id })
+        .from(teamsTable).where(eq(teamsTable.id, teamId)).limit(1);
+      if (team) out.branch_id = team.branch_id;
+    }
+  }
+  // 팀이 지점을 정하지 않은 경우에만 지점을 직접 받는다.
+  if ("branch_id" in body && out.branch_id === undefined) out.branch_id = num(body.branch_id);
+  return out;
+}
+
 /** Columns returned by the detail endpoint (everything except the password). */
 const userColumns = {
   id: usersTable.id,
@@ -103,6 +133,8 @@ const userColumns = {
   business_card_back_id: usersTable.business_card_back_id,
   notes: usersTable.notes,
   department: usersTable.department,
+  branch_id: usersTable.branch_id,
+  team_id: usersTable.team_id,
   job_title: usersTable.job_title,
   employee_no: usersTable.employee_no,
   joined_on: usersTable.joined_on,
@@ -438,6 +470,15 @@ router.patch("/v1/admin/users/:id", async (req, res): Promise<void> => {
     if (first_name !== undefined) updates.first_name = String(first_name).replace(/[\x00-\x1f\x7f]/g, "").trim().slice(0, 80);
     if (last_name !== undefined) updates.last_name = String(last_name).replace(/[\x00-\x1f\x7f]/g, "").trim().slice(0, 80);
     Object.assign(updates, profileUpdates(req.body as Record<string, unknown>));
+    // 소속 변경은 회계 가시성을 바꾸므로 관리자만.
+    if ("branch_id" in req.body || "team_id" in req.body) {
+      const role = (currentUser as { role?: string } | undefined)?.role;
+      if (role !== "SuperAdmin" && role !== "Admin") {
+        res.status(403).json({ success: false, error: denied(currentUser, "change a staff member's branch or team") });
+        return;
+      }
+      Object.assign(updates, await membershipUpdates(req.body as Record<string, unknown>));
+    }
     if (email !== undefined) {
       const normalized = String(email).trim().toLowerCase();
       if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(normalized)) {
