@@ -139,7 +139,10 @@
     "tenant_links": "租客链接",
     "help_docs": "内部资料库",
     "more": "更多",
-    "org_units": "分公司与团队"
+    "org_units": "分公司与团队",
+    "manual_register": "手册管理台账",
+    "period_close": "期间结账",
+    "fixed_assets": "资产台账"
   },
   "dashboard": {
     "title": "仪表板",
@@ -7511,5 +7514,169 @@
     "count": "已选 {{n}}/{{max}}",
     "reset": "恢复默认",
     "edit": "编辑底部标签"
+  },
+  "help": {
+    "eyebrow": "内部文件",
+    "docs_title": "手册管理台账",
+    "docs_subtitle": "公司运行的所有规程、指引、手册与表单的唯一清单。未在此登记的文件不具有内部效力。",
+    "search_placeholder": "按文件编号或标题搜索",
+    "empty": "没有符合条件的文件。",
+    "status_all": "全部状态",
+    "overdue": "超过复审期限",
+    "footnote": "显示 {{count}} 条 · 定期复审周期为最后修订日起 12 个月。",
+    "stat": {
+      "total": "登记文件",
+      "live": "生效中",
+      "pending": "编制中",
+      "missing": "未编制",
+      "overdue": "超过复审期限"
+    },
+    "category": {
+      "all": "全部",
+      "fin": "财务会计",
+      "ops": "运营",
+      "hr": "人事",
+      "leg": "法务与合同",
+      "sec": "信息保护",
+      "tec": "技术",
+      "sal": "销售"
+    },
+    "status": {
+      "live": "生效中",
+      "draft": "草案",
+      "review": "审核中",
+      "amending": "修订中",
+      "missing": "未编制",
+      "retired": "废止"
+    },
+    "kind": {
+      "regulation": "规程",
+      "guideline": "指引",
+      "manual": "手册",
+      "form": "表单"
+    },
+    "owner": {
+      "admin": "经营支援",
+      "ops": "运营",
+      "tech": "技术",
+      "sales": "销售"
+    },
+    "col": {
+      "id": "文件编号",
+      "title": "标题",
+      "kind": "类型",
+      "owner": "主管",
+      "status": "状态",
+      "issued": "制定",
+      "revised": "最后修订",
+      "next_review": "下次复审"
+    },
+    "doc_titles": {
+      "FIN-001": "费用报销规程",
+      "FIN-002": "公司卡使用指引",
+      "FIN-003": "开票与收款业务手册",
+      "FIN-004": "会计科目运用表",
+      "FIN-005": "退租结算处理手册",
+      "FIN-006": "合作方结算指引",
+      "OPS-001": "房间检查手册",
+      "OPS-002": "工单处理手册",
+      "OPS-003": "入住与退租流程手册",
+      "OPS-004": "保洁质量标准与检查表",
+      "OPS-005": "缺陷响应SLA指引",
+      "OPS-006": "紧急情况应对手册",
+      "OPS-007": "钥匙与门禁管理指引",
+      "HR-001": "就业规则",
+      "HR-002": "出勤与考勤管理指引",
+      "HR-003": "新员工入职手册",
+      "HR-004": "员工宿舍运营指引",
+      "LEG-001": "租赁合同业务手册",
+      "LEG-002": "标准合同格式管理台账",
+      "LEG-003": "电子签名运营指引",
+      "LEG-004": "文件签发与保存规程",
+      "SEC-001": "个人信息处理方针",
+      "SEC-002": "个人信息泄露应对流程",
+      "SEC-003": "信息安全基本指引",
+      "SEC-004": "访问权限管理指引",
+      "SEC-005": "信息主体权利响应手册",
+      "TEC-001": "部署运维流程",
+      "TEC-002": "故障处理手册",
+      "TEC-003": "数据库迁移规范",
+      "SAL-001": "房源发布手册",
+      "SAL-002": "咨询应答话术",
+      "SAL-003": "合作方入驻手册"
+    }
+  },
+  "period": {
+    "title": "期间结账",
+    "subtitle": "确定会计期间的费用归属。已结账的月份不能新增或修改交易；已确定（增值税申报·决算）的月份无法撤回。",
+    "rule_title": "FIN-001 第7条 — 追溯录入判定",
+    "rule_open": "开放：可自由按实际支出日录入。",
+    "rule_closed": "已结账：需经营支援填写理由解除后方可录入。",
+    "rule_locked": "已确定：不可撤回。遗漏计入当月费用，重大错误通过更正申报处理。",
+    "month_label": "{{month}}月",
+    "prev_year": "上一年",
+    "next_year": "下一年",
+    "close": "结账",
+    "reopen": "解除结账",
+    "lock": "确定",
+    "locked_final": "已确定，无法更改",
+    "reopen_title": "解除结账",
+    "reopen_desc": "若无需理由即可解除，结账就只是形式。",
+    "reopen_reason_required": "解除结账的理由（必填）",
+    "txn_count": "交易 {{count}} 笔",
+    "unposted_count": "未过账 {{count}} 笔",
+    "pending_claims": "待审批交易 {{count}} 笔",
+    "closed_on": "{{date}} 结账",
+    "locked_on": "{{date}} 确定",
+    "reopened_note": "解除理由：{{reason}}",
+    "toast_close": "已结账",
+    "toast_reopen": "已解除结账",
+    "toast_lock": "已确定",
+    "status": {
+      "open": "开放",
+      "closed": "已结账",
+      "locked": "已确定"
+    }
+  },
+  "asset": {
+    "title": "资产台账",
+    "subtitle": "取得价额超过 100 万韩元的物品与资本性支出属于资产而非费用。填写使用年限、安置地点与管理责任人并确定后，即可计算账面价值。",
+    "empty": "尚无登记资产。",
+    "filter_all": "全部",
+    "confirm": "确定",
+    "confirm_title": "确定资产",
+    "saved_toast": "已确定资产",
+    "years": "{{count}} 年",
+    "fully_depreciated": "已提足",
+    "as_of": "截至 {{date}} · 账面价值为计算值而非存储值。",
+    "stat": {
+      "draft": "待确定",
+      "active": "使用中",
+      "acquisition_total": "取得原价合计",
+      "book_value_total": "账面价值合计"
+    },
+    "status": {
+      "draft": "草案",
+      "active": "使用中",
+      "disposed": "处置"
+    },
+    "field": {
+      "useful_life": "使用年限（年）",
+      "useful_life_hint": "设备通常 5 年，建筑 40 年。",
+      "location": "安置地点",
+      "location_hint": "例：丽水总部 3 楼会议室"
+    },
+    "col": {
+      "no": "资产编号",
+      "name": "资产名称",
+      "account": "会计科目",
+      "acquired": "取得日",
+      "cost": "取得原价",
+      "life": "使用年限",
+      "accumulated": "累计折旧",
+      "book_value": "账面价值",
+      "location": "安置地点",
+      "status": "状态"
+    }
   }
 }

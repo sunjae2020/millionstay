@@ -101,6 +101,9 @@ import DocumentIntake from "@/pages/documents/DocumentIntake";
 import DocumentLibrary from "@/pages/documents/DocumentLibrary";
 import TenantLinkQueue from "@/pages/documents/TenantLinkQueue";
 import HelpDocs from "@/pages/help/HelpDocs";
+import ManualRegisterPage from "@/pages/help/DocsIndex";
+import PeriodClosePage from "@/pages/finance/PeriodClose";
+import FixedAssetsPage from "@/pages/finance/FixedAssets";
 import MobileGuide from "@/pages/help/MobileGuide";
 import DocumentCompliance from "@/pages/documents/DocumentCompliance";
 import QuoteList from "@/pages/documents/QuoteList";
@@ -368,6 +371,8 @@ function Router() {
       <Route path="/documents/tenant-links" component={TenantLinkQueue} />
       {/* 내부 문서함 — 운영 지도·정책·세입자 링크 (직원 교육용). */}
       <Route path="/help/docs" component={HelpDocs} />
+      {/* 사내 규정·매뉴얼 관리대장 — 내부 문서함(/help/docs)과 별개다. */}
+      <Route path="/help/manuals" component={ManualRegisterPage} />
       <Route path="/help/mobile" component={MobileGuide} />
       <Route path="/documents/quotes" component={QuoteList} />
       <Route path="/documents/quotes/new" component={QuoteDetail} />
@@ -389,6 +394,8 @@ function Router() {
       <Route path="/finance/recurring" component={RecurringScheduleList} />
       <Route path="/finance/exchange-rates" component={ExchangeRateList} />
       <Route path="/finance/journal" component={Journal} />
+      <Route path="/finance/period-close" component={PeriodClosePage} />
+      <Route path="/finance/fixed-assets" component={FixedAssetsPage} />
       <Route path="/finance/pay-run" component={PayRun} />
       <Route path="/finance/bank" component={BankReconciliation} />
 

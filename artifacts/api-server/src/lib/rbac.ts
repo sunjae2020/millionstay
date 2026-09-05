@@ -29,6 +29,10 @@ export type Resource = (typeof RESOURCES)[number];
 const PREFIX_MAP: Array<[string, Resource]> = [
   ["/v1/admin-users", "users"],
   ["/v1/roles", "users"],
+  ["/v1/accounting-periods", "finance"],
+  ["/v1/fixed-assets", "finance"],
+  ["/v1/transactions", "finance"],
+  ["/v1/payment-schedules", "finance"],
   ["/v1/invoices", "finance"],
   ["/v1/receipts", "finance"],
   ["/v1/journal", "finance"],

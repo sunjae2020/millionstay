@@ -37,6 +37,7 @@ import {
   generateContractSchedule,
   recalcSchedulePaid,
 } from "../lib/billing/paymentSchedule";
+import { guardPeriod } from "../lib/billing/accountingPeriod";
 
 // 거래 원장(/finance/transactions) + 계약 결제 일정.
 //
@@ -513,6 +514,8 @@ router.post("/v1/transactions", async (req, res): Promise<void> => {
   if (!parsed.success) { res.status(400).json({ error: parsed.error.message }); return; }
   try {
     const b = await inheritFromSchedule(parsed.data);
+    // FIN-001 제7조 — 마감된 기간에는 새 사실을 심을 수 없다.
+    if (await guardPeriod(res, b.txn_date)) return;
     const userId = (req as any).user?.id ?? null;
     const fx = await stampBaseAmount(round2(Math.abs(b.amount)), b.currency || DEFAULT_CURRENCY, b.txn_date);
     // 귀속을 만들 때 한 번 박는다 — 담당자가 부서를 옮겨도 과거 장부는 그대로다.
@@ -556,6 +559,8 @@ router.put("/v1/transactions/:id", async (req, res): Promise<void> => {
 
   const merged = { ...before, ...parsed.data, amount: parsed.data.amount ?? Number(before.amount) } as z.infer<typeof TxnBody>;
   const b = await inheritFromSchedule(merged);
+  // 마감된 달에서 꺼내오는 것도, 마감된 달로 밀어 넣는 것도 같은 위반이다.
+  if (await guardPeriod(res, before.txn_date, b.txn_date)) return;
   const userId = (req as any).user?.id ?? null;
   const nextStatus = parsed.data.status ?? before.status;
   const becameSettled = (nextStatus === "confirmed" || nextStatus === "posted")
@@ -606,6 +611,8 @@ router.post("/v1/transactions/:id/post", async (req, res): Promise<void> => {
   const [row] = await db.select().from(transactionsTable).where(eq(transactionsTable.id, id)).limit(1);
   if (!row) { res.status(404).json({ error: "Not found" }); return; }
   if (row.status === "void") { res.status(409).json({ error: "Voided transaction cannot be posted" }); return; }
+  // 전기는 원장에 새 분개를 만든다. 마감된 기간에는 만들 수 없다.
+  if (await guardPeriod(res, row.txn_date)) return;
   // 이미 분개를 들고 있으면 다시 전기하지 않는다. 인보이스 수납이 만든 거래는
   // `invoice_paid:<id>` 분개를 물려받는데, 여기서 또 전기하면 posting_key 가
   // 달라(`transaction:<id>`) 멱등 가드를 빠져나가고 같은 돈이 두 번 기록된다.
@@ -673,6 +680,10 @@ router.post("/v1/transactions/:id/post", async (req, res): Promise<void> => {
 router.post("/v1/transactions/:id/void", async (req, res): Promise<void> => {
   const id = Number(req.params.id);
   const reason = typeof req.body?.reason === "string" ? req.body.reason : null;
+  // 취소도 그 달의 집계를 바꾼다 — 마감된 기간에서는 허용하지 않는다.
+  const [existing] = await db.select({ txn_date: transactionsTable.txn_date })
+    .from(transactionsTable).where(eq(transactionsTable.id, id)).limit(1);
+  if (existing && await guardPeriod(res, existing.txn_date)) return;
   const [row] = await db.update(transactionsTable).set({
     status: "void",
     workflow_status: "void",

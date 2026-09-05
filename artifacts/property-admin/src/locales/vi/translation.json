@@ -137,7 +137,10 @@
     "tenant_links": "Liên kết người thuê",
     "help_docs": "Thư viện nội bộ",
     "more": "Thêm",
-    "org_units": "Chi nhánh & nhóm"
+    "org_units": "Chi nhánh & nhóm",
+    "manual_register": "Sổ đăng ký sổ tay",
+    "period_close": "Khóa sổ kỳ",
+    "fixed_assets": "Sổ tài sản"
   },
   "dashboard": {
     "title": "Bảng điều khiển",
@@ -7452,5 +7455,169 @@
     "count": "Đã chọn {{n}}/{{max}}",
     "reset": "Khôi phục mặc định",
     "edit": "Chỉnh sửa thanh tab dưới"
+  },
+  "help": {
+    "eyebrow": "Tài liệu nội bộ",
+    "docs_title": "Sổ đăng ký sổ tay",
+    "docs_subtitle": "Danh sách duy nhất gồm mọi quy định, hướng dẫn, sổ tay và biểu mẫu công ty đang vận hành. Tài liệu không đăng ký ở đây không có hiệu lực nội bộ.",
+    "search_placeholder": "Tìm theo số hiệu hoặc tiêu đề",
+    "empty": "Không có tài liệu nào khớp bộ lọc.",
+    "status_all": "Mọi trạng thái",
+    "overdue": "Quá hạn rà soát",
+    "footnote": "Hiển thị {{count}} mục · Chu kỳ rà soát là 12 tháng kể từ lần sửa đổi cuối.",
+    "stat": {
+      "total": "Đã đăng ký",
+      "live": "Đang hiệu lực",
+      "pending": "Đang soạn",
+      "missing": "Chưa soạn",
+      "overdue": "Quá hạn rà soát"
+    },
+    "category": {
+      "all": "Tất cả",
+      "fin": "Tài chính kế toán",
+      "ops": "Vận hành",
+      "hr": "Nhân sự",
+      "leg": "Pháp lý & hợp đồng",
+      "sec": "Bảo mật thông tin",
+      "tec": "Kỹ thuật",
+      "sal": "Kinh doanh"
+    },
+    "status": {
+      "live": "Đang hiệu lực",
+      "draft": "Bản thảo",
+      "review": "Đang xem xét",
+      "amending": "Đang sửa đổi",
+      "missing": "Chưa soạn",
+      "retired": "Đã bãi bỏ"
+    },
+    "kind": {
+      "regulation": "Quy định",
+      "guideline": "Hướng dẫn",
+      "manual": "Sổ tay",
+      "form": "Biểu mẫu"
+    },
+    "owner": {
+      "admin": "Hành chính",
+      "ops": "Vận hành",
+      "tech": "Kỹ thuật",
+      "sales": "Kinh doanh"
+    },
+    "col": {
+      "id": "Số hiệu",
+      "title": "Tiêu đề",
+      "kind": "Loại",
+      "owner": "Phụ trách",
+      "status": "Trạng thái",
+      "issued": "Ban hành",
+      "revised": "Sửa đổi",
+      "next_review": "Rà soát kế tiếp"
+    },
+    "doc_titles": {
+      "FIN-001": "Quy định thanh toán chi phí",
+      "FIN-002": "Hướng dẫn sử dụng thẻ công ty",
+      "FIN-003": "Sổ tay nghiệp vụ lập hóa đơn và thu tiền",
+      "FIN-004": "Bảng hệ thống tài khoản kế toán",
+      "FIN-005": "Sổ tay xử lý quyết toán khi trả phòng",
+      "FIN-006": "Hướng dẫn thanh toán cho đối tác",
+      "OPS-001": "Sổ tay kiểm tra căn hộ",
+      "OPS-002": "Sổ tay xử lý lệnh công việc",
+      "OPS-003": "Sổ tay quy trình nhận và trả phòng",
+      "OPS-004": "Tiêu chuẩn chất lượng vệ sinh và danh mục kiểm tra",
+      "OPS-005": "Hướng dẫn SLA xử lý lỗi",
+      "OPS-006": "Sổ tay ứng phó tình huống khẩn cấp",
+      "OPS-007": "Hướng dẫn quản lý chìa khóa và ra vào",
+      "HR-001": "Nội quy lao động",
+      "HR-002": "Hướng dẫn quản lý kỷ luật và chấm công",
+      "HR-003": "Sổ tay hội nhập nhân viên mới",
+      "HR-004": "Hướng dẫn vận hành nhà ở công ty",
+      "LEG-001": "Sổ tay nghiệp vụ hợp đồng thuê",
+      "LEG-002": "Sổ đăng ký biểu mẫu hợp đồng chuẩn",
+      "LEG-003": "Hướng dẫn vận hành chữ ký điện tử",
+      "LEG-004": "Quy định phát hành và lưu trữ tài liệu",
+      "SEC-001": "Chính sách bảo mật thông tin cá nhân",
+      "SEC-002": "Quy trình ứng phó rò rỉ thông tin cá nhân",
+      "SEC-003": "Hướng dẫn an toàn thông tin cơ bản",
+      "SEC-004": "Hướng dẫn quản lý quyền truy cập",
+      "SEC-005": "Sổ tay xử lý yêu cầu của chủ thể dữ liệu",
+      "TEC-001": "Quy trình vận hành triển khai",
+      "TEC-002": "Sổ tay xử lý sự cố",
+      "TEC-003": "Quy ước migration cơ sở dữ liệu",
+      "SAL-001": "Sổ tay đăng tin bất động sản",
+      "SAL-002": "Kịch bản trả lời khách hàng",
+      "SAL-003": "Sổ tay hội nhập đối tác"
+    }
+  },
+  "period": {
+    "title": "Khóa sổ kỳ",
+    "subtitle": "Chốt việc ghi nhận chi phí theo kỳ. Tháng đã khóa không thể tạo mới hay sửa giao dịch; tháng đã chốt (đã kê khai VAT / quyết toán) không thể mở lại.",
+    "rule_title": "FIN-001 Điều 7 — quy tắc ghi lùi ngày",
+    "rule_open": "Mở: nhập tự do theo ngày chi thực tế.",
+    "rule_closed": "Đã khóa: Hành chính phải mở lại kèm lý do trước khi nhập.",
+    "rule_locked": "Đã chốt: không thể đảo ngược. Khoản sót ghi vào tháng hiện tại; sai sót trọng yếu xử lý bằng tờ khai bổ sung.",
+    "month_label": "Tháng {{month}}",
+    "prev_year": "Năm trước",
+    "next_year": "Năm sau",
+    "close": "Khóa sổ",
+    "reopen": "Mở lại",
+    "lock": "Chốt",
+    "locked_final": "Đã chốt — không thể thay đổi",
+    "reopen_title": "Mở lại kỳ",
+    "reopen_desc": "Nếu mở lại được mà không cần lý do thì việc khóa sổ chỉ là hình thức.",
+    "reopen_reason_required": "Lý do mở lại (bắt buộc)",
+    "txn_count": "{{count}} giao dịch",
+    "unposted_count": "{{count}} chưa ghi sổ",
+    "pending_claims": "{{count}} giao dịch chờ duyệt",
+    "closed_on": "Khóa {{date}}",
+    "locked_on": "Chốt {{date}}",
+    "reopened_note": "Lý do mở lại: {{reason}}",
+    "toast_close": "Đã khóa sổ",
+    "toast_reopen": "Đã mở lại kỳ",
+    "toast_lock": "Đã chốt kỳ",
+    "status": {
+      "open": "Mở",
+      "closed": "Đã khóa",
+      "locked": "Đã chốt"
+    }
+  },
+  "asset": {
+    "title": "Sổ tài sản",
+    "subtitle": "Vật phẩm trên 1.000.000 KRW và chi phí vốn hóa là tài sản chứ không phải chi phí. Điền tuổi thọ, vị trí và người quản lý rồi xác nhận — giá trị còn lại sẽ được tính.",
+    "empty": "Chưa có tài sản nào.",
+    "filter_all": "Tất cả",
+    "confirm": "Xác nhận",
+    "confirm_title": "Xác nhận tài sản",
+    "saved_toast": "Đã xác nhận tài sản",
+    "years": "{{count}} năm",
+    "fully_depreciated": "đã khấu hao hết",
+    "as_of": "Tính đến {{date}} · giá trị còn lại là giá trị tính toán, không lưu trữ.",
+    "stat": {
+      "draft": "Chờ xác nhận",
+      "active": "Đang dùng",
+      "acquisition_total": "Tổng nguyên giá",
+      "book_value_total": "Tổng giá trị còn lại"
+    },
+    "status": {
+      "draft": "Bản nháp",
+      "active": "Đang dùng",
+      "disposed": "Đã thanh lý"
+    },
+    "field": {
+      "useful_life": "Tuổi thọ (năm)",
+      "useful_life_hint": "Thiết bị thường 5 năm, nhà cửa 40 năm.",
+      "location": "Vị trí",
+      "location_hint": "VD: Trụ sở Yeosu, phòng họp tầng 3"
+    },
+    "col": {
+      "no": "Số tài sản",
+      "name": "Tài sản",
+      "account": "Tài khoản",
+      "acquired": "Ngày mua",
+      "cost": "Nguyên giá",
+      "life": "Tuổi thọ",
+      "accumulated": "Khấu hao lũy kế",
+      "book_value": "Giá trị còn lại",
+      "location": "Vị trí",
+      "status": "Trạng thái"
+    }
   }
 }

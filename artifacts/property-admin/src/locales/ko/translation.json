@@ -139,7 +139,10 @@
     "tenant_links": "세입자 링크",
     "help_docs": "내부 문서함",
     "more": "더보기",
-    "org_units": "지점·팀"
+    "org_units": "지점·팀",
+    "manual_register": "매뉴얼 관리대장",
+    "period_close": "기간 마감",
+    "fixed_assets": "자산대장"
   },
   "dashboard": {
     "title": "대시보드",
@@ -7552,5 +7555,169 @@
     "count": "{{max}}개 중 {{n}}개 선택",
     "reset": "기본값으로 되돌리기",
     "edit": "하단 탭 편집"
+  },
+  "help": {
+    "eyebrow": "사내 문서",
+    "docs_title": "매뉴얼 관리대장",
+    "docs_subtitle": "회사가 운영하는 모든 규정·지침·매뉴얼·서식의 단일 목록입니다. 여기에 등재되지 않은 문서는 사내 문서로서 효력이 없습니다.",
+    "search_placeholder": "문서번호 또는 제목 검색",
+    "empty": "조건에 맞는 문서가 없습니다.",
+    "status_all": "전체 상태",
+    "overdue": "검토기한 초과",
+    "footnote": "{{count}}건 표시 · 정기검토 주기는 최종개정일로부터 12개월입니다.",
+    "stat": {
+      "total": "등록 문서",
+      "live": "운영중",
+      "pending": "작성 대기",
+      "missing": "미작성",
+      "overdue": "검토기한 초과"
+    },
+    "category": {
+      "all": "전체",
+      "fin": "재무회계",
+      "ops": "운영",
+      "hr": "인사",
+      "leg": "법무·계약",
+      "sec": "정보보호",
+      "tec": "기술",
+      "sal": "영업"
+    },
+    "status": {
+      "live": "운영중",
+      "draft": "초안",
+      "review": "검토중",
+      "amending": "개정중",
+      "missing": "미작성",
+      "retired": "폐지"
+    },
+    "kind": {
+      "regulation": "규정",
+      "guideline": "지침",
+      "manual": "매뉴얼",
+      "form": "서식"
+    },
+    "owner": {
+      "admin": "경영지원",
+      "ops": "운영",
+      "tech": "기술",
+      "sales": "영업"
+    },
+    "col": {
+      "id": "문서번호",
+      "title": "제목",
+      "kind": "유형",
+      "owner": "주관",
+      "status": "상태",
+      "issued": "제정",
+      "revised": "최종개정",
+      "next_review": "차기검토"
+    },
+    "doc_titles": {
+      "FIN-001": "경비 정산 규정",
+      "FIN-002": "법인카드 사용 지침",
+      "FIN-003": "청구·수납 업무 매뉴얼",
+      "FIN-004": "계정과목 운용표",
+      "FIN-005": "퇴거 정산 처리 매뉴얼",
+      "FIN-006": "파트너 정산 지침",
+      "OPS-001": "세대 점검 매뉴얼",
+      "OPS-002": "작업지시 처리 매뉴얼",
+      "OPS-003": "입주·퇴거 절차 매뉴얼",
+      "OPS-004": "청소 품질 기준 및 체크리스트",
+      "OPS-005": "하자 대응 SLA 지침",
+      "OPS-006": "긴급상황 대응 매뉴얼",
+      "OPS-007": "열쇠·출입 관리 지침",
+      "HR-001": "취업규칙",
+      "HR-002": "복무 및 근태 관리 지침",
+      "HR-003": "신규 입사자 온보딩 매뉴얼",
+      "HR-004": "사택 운영 지침",
+      "LEG-001": "임대차 계약 업무 매뉴얼",
+      "LEG-002": "표준 계약 서식 관리대장",
+      "LEG-003": "전자서명 운영 지침",
+      "LEG-004": "문서 발행·보존 규정",
+      "SEC-001": "개인정보 처리방침",
+      "SEC-002": "개인정보 유출 대응 절차",
+      "SEC-003": "정보보안 기본 지침",
+      "SEC-004": "접근권한 관리 지침",
+      "SEC-005": "정보주체 권리 대응 매뉴얼",
+      "TEC-001": "배포 운영 절차",
+      "TEC-002": "장애 대응 런북",
+      "TEC-003": "DB 마이그레이션 규약",
+      "SAL-001": "매물 등록·게시 매뉴얼",
+      "SAL-002": "문의 응대 스크립트",
+      "SAL-003": "파트너 온보딩 매뉴얼"
+    }
+  },
+  "period": {
+    "title": "기간 마감",
+    "subtitle": "회계기간의 비용 귀속을 확정합니다. 마감된 달로는 거래를 새로 만들거나 고칠 수 없고, 확정(부가세 신고·결산)된 달은 되돌릴 수 없습니다.",
+    "rule_title": "FIN-001 제7조 — 소급 입력 판정",
+    "rule_open": "열림: 실제 지출일을 거래일자로 자유롭게 입력합니다.",
+    "rule_closed": "마감: 경영지원이 사유를 남기고 해제해야 입력할 수 있습니다.",
+    "rule_locked": "확정: 되돌릴 수 없습니다. 누락은 당월 비용으로, 중요한 오류는 수정신고로 정정합니다.",
+    "month_label": "{{month}}월",
+    "prev_year": "이전 해",
+    "next_year": "다음 해",
+    "close": "마감",
+    "reopen": "마감 해제",
+    "lock": "확정",
+    "locked_final": "확정되어 변경할 수 없습니다",
+    "reopen_title": "마감 해제",
+    "reopen_desc": "사유 없는 해제가 가능하면 마감은 형식이 됩니다.",
+    "reopen_reason_required": "마감 해제 사유 (필수)",
+    "txn_count": "거래 {{count}}건",
+    "unposted_count": "미전기 {{count}}건",
+    "pending_claims": "승인 대기 거래 {{count}}건",
+    "closed_on": "{{date}} 마감",
+    "locked_on": "{{date}} 확정",
+    "reopened_note": "해제 사유: {{reason}}",
+    "toast_close": "마감했습니다",
+    "toast_reopen": "마감을 해제했습니다",
+    "toast_lock": "확정했습니다",
+    "status": {
+      "open": "열림",
+      "closed": "마감",
+      "locked": "확정"
+    }
+  },
+  "asset": {
+    "title": "자산대장",
+    "subtitle": "취득가액 100만원 초과 물품과 자본적 지출은 비용이 아니라 자산입니다. 내용연수·설치 장소·관리 책임자를 기재하고 확정하면 장부가액이 계산됩니다.",
+    "empty": "등록된 자산이 없습니다.",
+    "filter_all": "전체",
+    "confirm": "확정",
+    "confirm_title": "자산 확정",
+    "saved_toast": "자산을 확정했습니다",
+    "years": "{{count}}년",
+    "fully_depreciated": "상각완료",
+    "as_of": "기준일 {{date}} 현재 · 장부가액은 저장값이 아니라 계산값입니다.",
+    "stat": {
+      "draft": "확정 대기",
+      "active": "운용중",
+      "acquisition_total": "취득원가 합계",
+      "book_value_total": "장부가액 합계"
+    },
+    "status": {
+      "draft": "초안",
+      "active": "운용중",
+      "disposed": "처분"
+    },
+    "field": {
+      "useful_life": "내용연수(년)",
+      "useful_life_hint": "비품 5년, 건물 40년이 통상 기준입니다.",
+      "location": "설치 장소",
+      "location_hint": "예: 여수 본사 3층 회의실"
+    },
+    "col": {
+      "no": "자산번호",
+      "name": "자산명",
+      "account": "계정과목",
+      "acquired": "취득일",
+      "cost": "취득원가",
+      "life": "내용연수",
+      "accumulated": "감가상각누계",
+      "book_value": "장부가액",
+      "location": "설치 장소",
+      "status": "상태"
+    }
   }
 }

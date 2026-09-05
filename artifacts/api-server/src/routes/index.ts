@@ -69,6 +69,8 @@ import saleListingsRouter from "./sale-listings";
 import contentTranslationsRouter from "./content-translations";
 import tablePrefsRouter from "./table-prefs";
 import transactionsRouter from "./transactions";
+import accountingPeriodsRouter from "./accounting-periods";
+import fixedAssetsRouter from "./fixed-assets";
 import orgUnitsRouter from "./org-units";
 import bankImportRouter from "./bank-import";
 const router: IRouter = Router();
@@ -145,6 +147,10 @@ router.use(contentTranslationsRouter);
 router.use(tablePrefsRouter);
 // 거래 원장 + 계약 결제 일정 (/finance/transactions).
 router.use(transactionsRouter);
+
+// 회계기간 마감 + 자산대장 (FIN-001 제6·7조 / 제11조).
+router.use(accountingPeriodsRouter);
+router.use(fixedAssetsRouter);
 // 지점·팀 + 회계 접근 범위(HQ/지점/팀).
 router.use(orgUnitsRouter);
 // 은행 명세서 가져오기(붙여넣기 · 파일 · Google 링크).

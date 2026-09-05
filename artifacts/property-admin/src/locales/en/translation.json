@@ -139,7 +139,10 @@
     "tenant_links": "Tenant links",
     "help_docs": "Internal library",
     "more": "More",
-    "org_units": "Branches & teams"
+    "org_units": "Branches & teams",
+    "manual_register": "Manual register",
+    "period_close": "Period close",
+    "fixed_assets": "Fixed assets"
   },
   "dashboard": {
     "title": "Dashboard",
@@ -7552,5 +7555,169 @@
     "count": "{{n}} of {{max}} selected",
     "reset": "Reset to default",
     "edit": "Edit bottom tabs"
+  },
+  "help": {
+    "eyebrow": "Internal docs",
+    "docs_title": "Manual Register",
+    "docs_subtitle": "The single list of every policy, guideline, manual and form the company operates. A document not registered here has no internal effect.",
+    "search_placeholder": "Search by document number or title",
+    "empty": "No documents match these filters.",
+    "status_all": "All statuses",
+    "overdue": "Review overdue",
+    "footnote": "{{count}} shown · Review cycle is 12 months from the last revision.",
+    "stat": {
+      "total": "Registered",
+      "live": "In force",
+      "pending": "In progress",
+      "missing": "Not written",
+      "overdue": "Review overdue"
+    },
+    "category": {
+      "all": "All",
+      "fin": "Finance",
+      "ops": "Operations",
+      "hr": "People",
+      "leg": "Legal",
+      "sec": "Security",
+      "tec": "Engineering",
+      "sal": "Sales"
+    },
+    "status": {
+      "live": "In force",
+      "draft": "Draft",
+      "review": "In review",
+      "amending": "Amending",
+      "missing": "Not written",
+      "retired": "Retired"
+    },
+    "kind": {
+      "regulation": "Policy",
+      "guideline": "Guideline",
+      "manual": "Manual",
+      "form": "Form"
+    },
+    "owner": {
+      "admin": "Corporate",
+      "ops": "Operations",
+      "tech": "Engineering",
+      "sales": "Sales"
+    },
+    "col": {
+      "id": "No.",
+      "title": "Title",
+      "kind": "Type",
+      "owner": "Owner",
+      "status": "Status",
+      "issued": "Issued",
+      "revised": "Revised",
+      "next_review": "Next review"
+    },
+    "doc_titles": {
+      "FIN-001": "Expense Reimbursement Policy",
+      "FIN-002": "Corporate Card Guideline",
+      "FIN-003": "Billing & Collections Manual",
+      "FIN-004": "Chart of Accounts Guideline",
+      "FIN-005": "Move-out Settlement Manual",
+      "FIN-006": "Partner Payout Guideline",
+      "OPS-001": "Unit Inspection Manual",
+      "OPS-002": "Work Order Handling Manual",
+      "OPS-003": "Move-in / Move-out Procedure Manual",
+      "OPS-004": "Cleaning Quality Standard & Checklist",
+      "OPS-005": "Defect Response SLA Guideline",
+      "OPS-006": "Emergency Response Manual",
+      "OPS-007": "Key & Access Control Guideline",
+      "HR-001": "Employment Rules",
+      "HR-002": "Attendance & Conduct Guideline",
+      "HR-003": "New Hire Onboarding Manual",
+      "HR-004": "Company Housing Guideline",
+      "LEG-001": "Lease Contract Operations Manual",
+      "LEG-002": "Standard Contract Form Register",
+      "LEG-003": "E-signature Operations Guideline",
+      "LEG-004": "Document Issuance & Retention Policy",
+      "SEC-001": "Privacy Policy",
+      "SEC-002": "Data Breach Response Procedure",
+      "SEC-003": "Information Security Guideline",
+      "SEC-004": "Access Control (RBAC) Guideline",
+      "SEC-005": "Data Subject Request Manual",
+      "TEC-001": "Deployment Operations Procedure",
+      "TEC-002": "Incident Response Runbook",
+      "TEC-003": "DB Migration Convention",
+      "SAL-001": "Listing Publication Manual",
+      "SAL-002": "Inquiry Response Script",
+      "SAL-003": "Partner Onboarding Manual"
+    }
+  },
+  "period": {
+    "title": "Period close",
+    "subtitle": "Fix the expense period. A closed month accepts no new or edited transactions; a locked month (VAT filed / accounts finalised) cannot be reopened.",
+    "rule_title": "FIN-001 Art. 7 — back-dating rules",
+    "rule_open": "Open: enter the real spend date freely.",
+    "rule_closed": "Closed: Corporate must reopen it with a stated reason first.",
+    "rule_locked": "Locked: irreversible. Late items go to the current month; material errors go through an amended filing.",
+    "month_label": "{{month}}",
+    "prev_year": "Previous year",
+    "next_year": "Next year",
+    "close": "Close",
+    "reopen": "Reopen",
+    "lock": "Lock",
+    "locked_final": "Locked — no further changes",
+    "reopen_title": "Reopen period",
+    "reopen_desc": "A reopen without a stated reason makes the close a formality.",
+    "reopen_reason_required": "Reason for reopening (required)",
+    "txn_count": "{{count}} transactions",
+    "unposted_count": "{{count}} unposted",
+    "pending_claims": "{{count}} transactions awaiting approval",
+    "closed_on": "Closed {{date}}",
+    "locked_on": "Locked {{date}}",
+    "reopened_note": "Reopen reason: {{reason}}",
+    "toast_close": "Period closed",
+    "toast_reopen": "Period reopened",
+    "toast_lock": "Period locked",
+    "status": {
+      "open": "Open",
+      "closed": "Closed",
+      "locked": "Locked"
+    }
+  },
+  "asset": {
+    "title": "Fixed assets",
+    "subtitle": "Items over KRW 1,000,000 and capital expenditure are assets, not expenses. Fill in useful life, location and custodian, then confirm — book value is computed from there.",
+    "empty": "No assets registered.",
+    "filter_all": "All",
+    "confirm": "Confirm",
+    "confirm_title": "Confirm asset",
+    "saved_toast": "Asset confirmed",
+    "years": "{{count}} yr",
+    "fully_depreciated": "fully depreciated",
+    "as_of": "As of {{date}} · book value is computed, not stored.",
+    "stat": {
+      "draft": "Awaiting confirmation",
+      "active": "In service",
+      "acquisition_total": "Acquisition cost",
+      "book_value_total": "Book value"
+    },
+    "status": {
+      "draft": "Draft",
+      "active": "In service",
+      "disposed": "Disposed"
+    },
+    "field": {
+      "useful_life": "Useful life (years)",
+      "useful_life_hint": "5 years for equipment, 40 for buildings is the usual basis.",
+      "location": "Location",
+      "location_hint": "e.g. Yeosu HQ, 3F meeting room"
+    },
+    "col": {
+      "no": "Asset no.",
+      "name": "Asset",
+      "account": "Account",
+      "acquired": "Acquired",
+      "cost": "Cost",
+      "life": "Life",
+      "accumulated": "Accum. dep.",
+      "book_value": "Book value",
+      "location": "Location",
+      "status": "Status"
+    }
   }
 }
