@@ -18,7 +18,8 @@ import {
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { TenantLinkCard } from "@/components/TenantLinkCard";
 import { apiFetch } from "@/lib/apiFetch";
-import { FileSignature } from "lucide-react";
+import { FileSignature, FileText } from "lucide-react";
+import { DocumentPreviewDialog, useDocumentPreview } from "@/components/DocumentPreviewDialog";
 import { useBrand } from "@/contexts/ThemeContext";
 import { ArrowLeft, Save, TrendingDown, ArrowUpRight } from "lucide-react";
 import { Link } from "wouter";
@@ -82,6 +83,8 @@ export default function LeadDetail() {
   const qc = useQueryClient();
   const [convertOpen, setConvertOpen] = useState(false);
   const [contractOpen, setContractOpen] = useState(false);
+  // 서류는 언제나 미리보기 모달로 연다 — 바로 내려받게 하지 않는다.
+  const { previewConfig, openPreview, closePreview } = useDocumentPreview();
   const [contractForm, setContractForm] = useState({ space_id: null as number | null, start_date: "", end_date: "" });
   const [convertForm, setConvertForm] = useState<ConvertForm>({
     space_id: null, check_in_date: "", check_out_date: "", agreed_weekly_rate: "",
@@ -175,12 +178,21 @@ export default function LeadDetail() {
       });
       const body = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(body?.error?.message ?? body?.error ?? t("lead.contract_error"));
-      return body as { contract_id: number; contract_ref: string; created_contact: boolean; created_account: boolean };
+      return body as {
+        contract_id: number; contract_ref: string;
+        created_contact: boolean; created_account: boolean;
+        application_attached?: boolean; application_attach_error?: string | null;
+      };
     },
     onSuccess: (data) => {
       qc.invalidateQueries({ queryKey: getListLeadsQueryKey() });
       if (id) qc.invalidateQueries({ queryKey: getGetLeadQueryKey(id) });
       setContractOpen(false);
+      // 첨부만 실패한 경우가 있다(PDF 엔진·저장소). 계약은 이미 섰으므로 이동은
+      // 하되, 무엇이 빠졌는지는 말해 준다.
+      if (data.application_attached === false && data.application_attach_error !== "NO_APPLICATION") {
+        alert(t("lead.contract_attach_failed", { reason: data.application_attach_error ?? "" }));
+      }
       navigate(`/booking/contracts/${data.contract_id}`);
     },
     onError: (e: any) => alert(e.message),
@@ -261,6 +273,16 @@ export default function LeadDetail() {
               <Button size="sm" variant="outline" className="gap-1.5 text-green-700 border-green-300 hover:bg-green-50"
                 onClick={() => setConvertOpen(true)}>
                 <ArrowUpRight className="h-4 w-4" /> {t("lead.btn_convert")}
+              </Button>
+            )}
+            {!isNew && lead && (
+              <Button size="sm" variant="outline" className="gap-1.5"
+                onClick={() => openPreview({
+                  title: `${t("lead.application_doc")} · ${lead.lead_ref}`,
+                  filename: `${lead.lead_ref}-application.pdf`,
+                  source: { kind: "api", path: `/api/v1/leads/${id}/application.pdf` },
+                })}>
+                <FileText className="h-4 w-4" /> {t("lead.btn_application_doc")}
               </Button>
             )}
             {canConvertContract && (
@@ -515,6 +537,8 @@ export default function LeadDetail() {
           )}
         </div>
       </div>
+
+      <DocumentPreviewDialog config={previewConfig} onClose={closePreview} />
 
       {/* 계약으로 전환 — 만드는 것은 초안이다. 서식·결제조건·특약은 계약 상세에서
           정한다. 여기서 묻는 것은 초안을 세우는 데 꼭 필요한 세 칸뿐이다. */}

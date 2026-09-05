@@ -1078,7 +1078,10 @@
     "contract_hint": "書式・支払条件・特約は契約詳細で設定します。住戸が未定の場合は空欄で構いません。",
     "contract_error": "お問い合わせを契約に変換できませんでした",
     "label_start_date": "契約開始日",
-    "label_end_date": "契約終了日"
+    "label_end_date": "契約終了日",
+    "btn_application_doc": "申込書",
+    "application_doc": "賃貸申込書",
+    "contract_attach_failed": "契約は作成されましたが、申込書の添付に失敗しました（{{reason}}）。契約詳細の書類タブから改めて添付してください。"
   },
   "task": {
     "new": "新規タスク",

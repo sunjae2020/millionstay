@@ -1079,7 +1079,10 @@
     "contract_hint": "合同格式、付款条件与特别约定在合同详情中设置。房源未定时可留空。",
     "contract_error": "无法将该咨询转为合同",
     "label_start_date": "合同开始日",
-    "label_end_date": "合同结束日"
+    "label_end_date": "合同结束日",
+    "btn_application_doc": "申请表",
+    "application_doc": "租赁申请表",
+    "contract_attach_failed": "合同已创建，但申请表附件添加失败（{{reason}}）。请在合同详情的文件页签重新添加。"
   },
   "task": {
     "new": "新建任务",

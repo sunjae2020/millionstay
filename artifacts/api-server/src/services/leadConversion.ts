@@ -37,6 +37,28 @@ export interface LeadParty {
   answers: Record<string, string>;
 }
 
+/** 최신 제출본 한 건(원문). 답변과 제출 시각을 함께 쓰는 곳이 있어 따로 뺀다. */
+async function latestApplication(leadId: number): Promise<any | null> {
+  const [link] = await db
+    .select({ submissions: tenantAccessLinksTable.submissions })
+    .from(tenantAccessLinksTable)
+    .where(and(
+      eq(tenantAccessLinksTable.kind, "application"),
+      eq(tenantAccessLinksTable.context_type, "lead"),
+      eq(tenantAccessLinksTable.context_id, leadId),
+    ))
+    .orderBy(desc(tenantAccessLinksTable.id))
+    .limit(1);
+  const subs = Array.isArray(link?.submissions) ? link!.submissions : [];
+  return [...subs].reverse().find((s: any) => s?.event === "application") ?? null;
+}
+
+/** 제출 시각 — 문서에 "언제 낸 것인지" 를 찍는다. */
+export async function leadApplicationSubmittedAt(leadId: number): Promise<string | null> {
+  const latest = await latestApplication(leadId);
+  return typeof latest?.at === "string" ? latest.at : null;
+}
+
 /** 이 문의에 달린 임차 신청서의 최신 제출본. 없으면 빈 객체. */
 export async function leadApplicationAnswers(leadId: number): Promise<Record<string, string>> {
   const [link] = await db

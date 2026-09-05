@@ -1067,7 +1067,10 @@
     "contract_hint": "Mẫu hợp đồng, điều khoản thanh toán và thỏa thuận riêng được đặt trong chi tiết hợp đồng. Có thể để trống căn hộ nếu chưa xác định.",
     "contract_error": "Không thể chuyển yêu cầu thành hợp đồng",
     "label_start_date": "Ngày bắt đầu",
-    "label_end_date": "Ngày kết thúc"
+    "label_end_date": "Ngày kết thúc",
+    "btn_application_doc": "Đơn xin thuê",
+    "application_doc": "Đơn xin thuê",
+    "contract_attach_failed": "Hợp đồng đã được tạo nhưng không đính kèm được đơn xin thuê ({{reason}}). Vui lòng đính kèm lại ở tab tài liệu của hợp đồng."
   },
   "task": {
     "new": "Tác vụ mới",

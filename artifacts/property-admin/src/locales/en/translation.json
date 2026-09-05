@@ -1092,7 +1092,10 @@
     "contract_hint": "The form, payment terms and special clauses are set on the contract itself. Leave the unit blank if it is not decided yet.",
     "contract_error": "Could not convert this enquiry",
     "label_start_date": "Start date",
-    "label_end_date": "End date"
+    "label_end_date": "End date",
+    "btn_application_doc": "Application",
+    "application_doc": "Rental application",
+    "contract_attach_failed": "The contract was created, but the application could not be attached ({{reason}}). Attach it from the contract's documents tab."
   },
   "task": {
     "new": "New Task",

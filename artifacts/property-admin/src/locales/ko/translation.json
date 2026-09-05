@@ -1092,7 +1092,10 @@
     "contract_hint": "서식과 결제 조건, 특약은 계약 상세에서 정합니다. 세대가 아직 정해지지 않았으면 비워 두셔도 됩니다.",
     "contract_error": "문의를 계약으로 전환하지 못했습니다",
     "label_start_date": "계약 시작일",
-    "label_end_date": "계약 종료일"
+    "label_end_date": "계약 종료일",
+    "btn_application_doc": "신청서",
+    "application_doc": "임차 신청서",
+    "contract_attach_failed": "계약은 만들어졌지만 신청서 첨부에 실패했습니다({{reason}}). 계약 상세의 서류 탭에서 다시 붙여 주세요."
   },
   "task": {
     "new": "새 업무",
