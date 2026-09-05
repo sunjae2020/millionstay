@@ -118,8 +118,17 @@ export async function matchStatement(rows: StatementRow[], opts: MatchOptions): 
     gte(transactionsTable.txn_date, from),
     lte(transactionsTable.txn_date, to),
   ));
+  // ⚠️ 중복은 **개수로** 센다. 같은 날 같은 금액 같은 적요가 명세서에 두 번 찍히는
+  // 일이 실제로 있다(자사 이체 ₩1,500,000 × 2건). 존재 여부로만 판정하면 두 번째
+  // 정상 거래까지 중복으로 몰려 사람이 체크를 빼고, 그대로 유실된다.
   const dupKey = (d: string, a: number, m: string) => `${d}|${Math.round(a)}|${norm(m)}`;
-  const dupMap = new Map(existing.map((e) => [dupKey(e.date, Number(e.amount), e.memo ?? ""), e.ref]));
+  const dupCount = new Map<string, number>();
+  const dupRef = new Map<string, string>();
+  for (const e of existing) {
+    const k = dupKey(e.date, Number(e.amount), e.memo ?? "");
+    dupCount.set(k, (dupCount.get(k) ?? 0) + 1);
+    if (!dupRef.has(k)) dupRef.set(k, e.ref);
+  }
 
   /**
    * 후보가 여럿이면 버리지 말고 **고른다.**
@@ -170,11 +179,19 @@ export async function matchStatement(rows: StatementRow[], opts: MatchOptions): 
       invoice_id: null, invoice_ref: null, invoice_amount: null,
       gl_account_code: isIn ? opts.defaultIncomeCode : null,
       txn_type: isIn ? "income" : "expense",
-      duplicate_of: dupMap.get(dupKey(r.txn_date, amt, r.memo)) ?? null,
+      duplicate_of: null,
     };
     const withContract = (c: typeof contracts[number]) => ({
       contract_id: c.id, contract_ref: c.ref, unit_name: c.unit ?? unit, tenant_name: c.tenant ?? null,
     });
+
+    // 이미 들어온 개수만큼만 중복으로 표시한다.
+    const dk = dupKey(r.txn_date, amt, r.memo);
+    const remain = dupCount.get(dk) ?? 0;
+    if (remain > 0) {
+      dupCount.set(dk, remain - 1);
+      base.duplicate_of = dupRef.get(dk) ?? null;
+    }
 
     // 자사 계좌 간 이체 — 임대 수입이 아니다.
     // 양방향으로 본다 — 적요가 잘려 회사명보다 짧은 경우가 흔하다.

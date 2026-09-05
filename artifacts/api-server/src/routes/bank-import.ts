@@ -1,6 +1,6 @@
 import { Router, type IRouter } from "express";
 import multer from "multer";
-import { and, asc, eq, inArray, isNull, sql } from "drizzle-orm";
+import { and, asc, eq, gte, inArray, isNull, lte, sql } from "drizzle-orm";
 import { z } from "zod";
 import {
   db, bankAccountsTable, chartOfAccountsTable, transactionsTable, paymentSchedulesTable,
@@ -65,6 +65,20 @@ export function ownNameVariants(names: Array<string | null | undefined>): string
     }
   }
   return [...out].filter((s) => s.length >= 3);
+}
+
+
+/**
+ * 이미 들어온 거래인지 가리는 키. 통장·날짜·금액·적요가 모두 같으면 같은 입금이다.
+ *
+ * ⚠️ **개수로 센다. 있으면 무조건 차단하는 방식은 틀린다.** 실제 명세서에는 같은 날
+ * 같은 금액 같은 적요가 두 번 찍히는 일이 있다(자사 이체 ₩1,500,000 × 2건). 존재
+ * 여부로만 막으면 두 번째 정상 거래가 조용히 사라진다. DB 에 이미 있는 개수만큼만
+ * 건너뛰고, 그보다 많이 들어온 만큼은 받아들인다.
+ */
+function dupKey(bankId: number | null, date: string, amount: number, memo: string): string {
+  const norm = (x: string) => (x ?? "").normalize("NFKC").replace(/[\s()（）]/g, "");
+  return `${bankId ?? 0}|${date.slice(0, 10)}|${Math.round(amount)}|${norm(memo)}`;
 }
 
 const router: IRouter = Router();
@@ -240,6 +254,29 @@ router.post("/v1/bank-import/commit", async (req, res): Promise<void> => {
     try { schedulesCreated += (await generateContractSchedule(cid)).created; } catch { /* 일정 실패가 임포트를 막지 않는다 */ }
   }
 
+  // ── 중복 가드 (서버) ──────────────────────────────────────────────────────
+  // 미리보기는 **한 시점의 스냅샷**이다. 등록 후 같은 화면에서 다시 누르거나,
+  // 더블클릭·타임아웃 재전송이 오면 그 스냅샷에는 중복 표시가 없어 그대로 통과한다.
+  // 화면의 체크 해제는 편의이지 보증이 아니므로, 서버가 마지막에 한 번 더 막는다.
+  const dates = b.rows.map((r) => r.txn_date.slice(0, 10)).sort();
+  const already = new Map<string, number>();
+  if (dates.length) {
+    const prior = await db.select({
+      date: transactionsTable.txn_date, amount: transactionsTable.amount,
+      memo: transactionsTable.bank_reference, bank: transactionsTable.bank_account_id,
+    }).from(transactionsTable).where(and(
+      isNull(transactionsTable.deleted_at),
+      sql`${transactionsTable.status} <> 'void'`,
+      gte(transactionsTable.txn_date, dates[0]!),
+      lte(transactionsTable.txn_date, dates[dates.length - 1]!),
+    ));
+    for (const p of prior) {
+      const k = dupKey(p.bank, p.date, Number(p.amount), p.memo ?? "");
+      already.set(k, (already.get(k) ?? 0) + 1);
+    }
+  }
+  const skippedDuplicates: Array<{ memo: string; txn_date: string; amount: number; existing_ref: string | null }> = [];
+
   const year = new Date().getFullYear();
   const [seq] = await db.select({ n: sql<number>`count(*)::int` }).from(transactionsTable)
     .where(sql`${transactionsTable.txn_ref} LIKE ${`TXN-${year}-%`}`);
@@ -251,6 +288,14 @@ router.post("/v1/bank-import/commit", async (req, res): Promise<void> => {
   let settled = 0;
 
   for (const r of b.rows) {
+    // 이미 있는 만큼만 건너뛴다 — 같은 줄이 명세서에 두 번 있으면 두 번째는 받는다.
+    const k = dupKey(b.bank_account_id ?? null, r.txn_date, r.amount, r.memo);
+    const have = already.get(k) ?? 0;
+    if (have > 0) {
+      already.set(k, have - 1);
+      skippedDuplicates.push({ memo: r.memo, txn_date: r.txn_date.slice(0, 10), amount: r.amount, existing_ref: null });
+      continue;
+    }
     try {
       const fx = await stampBaseAmount(r.amount, DEFAULT_CURRENCY, r.txn_date);
       // 회차 연결 — 청구서가 붙었으면 그 회차, 보증금이면 미납 보증금 회차.
@@ -346,6 +391,8 @@ router.post("/v1/bank-import/commit", async (req, res): Promise<void> => {
     success: true,
     data: {
       created: created.length, settled, failed,
+      skipped_duplicates: skippedDuplicates.length,
+      duplicates: skippedDuplicates.slice(0, 20),
       schedules_created: schedulesCreated, transaction_ids: created,
     },
   });

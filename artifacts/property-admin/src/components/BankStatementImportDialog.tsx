@@ -85,7 +85,11 @@ export function BankStatementImportDialog({
   const [meta, setMeta] = useState<PreviewMeta | null>(null);
   const [include, setInclude] = useState<Record<string, boolean>>({});
   const [settleInvoices, setSettleInvoices] = useState(true);
-  const [result, setResult] = useState<{ created: number; settled: number; failed: Array<{ memo: string; error: string }> } | null>(null);
+  const [result, setResult] = useState<{
+    created: number; settled: number; skipped_duplicates: number;
+    duplicates: Array<{ memo: string; txn_date: string; amount: number }>;
+    failed: Array<{ memo: string; error: string }>;
+  } | null>(null);
 
   const money = (n: number) => formatMoney(n, brand.currency, brand.currencyPosition);
 
@@ -153,7 +157,7 @@ export function BankStatementImportDialog({
       });
       const p = await r.json().catch(() => ({}));
       if (!r.ok) throw new Error(p?.error ?? "실패");
-      return p.data as { created: number; settled: number; failed: Array<{ memo: string; error: string }> };
+      return p.data as typeof result & object;
     },
     onSuccess: (d) => { setResult(d); setStep("done"); onImported(); },
     onError: (e: Error) => toast({ title: "등록 실패", description: e.message, variant: "destructive" }),
@@ -384,6 +388,23 @@ export function BankStatementImportDialog({
                 </p>
               )}
             </div>
+            {result.skipped_duplicates > 0 && (
+              // 서버가 막았다는 사실을 반드시 보여준다 — 조용히 건너뛰면 "왜 52건을
+              // 올렸는데 0건이지?" 가 되고, 사람이 같은 시도를 반복한다.
+              <div className="border border-amber-200 bg-amber-50 rounded-md px-3 py-2 text-xs">
+                <p className="font-medium text-amber-800">
+                  이미 등록된 {result.skipped_duplicates}건은 건너뛰었습니다.
+                </p>
+                <p className="text-amber-700 mt-0.5">
+                  같은 통장·날짜·금액·적요의 거래가 이미 있어 중복 등록을 막았습니다.
+                </p>
+                {result.duplicates.slice(0, 5).map((d, i) => (
+                  <p key={i} className="text-amber-700 mt-0.5">
+                    {d.txn_date} {money(d.amount)} · {d.memo}
+                  </p>
+                ))}
+              </div>
+            )}
             {result.failed.length > 0 && (
               <div className="border border-red-200 bg-red-50 rounded-md px-3 py-2 text-xs">
                 <p className="font-medium text-red-700">{result.failed.length}건 실패</p>
