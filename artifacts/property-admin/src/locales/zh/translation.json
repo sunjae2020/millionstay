@@ -5290,7 +5290,10 @@
     "cat_host": "服务人员",
     "cat_staff": "内部员工",
     "cat_marketing": "营销",
-    "cat_legacy": "待整理"
+    "cat_legacy": "待整理",
+    "kind_sms": "短信",
+    "sms_too_long": "过长",
+    "sms_hint": "90字节以内按SMS发送（韩文1字=2字节），超过则按LMS发送，费用约为3倍。无法发送表情符号和HTML，商号会自动填入{{brand}}的位置。"
   },
   "homestayBilling": {
     "title": "寄宿计费",

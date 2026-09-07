@@ -21,6 +21,8 @@ interface SmsStatus {
   configured: boolean; api_key: boolean; api_secret: boolean;
   sender_number: string | null; ad_opt_out_number: string | null; advertising_ready: boolean;
   kakao_pf_id: boolean; missing: string[]; balance: number | null;
+  /** 문안의 {{brand}} 가 발송 시 치환되는 상호. 미리보기가 같은 값을 쓴다. */
+  brand: string | null;
   /** SOLAPI 에 등록·승인된 발신번호. null = 조회 실패. */
   registered_senders: string[] | null;
   /** 설정된 발신번호가 그 목록에 있나. null = 모름. */
@@ -300,7 +302,7 @@ export default function SmsCenterPage() {
                 <Label>{t("sms_center.preview", "Preview")}</Label>
                 <div className="rounded-2xl border bg-muted/40 p-4 max-w-sm">
                   <div className="rounded-xl bg-background border px-3 py-2 text-sm whitespace-pre-wrap break-words min-h-[4rem]">
-                    {text ? text.replace(/\{\{brand\}\}/g, "[브랜드]").replace(/\{\{name\}\}/g, "고객") : <span className="text-muted-foreground">{t("sms_center.preview_empty", "Your message will appear here.")}</span>}
+                    {text ? text.replace(/\{\{brand\}\}/g, s?.brand ?? "브랜드").replace(/\{\{name\}\}/g, "고객") : <span className="text-muted-foreground">{t("sms_center.preview_empty", "Your message will appear here.")}</span>}
                   </div>
                   <p className="text-[11px] text-muted-foreground mt-2">{t("sms_center.preview_from", "From")}: {s?.sender_number ? prettyPhone(s.sender_number) : "—"}</p>
                 </div>

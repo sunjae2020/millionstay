@@ -5328,7 +5328,10 @@
     "cat_staff": "내부 직원",
     "cat_marketing": "마케팅",
     "cat_legacy": "정리 대상",
-    "kind_pdf": "PDF"
+    "kind_pdf": "PDF",
+    "kind_sms": "문자",
+    "sms_too_long": "너무 깁니다",
+    "sms_hint": "90바이트까지 SMS(한글 1자 = 2바이트), 넘으면 LMS로 나가며 요금이 약 3배입니다. 이모지와 HTML은 보낼 수 없고, 상호는 {{brand}} 자리에 자동으로 채워집니다."
   },
   "homestayBilling": {
     "title": "홈스테이 청구",

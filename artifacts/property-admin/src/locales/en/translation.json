@@ -5328,7 +5328,10 @@
     "cat_host": "Service hosts",
     "cat_staff": "Internal staff",
     "cat_marketing": "Marketing",
-    "cat_legacy": "Legacy (to review)"
+    "cat_legacy": "Legacy (to review)",
+    "kind_sms": "Text",
+    "sms_too_long": "too long",
+    "sms_hint": "Up to 90 bytes goes as SMS (Korean = 2 bytes per character); longer texts go as LMS at about 3× the cost. Emoji and HTML cannot be sent, and the brand name is filled in automatically as {{brand}}."
   },
   "homestayBilling": {
     "title": "Homestay Billing",

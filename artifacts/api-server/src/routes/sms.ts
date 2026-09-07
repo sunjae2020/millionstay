@@ -9,6 +9,7 @@ import { and, desc, eq, ilike, like, or, sql } from "drizzle-orm";
 import { db, emailLogsTable, documentTemplatesTable, documentTemplateTranslationsTable } from "@workspace/db";
 import { normalizeKrPhone, sendSms, smsBalance, smsBytes, smsConfigStatus, smsSenderIds, smsType } from "../lib/sms";
 import { renderString } from "../lib/documents/templateEngine.js";
+import { resolveEmailBrand } from "../lib/emailBrand.js";
 import { buildOrderBy, parseListPage, parseSortParams, sendList, type SortMap } from "../utils/pagination";
 import { logAction } from "../utils/auditLog";
 
@@ -26,11 +27,15 @@ router.get("/v1/sms/status", async (_req, res): Promise<void> => {
   const [balance, senders] = authed
     ? await Promise.all([smsBalance(), smsSenderIds()])
     : [null, null];
+  // 문안의 {{brand}} 는 발송 시점에 서버가 채운다. 화면 미리보기가 같은 값을
+  // 보여 주려면 그 상호를 알아야 한다.
+  const brand = await resolveEmailBrand().then((b) => b.name).catch(() => null);
   res.json({
     success: true,
     data: {
       ...config,
       balance,
+      brand,
       registered_senders: senders,
       // null = 조회 실패(모름), false = 목록에 없음.
       sender_registered: senders == null ? null : !!config.sender_number && senders.includes(config.sender_number),

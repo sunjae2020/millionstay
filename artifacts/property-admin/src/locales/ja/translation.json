@@ -5286,7 +5286,10 @@
     "cat_host": "サービスホスト",
     "cat_staff": "社内スタッフ",
     "cat_marketing": "マーケティング",
-    "cat_legacy": "整理対象"
+    "cat_legacy": "整理対象",
+    "kind_sms": "SMS",
+    "sms_too_long": "長すぎます",
+    "sms_hint": "90バイトまではSMS（韓国語1文字=2バイト）、超えるとLMSとなり料金は約3倍です。絵文字とHTMLは送れず、会社名は{{brand}}の位置に自動で入ります。"
   },
   "homestayBilling": {
     "title": "ホームステイ請求",

@@ -58,6 +58,9 @@ export default function DocumentTemplateEdit() {
   });
   const tpl = data?.data;
   const isEmail = tpl?.kind === "email";
+  // 문자 문안은 HTML 이 아니라 평문이고, 길이가 곧 요금이다(90바이트 초과 = LMS,
+  // 약 3배). 그래서 서식 편집기·PDF 미리보기 대신 글자수 계산이 필요하다.
+  const isSms = tpl?.kind === "sms";
 
   const [locale, setLocale] = useState<string>(DEFAULT_DOC_LANG);
   const [drafts, setDrafts] = useState<Record<string, { subject: string; body_html: string }>>({});
@@ -77,7 +80,24 @@ export default function DocumentTemplateEdit() {
   const setCur = (patch: Partial<{ subject: string; body_html: string }>) =>
     setDrafts((d) => ({ ...d, [locale]: { ...cur, ...patch } }));
 
-  const vars = useMemo(() => sampleVars(tpl?.variables_schema ?? {}), [tpl]);
+  const vars = useMemo(() => {
+    const v = sampleVars(tpl?.variables_schema ?? {});
+    // {{brand}} 는 문안의 변수 정의에 없다 — 발송 시점에 테넌트 상호로 서버가
+    // 채운다(lib/sms.ts). 미리보기에서 비워 두면 "[] 입실 안내" 가 되므로
+    // 자리를 지키는 표본값을 넣는다.
+    if (!v.brand) v.brand = "브랜드";
+    return v;
+  }, [tpl]);
+
+  /* 문자 길이는 **표본을 치환한 뒤** 재야 한다 — {{변수}} 리터럴로 재면 실제
+     발송분이 LMS 로 넘어가도 화면에서는 SMS 로 보인다. 시드 검증기와 같은 규칙. */
+  const smsSample = render(cur.body_html, vars);
+  const smsSize = useMemo(() => {
+    let n = 0;
+    for (const ch of smsSample) n += /[\x00-\x7F]/.test(ch) ? 1 : 2;
+    return n;
+  }, [smsSample]);
+  const smsKind = smsSize <= 90 ? "SMS" : smsSize <= 2000 ? "LMS" : "OVER";
 
   const save = useMutation({
     mutationFn: async () => {
@@ -142,7 +162,7 @@ export default function DocumentTemplateEdit() {
           <div className="flex flex-wrap gap-2">
             <Link href="/settings/document-templates"><Button variant="outline" size="sm" className="gap-1.5"><ArrowLeft className="h-4 w-4" /> {t("common.back")}</Button></Link>
             {isEmail && <Button variant="outline" size="sm" className="gap-1.5" onClick={() => testSend.mutate()} disabled={testSend.isPending}><Send className="h-4 w-4" /> {t("documentTemplate.btn_test")}</Button>}
-            {!isEmail && <Button variant="outline" size="sm" className="gap-1.5" onClick={openSamplePdf}><FileText className="h-4 w-4" /> {t("documentTemplate.btn_sample_pdf")}</Button>}
+            {!isEmail && !isSms && <Button variant="outline" size="sm" className="gap-1.5" onClick={openSamplePdf}><FileText className="h-4 w-4" /> {t("documentTemplate.btn_sample_pdf")}</Button>}
             <Button variant="outline" size="sm" className="gap-1.5" onClick={() => save.mutate()} disabled={save.isPending}><Save className="h-4 w-4" /> {t("documentTemplate.btn_save")}</Button>
             <Button size="sm" className="gap-1.5" onClick={() => publish.mutate()} disabled={publish.isPending}><CheckCircle2 className="h-4 w-4" /> {t("documentTemplate.btn_publish")}</Button>
           </div>
@@ -154,10 +174,10 @@ export default function DocumentTemplateEdit() {
           {localeTabs.map((l) => (
             <button key={l} onClick={() => setLocale(l)} className={`px-3 py-1 rounded-full text-xs font-medium border ${locale === l ? "bg-primary/15 text-primary border-primary/20" : "bg-white text-muted-foreground border-border hover:bg-muted/50"}`}>{l}</button>
           ))}
-          <select className="text-xs border rounded-full px-2 py-1 text-muted-foreground" value="" onChange={(e) => { if (e.target.value) setLocale(e.target.value); }}>
+          {!isSms && <select className="text-xs border rounded-full px-2 py-1 text-muted-foreground" value="" onChange={(e) => { if (e.target.value) setLocale(e.target.value); }}>
             <option value="">+ {t("documentTemplate.add_locale")}</option>
             {LOCALES.filter((l) => !localeTabs.includes(l)).map((l) => <option key={l} value={l}>{l}</option>)}
-          </select>
+          </select>}
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-[1fr,220px] gap-5">
@@ -171,13 +191,31 @@ export default function DocumentTemplateEdit() {
             <div className="grid gap-1.5">
               <div className="flex items-center justify-between">
                 <Label>{t("documentTemplate.f_body")}</Label>
+                {isSms ? (
+                  <span className={`text-xs font-mono ${smsKind === "OVER" ? "text-destructive" : smsKind === "LMS" ? "text-amber-600" : "text-muted-foreground"}`}>
+                    {smsSize} B · {smsKind === "OVER" ? t("documentTemplate.sms_too_long", "too long") : smsKind}
+                  </span>
+                ) : (
                 <div className="flex gap-1">
                   <button onClick={() => setMode("visual")} className={`inline-flex items-center gap-1 text-xs px-2 py-1 rounded border ${mode === "visual" ? "bg-muted" : "bg-white"}`}><Type className="h-3 w-3" /> {t("documentTemplate.visual")}</button>
                   <button onClick={() => setMode("html")} className={`inline-flex items-center gap-1 text-xs px-2 py-1 rounded border ${mode === "html" ? "bg-muted" : "bg-white"}`}><Code className="h-3 w-3" /> HTML</button>
                   <button onClick={() => setMode("preview")} className={`inline-flex items-center gap-1 text-xs px-2 py-1 rounded border ${mode === "preview" ? "bg-muted" : "bg-white"}`}><Eye className="h-3 w-3" /> {t("documentTemplate.preview")}</button>
                 </div>
+                )}
               </div>
-              {mode === "visual" ? (
+              {isSms ? (
+                <>
+                  <Textarea value={cur.body_html} onChange={(e) => setCur({ body_html: e.target.value })} rows={6}
+                    placeholder="[{{brand}}] …" />
+                  <p className="text-xs text-muted-foreground">{t("documentTemplate.sms_hint", "Up to 90 bytes goes as SMS (Korean = 2 bytes per character); longer texts go as LMS at about 3× the cost. Emoji and HTML cannot be sent, and the brand name is filled in automatically as {{brand}}.")}</p>
+                  <div className="rounded-2xl border bg-muted/40 p-4 max-w-sm mt-1">
+                    <p className="text-[11px] text-muted-foreground mb-1.5">{t("documentTemplate.preview")}</p>
+                    <div className="rounded-xl bg-background border px-3 py-2 text-sm whitespace-pre-wrap break-words min-h-[3rem]">
+                      {smsSample}
+                    </div>
+                  </div>
+                </>
+              ) : mode === "visual" ? (
                 <RichTextEditor value={cur.body_html} onChange={(html) => setCur({ body_html: html })} placeholder="Hi {{name}}, …" />
               ) : mode === "html" ? (
                 <Textarea value={cur.body_html} onChange={(e) => setCur({ body_html: e.target.value })} rows={18} className="font-mono text-xs" placeholder="<p>Hi {{name}}, …</p>" />
