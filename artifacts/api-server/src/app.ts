@@ -37,6 +37,7 @@ import {
   documentEmailAdminRouter, documentEmailGuestRouter, documentEmailPartnerRouter,
   documentEmailPublicRouter,
 } from "./routes/document-email";
+import { documentSmsAdminRouter, documentSmsPublicRouter } from "./routes/document-sms";
 import helpDocsRouter from "./routes/help-docs";
 import { homestayStudentPublicRouter } from "./routes/homestay-students";
 import { shortTermPublicRouter } from "./routes/short-term";
@@ -290,6 +291,9 @@ app.use("/api", shortTermPublicRouter);
 app.use("/api", tenantLinksPublicRouter);
 // 토큰 링크 화면의 "내 메일로 받기" — 받는 주소는 서버가 원장에서 고른다.
 app.use("/api", documentEmailPublicRouter);
+// 문자로 보낸 문서 열람 링크 `/d/<token>` — /api 밖의 가장 짧은 경로(문자 길이가
+// 곧 요금). 토큰이 곧 인증이라 가드 앞에 둔다.
+app.use(documentSmsPublicRouter);
 app.use("/api", chatRouter);
 app.use("/api", privacyRouter);
 // Resend campaign event webhook — the caller is Resend, not an admin, so it is
@@ -366,6 +370,8 @@ app.use("/api", depositSettlementsAdminRouter);
 app.use("/api", tenantLinksAdminRouter);
 // 문서 메일(관리자) — 전용 발송 경로가 없는 문서를 미리보기에서 그대로 보낸다.
 app.use("/api", documentEmailAdminRouter);
+// 문서 문자 보내기(열람 링크 발급) — 관리자.
+app.use("/api", documentSmsAdminRouter);
 // 내부 문서함 — 운영 지도·정책 문서·세입자 링크 목록(직원 교육용).
 app.use("/api", helpDocsRouter);
 app.use("/api", router);

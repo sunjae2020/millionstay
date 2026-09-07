@@ -561,6 +561,7 @@ export default function ContractDetail() {
       title: `${invoice.invoice_ref ?? t('contract.btn_receipt')} · ${t('contract.btn_receipt')}`,
       filename: `${invoice.invoice_ref ?? "receipt"}.pdf`,
       source: { kind: "api", path: `/api/v1/invoices/${invoice.id}/receipt/pdf` },
+      sms: { entity: { type: "invoice", id: Number(invoice.id) }, docTypeLabel: "영수증" },
       email: {
         recipientsPath: `/api/v1/invoices/${invoice.id}/receipt/email-recipients`,
         send: async (to) => {
@@ -833,6 +834,7 @@ export default function ContractDetail() {
     source: { kind: "api", path: `/api/v1/contracts/${id}/pdf` },
     email: { recipientsPath: `/api/v1/contracts/${id}/email-recipients`, send: handleEmail },
     emailLabel: t('contract.btn_email'),
+    sms: { entity: { type: "contract", id: Number(id) }, docTypeLabel: "계약서" },
   });
   /**
    * "임차인에게 발송" — 미리보기를 거치지 않고 곧바로 수신자(임차인/부동산/임대인

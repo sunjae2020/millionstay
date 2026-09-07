@@ -1,7 +1,7 @@
 ---
 status: live
 domain: 인프라
-last_verified: 2026-09-01
+last_verified: 2026-09-07
 ---
 
 # SMS 발송 개통 절차 (SOLAPI)
@@ -130,6 +130,24 @@ DATABASE_URL=… node scripts/sms-preflight.mjs --send 01012345678
 | 보증금 정산 확정 | `sms.moveout_settlement` | 임차인 | `POST /v1/deposit-settlements/:id/finalize` |
 | 정산 확인 서명 링크 | `sms.signature_request` | 임차인 | `POST /v1/deposit-settlements/:id/sign-link` (`send_sms`) |
 | 소유주·파트너·에이전트 지급 | `sms.owner_payout_sent` / `sms.host_payout_sent` / `sms.commission_paid` | 수취인 | `paySettlement()` — 개별 지급·페이런 공통 |
+| 문서 미리보기 → **문자 보내기** (수동) | `sms.document_link` | 관리자가 고른 번호 | `POST /v1/documents/sms-link` (`routes/document-sms.ts`) |
+
+### 문서 미리보기의 "문자 보내기"
+
+이메일 버튼 옆의 문자 버튼은 **모든 문서**(청구서·영수증·계약서·견적서·정산서·
+점검표·업로드 스캔 …)에 뜬다. 문자에는 파일을 실을 수 없으므로 화면에 떠 있는
+바이트를 비공개 Cloudinary 에 올리고 **짧은 열람 링크** `https://<PUBLIC_API_URL>/d/<12자>`
+를 문안에 넣어 보낸다. 수신자마다 토큰이 따로 발급되어(`document_share_links`)
+누가 언제 열었는지가 남고, 기본 30일 뒤 만료된다. 회수는
+`POST /v1/documents/sms-links/:id/revoke`.
+
+- 수신 번호 후보는 이메일과 같은 `<doc>/email-recipients` 끝점이 준다(`phone`,
+  `default_phone`) — 계정 phone1/phone2, 담당 연락처 mobile_number, 계약의 중개
+  연락처, 문의의 phone 가운데 **휴대폰(01x)** 만.
+- 문안 `sms.document_link` 가 DB 에 없어도 코드의 대체 문안으로 나간다
+  (`DOCUMENT_LINK_SMS_FALLBACK`). Studio 에서 고치면 그쪽이 이긴다.
+- 링크가 Railway 기본 도메인이면 60자 안팎이라 대개 **LMS** 로 나간다. 짧은 API
+  도메인(예: `api.metheim.kr`)을 `PUBLIC_API_URL` 에 걸면 SMS 요금으로 내려온다.
 
 이력은 `email_log` 에 남는다(`template_code` = 문안 키, `to_email` 칸에 번호). 테이블
 이름은 이메일이지만 이 로그가 답하는 질문은 "이 건은 통보했는가" 이고 그건 채널과

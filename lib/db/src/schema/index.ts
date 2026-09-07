@@ -115,3 +115,4 @@ export * from "./transactions";
 export * from "./accounting_periods";
 export * from "./fixed_assets";
 export * from "./org_units";
+export * from "./document_share_links";

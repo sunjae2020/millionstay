@@ -20,6 +20,13 @@
 
 export const SMS_CUSTOMER = [
   {
+    key: "sms.document_link",
+    name: "문서 열람 링크",
+    description: "미리보기 모달의 '문자 보내기'. 파일을 실을 수 없어 짧은 열람 링크가 첨부를 대신한다. 본문을 고치면 routes/document-sms.ts 의 대체 문안도 같이 고친다.",
+    vars: { name: { type: "string", required: true }, doc_type: { type: "string", required: true }, url: { type: "url", required: true }, ref: { type: "string" } },
+    text: "[{{brand}}] {{name}}님, {{doc_type}} 확인 부탁드립니다.\n{{url}}",
+  },
+  {
     key: "sms.auth_code",
     name: "인증번호",
     description: "본인 확인 6자리. 다른 안내를 붙이지 않는다 — 인증번호만 있는 문자가 가장 안전하다.",

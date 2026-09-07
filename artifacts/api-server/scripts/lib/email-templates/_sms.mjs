@@ -58,6 +58,8 @@ export const SMS_SAMPLES = {
   net_amount: "820,000원",
   client_name: "박지연",
   status: "계약 완료",
+  name: "김민수",
+  doc_type: "계약서",
 };
 
 /** {{변수}} 를 표본값으로 치환. 표본이 없으면 변수명 길이로 대체(과소평가 방지). */

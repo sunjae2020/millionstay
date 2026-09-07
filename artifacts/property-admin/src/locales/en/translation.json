@@ -6365,7 +6365,10 @@
     "email_me": "Email me a copy",
     "email_sent": "Sent",
     "email_failed": "Could not send the email.",
-    "email_not_ready": "The document is still loading."
+    "email_not_ready": "The document is still loading.",
+    "sms": "Send text",
+    "sms_sent": "Text message sent",
+    "sms_failed": "Could not send the text message."
   },
   "error_boundary": {
     "title": "Something went wrong",
@@ -6408,6 +6411,13 @@
     "role_contact": "Contact",
     "role_landlord": "Landlord",
     "role_agency": "Agency"
+  },
+  "doc_sms": {
+    "title": "Send by text message",
+    "hint": "The recipient gets a short link that opens this document in their browser. The link expires after 30 days.",
+    "to": "Mobile numbers",
+    "placeholder": "010-0000-0000",
+    "invalid": "Check this number: {{phone}}"
   },
   "entity_docs": {
     "tab_title": "Documents",

@@ -46,6 +46,8 @@ export interface NotifySmsArgs {
   once?: boolean;
   /** 알림톡을 쓰지 않고 SMS 로만. */
   smsOnly?: boolean;
+  /** `smsKey` 문안이 DB 에 없을 때의 대체 본문(lib/sms.ts 참조). */
+  text?: string;
 }
 
 export interface NotifySmsResult {
@@ -87,6 +89,7 @@ export async function notifySms(args: NotifySmsArgs): Promise<NotifySmsResult> {
     const res = await sendSms({
       to,
       templateKey: args.smsKey,
+      text: args.text,
       smsOnly: args.smsOnly,
       vars: {
         // 문의 번호는 거의 모든 문안이 쓰고 값은 인스턴스 하나다 — 호출부마다

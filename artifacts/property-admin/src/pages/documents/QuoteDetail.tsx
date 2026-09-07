@@ -187,6 +187,7 @@ export default function QuoteDetail() {
                   filename: `${quote?.quote_ref ?? "quote"}.pdf`,
                   source: { kind: "api", path: `/api/v1/quotes/${id}/pdf` },
                   email: { recipientsPath: `/api/v1/quotes/${id}/email-recipients`, send: handleEmail },
+                  sms: { entity: { type: "quote", id: Number(id) }, docTypeLabel: "견적서" },
                   emailLabel: t("quote.email", "Email"),
                 })}><FileText className="h-4 w-4 mr-1" /> {t("quote.preview", "Preview")}</Button>
                 <DocumentVersions entityType="quote" entityId={Number(id)} freezeUrl={`/api/v1/quotes/${id}/freeze`} />

@@ -6272,7 +6272,10 @@
     "email_me": "Gửi vào email của tôi",
     "email_sent": "Đã gửi",
     "email_failed": "Không gửi được email.",
-    "email_not_ready": "Tài liệu đang được tải."
+    "email_not_ready": "Tài liệu đang được tải.",
+    "sms": "Gửi tin nhắn",
+    "sms_sent": "Đã gửi tin nhắn",
+    "sms_failed": "Không thể gửi tin nhắn."
   },
   "error_boundary": {
     "title": "Đã xảy ra lỗi",
@@ -6314,6 +6317,13 @@
     "role_contact": "Người phụ trách",
     "role_landlord": "Chủ nhà",
     "role_agency": "Công ty môi giới"
+  },
+  "doc_sms": {
+    "title": "Gửi qua tin nhắn",
+    "hint": "Người nhận sẽ nhận được một liên kết ngắn qua tin nhắn để mở tài liệu này trên trình duyệt. Liên kết hết hạn sau 30 ngày.",
+    "to": "Số di động",
+    "placeholder": "010-0000-0000",
+    "invalid": "Vui lòng kiểm tra số này: {{phone}}"
   },
   "entity_docs": {
     "tab_title": "Tài liệu",

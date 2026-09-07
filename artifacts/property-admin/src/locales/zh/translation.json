@@ -6326,7 +6326,10 @@
     "email_me": "发送到我的邮箱",
     "email_sent": "已发送",
     "email_failed": "邮件发送失败。",
-    "email_not_ready": "文档仍在加载中。"
+    "email_not_ready": "文档仍在加载中。",
+    "sms": "发送短信",
+    "sms_sent": "短信已发送",
+    "sms_failed": "短信发送失败。"
   },
   "error_boundary": {
     "title": "出现问题",
@@ -6368,6 +6371,13 @@
     "role_contact": "负责人",
     "role_landlord": "房东",
     "role_agency": "房产中介"
+  },
+  "doc_sms": {
+    "title": "通过短信发送",
+    "hint": "收件人将收到一条短信，内含可在浏览器中直接打开此文件的短链接。链接30天后失效。",
+    "to": "手机号码",
+    "placeholder": "010-0000-0000",
+    "invalid": "请检查此号码：{{phone}}"
   },
   "entity_docs": {
     "tab_title": "文件",

@@ -6365,7 +6365,10 @@
     "email_me": "내 메일로 받기",
     "email_sent": "보냈습니다",
     "email_failed": "메일을 보내지 못했습니다.",
-    "email_not_ready": "문서를 아직 불러오는 중입니다."
+    "email_not_ready": "문서를 아직 불러오는 중입니다.",
+    "sms": "문자 보내기",
+    "sms_sent": "문자를 보냈습니다",
+    "sms_failed": "문자를 보내지 못했습니다."
   },
   "error_boundary": {
     "title": "문제가 발생했습니다",
@@ -6408,6 +6411,13 @@
     "role_landlord": "임대인",
     "role_agency": "부동산",
     "placeholder": "name@example.com"
+  },
+  "doc_sms": {
+    "title": "문자로 보내기",
+    "hint": "받는 분에게 이 문서를 브라우저에서 바로 열 수 있는 짧은 링크가 문자로 갑니다. 링크는 30일 뒤 만료됩니다.",
+    "to": "휴대폰 번호",
+    "placeholder": "010-0000-0000",
+    "invalid": "번호를 확인해 주세요: {{phone}}"
   },
   "entity_docs": {
     "tab_title": "서류",
