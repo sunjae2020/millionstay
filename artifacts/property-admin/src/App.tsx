@@ -151,6 +151,7 @@ import InspectionTemplatePage from "@/pages/settings/sub/InspectionTemplate";
 import TranslationsPage from "@/pages/settings/sub/Translations";
 import BookingReportPage from "@/pages/settings/sub/BookingReport";
 import IntegrationsPage from "@/pages/settings/sub/Integrations";
+import SmsCenterPage from "@/pages/settings/sub/SmsCenter";
 import AiOpsPage from "@/pages/settings/sub/AiOps";
 import AddonServicesPage from "@/pages/settings/sub/AddonServices";
 import PasskeysPage from "@/pages/settings/sub/Passkeys";
@@ -421,6 +422,7 @@ function Router() {
       <Route path="/settings/homestay-billing" component={HomestayBillingPage} />
       <Route path="/settings/design" component={DesignPage} />
       <Route path="/settings/integrations" component={IntegrationsPage} />
+      <Route path="/settings/sms" component={SmsCenterPage} />
       <Route path="/settings/api-keys" component={ApiKeysPage} />
       <Route path="/settings/passkeys" component={PasskeysPage} />
       <Route path="/settings/application-emails" component={ApplicationEmailsPage} />

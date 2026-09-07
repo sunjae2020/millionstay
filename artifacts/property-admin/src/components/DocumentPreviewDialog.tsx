@@ -3,9 +3,11 @@ import { useTranslation } from "react-i18next";
 import { useLocation } from "wouter";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Loader2, Printer, Download, Mail, X, ExternalLink, AlertTriangle, FileQuestion, FolderOpen, ArrowUpRight } from "lucide-react";
+import { Loader2, Printer, Download, Mail, MessageSquare, X, ExternalLink, AlertTriangle, FileQuestion, FolderOpen, ArrowUpRight } from "lucide-react";
 import { apiFetch } from "@/lib/apiFetch";
+import { useToast } from "@/hooks/use-toast";
 import { DocumentEmailDialog, type DocumentEmailTarget } from "@/components/DocumentEmailDialog";
+import { DocumentSmsDialog, type DocumentSmsTarget, type SmsRecipient } from "@/components/DocumentSmsDialog";
 
 /**
  * Where the previewed document comes from.
@@ -72,6 +74,22 @@ export interface DocumentPreviewConfig {
   /** Overrides the default "Send email" label. */
   emailLabel?: string;
   /**
+   * 문자 버튼도 **모든 문서에** 뜬다. 문자에는 파일을 실을 수 없으므로 화면에
+   * 떠 있는 바이트를 올려 짧은 열람 링크를 만들고 그 링크를 보낸다
+   * (`POST /v1/documents/sms-link`). 수신 번호 후보는 `email.recipientsPath` 와
+   * 같은 끝점에서 온다 — 그 응답이 번호도 함께 준다.
+   *
+   * 아래는 그 기본 동작에 덧붙일 것이 있을 때만 준다.
+   */
+  sms?: {
+    /** 번호 후보 끝점. 생략하면 `email.recipientsPath` 를 그대로 쓴다. */
+    recipientsPath?: string;
+    /** 이력·검색용 — "이 계약/청구서로 보낸 링크" 를 나중에 찾을 수 있게. */
+    entity?: { type: string; id: number };
+    /** 문자 본문의 문서 이름("계약서"). 생략하면 제목(title)을 쓴다. */
+    docTypeLabel?: string;
+  };
+  /**
    * Where this document is filed, shown under the title with a shortcut to the
    * record. Opened from the document library a preview is otherwise
    * context-free — you can read the page but not tell which contract it hangs
@@ -110,6 +128,8 @@ export function DocumentPreviewDialog({ config, onClose }: Props) {
   const [error, setError] = useState<string | null>(null);
   const [emailBusy, setEmailBusy] = useState(false);
   const [emailTarget, setEmailTarget] = useState<DocumentEmailTarget | null>(null);
+  const [smsTarget, setSmsTarget] = useState<DocumentSmsTarget | null>(null);
+  const { toast } = useToast();
 
   const open = config !== null;
   // An unknown type is treated as renderable: server-rendered PDFs are the
@@ -183,6 +203,7 @@ export function DocumentPreviewDialog({ config, onClose }: Props) {
   useEffect(() => {
     if (!open) {
       setEmailTarget(null);
+      setSmsTarget(null);
       setObjectUrl(null);
       setServerFilename(null);
       setContentType(null);
@@ -239,6 +260,43 @@ export function DocumentPreviewDialog({ config, onClose }: Props) {
     const body = await res.json().catch(() => ({}));
     if (!res.ok) throw new Error(body?.error?.message ?? t("doc_preview.email_failed", "Could not send the email."));
   }, [objectUrl, config, serverFilename, contentType, t]);
+
+  /**
+   * 문자는 문서 종류를 가리지 않는다 — 화면의 바이트를 올려 열람 링크를 만들고
+   * 그 링크를 문자로 보낸다. 서버가 수신자마다 토큰을 따로 발급하므로 누가
+   * 열었는지가 남는다.
+   */
+  const sendSmsLink = useCallback(async (to: SmsRecipient[]) => {
+    if (!objectUrl || !config) throw new Error(t("doc_preview.email_not_ready", "The document is still loading."));
+    const blob = await (await fetch(objectUrl)).blob();
+    const name = serverFilename ?? config.filename;
+    const form = new FormData();
+    form.append("file", new File([blob], name, { type: contentType ?? blob.type ?? "application/pdf" }));
+    form.append("filename", name);
+    form.append("doc_type_label", config.sms?.docTypeLabel ?? config.title);
+    form.append("ref", name.replace(/\.[^.]+$/, ""));
+    form.append("to", JSON.stringify(to));
+    if (config.sms?.entity) {
+      form.append("entity_type", config.sms.entity.type);
+      form.append("entity_id", String(config.sms.entity.id));
+    }
+    const res = await apiFetch("/api/v1/documents/sms-link", { method: "POST", body: form });
+    const body = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(body?.error?.message ?? t("doc_preview.sms_failed", "Could not send the text message."));
+    toast({
+      title: t("doc_preview.sms_sent", "Text message sent"),
+      description: to.map((r) => r.phone).join(", "),
+    });
+  }, [objectUrl, config, serverFilename, contentType, t, toast]);
+
+  const handleSms = useCallback(() => {
+    if (!config) return;
+    setSmsTarget({
+      title: config.title,
+      recipientsPath: config.sms?.recipientsPath ?? config.email?.recipientsPath,
+      send: sendSmsLink,
+    });
+  }, [config, sendSmsLink]);
 
   const handleEmail = useCallback(async () => {
     // Preferred path: let the admin review/edit the recipients first.
@@ -361,6 +419,13 @@ export function DocumentPreviewDialog({ config, onClose }: Props) {
               {config.emailLabel ?? t("doc_preview.email", "Send email")}
             </Button>
           )}
+          {/* 문자도 종류를 가리지 않는다 — 열람 링크를 만들어 보낸다. */}
+          {config && (
+            <Button variant="outline" size="sm" onClick={handleSms} disabled={!objectUrl}>
+              <MessageSquare className="h-4 w-4 mr-1.5" />
+              {t("doc_preview.sms", "Send text")}
+            </Button>
+          )}
           <Button variant="default" size="sm" onClick={onClose}>
             <X className="h-4 w-4 mr-1.5" />
             {t("doc_preview.close", "Close")}
@@ -371,6 +436,7 @@ export function DocumentPreviewDialog({ config, onClose }: Props) {
 
     {/* Recipient editor — sibling, not nested, so the two modals stack cleanly. */}
     <DocumentEmailDialog target={emailTarget} onClose={() => setEmailTarget(null)} />
+    <DocumentSmsDialog target={smsTarget} onClose={() => setSmsTarget(null)} />
     </>
   );
 }

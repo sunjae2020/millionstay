@@ -230,6 +230,7 @@ export default function InvoiceDetail() {
                       send: handleEmail,
                     },
                     emailLabel: t('invoice.btn_email'),
+                    sms: { entity: { type: "invoice", id: Number(id) }, docTypeLabel: "청구서" },
                   })}
                 >
                   <FileText className="h-4 w-4 mr-1" /> {t('invoice.btn_preview')}

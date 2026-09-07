@@ -1,7 +1,7 @@
 ---
 status: live
 domain: 인프라
-last_verified: 2026-09-01
+last_verified: 2026-09-07
 ---
 
 # SMS 발송 개통 절차 (SOLAPI)
@@ -36,7 +36,7 @@ SOLAPI_API_SECRET=...
 3. 승인된 번호를 등록:
 
 ```
-SMS_SENDER_NUMBER=0611234567
+SMS_SENDER_NUMBER=0319262281   # 회사 대표 유선번호도 된다 — 02·지역번호·070·080·1544 허용(normalizeKrSender)
 ```
 
 ## 3. 광고 SMS 무료거부번호 (광고 발송 시에만)
@@ -113,6 +113,22 @@ DATABASE_URL=… node scripts/sms-preflight.mjs --send 01012345678
 
 심사는 광고성 문구를 걸러낸다. 24종을 거래성만 골라 둔 것이 여기서 그대로 유리하게 작용한다.
 
+## 문자 발송 센터 (관리자 → 설정 → 문자 발송)
+
+연동 카드가 "개통이 됐나" 를 답한다면, 이 화면은 그 다음을 맡는다 — `/settings/sms`
+(`pages/settings/sub/SmsCenter.tsx`, 뒷단 `routes/sms.ts`).
+
+| 탭 | 무엇을 | 끝점 |
+|---|---|---|
+| 상단 카드 | 개통 상태·발신번호·잔액·오늘/이달 건수·이달 실패 | `GET /v1/sms/status`, `GET /v1/sms/summary` |
+| 직접 발송 | 번호 여러 개(최대 50) + 본문, 바이트/SMS·LMS 표시, 저장된 문안 불러오기 | `POST /v1/sms/send`, `GET /v1/sms/templates` |
+| 발송 내역 | email_log 의 SMS 행(자동 통보 + 직접 발송 + 문서 링크), 상태·검색 필터, CSV | `GET /v1/sms/logs` (공용 정렬·페이징 규약) |
+| 문서 링크 | 미리보기에서 문자로 보낸 링크의 열람 여부·만료·회수 | `GET /v1/documents/sms-links`, `POST …/:id/revoke` |
+
+직접 발송의 이력은 `template_code='sms.manual'` 로 남는다. 발송 실패 사유는 SOLAPI 의
+`failedMessageList` 안쪽 문구("발신번호 미등록" 같은)를 그대로 보여 준다 — 바깥 메시지는
+"n개의 메시지가 접수되지 못했습니다" 뿐이라 그것만으로는 다음 할 일을 알 수 없다.
+
 ## 어떤 사건에서 문자가 나가나 (배선 현황)
 
 호출부는 전부 `lib/notify.ts` 의 `notifySms()` 를 거친다 — 수신자 조회·중복 방지·이력이
@@ -130,6 +146,24 @@ DATABASE_URL=… node scripts/sms-preflight.mjs --send 01012345678
 | 보증금 정산 확정 | `sms.moveout_settlement` | 임차인 | `POST /v1/deposit-settlements/:id/finalize` |
 | 정산 확인 서명 링크 | `sms.signature_request` | 임차인 | `POST /v1/deposit-settlements/:id/sign-link` (`send_sms`) |
 | 소유주·파트너·에이전트 지급 | `sms.owner_payout_sent` / `sms.host_payout_sent` / `sms.commission_paid` | 수취인 | `paySettlement()` — 개별 지급·페이런 공통 |
+| 문서 미리보기 → **문자 보내기** (수동) | `sms.document_link` | 관리자가 고른 번호 | `POST /v1/documents/sms-link` (`routes/document-sms.ts`) |
+
+### 문서 미리보기의 "문자 보내기"
+
+이메일 버튼 옆의 문자 버튼은 **모든 문서**(청구서·영수증·계약서·견적서·정산서·
+점검표·업로드 스캔 …)에 뜬다. 문자에는 파일을 실을 수 없으므로 화면에 떠 있는
+바이트를 비공개 Cloudinary 에 올리고 **짧은 열람 링크** `https://<PUBLIC_API_URL>/d/<12자>`
+를 문안에 넣어 보낸다. 수신자마다 토큰이 따로 발급되어(`document_share_links`)
+누가 언제 열었는지가 남고, 기본 30일 뒤 만료된다. 회수는
+`POST /v1/documents/sms-links/:id/revoke`.
+
+- 수신 번호 후보는 이메일과 같은 `<doc>/email-recipients` 끝점이 준다(`phone`,
+  `default_phone`) — 계정 phone1/phone2, 담당 연락처 mobile_number, 계약의 중개
+  연락처, 문의의 phone 가운데 **휴대폰(01x)** 만.
+- 문안 `sms.document_link` 가 DB 에 없어도 코드의 대체 문안으로 나간다
+  (`DOCUMENT_LINK_SMS_FALLBACK`). Studio 에서 고치면 그쪽이 이긴다.
+- 링크가 Railway 기본 도메인이면 60자 안팎이라 대개 **LMS** 로 나간다. 짧은 API
+  도메인(예: `api.metheim.kr`)을 `PUBLIC_API_URL` 에 걸면 SMS 요금으로 내려온다.
 
 이력은 `email_log` 에 남는다(`template_code` = 문안 키, `to_email` 칸에 번호). 테이블
 이름은 이메일이지만 이 로그가 답하는 질문은 "이 건은 통보했는가" 이고 그건 채널과
