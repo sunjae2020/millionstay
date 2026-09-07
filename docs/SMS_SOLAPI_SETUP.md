@@ -177,6 +177,25 @@ DATABASE_URL=… node scripts/sms-preflight.mjs --send 01012345678
 이름은 이메일이지만 이 로그가 답하는 질문은 "이 건은 통보했는가" 이고 그건 채널과
 무관하다. 실패도 `status='Failed'` 로 남으므로 조용한 실패가 없다.
 
+### 임차인 진행 순서 안내 (수동 발송)
+
+공개 안내 페이지 `/for-tenant` 의 7단계에 맞춘 문안이다. 링크 발급 엔드포인트가
+문자를 자동으로 보내지는 않는다(메일만 자동) — 담당자가 **설정 → 문자 발송 →
+직접 발송**에서 문안을 불러와 발급된 링크를 넣어 보낸다. 단계·문안·발급
+엔드포인트 대응표는 [TENANT_ONBOARDING_LINKS.md](TENANT_ONBOARDING_LINKS.md)
+의 "안내 문자 — 단계별 문안과 링크" 절이 정본이다.
+
+| 단계 | 문안 |
+|---|---|
+| ① 임차 신청 | `sms.application_link` |
+| ② 방문 확정 | `sms.viewing_confirmed` |
+| ③ 서류 제출 | `sms.document_request` |
+| ⑤ 계약금·보증금 | `sms.payment_request` |
+| ⑥ 입주 신청서 | `sms.intake_request` |
+
+④ 계약서는 `sms.signature_request`, ⑦ 퇴거는 `sms.inspection_notice` +
+`sms.moveout_settlement` 가 이미 맡는다.
+
 ### 아직 트리거가 없는 문안
 
 문안은 있으나 그 사건 자체가 시스템에 없어 걸 곳이 없는 것들이다. 기능이 생길 때 함께

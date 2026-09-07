@@ -103,6 +103,50 @@ export const SMS_CUSTOMER = [
     vars: { date: { type: "date" }, time_window: { type: "string" }, purpose: { type: "string" } },
     text: "[{{brand}}] {{date}} {{time_window}} {{purpose}} 예정입니다.\n미리 준비 부탁드립니다.",
   },
+  /* ── 임차인 진행 순서(/for-tenant) 안내 문자 ─────────────────────────────
+     공개 안내 페이지가 세입자에게 약속하는 7단계와 **같은 순서**의 문안이다.
+     각 단계는 무로그인 링크 하나로 끝나고(docs/TENANT_ONBOARDING_LINKS.md),
+     그 링크를 실어 나르는 것이 이 문안들이다. 문안이 없던 단계 — 신청·방문·
+     서류·청구·입주 — 를 채운다. 계약서 서명은 sms.signature_request, 퇴거는
+     sms.inspection_notice + sms.moveout_settlement 가 이미 맡는다.
+
+     ⚠️ {{url}} 은 반드시 발급 엔드포인트가 돌려준 토큰 링크를 넣는다. 공개
+        주소(/apply)를 그대로 보내면 누가 낸 신청서인지 이어지지 않는다. */
+  {
+    key: "sms.application_link",
+    name: "① 임차 신청서 링크",
+    description: "상담 뒤 신청서를 보낼 때. POST /v1/leads/:id/apply-link 가 돌려준 링크를 넣는다.",
+    vars: { name: { type: "string" }, url: { type: "url", required: true } },
+    text: "[{{brand}}] {{name}}님, 임차 신청서를 보내드립니다.\n{{url}}",
+  },
+  {
+    key: "sms.viewing_confirmed",
+    name: "② 방문 일정 확정",
+    description: "공실 확인 뒤 방문 약속이 잡혔을 때. 전일 알림은 sms.appointment_reminder 가 따로 나간다.",
+    vars: { date: { type: "date" }, time_window: { type: "string" }, contact_phone: { type: "string" } },
+    text: "[{{brand}}] 방문 일정 안내\n{{date}} {{time_window}}\n변경 {{contact_phone}}",
+  },
+  {
+    key: "sms.document_request",
+    name: "③ 서류 제출 링크",
+    description: "조건 확정 뒤 신분증·통장 사본 등을 받을 때. POST /v1/contracts/:id/document-request.",
+    vars: { name: { type: "string" }, url: { type: "url", required: true } },
+    text: "[{{brand}}] {{name}}님, 서류 제출 부탁드립니다.\n{{url}}",
+  },
+  {
+    key: "sms.payment_request",
+    name: "⑤ 계약금·보증금 청구 링크",
+    description: "계약금·보증금 청구. 월세 정기 청구는 sms.rent_due 를 쓴다. POST /v1/invoices/:id/pay-link.",
+    vars: { amount: { type: "string" }, due_date: { type: "date" }, url: { type: "url", required: true } },
+    text: "[{{brand}}] {{amount}} 납부 안내입니다.\n{{due_date}}까지\n{{url}}",
+  },
+  {
+    key: "sms.intake_request",
+    name: "⑥ 입주 신청서 링크",
+    description: "입주 전 비상연락처·차량·반려동물을 받을 때. POST /v1/contracts/:id/intake-request.",
+    vars: { name: { type: "string" }, url: { type: "url", required: true } },
+    text: "[{{brand}}] {{name}}님, 입주 신청서 작성 부탁드립니다.\n{{url}}",
+  },
   {
     key: "sms.moveout_settlement",
     name: "보증금 정산 완료",
