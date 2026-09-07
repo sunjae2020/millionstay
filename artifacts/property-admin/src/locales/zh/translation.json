@@ -6436,7 +6436,13 @@
     "link_viewed": "已查看{{n}}次",
     "link_unopened": "未打开",
     "open_link": "打开",
-    "revoke": "撤销"
+    "revoke": "撤销",
+    "sender_unregistered": "{{number}}不是已登记的发送号码 — SOLAPI将拒绝所有短信（错误1062）。",
+    "sender_registered_list": "此账户已登记的号码：{{list}}",
+    "sender_none_registered": "此账户尚未登记任何发送号码。",
+    "sender_fix": "请在SOLAPI控制台登记该号码（营业执照＋通信服务使用证明，审核需1–2个工作日），或在连接设置中填入已获批准的号码。",
+    "open_console": "SOLAPI控制台",
+    "not_registered_hint": "请先登记发送号码。"
   },
   "entity_docs": {
     "tab_title": "文件",

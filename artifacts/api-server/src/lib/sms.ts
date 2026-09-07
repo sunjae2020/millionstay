@@ -158,6 +158,19 @@ function applyAdvertisingRules(text: string): { text: string } | { error: string
  * SDK 는 **동적 import** 한다. `solapi` 패키지를 아직 설치하지 않은 환경(현재)에서도
  * 이 모듈을 import 하는 코드가 깨지지 않아야 하고, 설치 여부가 곧 기능 활성화 스위치다.
  */
+/**
+ * SOLAPI 오류 문구에 **다음에 할 일**을 붙인다. 원문은 사유만 말하고 조치는
+ * 말하지 않는데(`1062 발신번호 미등록`), 그 조치가 우리 화면에서 하는 일이
+ * 아니라 SOLAPI 콘솔의 서류 제출이라 특히 안내가 필요하다.
+ */
+function withSendHint(msg: string, from: string): string {
+  if (/1062|발신번호\s*미등록/.test(msg)) {
+    return `${msg} — ${from} 은(는) SOLAPI 에 등록된 발신번호가 아닙니다. 콘솔에서 등록·승인받거나(서류 필요, 1~2영업일) 이미 승인된 번호로 바꾸세요.`;
+  }
+  if (/1063|잔액/.test(msg)) return `${msg} — SOLAPI 잔액을 충전하세요.`;
+  return msg;
+}
+
 export async function sendSms(opts: SendSmsOptions): Promise<SmsSendResult> {
   const to = normalizeKrPhone(opts.to);
   if (!to) return { ok: false, error: `발신 불가한 번호 형식: ${opts.to}` };
@@ -242,7 +255,7 @@ export async function sendSms(opts: SendSmsOptions): Promise<SmsSendResult> {
     if (failed > 0) {
       const detail = res?.failedMessageList?.[0];
       const msg = detail
-        ? `${detail.statusCode ?? ""} ${detail.statusMessage ?? ""}`.trim()
+        ? withSendHint(`${detail.statusCode ?? ""} ${detail.statusMessage ?? ""}`.trim(), from)
         : `${failed}건 등록 실패`;
       console.error(`[sms] 발송 실패 (${channel}) → ${to}: ${msg}`);
       return { ok: false, error: msg, type, bytes };
@@ -256,10 +269,46 @@ export async function sendSms(opts: SendSmsOptions): Promise<SmsSendResult> {
     // 못했습니다" 라는 껍데기뿐이라, 안쪽을 꺼내야 담당자가 다음 할 일을 안다.
     const detail = (err as any)?.failedMessageList?.[0];
     const msg = detail
-      ? `${detail.statusCode ?? ""} ${detail.statusMessage ?? ""}`.trim()
+      ? withSendHint(`${detail.statusCode ?? ""} ${detail.statusMessage ?? ""}`.trim(), from)
       : err instanceof Error ? err.message : "발송 실패";
     console.error(`[sms] 발송 실패 → ${to}: ${msg}`);
     return { ok: false, error: msg, type, bytes };
+  }
+}
+
+/**
+ * 계정에 **등록·승인된 발신번호** 목록.
+ *
+ * 국내 발신번호는 사전등록제라, 등록되지 않은 번호로 보내면 SOLAPI 가 접수
+ * 단계에서 `1062 발신번호 미등록` 으로 거부한다. 그런데 그 사실은 한 통을
+ * 보내 봐야 알 수 있어서, 담당자는 "키도 맞고 잔액도 있는데 왜 안 가지" 를
+ * 겪는다. 이 목록을 관리 화면에 띄우면 발송 전에 알 수 있다.
+ *
+ * SDK 에 조회 메서드가 없어 REST 를 직접 부른다(HMAC-SHA256 서명).
+ * 실패·미설정은 null — "조회하지 못했다" 와 "한 개도 없다"([]) 는 다르다.
+ */
+export async function smsSenderIds(): Promise<string[] | null> {
+  const apiKey = (process.env.SOLAPI_API_KEY ?? "").trim();
+  const apiSecret = (process.env.SOLAPI_API_SECRET ?? "").trim();
+  if (!apiKey || !apiSecret) return null;
+  try {
+    const { createHmac, randomBytes } = await import("node:crypto");
+    const date = new Date().toISOString();
+    const salt = randomBytes(16).toString("hex");
+    const signature = createHmac("sha256", apiSecret).update(date + salt).digest("hex");
+    const res = await fetch("https://api.solapi.com/senderid/v1/numbers/active", {
+      headers: { Authorization: `HMAC-SHA256 apiKey=${apiKey}, date=${date}, salt=${salt}, signature=${signature}` },
+    });
+    if (!res.ok) return null;
+    const body = (await res.json()) as { senderIds?: unknown; data?: unknown } | unknown[];
+    const list = Array.isArray(body) ? body : (body.senderIds ?? body.data ?? []);
+    return (Array.isArray(list) ? list : [])
+      .map((n: unknown) => (typeof n === "string" ? n : String((n as any)?.phoneNumber ?? "")))
+      .map((n: string) => n.replace(/[^\d]/g, ""))
+      .filter(Boolean);
+  } catch (err) {
+    console.error("[sms] 발신번호 조회 실패:", err instanceof Error ? err.message : err);
+    return null;
   }
 }
 

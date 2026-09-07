@@ -6432,7 +6432,13 @@
     "link_viewed": "閲覧 {{n}}回",
     "link_unopened": "未閲覧",
     "open_link": "開く",
-    "revoke": "取り消し"
+    "revoke": "取り消し",
+    "sender_unregistered": "{{number}}は登録された発信番号ではありません — SOLAPIがすべての送信を拒否します（エラー1062）。",
+    "sender_registered_list": "このアカウントに登録済みの番号: {{list}}",
+    "sender_none_registered": "このアカウントにはまだ登録された発信番号がありません。",
+    "sender_fix": "SOLAPIコンソールで番号を登録してください（事業者登録証＋通信サービス利用証明書、承認まで1〜2営業日）。または、すでに承認済みの番号を連携設定に入力してください。",
+    "open_console": "SOLAPIコンソール",
+    "not_registered_hint": "先に発信番号を登録してください。"
   },
   "entity_docs": {
     "tab_title": "書類",

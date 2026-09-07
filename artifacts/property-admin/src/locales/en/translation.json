@@ -6476,7 +6476,13 @@
     "link_viewed": "Viewed {{n}}×",
     "link_unopened": "Not opened",
     "open_link": "Open",
-    "revoke": "Revoke"
+    "revoke": "Revoke",
+    "sender_unregistered": "{{number}} is not a registered sender number — SOLAPI will reject every message (error 1062).",
+    "sender_registered_list": "Registered on this account: {{list}}",
+    "sender_none_registered": "This account has no registered sender number yet.",
+    "sender_fix": "Register the number in the SOLAPI console (business registration + a telecom service certificate, approved in 1–2 business days), or set an already-approved number in the connection settings.",
+    "open_console": "SOLAPI console",
+    "not_registered_hint": "Register the sender number before sending."
   },
   "entity_docs": {
     "tab_title": "Documents",

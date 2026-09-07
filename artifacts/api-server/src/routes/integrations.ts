@@ -9,7 +9,7 @@ import { resolveEmailBrand } from "../lib/emailBrand.js";
 import { allProviders, apiKeyOf, capabilitiesOf, isProviderConfigured, providerEnvKeys } from "../lib/ai/providers.js";
 import { taskModelEnvKeys } from "../lib/ai/tasks.js";
 import { resetAiClients, resolveAllTasks } from "../lib/ai/client.js";
-import { sendSms, smsBalance, smsConfigStatus } from "../lib/sms.js";
+import { sendSms, smsBalance, smsConfigStatus, smsSenderIds } from "../lib/sms.js";
 
 const router: IRouter = Router();
 
@@ -396,7 +396,14 @@ router.post("/v1/integrations/solapi/test", async (req: Request, res: Response):
 
   const to = typeof req.body?.to === "string" ? req.body.to.trim() : "";
   if (!to) {
-    res.json({ success: true, balance, sender_number: status.sender_number, missing: status.missing });
+    // 번호를 비우고 누른 경우 = 회선 점검. 등록된 발신번호까지 돌려줘서
+    // "키는 맞는데 발신번호가 미등록" 을 발송 전에 알 수 있게 한다.
+    const senders = await smsSenderIds();
+    res.json({
+      success: true, balance, sender_number: status.sender_number, missing: status.missing,
+      registered_senders: senders,
+      sender_registered: senders == null ? null : !!status.sender_number && senders.includes(status.sender_number),
+    });
     return;
   }
   if (!status.configured) {

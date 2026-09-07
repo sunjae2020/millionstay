@@ -6382,7 +6382,13 @@
     "link_viewed": "Đã xem {{n}} lần",
     "link_unopened": "Chưa mở",
     "open_link": "Mở",
-    "revoke": "Thu hồi"
+    "revoke": "Thu hồi",
+    "sender_unregistered": "{{number}} không phải là số gửi đã đăng ký — SOLAPI sẽ từ chối mọi tin nhắn (lỗi 1062).",
+    "sender_registered_list": "Số đã đăng ký trên tài khoản này: {{list}}",
+    "sender_none_registered": "Tài khoản này chưa có số gửi nào được đăng ký.",
+    "sender_fix": "Hãy đăng ký số trong bảng điều khiển SOLAPI (giấy phép kinh doanh + giấy chứng nhận sử dụng dịch vụ viễn thông, duyệt trong 1–2 ngày làm việc), hoặc đặt một số đã được duyệt trong cài đặt kết nối.",
+    "open_console": "Bảng điều khiển SOLAPI",
+    "not_registered_hint": "Hãy đăng ký số gửi trước khi gửi."
   },
   "entity_docs": {
     "tab_title": "Tài liệu",

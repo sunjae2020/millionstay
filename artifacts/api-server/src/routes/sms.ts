@@ -7,7 +7,7 @@
 import { Router, type IRouter } from "express";
 import { and, desc, eq, ilike, like, or, sql } from "drizzle-orm";
 import { db, emailLogsTable, documentTemplatesTable, documentTemplateTranslationsTable } from "@workspace/db";
-import { normalizeKrPhone, sendSms, smsBalance, smsBytes, smsConfigStatus, smsType } from "../lib/sms";
+import { normalizeKrPhone, sendSms, smsBalance, smsBytes, smsConfigStatus, smsSenderIds, smsType } from "../lib/sms";
 import { renderString } from "../lib/documents/templateEngine.js";
 import { buildOrderBy, parseListPage, parseSortParams, sendList, type SortMap } from "../utils/pagination";
 import { logAction } from "../utils/auditLog";
@@ -20,8 +20,22 @@ const SMS_ROWS = or(like(emailLogsTable.subject, "[SMS]%"), like(emailLogsTable.
 /** 개통 상태 + 잔액. 잔액 조회는 SOLAPI 호출이라 무료지만 느릴 수 있어 status 에만 붙인다. */
 router.get("/v1/sms/status", async (_req, res): Promise<void> => {
   const config = smsConfigStatus();
-  const balance = config.api_key && config.api_secret ? await smsBalance() : null;
-  res.json({ success: true, data: { ...config, balance } });
+  const authed = config.api_key && config.api_secret;
+  // 등록된 발신번호까지 같이 본다 — 설정값이 등록 목록에 없으면 한 통도 나가지
+  // 않는데, 그건 발송해 봐야 드러나는 종류의 실패다.
+  const [balance, senders] = authed
+    ? await Promise.all([smsBalance(), smsSenderIds()])
+    : [null, null];
+  res.json({
+    success: true,
+    data: {
+      ...config,
+      balance,
+      registered_senders: senders,
+      // null = 조회 실패(모름), false = 목록에 없음.
+      sender_registered: senders == null ? null : !!config.sender_number && senders.includes(config.sender_number),
+    },
+  });
 });
 
 /** 발행된 SMS 문안 — 직접 발송 화면의 "문안 불러오기". 본문은 ko 만 있다(국내 전용). */
