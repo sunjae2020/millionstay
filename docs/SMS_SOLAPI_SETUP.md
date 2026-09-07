@@ -1,7 +1,7 @@
 ---
 status: live
 domain: 인프라
-last_verified: 2026-09-07
+last_verified: 2026-09-08
 ---
 
 # SMS 발송 개통 절차 (SOLAPI)
@@ -34,6 +34,14 @@ SOLAPI_API_SECRET=...
 1. SOLAPI 콘솔 → 발신번호 등록
 2. 통신서비스 이용증명원 또는 사업자등록증 등 서류 제출 → 승인 대기(영업일 1~2일)
 3. 승인된 번호를 등록:
+
+> 🚨 **등록되지 않은 번호로 보내면 SOLAPI 가 접수 단계에서 `1062 발신번호 미등록`
+> 으로 거부한다.** 키·잔액이 멀쩡해도 한 통도 나가지 않으므로, 문자 발송 센터가
+> 계정에 등록된 번호 목록(`GET /senderid/v1/numbers/active`)을 함께 조회해
+> 설정값이 그 안에 없으면 발송 전에 경고하고 발송 버튼을 막는다
+> (`smsSenderIds()`, `GET /v1/sms/status` 의 `registered_senders`·`sender_registered`).
+> 2026-09-08 Metheim: 대표번호 031-926-2281 을 넣었으나 콘솔 등록 전이라 전량 거부됐다.
+
 
 ```
 SMS_SENDER_NUMBER=0319262281   # 회사 대표 유선번호도 된다 — 02·지역번호·070·080·1544 허용(normalizeKrSender)

@@ -5246,7 +5246,10 @@
     "cat_host": "Nhân viên dịch vụ",
     "cat_staff": "Nhân viên nội bộ",
     "cat_marketing": "Tiếp thị",
-    "cat_legacy": "Cần rà soát"
+    "cat_legacy": "Cần rà soát",
+    "kind_sms": "Tin nhắn",
+    "sms_too_long": "quá dài",
+    "sms_hint": "Tối đa 90 byte gửi dạng SMS (tiếng Hàn = 2 byte/ký tự); dài hơn sẽ gửi dạng LMS với chi phí gấp khoảng 3 lần. Không gửi được emoji và HTML, tên thương hiệu được tự động điền vào vị trí {{brand}}."
   },
   "homestayBilling": {
     "title": "Thanh toán Homestay",
@@ -6382,7 +6385,13 @@
     "link_viewed": "Đã xem {{n}} lần",
     "link_unopened": "Chưa mở",
     "open_link": "Mở",
-    "revoke": "Thu hồi"
+    "revoke": "Thu hồi",
+    "sender_unregistered": "{{number}} không phải là số gửi đã đăng ký — SOLAPI sẽ từ chối mọi tin nhắn (lỗi 1062).",
+    "sender_registered_list": "Số đã đăng ký trên tài khoản này: {{list}}",
+    "sender_none_registered": "Tài khoản này chưa có số gửi nào được đăng ký.",
+    "sender_fix": "Hãy đăng ký số trong bảng điều khiển SOLAPI (giấy phép kinh doanh + giấy chứng nhận sử dụng dịch vụ viễn thông, duyệt trong 1–2 ngày làm việc), hoặc đặt một số đã được duyệt trong cài đặt kết nối.",
+    "open_console": "Bảng điều khiển SOLAPI",
+    "not_registered_hint": "Hãy đăng ký số gửi trước khi gửi."
   },
   "entity_docs": {
     "tab_title": "Tài liệu",

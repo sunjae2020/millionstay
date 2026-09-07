@@ -5328,7 +5328,10 @@
     "cat_host": "Service hosts",
     "cat_staff": "Internal staff",
     "cat_marketing": "Marketing",
-    "cat_legacy": "Legacy (to review)"
+    "cat_legacy": "Legacy (to review)",
+    "kind_sms": "Text",
+    "sms_too_long": "too long",
+    "sms_hint": "Up to 90 bytes goes as SMS (Korean = 2 bytes per character); longer texts go as LMS at about 3× the cost. Emoji and HTML cannot be sent, and the brand name is filled in automatically as {{brand}}."
   },
   "homestayBilling": {
     "title": "Homestay Billing",
@@ -6476,7 +6479,13 @@
     "link_viewed": "Viewed {{n}}×",
     "link_unopened": "Not opened",
     "open_link": "Open",
-    "revoke": "Revoke"
+    "revoke": "Revoke",
+    "sender_unregistered": "{{number}} is not a registered sender number — SOLAPI will reject every message (error 1062).",
+    "sender_registered_list": "Registered on this account: {{list}}",
+    "sender_none_registered": "This account has no registered sender number yet.",
+    "sender_fix": "Register the number in the SOLAPI console (business registration + a telecom service certificate, approved in 1–2 business days), or set an already-approved number in the connection settings.",
+    "open_console": "SOLAPI console",
+    "not_registered_hint": "Register the sender number before sending."
   },
   "entity_docs": {
     "tab_title": "Documents",

@@ -5290,7 +5290,10 @@
     "cat_host": "服务人员",
     "cat_staff": "内部员工",
     "cat_marketing": "营销",
-    "cat_legacy": "待整理"
+    "cat_legacy": "待整理",
+    "kind_sms": "短信",
+    "sms_too_long": "过长",
+    "sms_hint": "90字节以内按SMS发送（韩文1字=2字节），超过则按LMS发送，费用约为3倍。无法发送表情符号和HTML，商号会自动填入{{brand}}的位置。"
   },
   "homestayBilling": {
     "title": "寄宿计费",
@@ -6436,7 +6439,13 @@
     "link_viewed": "已查看{{n}}次",
     "link_unopened": "未打开",
     "open_link": "打开",
-    "revoke": "撤销"
+    "revoke": "撤销",
+    "sender_unregistered": "{{number}}不是已登记的发送号码 — SOLAPI将拒绝所有短信（错误1062）。",
+    "sender_registered_list": "此账户已登记的号码：{{list}}",
+    "sender_none_registered": "此账户尚未登记任何发送号码。",
+    "sender_fix": "请在SOLAPI控制台登记该号码（营业执照＋通信服务使用证明，审核需1–2个工作日），或在连接设置中填入已获批准的号码。",
+    "open_console": "SOLAPI控制台",
+    "not_registered_hint": "请先登记发送号码。"
   },
   "entity_docs": {
     "tab_title": "文件",

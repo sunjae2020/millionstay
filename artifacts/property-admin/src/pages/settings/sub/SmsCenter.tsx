@@ -21,6 +21,12 @@ interface SmsStatus {
   configured: boolean; api_key: boolean; api_secret: boolean;
   sender_number: string | null; ad_opt_out_number: string | null; advertising_ready: boolean;
   kakao_pf_id: boolean; missing: string[]; balance: number | null;
+  /** 문안의 {{brand}} 가 발송 시 치환되는 상호. 미리보기가 같은 값을 쓴다. */
+  brand: string | null;
+  /** SOLAPI 에 등록·승인된 발신번호. null = 조회 실패. */
+  registered_senders: string[] | null;
+  /** 설정된 발신번호가 그 목록에 있나. null = 모름. */
+  sender_registered: boolean | null;
 }
 interface SmsSummary { today: number; month: number; failed_month: number }
 interface SmsTemplate { key: string; name: string; description: string | null; body: string; variables: string[] }
@@ -188,12 +194,15 @@ export default function SmsCenterPage() {
         {/* 상태 카드 */}
         <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
           <StatCard label={t("sms_center.card_status", "Status")}>
-            {status.isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : s?.configured
+            {status.isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : s?.configured && s?.sender_registered !== false
               ? <span className="text-emerald-600 flex items-center gap-1"><CheckCircle2 className="h-4 w-4" />{t("sms_center.ready", "Ready")}</span>
               : <span className="text-amber-600 flex items-center gap-1"><AlertTriangle className="h-4 w-4" />{t("sms_center.not_ready", "Not ready")}</span>}
           </StatCard>
           <StatCard label={t("sms_center.card_sender", "Sender number")}>
-            <span className="font-mono">{s?.sender_number ? prettyPhone(s.sender_number) : "—"}</span>
+            <span className={`font-mono ${s?.sender_registered === false ? "text-destructive" : ""}`}>
+              {s?.sender_number ? prettyPhone(s.sender_number) : "—"}
+            </span>
+            {s?.sender_registered === false && <AlertTriangle className="h-4 w-4 text-destructive shrink-0" />}
           </StatCard>
           <StatCard label={t("sms_center.card_balance", "Balance")}>
             {s?.balance == null ? "—" : `${s.balance.toLocaleString()}원`}
@@ -212,6 +221,32 @@ export default function SmsCenterPage() {
             <Link href="/settings/integrations" className="text-primary text-xs hover:underline inline-flex items-center gap-1 mt-1">
               {t("sms_center.go_integrations", "Connection settings")} <ExternalLink className="h-3 w-3" />
             </Link>
+          </div>
+        )}
+        {/* 키·잔액이 멀쩡해도 발신번호가 사전등록돼 있지 않으면 한 통도 나가지
+            않는다(SOLAPI 1062). 발송해 보기 전에 여기서 말해 준다. */}
+        {s?.sender_registered === false && (
+          <div className="rounded-md border border-destructive/40 bg-destructive/5 px-4 py-3 text-sm space-y-1">
+            <p className="font-medium text-destructive flex items-center gap-1.5">
+              <AlertTriangle className="h-4 w-4" />
+              {t("sms_center.sender_unregistered", "{{number}} is not a registered sender number — SOLAPI will reject every message (error 1062).", { number: prettyPhone(s.sender_number ?? "") })}
+            </p>
+            <p className="text-xs text-muted-foreground">
+              {s.registered_senders?.length
+                ? t("sms_center.sender_registered_list", "Registered on this account: {{list}}", { list: s.registered_senders.map(prettyPhone).join(", ") })
+                : t("sms_center.sender_none_registered", "This account has no registered sender number yet.")}
+            </p>
+            <p className="text-xs text-muted-foreground">
+              {t("sms_center.sender_fix", "Register the number in the SOLAPI console (business registration + a telecom service certificate, approved in 1–2 business days), or set an already-approved number in the connection settings.")}
+            </p>
+            <div className="flex items-center gap-3 pt-0.5">
+              <Link href="/settings/integrations" className="text-primary text-xs hover:underline inline-flex items-center gap-1">
+                {t("sms_center.go_integrations", "Connection settings")} <ExternalLink className="h-3 w-3" />
+              </Link>
+              <a href="https://console.solapi.com/sender-ids" target="_blank" rel="noopener noreferrer" className="text-primary text-xs hover:underline inline-flex items-center gap-1">
+                {t("sms_center.open_console", "SOLAPI console")} <ExternalLink className="h-3 w-3" />
+              </a>
+            </div>
           </div>
         )}
 
@@ -255,18 +290,19 @@ export default function SmsCenterPage() {
                   <p className="text-xs text-muted-foreground">{t("sms_center.message_hint", "Up to 90 bytes goes as SMS (Korean = 2 bytes per character); longer texts go as LMS at about 3× the cost. Emoji cannot be sent.")}</p>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Button onClick={() => void handleSend()} disabled={!canSend || !s?.configured}>
+                  <Button onClick={() => void handleSend()} disabled={!canSend || !s?.configured || s?.sender_registered === false}>
                     {sending ? <Loader2 className="h-4 w-4 mr-1.5 animate-spin" /> : <Send className="h-4 w-4 mr-1.5" />}
                     {t("sms_center.send_button", "Send now")}
                   </Button>
                   {s && !s.configured && <span className="text-xs text-muted-foreground">{t("sms_center.not_ready_hint", "Set the sender number first.")}</span>}
+                  {s?.configured && s.sender_registered === false && <span className="text-xs text-destructive">{t("sms_center.not_registered_hint", "Register the sender number before sending.")}</span>}
                 </div>
               </div>
               <div className="space-y-3">
                 <Label>{t("sms_center.preview", "Preview")}</Label>
                 <div className="rounded-2xl border bg-muted/40 p-4 max-w-sm">
                   <div className="rounded-xl bg-background border px-3 py-2 text-sm whitespace-pre-wrap break-words min-h-[4rem]">
-                    {text ? text.replace(/\{\{brand\}\}/g, "[브랜드]").replace(/\{\{name\}\}/g, "고객") : <span className="text-muted-foreground">{t("sms_center.preview_empty", "Your message will appear here.")}</span>}
+                    {text ? text.replace(/\{\{brand\}\}/g, s?.brand ?? "브랜드").replace(/\{\{name\}\}/g, "고객") : <span className="text-muted-foreground">{t("sms_center.preview_empty", "Your message will appear here.")}</span>}
                   </div>
                   <p className="text-[11px] text-muted-foreground mt-2">{t("sms_center.preview_from", "From")}: {s?.sender_number ? prettyPhone(s.sender_number) : "—"}</p>
                 </div>

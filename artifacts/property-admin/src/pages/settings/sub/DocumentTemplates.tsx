@@ -9,7 +9,7 @@ import { DataTable, ACTIONS_KEY, type ColumnDef } from "@/components/ui/data-tab
 import { SearchBox } from "@/components/list-filters";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { FileText, Mail, FileCheck, FileType, Eye, Globe, Plus } from "lucide-react";
+import { FileText, Mail, FileCheck, FileType, MessageSquare, Eye, Globe, Plus } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiFetch } from "@/lib/apiFetch";
 
@@ -28,10 +28,14 @@ interface TemplateRow {
   updated_at: string;
 }
 
-type Kind = "email" | "contract" | "pdf";
+type Kind = "email" | "sms" | "contract" | "pdf";
 
 const KINDS = [
   { key: "email", icon: Mail },
+  // 문자 문안(kind='sms')도 같은 표에 있는데 탭이 없어 화면에서 보이지 않았다.
+  // 발송 코드는 이 행을 읽으므로(lib/sms.ts resolveTemplate), 편집 자리가 없으면
+  // 문안을 고치려면 DB 를 직접 만져야 했다.
+  { key: "sms", icon: MessageSquare },
   { key: "contract", icon: FileCheck },
   { key: "pdf", icon: FileType },
 ] as const;

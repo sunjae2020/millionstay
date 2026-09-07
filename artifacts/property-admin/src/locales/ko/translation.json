@@ -5328,7 +5328,10 @@
     "cat_staff": "내부 직원",
     "cat_marketing": "마케팅",
     "cat_legacy": "정리 대상",
-    "kind_pdf": "PDF"
+    "kind_pdf": "PDF",
+    "kind_sms": "문자",
+    "sms_too_long": "너무 깁니다",
+    "sms_hint": "90바이트까지 SMS(한글 1자 = 2바이트), 넘으면 LMS로 나가며 요금이 약 3배입니다. 이모지와 HTML은 보낼 수 없고, 상호는 {{brand}} 자리에 자동으로 채워집니다."
   },
   "homestayBilling": {
     "title": "홈스테이 청구",
@@ -6476,7 +6479,13 @@
     "link_viewed": "열람 {{n}}회",
     "link_unopened": "미열람",
     "open_link": "열기",
-    "revoke": "회수"
+    "revoke": "회수",
+    "sender_unregistered": "{{number}}은(는) 등록된 발신번호가 아닙니다 — SOLAPI가 모든 발송을 거부합니다(오류 1062).",
+    "sender_registered_list": "이 계정에 등록된 번호: {{list}}",
+    "sender_none_registered": "이 계정에는 아직 등록된 발신번호가 없습니다.",
+    "sender_fix": "SOLAPI 콘솔에서 번호를 등록하세요(사업자등록증 + 통신서비스 이용증명원, 승인 1~2영업일). 또는 이미 승인된 번호를 연동 설정에 넣으세요.",
+    "open_console": "SOLAPI 콘솔",
+    "not_registered_hint": "발신번호를 먼저 등록하세요."
   },
   "entity_docs": {
     "tab_title": "서류",
