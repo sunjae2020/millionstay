@@ -32,7 +32,7 @@ export function useCmsSites(options: { includeInactive?: boolean } = {}) {
       const rows = await res.json();
       return rows.map((row: CmsSite) => ({
         ...row,
-        locales: Array.isArray(row.locales) ? row.locales : ["en"],
+        locales: Array.isArray(row.locales) ? row.locales : [row.default_locale].filter(Boolean),
       }));
     },
     staleTime: 5 * 60 * 1000,

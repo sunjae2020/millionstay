@@ -78,7 +78,7 @@ interface TranslationDetail {
 export default function CmsPageBuilder() {
   const params = useParams();
   const pageId = Number(params["id"]);
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { toast } = useToast();
   const qc = useQueryClient();
   const [, navigate] = useLocation();
@@ -107,12 +107,21 @@ export default function CmsPageBuilder() {
     },
   });
 
-  const siteLocales = useMemo(() => page?.site?.locales ?? ["en"], [page]);
-  const baseLocale = page?.site?.default_locale ?? "en";
+  // Fallback while the site row is unknown: the console's own working language
+  // (Korean on a Korean tenant), never a hardcoded "en".
+  const consoleLocale = i18n.language.slice(0, 2);
+  const siteLocales = useMemo(() => page?.site?.locales ?? [consoleLocale], [page, consoleLocale]);
+  const baseLocale = page?.site?.default_locale ?? consoleLocale;
 
+  // Choose the starting language only once the page — and with it the site's
+  // default_locale — has loaded. Deciding while `page` was still undefined
+  // locked the editor to the fallback language for the rest of the visit: the
+  // site could say Korean and the editor still opened in English.
   useEffect(() => {
-    if (!locale && siteLocales.length > 0) setLocale(baseLocale);
-  }, [siteLocales, baseLocale, locale]);
+    if (!page) return;
+    if (locale && siteLocales.includes(locale)) return;
+    setLocale(baseLocale);
+  }, [page, siteLocales, baseLocale, locale]);
 
   useEffect(() => {
     if (!page) return;

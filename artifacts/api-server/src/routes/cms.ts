@@ -271,6 +271,25 @@ function slugify(input: string): string {
 }
 
 /**
+ * Order a page's per-locale rows the way the site itself lists its languages:
+ * the site's default language first, then its declared order. Without this the
+ * admin gets them in database insertion order — English first on a Korean
+ * site — which contradicts how the site is configured.
+ */
+function sortLocalesForSite<T extends { locale: string }>(
+  rows: T[],
+  site: { locales: unknown; default_locale: string } | null | undefined,
+): T[] {
+  const declared = Array.isArray(site?.locales) ? (site.locales as string[]) : [];
+  const order = [site?.default_locale, ...declared].filter(Boolean) as string[];
+  const rank = (code: string): number => {
+    const i = order.indexOf(code);
+    return i === -1 ? order.length : i;
+  };
+  return [...rows].sort((a, b) => rank(a.locale) - rank(b.locale) || a.locale.localeCompare(b.locale));
+}
+
+/**
  * List pages with a per-locale completion summary. The translation rows are
  * fetched in ONE batched query (inArray) — enriching row-by-row is the N+1
  * pattern that has caused admin list timeouts before.
@@ -323,7 +342,22 @@ router.get("/v1/cms/pages", async (req, res): Promise<void> => {
     byPage.set(t.page_id, list);
   }
 
-  res.json(pages.map((page) => ({ ...page, locales: byPage.get(page.id) ?? [] })));
+  const siteRows = await db
+    .select({
+      site_key: cmsSitesTable.site_key,
+      locales: cmsSitesTable.locales,
+      default_locale: cmsSitesTable.default_locale,
+    })
+    .from(cmsSitesTable)
+    .where(inArray(cmsSitesTable.site_key, [...new Set(pages.map((p) => p.site_key))]));
+  const siteByKey = new Map(siteRows.map((row) => [row.site_key, row]));
+
+  res.json(
+    pages.map((page) => ({
+      ...page,
+      locales: sortLocalesForSite(byPage.get(page.id) ?? [], siteByKey.get(page.site_key)),
+    })),
+  );
 });
 
 const PageBody = z.object({
@@ -391,13 +425,16 @@ router.get("/v1/cms/pages/:id", async (req, res): Promise<void> => {
   res.json({
     ...page,
     site: site ?? null,
-    locales: translations.map((t) => ({
-      locale: t.locale,
-      status: t.status,
-      source: t.source,
-      updated_at: t.updated_at,
-      blocks: countBlocks(normaliseBody(t.body_json).blocks),
-    })),
+    locales: sortLocalesForSite(
+      translations.map((t) => ({
+        locale: t.locale,
+        status: t.status,
+        source: t.source,
+        updated_at: t.updated_at,
+        blocks: countBlocks(normaliseBody(t.body_json).blocks),
+      })),
+      site,
+    ),
   });
 });
 

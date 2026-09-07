@@ -24,19 +24,26 @@ const LOCALE_LABELS: Record<string, string> = {
 };
 
 export function PostBlockEditor({ postId, siteKey }: { postId: string; siteKey: string }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { toast } = useToast();
   const qc = useQueryClient();
   const { sites } = useCmsSites();
   const site = sites.find((s) => s.site_key === siteKey);
-  const locales = site?.locales ?? ["en"];
-  const baseLocale = site?.default_locale ?? "en";
+  const consoleLocale = i18n.language.slice(0, 2);
+  const locales = site?.locales ?? [consoleLocale];
+  const baseLocale = site?.default_locale ?? consoleLocale;
 
   const [locale, setLocale] = useState(baseLocale);
   const [blocks, setBlocks] = useState<Block[]>([]);
   const [dirty, setDirty] = useState(false);
 
-  useEffect(() => setLocale(baseLocale), [baseLocale]);
+  // Same rule as the page editor: wait for the site row, then open in the
+  // site's default language — and never override a language the user picked.
+  useEffect(() => {
+    if (!site) return;
+    if (locale && locales.includes(locale)) return;
+    setLocale(baseLocale);
+  }, [site, locales, baseLocale, locale]);
 
   const { data: translation, isFetching } = useQuery({
     queryKey: ["cms-post-translation", postId, locale],
