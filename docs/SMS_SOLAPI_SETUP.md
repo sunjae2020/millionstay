@@ -36,7 +36,7 @@ SOLAPI_API_SECRET=...
 3. 승인된 번호를 등록:
 
 ```
-SMS_SENDER_NUMBER=0611234567
+SMS_SENDER_NUMBER=0319262281   # 회사 대표 유선번호도 된다 — 02·지역번호·070·080·1544 허용(normalizeKrSender)
 ```
 
 ## 3. 광고 SMS 무료거부번호 (광고 발송 시에만)
@@ -112,6 +112,22 @@ DATABASE_URL=… node scripts/sms-preflight.mjs --send 01012345678
 3. 발송 시 알림톡을 먼저 시도하고 실패하면 SMS 로 대체(`fallback`)
 
 심사는 광고성 문구를 걸러낸다. 24종을 거래성만 골라 둔 것이 여기서 그대로 유리하게 작용한다.
+
+## 문자 발송 센터 (관리자 → 설정 → 문자 발송)
+
+연동 카드가 "개통이 됐나" 를 답한다면, 이 화면은 그 다음을 맡는다 — `/settings/sms`
+(`pages/settings/sub/SmsCenter.tsx`, 뒷단 `routes/sms.ts`).
+
+| 탭 | 무엇을 | 끝점 |
+|---|---|---|
+| 상단 카드 | 개통 상태·발신번호·잔액·오늘/이달 건수·이달 실패 | `GET /v1/sms/status`, `GET /v1/sms/summary` |
+| 직접 발송 | 번호 여러 개(최대 50) + 본문, 바이트/SMS·LMS 표시, 저장된 문안 불러오기 | `POST /v1/sms/send`, `GET /v1/sms/templates` |
+| 발송 내역 | email_log 의 SMS 행(자동 통보 + 직접 발송 + 문서 링크), 상태·검색 필터, CSV | `GET /v1/sms/logs` (공용 정렬·페이징 규약) |
+| 문서 링크 | 미리보기에서 문자로 보낸 링크의 열람 여부·만료·회수 | `GET /v1/documents/sms-links`, `POST …/:id/revoke` |
+
+직접 발송의 이력은 `template_code='sms.manual'` 로 남는다. 발송 실패 사유는 SOLAPI 의
+`failedMessageList` 안쪽 문구("발신번호 미등록" 같은)를 그대로 보여 준다 — 바깥 메시지는
+"n개의 메시지가 접수되지 못했습니다" 뿐이라 그것만으로는 다음 할 일을 알 수 없다.
 
 ## 어떤 사건에서 문자가 나가나 (배선 현황)
 

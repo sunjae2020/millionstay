@@ -251,7 +251,13 @@ export async function sendSms(opts: SendSmsOptions): Promise<SmsSendResult> {
     console.log(`[sms] 발송 ${channel} ${bytes}B → ${to} (${groupId ?? "no-group"})`);
     return { ok: true, id: groupId, type, bytes };
   } catch (err) {
-    const msg = err instanceof Error ? err.message : "발송 실패";
+    // SDK 는 전부 실패하면 throw 한다. 진짜 사유(발신번호 미등록·잔액 부족 …)는
+    // err.failedMessageList 안에 있고 err.message 는 "n개의 메시지가 접수되지
+    // 못했습니다" 라는 껍데기뿐이라, 안쪽을 꺼내야 담당자가 다음 할 일을 안다.
+    const detail = (err as any)?.failedMessageList?.[0];
+    const msg = detail
+      ? `${detail.statusCode ?? ""} ${detail.statusMessage ?? ""}`.trim()
+      : err instanceof Error ? err.message : "발송 실패";
     console.error(`[sms] 발송 실패 → ${to}: ${msg}`);
     return { ok: false, error: msg, type, bytes };
   }

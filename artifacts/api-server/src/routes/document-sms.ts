@@ -223,11 +223,12 @@ adminRouter.post("/v1/documents/sms-link", upload.single("file"), async (req, re
 adminRouter.get("/v1/documents/sms-links", async (req, res): Promise<void> => {
   const entityType = String(req.query.entity_type ?? "").trim();
   const entityId = Number(req.query.entity_id);
-  if (!entityType || !Number.isFinite(entityId)) { res.json({ success: true, data: [] }); return; }
+  const scoped = !!entityType && Number.isFinite(entityId);
+  // 레코드 지정이 없으면 최근 발급분 — 문자 발송 센터의 "문서 링크" 탭.
   const rows = await db.select().from(documentShareLinksTable)
-    .where(and(eq(documentShareLinksTable.entity_type, entityType), eq(documentShareLinksTable.entity_id, entityId)))
+    .where(scoped ? and(eq(documentShareLinksTable.entity_type, entityType), eq(documentShareLinksTable.entity_id, entityId)) : undefined)
     .orderBy(sql`${documentShareLinksTable.created_at} DESC`)
-    .limit(50);
+    .limit(scoped ? 50 : 200);
   res.json({
     success: true,
     data: rows.map((r) => ({
