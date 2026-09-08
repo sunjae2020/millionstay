@@ -20,6 +20,7 @@ import {
   TrendingUp,
   Settings2,
   Palette,
+  Gauge,
   Plug,
   KeyRound,
   Fingerprint,
@@ -67,6 +68,12 @@ const ADMIN_CARDS: CardDef[] = [
     description: "settings_hub.design_desc",
     icon: Palette,
     href: "/settings/design",
+  },
+  {
+    title: "settings_hub.seo_defaults_title",
+    description: "settings_hub.seo_defaults_desc",
+    icon: Gauge,
+    href: "/settings/seo-defaults",
   },
   {
     title: "settings_hub.doc_templates_title",

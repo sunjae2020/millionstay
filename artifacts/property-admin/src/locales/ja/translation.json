@@ -6055,7 +6055,9 @@
     "org_units_title": "支店・チーム",
     "org_units_desc": "組織構造と会計アクセス範囲",
     "activity_analytics_title": "アクティビティ分析",
-    "activity_analytics_desc": "ユーザー・チーム・拠点別の日次アクティビティ"
+    "activity_analytics_desc": "ユーザー・チーム・拠点別の日次アクティビティ",
+    "seo_defaults_title": "SEO 既定値",
+    "seo_defaults_desc": "サイト全体が引き継ぐ会社スキーマ・llms.txt 紹介文・正規URLを管理します。"
   },
   "settings_org": {
     "page_subtitle": "会社プロフィールと連絡先",
@@ -8064,6 +8066,38 @@
     "gap_robots_no_ai_rules": "サイトの robots.txt がAIクローラーを明記していません",
     "gap_llms_txt_missing": "llms.txt の紹介文が空です",
     "gap_organization_schema_missing": "会社スキーマがありません",
-    "gap_brand_absent_from_title": "タイトルにブランド名がありません"
+    "gap_brand_absent_from_title": "タイトルにブランド名がありません",
+    "session_expired": "ログインの有効期限が切れました。再度ログインしてお試しください。"
+  },
+  "seo_defaults": {
+    "title": "SEO 既定値",
+    "subtitle": "サイトの全ページが引き継ぐ値です。一つ空けると全ページのスコアが一緒に下がります。",
+    "saved": "保存しました",
+    "save_failed": "保存できませんでした",
+    "prefill": "会社情報から取り込む",
+    "prefilled": "会社情報を読み込みました",
+    "prefilled_hint": "空欄だけ埋めました。確認してから保存してください。",
+    "prefill_failed": "会社情報を読み込めませんでした",
+    "org_title": "会社スキーマ",
+    "org_desc": "このサイトを運営する会社が誰かを検索エンジンとAIに伝える情報です。ブランド項目の3点はここから出ます。",
+    "org_name": "会社名",
+    "org_url": "公式サイト",
+    "org_logo": "ロゴ画像のURL",
+    "org_phone": "代表電話",
+    "org_email": "代表メール",
+    "org_street": "番地・町名",
+    "org_city": "市区町村",
+    "org_region": "都道府県",
+    "org_postcode": "郵便番号",
+    "org_country": "国コード",
+    "org_same_as": "公式チャンネルのURL",
+    "org_same_as_hint": "1行に1つ。インスタグラムやブログなど、この会社が公式に運営する URL だけを書いてください。",
+    "llms_title": "llms.txt 紹介文",
+    "llms_desc": "AIエンジンがこのサイトを理解するために最初に読む一段落です。空欄だと llms.txt の6点が入りません。",
+    "llms_placeholder": "麗水旧都心の269戸の都市型住宅。分譲・賃貸・管理受託を一社で担います。",
+    "canonical_title": "正規URL",
+    "canonical_desc": "サイトマップと正規URL（canonical）に使うアドレスです。空欄ならサイトに登録された住所を使います。",
+    "robots_title": "robots.txt 追加ルール",
+    "robots_desc": "自動生成された robots.txt の後ろにそのまま付きます。インデックスから外したいパスがある時だけ使ってください。"
   }
 }

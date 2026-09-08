@@ -6006,7 +6006,9 @@
     "org_units_title": "Chi nhánh & nhóm",
     "org_units_desc": "Cơ cấu tổ chức và phạm vi truy cập kế toán",
     "activity_analytics_title": "Phân tích hoạt động",
-    "activity_analytics_desc": "Hoạt động hằng ngày theo người dùng, nhóm và chi nhánh"
+    "activity_analytics_desc": "Hoạt động hằng ngày theo người dùng, nhóm và chi nhánh",
+    "seo_defaults_title": "Mặc định SEO",
+    "seo_defaults_desc": "Quản lý schema công ty, lời giới thiệu llms.txt và URL chuẩn mà mọi trang kế thừa."
   },
   "settings_org": {
     "page_subtitle": "Hồ sơ công ty và thông tin liên hệ",
@@ -8009,6 +8011,38 @@
     "gap_robots_no_ai_rules": "robots.txt của trang không nêu tên các trình thu thập AI",
     "gap_llms_txt_missing": "Lời giới thiệu llms.txt đang trống",
     "gap_organization_schema_missing": "Không có schema công ty",
-    "gap_brand_absent_from_title": "Tiêu đề không chứa tên thương hiệu"
+    "gap_brand_absent_from_title": "Tiêu đề không chứa tên thương hiệu",
+    "session_expired": "Phiên đăng nhập đã hết hạn. Hãy đăng nhập lại và thử lại."
+  },
+  "seo_defaults": {
+    "title": "Mặc định SEO",
+    "subtitle": "Những giá trị mọi trang trong site đều kế thừa. Bỏ trống một mục là điểm của tất cả các trang cùng giảm.",
+    "saved": "Đã lưu",
+    "save_failed": "Không lưu được",
+    "prefill": "Lấy từ thông tin công ty",
+    "prefilled": "Đã tải thông tin công ty",
+    "prefilled_hint": "Chỉ điền vào các ô trống. Hãy kiểm tra rồi lưu.",
+    "prefill_failed": "Không tải được thông tin công ty",
+    "org_title": "Schema công ty",
+    "org_desc": "Cho công cụ tìm kiếm và AI biết ai vận hành trang này. Ba điểm thương hiệu đến từ đây.",
+    "org_name": "Tên công ty",
+    "org_url": "Website chính",
+    "org_logo": "Địa chỉ ảnh logo",
+    "org_phone": "Điện thoại",
+    "org_email": "Email",
+    "org_street": "Địa chỉ",
+    "org_city": "Thành phố",
+    "org_region": "Tỉnh hoặc bang",
+    "org_postcode": "Mã bưu chính",
+    "org_country": "Mã quốc gia",
+    "org_same_as": "Kênh chính thức",
+    "org_same_as_hint": "Mỗi dòng một địa chỉ. Chỉ ghi những địa chỉ công ty này vận hành chính thức, như Instagram hay blog.",
+    "llms_title": "Lời giới thiệu llms.txt",
+    "llms_desc": "Đoạn văn AI đọc đầu tiên để hiểu trang này là gì. Bỏ trống là mất sáu điểm llms.txt.",
+    "llms_placeholder": "269 căn hộ đô thị tại trung tâm cũ Yeosu. Bán, cho thuê và quản lý trong cùng một nơi.",
+    "canonical_title": "URL chuẩn",
+    "canonical_desc": "Địa chỉ dùng trong sitemap và liên kết canonical. Bỏ trống sẽ dùng địa chỉ đã đăng ký của site.",
+    "robots_title": "Quy tắc robots.txt bổ sung",
+    "robots_desc": "Được nối nguyên văn vào cuối robots.txt tự sinh. Chỉ dùng khi có đường dẫn cần loại khỏi chỉ mục."
   }
 }

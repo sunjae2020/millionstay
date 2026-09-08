@@ -6098,7 +6098,9 @@
     "org_units_title": "Branches & teams",
     "org_units_desc": "Organisation structure and the accounting access scope",
     "activity_analytics_title": "Activity Analytics",
-    "activity_analytics_desc": "Daily activity by user, team and branch"
+    "activity_analytics_desc": "Daily activity by user, team and branch",
+    "seo_defaults_title": "SEO defaults",
+    "seo_defaults_desc": "The Organization schema, llms.txt intro and canonical base every page on a site inherits."
   },
   "settings_org": {
     "page_subtitle": "Company profile and contact details",
@@ -8109,6 +8111,38 @@
     "gap_robots_no_ai_rules": "Site robots.txt does not name the AI crawlers",
     "gap_llms_txt_missing": "The llms.txt intro is empty",
     "gap_organization_schema_missing": "No Organization schema",
-    "gap_brand_absent_from_title": "Brand name is not in the title"
+    "gap_brand_absent_from_title": "Brand name is not in the title",
+    "session_expired": "Your session has expired. Sign in again and retry."
+  },
+  "seo_defaults": {
+    "title": "SEO defaults",
+    "subtitle": "Values every page on the site inherits. Leave one empty and every page loses those points.",
+    "saved": "Saved",
+    "save_failed": "Could not save",
+    "prefill": "Fill from company details",
+    "prefilled": "Loaded company details",
+    "prefilled_hint": "Only empty fields were filled. Check them, then save.",
+    "prefill_failed": "Could not load company details",
+    "org_title": "Organization schema",
+    "org_desc": "Tells search engines and AI who runs this site. The three brand points come from here.",
+    "org_name": "Company name",
+    "org_url": "Main website",
+    "org_logo": "Logo image URL",
+    "org_phone": "Phone",
+    "org_email": "Email",
+    "org_street": "Street address",
+    "org_city": "City",
+    "org_region": "State or province",
+    "org_postcode": "Postcode",
+    "org_country": "Country code",
+    "org_same_as": "Official channels",
+    "org_same_as_hint": "One per line. Only addresses this company officially runs, such as Instagram or a blog.",
+    "llms_title": "llms.txt intro",
+    "llms_desc": "The paragraph an AI engine reads first to learn what this site is. Empty means the six llms.txt points are lost.",
+    "llms_placeholder": "269 compact urban homes in central Yeosu. Sales, leasing and management under one roof.",
+    "canonical_title": "Canonical base",
+    "canonical_desc": "The address used in the sitemap and in canonical links. Empty falls back to the site's registered address.",
+    "robots_title": "Extra robots.txt rules",
+    "robots_desc": "Appended verbatim to the generated robots.txt. Use it only when a path should stay out of the index."
   }
 }

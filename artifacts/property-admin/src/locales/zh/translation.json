@@ -6059,7 +6059,9 @@
     "org_units_title": "分公司与团队",
     "org_units_desc": "组织结构与会计访问范围",
     "activity_analytics_title": "活动分析",
-    "activity_analytics_desc": "按用户、团队和分店统计的每日活动"
+    "activity_analytics_desc": "按用户、团队和分店统计的每日活动",
+    "seo_defaults_title": "SEO 默认值",
+    "seo_defaults_desc": "管理全站继承的公司结构化数据、llms.txt 简介与规范网址。"
   },
   "settings_org": {
     "page_subtitle": "公司资料和联系方式",
@@ -8068,6 +8070,38 @@
     "gap_robots_no_ai_rules": "站点 robots.txt 未指明 AI 爬虫",
     "gap_llms_txt_missing": "llms.txt 简介为空",
     "gap_organization_schema_missing": "没有公司结构化数据",
-    "gap_brand_absent_from_title": "标题中没有品牌名"
+    "gap_brand_absent_from_title": "标题中没有品牌名",
+    "session_expired": "登录已过期，请重新登录后再试。"
+  },
+  "seo_defaults": {
+    "title": "SEO 默认值",
+    "subtitle": "全站每个页面继承的值。留空一项，所有页面的评分都会一起下降。",
+    "saved": "已保存",
+    "save_failed": "保存失败",
+    "prefill": "从公司信息填入",
+    "prefilled": "已载入公司信息",
+    "prefilled_hint": "只填了空白项。请确认后保存。",
+    "prefill_failed": "无法载入公司信息",
+    "org_title": "公司结构化数据",
+    "org_desc": "告诉搜索引擎和 AI 是谁在运营本站。品牌项的三分来自这里。",
+    "org_name": "公司名称",
+    "org_url": "官方网站",
+    "org_logo": "标志图片网址",
+    "org_phone": "联系电话",
+    "org_email": "联系邮箱",
+    "org_street": "详细地址",
+    "org_city": "城市",
+    "org_region": "省/州",
+    "org_postcode": "邮政编码",
+    "org_country": "国家代码",
+    "org_same_as": "官方渠道网址",
+    "org_same_as_hint": "每行一个。只填本公司官方运营的网址，例如 Instagram 或博客。",
+    "llms_title": "llms.txt 简介",
+    "llms_desc": "AI 引擎最先读取、用来了解本站的一段话。留空则拿不到 llms.txt 的六分。",
+    "llms_placeholder": "丽水老城区 269 户城市型住宅，销售、租赁与托管由一家公司负责。",
+    "canonical_title": "规范网址",
+    "canonical_desc": "用于站点地图和规范网址（canonical）的地址。留空则使用站点已登记的地址。",
+    "robots_title": "robots.txt 附加规则",
+    "robots_desc": "原样追加到自动生成的 robots.txt 之后。仅在需要将某些路径排除出索引时使用。"
   }
 }

@@ -6098,7 +6098,9 @@
     "org_units_title": "지점·팀",
     "org_units_desc": "조직 구조와 회계 접근 범위",
     "activity_analytics_title": "활동 분석",
-    "activity_analytics_desc": "사용자·팀·지점별 일자 활동 집계"
+    "activity_analytics_desc": "사용자·팀·지점별 일자 활동 집계",
+    "seo_defaults_title": "SEO 기본값",
+    "seo_defaults_desc": "사이트 전체가 물려받는 회사 스키마·llms.txt 안내문·대표 주소를 관리합니다."
   },
   "settings_org": {
     "page_subtitle": "회사 프로필 및 연락처 정보",
@@ -8109,6 +8111,38 @@
     "gap_robots_no_ai_rules": "사이트 robots.txt가 AI 크롤러를 명시하지 않습니다",
     "gap_llms_txt_missing": "llms.txt 안내문이 비어 있습니다",
     "gap_organization_schema_missing": "회사 스키마가 없습니다",
-    "gap_brand_absent_from_title": "제목에 브랜드명이 없습니다"
+    "gap_brand_absent_from_title": "제목에 브랜드명이 없습니다",
+    "session_expired": "로그인이 만료되었습니다. 다시 로그인한 뒤 시도해 주세요."
+  },
+  "seo_defaults": {
+    "title": "SEO 기본값",
+    "subtitle": "사이트의 모든 페이지가 물려받는 값입니다. 하나가 비면 전 페이지 점수가 함께 깎입니다.",
+    "saved": "저장했습니다",
+    "save_failed": "저장하지 못했습니다",
+    "prefill": "회사정보에서 가져오기",
+    "prefilled": "회사정보를 불러왔습니다",
+    "prefilled_hint": "빈 칸만 채웠습니다. 확인 후 저장하세요.",
+    "prefill_failed": "회사정보를 불러오지 못했습니다",
+    "org_title": "회사 스키마",
+    "org_desc": "검색엔진과 AI에게 이 사이트를 운영하는 회사가 누구인지 알려주는 정보입니다. 브랜드 항목 3점이 여기서 나옵니다.",
+    "org_name": "회사명",
+    "org_url": "대표 홈페이지",
+    "org_logo": "로고 이미지 주소",
+    "org_phone": "대표 전화",
+    "org_email": "대표 이메일",
+    "org_street": "도로명 주소",
+    "org_city": "시·군·구",
+    "org_region": "시·도",
+    "org_postcode": "우편번호",
+    "org_country": "국가 코드",
+    "org_same_as": "공식 채널 주소",
+    "org_same_as_hint": "한 줄에 하나씩. 인스타그램·블로그처럼 이 회사가 공식으로 운영하는 주소만 적으세요.",
+    "llms_title": "llms.txt 안내문",
+    "llms_desc": "AI 엔진이 이 사이트가 무엇인지 먼저 읽는 한 문단입니다. 비어 있으면 llms.txt 항목 6점을 받지 못합니다.",
+    "llms_placeholder": "여수 원도심 269세대 도시형 생활주택. 분양·임대·위탁관리를 한 곳에서 맡습니다.",
+    "canonical_title": "대표 주소",
+    "canonical_desc": "사이트맵과 대표 주소(canonical)에 쓰이는 주소입니다. 비우면 사이트에 등록된 주소를 씁니다.",
+    "robots_title": "robots.txt 추가 규칙",
+    "robots_desc": "자동 생성되는 robots.txt 뒤에 그대로 붙습니다. 색인에서 빼고 싶은 경로가 있을 때만 쓰세요."
   }
 }

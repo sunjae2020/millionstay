@@ -23,6 +23,31 @@ import { SiteSwitcher } from "./CmsPagesList";
 // pressing Approve.
 // ---------------------------------------------------------------------------
 
+/**
+ * A readable message out of any error body this API can return. The auth layer
+ * answers `{ error: { code, message } }` while the route handlers answer
+ * `{ error: "text" }`, and passing the first shape to `new Error()` is what put
+ * a literal "[object Object]" in front of the user.
+ */
+async function errorText(res: Response, fallback: string): Promise<string> {
+  if (res.status === 401) return "SESSION_EXPIRED";
+  let body: unknown = null;
+  try {
+    body = await res.json();
+  } catch {
+    return fallback;
+  }
+  const error = (body as { error?: unknown } | null)?.error;
+  if (typeof error === "string" && error.trim()) return error;
+  if (error && typeof error === "object") {
+    const message = (error as { message?: unknown }).message;
+    if (typeof message === "string" && message.trim()) return message;
+  }
+  const message = (body as { message?: unknown } | null)?.message;
+  if (typeof message === "string" && message.trim()) return message;
+  return fallback;
+}
+
 type EntityType = "page" | "blog" | "listing";
 
 interface OverviewRow {
@@ -148,7 +173,7 @@ export default function CmsSeo() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ site: siteKey, generate }),
       });
-      if (!res.ok) throw new Error((await res.json()).error ?? "Refresh failed");
+      if (!res.ok) throw new Error(await errorText(res, t("seo.refresh_failed")));
       return res.json();
     },
     onSuccess: () => {
@@ -157,7 +182,11 @@ export default function CmsSeo() {
       toast({ title: t("seo.refreshed") });
     },
     onError: (err: Error) =>
-      toast({ title: t("seo.refresh_failed"), description: err.message, variant: "destructive" }),
+      toast({
+        title: t("seo.refresh_failed"),
+        description: err.message === "SESSION_EXPIRED" ? t("seo.session_expired") : err.message,
+        variant: "destructive",
+      }),
   });
 
   const refreshAll = useMutation({
@@ -167,7 +196,7 @@ export default function CmsSeo() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ site: siteKey }),
       });
-      if (!res.ok) throw new Error((await res.json()).error ?? "Refresh failed");
+      if (!res.ok) throw new Error(await errorText(res, t("seo.refresh_failed")));
       return res.json() as Promise<{ audited: number; total: number; failures: unknown[] }>;
     },
     onSuccess: (result) => {
@@ -180,7 +209,11 @@ export default function CmsSeo() {
       });
     },
     onError: (err: Error) =>
-      toast({ title: t("seo.refresh_failed"), description: err.message, variant: "destructive" }),
+      toast({
+        title: t("seo.refresh_failed"),
+        description: err.message === "SESSION_EXPIRED" ? t("seo.session_expired") : err.message,
+        variant: "destructive",
+      }),
   });
 
   const rows = useMemo(() => {
@@ -413,7 +446,7 @@ function SeoDetailDialog({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ site: siteKey, ...drafts }),
       });
-      if (!res.ok) throw new Error((await res.json()).error ?? "Apply failed");
+      if (!res.ok) throw new Error(await errorText(res, t("seo.apply_failed")));
       return res.json();
     },
     onSuccess: () => {
@@ -422,7 +455,11 @@ function SeoDetailDialog({
       toast({ title: t("seo.applied") });
     },
     onError: (err: Error) =>
-      toast({ title: t("seo.apply_failed"), description: err.message, variant: "destructive" }),
+      toast({
+        title: t("seo.apply_failed"),
+        description: err.message === "SESSION_EXPIRED" ? t("seo.session_expired") : err.message,
+        variant: "destructive",
+      }),
   });
 
   return (

@@ -127,6 +127,7 @@ import CmsCompany from "@/pages/cms/CmsCompany";
 import CmsDesign from "@/pages/cms/CmsDesign";
 import CmsBlockTemplates from "@/pages/cms/CmsBlockTemplates";
 import CmsSeo from "@/pages/cms/CmsSeo";
+import SeoDefaultsSettings from "@/pages/settings/sections/SeoDefaults";
 import KnowledgeBase from "@/pages/ai/KnowledgeBase";
 import Conversations from "@/pages/ai/Conversations";
 import ChatWidgetSettings from "@/pages/ai/ChatWidgetSettings";
@@ -423,6 +424,7 @@ function Router() {
       <Route path="/settings/document-templates/:id" component={DocumentTemplateEditPage} />
       <Route path="/settings/homestay-billing" component={HomestayBillingPage} />
       <Route path="/settings/design" component={DesignPage} />
+      <Route path="/settings/seo-defaults" component={SeoDefaultsSettings} />
       <Route path="/settings/integrations" component={IntegrationsPage} />
       <Route path="/settings/sms" component={SmsCenterPage} />
       <Route path="/settings/api-keys" component={ApiKeysPage} />
