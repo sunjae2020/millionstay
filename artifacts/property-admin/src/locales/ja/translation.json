@@ -6442,7 +6442,19 @@
     "sender_none_registered": "このアカウントにはまだ登録された発信番号がありません。",
     "sender_fix": "SOLAPIコンソールで番号を登録してください（事業者登録証＋通信サービス利用証明書、承認まで1〜2営業日）。または、すでに承認済みの番号を連携設定に入力してください。",
     "open_console": "SOLAPIコンソール",
-    "not_registered_hint": "先に発信番号を登録してください。"
+    "not_registered_hint": "先に発信番号を登録してください。",
+    "var_name": "受信者の氏名",
+    "var_brand": "会社名 — 送信時に自動",
+    "var_contact": "代表問い合わせ番号 — 送信時に自動"
+  },
+  "templateVars": {
+    "button": "変数",
+    "auto": "自動",
+    "search": "変数を検索…",
+    "no_match": "該当なし",
+    "none": "この文面に変数はありません。",
+    "pick_hint": "↑↓ 選択 · Enter 挿入 · Esc 閉じる",
+    "insert_hint": "カーソル位置に挿入されます。本文で {{ と入力しても開きます。"
   },
   "entity_docs": {
     "tab_title": "書類",

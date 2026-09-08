@@ -6392,7 +6392,19 @@
     "sender_none_registered": "Tài khoản này chưa có số gửi nào được đăng ký.",
     "sender_fix": "Hãy đăng ký số trong bảng điều khiển SOLAPI (giấy phép kinh doanh + giấy chứng nhận sử dụng dịch vụ viễn thông, duyệt trong 1–2 ngày làm việc), hoặc đặt một số đã được duyệt trong cài đặt kết nối.",
     "open_console": "Bảng điều khiển SOLAPI",
-    "not_registered_hint": "Hãy đăng ký số gửi trước khi gửi."
+    "not_registered_hint": "Hãy đăng ký số gửi trước khi gửi.",
+    "var_name": "Tên người nhận",
+    "var_brand": "Tên công ty — tự động điền khi gửi",
+    "var_contact": "Số hỗ trợ — tự động điền khi gửi"
+  },
+  "templateVars": {
+    "button": "Biến",
+    "auto": "tự động",
+    "search": "Tìm biến…",
+    "no_match": "Không có kết quả.",
+    "none": "Mẫu tin này không có biến.",
+    "pick_hint": "↑↓ chọn · Enter chèn · Esc đóng",
+    "insert_hint": "Chèn tại vị trí con trỏ. Gõ {{ trong nội dung cũng mở danh sách này."
   },
   "entity_docs": {
     "tab_title": "Tài liệu",

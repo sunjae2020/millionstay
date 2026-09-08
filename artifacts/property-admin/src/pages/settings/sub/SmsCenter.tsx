@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "wouter";
@@ -12,6 +12,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { DataTable, useServerList, type ColumnDef } from "@/components/ui/data-table";
 import { ALL, SearchBox } from "@/components/list-filters";
 import { apiFetch, apiJson } from "@/lib/apiFetch";
+import {
+  VariablePickerButton, VariableSuggestions, useVariableAutocomplete, type VariableDef,
+} from "@/components/TemplateVariables";
 import { formatDateTime } from "@/lib/date";
 import { useToast } from "@/hooks/use-toast";
 import { AlertTriangle, ArrowLeft, CheckCircle2, ExternalLink, Loader2, MessageSquare, RefreshCw, Send, XCircle, Ban } from "lucide-react";
@@ -90,6 +93,22 @@ export default function SmsCenterPage() {
   const kind = bytes <= 90 ? "SMS" : bytes <= 2000 ? "LMS" : "OVER";
   const recipients = toText.split(/[\n,;]/).map((s) => s.trim()).filter(Boolean);
   const canSend = recipients.length > 0 && text.trim().length > 0 && kind !== "OVER" && !sending;
+
+  /* 직접 발송에서도 같은 규칙으로 변수를 넣는다 — 불러온 문안이 선언한 변수와
+     서버가 채우는 변수(brand·contact_phone). 문안을 바꾸면 목록도 따라 바뀐다. */
+  const variableDefs: VariableDef[] = useMemo(() => {
+    const tpl = templates.data?.find((x) => x.key === templateKey);
+    const declared = (tpl?.variables ?? []).map((n) => ({ name: n }));
+    const base: VariableDef[] = [
+      { name: "name", sample: "고객", description: t("sms_center.var_name", "Recipient's name") },
+      { name: "brand", auto: true, sample: status.data?.brand ?? "브랜드", description: t("sms_center.var_brand", "Company name — filled in on send") },
+      { name: "contact_phone", auto: true, sample: "061-123-4567", description: t("sms_center.var_contact", "Support number — filled in on send") },
+    ];
+    return [...declared.filter((d) => !base.some((b) => b.name === d.name)), ...base];
+  }, [templateKey, templates.data, status.data?.brand, t]);
+
+  const textRef = useRef<HTMLTextAreaElement>(null);
+  const ac = useVariableAutocomplete(textRef, text, setText, variableDefs);
 
   const applyTemplate = (key: string) => {
     setTemplateKey(key);
@@ -280,13 +299,23 @@ export default function SmsCenterPage() {
                 </div>
                 <div className="space-y-1.5">
                   <div className="flex items-center justify-between">
-                    <Label>{t("sms_center.message", "Message")}</Label>
+                    <div className="flex items-center gap-2">
+                      <Label>{t("sms_center.message", "Message")}</Label>
+                      <VariablePickerButton variables={variableDefs} onInsert={ac.insertAtCaret} />
+                    </div>
                     <span className={`text-xs font-mono ${kind === "OVER" ? "text-destructive" : kind === "LMS" ? "text-amber-600" : "text-muted-foreground"}`}>
                       {bytes} B · {kind === "OVER" ? t("sms_center.too_long", "too long") : kind}
                     </span>
                   </div>
-                  <Textarea rows={6} value={text} onChange={(e) => setText(e.target.value)}
-                    placeholder={t("sms_center.message_placeholder", "[Brand] is filled in automatically as {{brand}}. {{name}} becomes the recipient's name when known.")} />
+                  <Textarea
+                    ref={textRef}
+                    rows={6}
+                    value={text}
+                    onChange={(e) => setText(e.target.value)}
+                    placeholder={t("sms_center.message_placeholder", "[Brand] is filled in automatically as {{brand}}. {{name}} becomes the recipient's name when known.")}
+                    {...ac.inputProps}
+                  />
+                  <VariableSuggestions ac={ac} />
                   <p className="text-xs text-muted-foreground">{t("sms_center.message_hint", "Up to 90 bytes goes as SMS (Korean = 2 bytes per character); longer texts go as LMS at about 3× the cost. Emoji cannot be sent.")}</p>
                 </div>
                 <div className="flex items-center gap-2">

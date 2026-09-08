@@ -4,6 +4,7 @@ import StarterKit from "@tiptap/starter-kit";
 import Link from "@tiptap/extension-link";
 import Placeholder from "@tiptap/extension-placeholder";
 import { Bold, Italic, Heading2, List, ListOrdered, Link2, Undo, Redo } from "lucide-react";
+import { VariablePickerButton, type VariableDef } from "@/components/TemplateVariables";
 
 // Minimal TipTap WYSIWYG editor. Emits HTML via onChange; controlled by `value`.
 // Ported (trimmed) from the Edubee CRM rich-text editor.
@@ -12,6 +13,11 @@ interface Props {
   onChange: (html: string) => void;
   placeholder?: string;
   minHeight?: number;
+  /**
+   * 주면 툴바에 "변수" 버튼이 생기고 **커서 자리에** `{{name}}` 을 넣는다.
+   * (평문 편집기의 `{{` 자동완성에 대응하는 서식 편집기 쪽 입구.)
+   */
+  variables?: VariableDef[];
 }
 
 function ToolButton({ active, onClick, children, title }: { active?: boolean; onClick: () => void; children: React.ReactNode; title: string }) {
@@ -27,7 +33,7 @@ function ToolButton({ active, onClick, children, title }: { active?: boolean; on
   );
 }
 
-export function RichTextEditor({ value, onChange, placeholder, minHeight = 280 }: Props) {
+export function RichTextEditor({ value, onChange, placeholder, minHeight = 280, variables }: Props) {
   const editor = useEditor({
     extensions: [
       StarterKit.configure({ heading: { levels: [1, 2, 3] } }),
@@ -52,6 +58,13 @@ export function RichTextEditor({ value, onChange, placeholder, minHeight = 280 }
     else editor.chain().focus().unsetLink().run();
   };
 
+  const insertVariable = (name: string) => {
+    // 서식 편집기에서는 `{{` 자동완성을 걸 수 없다(ProseMirror 문서 모델이라
+    // 평문 커서 오프셋이 없다). 버튼이 그 자리를 대신하고, 삽입은 선택 영역을
+    // 덮어쓰는 일반 텍스트 삽입이라 서식이 섞이지 않는다.
+    editor.chain().focus().insertContent(`{{${name}}}`).run();
+  };
+
   return (
     <div className="border rounded-md bg-white">
       <div className="flex flex-wrap gap-1 border-b p-1.5">
@@ -64,6 +77,11 @@ export function RichTextEditor({ value, onChange, placeholder, minHeight = 280 }
         <div className="flex-1" />
         <ToolButton title="Undo" onClick={() => editor.chain().focus().undo().run()}><Undo className="h-3.5 w-3.5" /></ToolButton>
         <ToolButton title="Redo" onClick={() => editor.chain().focus().redo().run()}><Redo className="h-3.5 w-3.5" /></ToolButton>
+        {variables && variables.length > 0 && (
+          <span className="ml-1 flex items-center">
+            <VariablePickerButton variables={variables} onInsert={insertVariable} />
+          </span>
+        )}
       </div>
       <EditorContent editor={editor} />
     </div>

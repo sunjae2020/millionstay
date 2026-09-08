@@ -6446,7 +6446,19 @@
     "sender_none_registered": "此账户尚未登记任何发送号码。",
     "sender_fix": "请在SOLAPI控制台登记该号码（营业执照＋通信服务使用证明，审核需1–2个工作日），或在连接设置中填入已获批准的号码。",
     "open_console": "SOLAPI控制台",
-    "not_registered_hint": "请先登记发送号码。"
+    "not_registered_hint": "请先登记发送号码。",
+    "var_name": "收件人姓名",
+    "var_brand": "商号 — 发送时自动填入",
+    "var_contact": "客服号码 — 发送时自动填入"
+  },
+  "templateVars": {
+    "button": "变量",
+    "auto": "自动",
+    "search": "搜索变量…",
+    "no_match": "无匹配结果。",
+    "none": "此文案没有变量。",
+    "pick_hint": "↑↓ 选择 · Enter 插入 · Esc 关闭",
+    "insert_hint": "插入到光标位置。在正文中输入 {{ 也会打开。"
   },
   "entity_docs": {
     "tab_title": "文件",
