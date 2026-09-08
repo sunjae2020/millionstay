@@ -382,6 +382,13 @@ export async function resolveAllEntities(site: SeoSiteMeta): Promise<ResolvedEnt
       const copy = blob[locale] ?? blob["ko"] ?? blob["en"] ?? {};
       const title = String(copy["title"] ?? "").trim() || `#${listing.id}`;
       const description = String(copy["description"] ?? "").trim() || null;
+      // A listing's page copy and its search snippet are different lengths, so
+      // a short `seo_description` may sit alongside the full description.
+      const metaDescription = String(copy["seo_description"] ?? "").trim() || description;
+      // The detail page draws a title and a specification list from these
+      // columns, so the page really does have a heading and a list.
+      const specCount = [listing.area_m2, listing.bedrooms, listing.bathrooms, listing.price_amount]
+        .filter((value) => value !== null && value !== undefined).length;
       out.push({
         subject: {
           entityType: "listing",
@@ -390,7 +397,7 @@ export async function resolveAllEntities(site: SeoSiteMeta): Promise<ResolvedEnt
           slug: String(listing.id),
           title,
           seoTitle: null,
-          seoDescription: description,
+          seoDescription: metaDescription,
           seoKeywords: null,
           seoImageUrl: effectiveImage(listing.cover_image, null, description),
           ogTitle: null,
@@ -405,6 +412,8 @@ export async function resolveAllEntities(site: SeoSiteMeta): Promise<ResolvedEnt
           localeCount: Object.keys(blob).length,
           bodyJson: null,
           legacyHtml: description,
+          structuredHeadings: 1,
+          structuredLists: specCount >= 2 ? 1 : 0,
         },
         display: {
           entityType: "listing",

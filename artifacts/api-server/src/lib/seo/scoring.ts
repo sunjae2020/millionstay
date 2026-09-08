@@ -55,6 +55,14 @@ export interface SeoSubject {
   localeCount: number;
   bodyJson: unknown;
   legacyHtml: string | null;
+  /**
+   * Structure the page renders from FIELDS rather than from prose. A unit
+   * listing has no body to put a heading or a bullet list in, yet its page
+   * shows a title and a specification list built from its columns. Counting
+   * only prose marked those pages down for a shape they cannot have.
+   */
+  structuredHeadings?: number;
+  structuredLists?: number;
 }
 
 /** Site-wide facts that individual pages inherit. */
@@ -464,9 +472,11 @@ export function auditSeoGeo(
   } else {
     add("body_missing", "Body is under 250 words", "high", "content");
   }
-  if (body.headings >= 1) scores.content.score += 4;
+  const headings = body.headings + (subject.structuredHeadings ?? 0);
+  const lists = body.lists + (subject.structuredLists ?? 0);
+  if (headings >= 1) scores.content.score += 4;
   else add("headings_missing", "No headings", "medium", "content");
-  if (body.lists >= 1) scores.content.score += 4;
+  if (lists >= 1) scores.content.score += 4;
   else add("lists_missing", "No lists", "low", "content");
 
   // ── signals (8) ──────────────────────────────────────────────────────────

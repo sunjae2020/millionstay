@@ -307,6 +307,21 @@ test("drift reports what was fixed and what appeared", () => {
   assert.deepEqual(drift.resolved.map((g) => g.code), ["a"]);
 });
 
+test("a page rendered from fields counts those fields as its structure", () => {
+  // A unit listing has no body to put a heading or a bullet list in, yet its
+  // detail page shows a title and a specification list built from its columns.
+  const bare = auditSeoGeo(emptySubject({ entityType: "listing" }), BARE_SITE, NOW);
+  const structured = auditSeoGeo(
+    emptySubject({ entityType: "listing", structuredHeadings: 1, structuredLists: 1 }),
+    BARE_SITE,
+    NOW,
+  );
+  assert.equal(structured.scoreTotal - bare.scoreTotal, 8);
+  assert.ok(bare.gaps.some((gap) => gap.code === "headings_missing"));
+  assert.ok(!structured.gaps.some((gap) => gap.code === "headings_missing"));
+  assert.ok(!structured.gaps.some((gap) => gap.code === "lists_missing"));
+});
+
 // ── Public routes ──────────────────────────────────────────────────────────
 
 test("a page slug maps to the address the site actually serves", () => {
