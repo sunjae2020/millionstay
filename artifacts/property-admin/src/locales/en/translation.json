@@ -6498,7 +6498,20 @@
     "no_match": "No match.",
     "none": "This template has no variables.",
     "pick_hint": "↑↓ to choose · Enter to insert · Esc to close",
-    "insert_hint": "Inserts at the cursor. Typing {{ in the body opens this too."
+    "insert_hint": "Inserts at the cursor. Typing {{ in the body opens this too.",
+    "sec_declared": "This template",
+    "sec_auto": "Filled in automatically",
+    "sec_related": "Used by other templates",
+    "related_note": "Not sent for this template — the sending code must supply it, or it goes out blank.",
+    "sidebar_more": "{{n}} more variables are used by other templates — open Variables to browse them by category.",
+    "group_link": "Links",
+    "group_money": "Amounts",
+    "group_date": "Dates",
+    "group_person": "People",
+    "group_place": "Property",
+    "group_contact": "Contact",
+    "group_doc": "Document",
+    "group_other": "Other"
   },
   "entity_docs": {
     "tab_title": "Documents",

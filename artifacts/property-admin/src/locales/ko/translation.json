@@ -6498,7 +6498,20 @@
     "no_match": "결과가 없습니다.",
     "none": "이 문안에는 변수가 없습니다.",
     "pick_hint": "↑↓ 선택 · Enter 삽입 · Esc 닫기",
-    "insert_hint": "커서 자리에 들어갑니다. 본문에 {{ 를 쳐도 열립니다."
+    "insert_hint": "커서 자리에 들어갑니다. 본문에 {{ 를 쳐도 열립니다.",
+    "sec_declared": "이 문안이 받는 값",
+    "sec_auto": "자동으로 채워짐",
+    "sec_related": "다른 문안이 쓰는 값",
+    "related_note": "이 문안에는 전달되지 않습니다 — 발송 코드가 보내지 않으면 빈칸으로 나갑니다.",
+    "sidebar_more": "다른 문안이 쓰는 변수가 {{n}}개 더 있습니다. 변수 버튼에서 분류별로 볼 수 있습니다.",
+    "group_link": "링크",
+    "group_money": "금액",
+    "group_date": "일시",
+    "group_person": "사람",
+    "group_place": "공간·주소",
+    "group_contact": "연락·코드",
+    "group_doc": "문서·참조",
+    "group_other": "기타"
   },
   "entity_docs": {
     "tab_title": "서류",

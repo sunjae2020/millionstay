@@ -30,18 +30,9 @@ interface TemplateDetail {
   translations: Translation[];
 }
 
-/**
- * 문안의 변수 정의에는 없지만 **서버가 발송 시점에 채우는** 변수.
- * 목록에서 빠뜨리면 담당자가 상호를 직접 타이핑하게 되고, 그러면 테넌트가 바뀔 때
- * 문안이 통째로 틀린다. (lib/sms.ts · lib/notify.ts 가 채운다.)
- */
-const AUTO_VARS: Record<string, VariableDef[]> = {
-  sms: [
-    { name: "brand", auto: true, sample: "브랜드", description: "상호 — 발송 시 자동" },
-    { name: "contact_phone", auto: true, sample: "061-123-4567", description: "대표 문의번호 — 발송 시 자동" },
-  ],
-  email: [{ name: "brand", auto: true, sample: "브랜드", description: "상호 — 발송 시 자동" }],
-};
+/** 서버가 돌려주는 변수 카탈로그(routes/document-templates.ts). */
+interface CatalogVar { name: string; type: string; sample: string; group: string; used_by?: string[]; used_count?: number }
+interface VariableCatalog { declared: CatalogVar[]; auto: CatalogVar[]; related: CatalogVar[] }
 
 /** {{var}} substitution mirroring the server engine, for the live preview. */
 function render(tpl: string, vars: Record<string, string>): string {
@@ -105,15 +96,37 @@ export default function DocumentTemplateEdit() {
     return v;
   }, [tpl]);
 
-  /* 삽입 목록 = 문안이 선언한 변수 + 서버가 채우는 변수. 표본값을 함께 보여
-     "이 자리에 무엇이 들어가는지" 를 이름만으로 짐작하지 않게 한다. */
+  /* 삽입 목록. 서버가 세 묶음으로 갈라 준다 —
+       declared 이 문안이 받는 값 · auto 서버가 채움 · related 다른 문안이 쓰는 값.
+     related 는 넣으면 발송 코드도 고쳐야 하므로(안 그러면 빈칸) 화면이 그렇게 말한다. */
+  const catalog = useQuery({
+    queryKey: ["document-template-variables", id],
+    queryFn: async () => {
+      const res = await apiFetch(`${API}/${id}/variable-catalog`);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      return ((await res.json()) as { data: VariableCatalog }).data;
+    },
+    enabled: !!id,
+    staleTime: 300_000,
+  });
+
   const variableDefs: VariableDef[] = useMemo(() => {
-    const declared = Object.entries(tpl?.variables_schema ?? {}).map(([name, def]) => ({
-      name, type: def?.type ?? "string", sample: vars[name],
-    }));
-    const auto = (AUTO_VARS[tpl?.kind ?? ""] ?? []).filter((a) => !declared.some((d) => d.name === a.name));
-    return [...declared, ...auto];
-  }, [tpl, vars]);
+    const c = catalog.data;
+    if (!c) {
+      // 카탈로그를 못 받아도 편집은 막지 않는다 — 선언된 변수만으로 목록을 만든다.
+      return Object.entries(tpl?.variables_schema ?? {})
+        .filter(([name]) => name !== "kakao")
+        .map(([name, def]) => ({ name, type: def?.type ?? "string", sample: vars[name] }));
+    }
+    return [
+      ...c.declared.map((v) => ({ name: v.name, type: v.type, sample: vars[v.name] ?? v.sample, group: v.group })),
+      ...c.auto.map((v) => ({ name: v.name, type: v.type, sample: v.sample, group: v.group, auto: true })),
+      ...c.related.map((v) => ({
+        name: v.name, type: v.type, sample: v.sample, group: v.group,
+        related: true, usedBy: v.used_by, usedCount: v.used_count,
+      })),
+    ];
+  }, [catalog.data, tpl, vars]);
 
   const bodyRef = useRef<HTMLTextAreaElement>(null);
   const ac = useVariableAutocomplete(bodyRef, cur.body_html, (next) => setCur({ body_html: next }), variableDefs);
@@ -287,7 +300,7 @@ export default function DocumentTemplateEdit() {
             <div className="space-y-1">
               {variableDefs.length === 0 ? (
                 <p className="text-xs text-muted-foreground/60">—</p>
-              ) : variableDefs.map((v) => (
+              ) : variableDefs.filter((v) => !v.related).map((v) => (
                 // 종전에는 본문 **맨 끝**에 붙어, 문장 중간에 넣으려면 잘라 옮겨야 했다.
                 // 이제 커서 자리에 들어간다(서식 편집기에서는 툴바 버튼을 쓴다).
                 <button
@@ -304,6 +317,15 @@ export default function DocumentTemplateEdit() {
                 </button>
               ))}
             </div>
+            {variableDefs.some((v) => v.related) && (
+              // 관련 변수는 여기 늘어놓지 않는다 — 목록이 길어지면 정작 이 문안이
+              // 받는 값을 못 찾는다. 분류가 붙은 팝오버로 보낸다.
+              <p className="mt-3 text-[11px] leading-relaxed text-muted-foreground">
+                {t("templateVars.sidebar_more", "{{n}} more variables are used by other templates — open Variables to browse them by category.", {
+                  n: variableDefs.filter((v) => v.related).length,
+                })}
+              </p>
+            )}
           </div>
         </div>
       </div>

@@ -6454,7 +6454,20 @@
     "no_match": "該当なし",
     "none": "この文面に変数はありません。",
     "pick_hint": "↑↓ 選択 · Enter 挿入 · Esc 閉じる",
-    "insert_hint": "カーソル位置に挿入されます。本文で {{ と入力しても開きます。"
+    "insert_hint": "カーソル位置に挿入されます。本文で {{ と入力しても開きます。",
+    "sec_declared": "この文面が受け取る値",
+    "sec_auto": "自動で入る値",
+    "sec_related": "他の文面が使う値",
+    "related_note": "この文面には渡されません — 送信コードが送らなければ空欄で送信されます。",
+    "sidebar_more": "他の文面が使う変数があと{{n}}個あります。変数ボタンから分類ごとに確認できます。",
+    "group_link": "リンク",
+    "group_money": "金額",
+    "group_date": "日時",
+    "group_person": "人",
+    "group_place": "物件・住所",
+    "group_contact": "連絡・コード",
+    "group_doc": "書類・参照",
+    "group_other": "その他"
   },
   "entity_docs": {
     "tab_title": "書類",

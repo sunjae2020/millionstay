@@ -6458,7 +6458,20 @@
     "no_match": "无匹配结果。",
     "none": "此文案没有变量。",
     "pick_hint": "↑↓ 选择 · Enter 插入 · Esc 关闭",
-    "insert_hint": "插入到光标位置。在正文中输入 {{ 也会打开。"
+    "insert_hint": "插入到光标位置。在正文中输入 {{ 也会打开。",
+    "sec_declared": "此文案接收的值",
+    "sec_auto": "自动填入",
+    "sec_related": "其他文案使用的值",
+    "related_note": "不会传给此文案 — 若发送代码不提供，将以空白发出。",
+    "sidebar_more": "其他文案还使用了{{n}}个变量。可在变量按钮中按分类查看。",
+    "group_link": "链接",
+    "group_money": "金额",
+    "group_date": "日期时间",
+    "group_person": "人员",
+    "group_place": "房源·地址",
+    "group_contact": "联系·代码",
+    "group_doc": "文件·编号",
+    "group_other": "其他"
   },
   "entity_docs": {
     "tab_title": "文件",

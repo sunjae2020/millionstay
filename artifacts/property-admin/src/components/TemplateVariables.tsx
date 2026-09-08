@@ -20,7 +20,7 @@ import { useTranslation } from "react-i18next";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Braces } from "lucide-react";
+import { Braces, TriangleAlert } from "lucide-react";
 
 export interface VariableDef {
   name: string;
@@ -33,7 +33,20 @@ export interface VariableDef {
    */
   auto?: boolean;
   description?: string;
+  /**
+   * 이 문안이 **선언하지 않은** 변수. 같은 종류의 다른 문안에서 가져온 것이라
+   * 넣으려면 발송 코드도 함께 고쳐야 한다 — 안 그러면 빈칸으로 나간다.
+   */
+  related?: boolean;
+  /** 어느 문안이 쓰는지(related 에만). */
+  usedBy?: string[];
+  usedCount?: number;
+  /** 분류 키(link·money·date·person·place·contact·doc·other). */
+  group?: string;
 }
+
+/** 팝오버 안의 묶음 순서. 서버 groupOf() 와 같은 키를 쓴다. */
+const GROUP_ORDER = ["link", "money", "date", "person", "place", "contact", "doc", "other"];
 
 /* ── `{{` 자동완성 ────────────────────────────────────────────────────────
    textarea 전용이다. 커서 앞을 거꾸로 훑어 여는 `{{` 를 찾고, 그 뒤에 닫는
@@ -183,8 +196,11 @@ function Row({ v, active, onPick, onHover }: { v: VariableDef; active?: boolean;
       className={`w-full text-left rounded px-2 py-1.5 transition-colors ${active ? "bg-muted" : "hover:bg-muted/60"}`}
     >
       <div className="flex items-center justify-between gap-2">
-        <span className="font-mono text-xs">{`{{${v.name}}}`}</span>
-        <span className="text-[10px] text-muted-foreground shrink-0">
+        <span className="flex min-w-0 items-center gap-1 font-mono text-xs">
+          {v.related && <TriangleAlert className="h-3 w-3 shrink-0 text-amber-600" />}
+          <span className="truncate">{`{{${v.name}}}`}</span>
+        </span>
+        <span className="shrink-0 text-[10px] text-muted-foreground">
           {v.auto ? t("templateVars.auto", "auto") : (v.type ?? "string")}
         </span>
       </div>
@@ -193,8 +209,19 @@ function Row({ v, active, onPick, onHover }: { v: VariableDef; active?: boolean;
           {v.description ? v.description : `→ ${v.sample}`}
         </div>
       )}
+      {v.related && (
+        <div className="mt-0.5 truncate text-[11px] text-amber-700 dark:text-amber-500">
+          {t("templateVars.related_note", "Not sent for this template — the sending code must supply it, or it goes out blank.")}
+          {v.usedBy?.length ? ` · ${v.usedBy.join(", ")}${(v.usedCount ?? 0) > v.usedBy.length ? " …" : ""}` : ""}
+        </div>
+      )}
     </button>
   );
+}
+
+/** 묶음 제목 한 줄. */
+function GroupLabel({ children }: { children: React.ReactNode }) {
+  return <p className="px-2 pb-0.5 pt-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">{children}</p>;
 }
 
 /** `{{` 자동완성이 열렸을 때 본문 아래에 붙는 목록. */
@@ -240,6 +267,32 @@ export function VariablePickerButton({
     return variables.filter((v) => v.name.toLowerCase().includes(s) || (v.description ?? "").toLowerCase().includes(s));
   }, [q, variables]);
 
+  /* 변수가 스무 개를 넘으면 한 덩어리 목록은 훑어지지 않는다. 먼저 "이 문안이
+     받는 값"과 "자동" 을 위로 올리고, 나머지 관련 변수만 분류로 나눈다 —
+     분류가 필요한 것은 관련 변수 쪽이지 선언된 변수가 아니다. */
+  const sections = useMemo(() => {
+    const out: Array<{ title: string; items: VariableDef[] }> = [];
+    const own = items.filter((v) => !v.related && !v.auto);
+    const auto = items.filter((v) => v.auto);
+    const rel = items.filter((v) => v.related);
+    if (own.length) out.push({ title: t("templateVars.sec_declared", "This template"), items: own });
+    if (auto.length) out.push({ title: t("templateVars.sec_auto", "Filled in automatically"), items: auto });
+    if (rel.length) {
+      const byGroup = new Map<string, VariableDef[]>();
+      for (const v of rel) {
+        const g = v.group ?? "other";
+        byGroup.set(g, [...(byGroup.get(g) ?? []), v]);
+      }
+      const ordered = [...byGroup.entries()].sort(
+        (a, b) => GROUP_ORDER.indexOf(a[0]) - GROUP_ORDER.indexOf(b[0]),
+      );
+      for (const [g, list] of ordered) {
+        out.push({ title: `${t("templateVars.sec_related", "Used by other templates")} · ${t(`templateVars.group_${g}`, g)}`, items: list });
+      }
+    }
+    return out;
+  }, [items, t]);
+
   return (
     <Popover open={open} onOpenChange={(v) => { setOpen(v); if (!v) setQ(""); }}>
       <PopoverTrigger asChild>
@@ -247,7 +300,7 @@ export function VariablePickerButton({
           <Braces className="h-3 w-3" /> {t("templateVars.button", "Variables")}
         </Button>
       </PopoverTrigger>
-      <PopoverContent align="start" className="w-80 p-2">
+      <PopoverContent align="start" className="w-96 p-2">
         {variables.length === 0 ? (
           <p className="px-1 py-2 text-xs text-muted-foreground">{t("templateVars.none", "This template has no variables.")}</p>
         ) : (
@@ -262,11 +315,16 @@ export function VariablePickerButton({
             <p className="px-1 pt-2 text-[10px] uppercase tracking-wider text-muted-foreground">
               {t("templateVars.insert_hint", "Inserts at the cursor. Typing {{ in the body opens this too.")}
             </p>
-            <div className="mt-1 max-h-64 overflow-y-auto">
+            <div className="mt-1 max-h-80 overflow-y-auto">
               {items.length === 0 ? (
                 <p className="px-1 py-2 text-xs text-muted-foreground">{t("templateVars.no_match", "No match.")}</p>
-              ) : items.map((v) => (
-                <Row key={v.name} v={v} onPick={() => { onInsert(v.name); setOpen(false); setQ(""); }} />
+              ) : sections.map((sec) => (
+                <div key={sec.title}>
+                  <GroupLabel>{sec.title}</GroupLabel>
+                  {sec.items.map((v) => (
+                    <Row key={v.name} v={v} onPick={() => { onInsert(v.name); setOpen(false); setQ(""); }} />
+                  ))}
+                </div>
               ))}
             </div>
           </>
