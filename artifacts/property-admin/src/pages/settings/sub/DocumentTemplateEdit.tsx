@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useParams, Link } from "wouter";
 import { useTranslation } from "react-i18next";
 import { Layout, PageHeader } from "@/components/Layout";
@@ -13,6 +13,9 @@ import { apiFetch } from "@/lib/apiFetch";
 import { RichTextEditor } from "@/components/ui/rich-text-editor";
 import { DocumentPreviewDialog, useDocumentPreview } from "@/components/DocumentPreviewDialog";
 import { DEFAULT_DOC_LANG, DOC_LOCALES, orderLocales } from "@/lib/docLang";
+import {
+  VariablePickerButton, VariableSuggestions, useVariableAutocomplete, type VariableDef,
+} from "@/components/TemplateVariables";
 
 const API = "/api/v1/document-templates";
 // Guest-facing documents (invoice/quote/agreements) ship six locales, ordered
@@ -26,6 +29,19 @@ interface TemplateDetail {
   variables_schema: Record<string, { type?: string; required?: boolean }>;
   translations: Translation[];
 }
+
+/**
+ * 문안의 변수 정의에는 없지만 **서버가 발송 시점에 채우는** 변수.
+ * 목록에서 빠뜨리면 담당자가 상호를 직접 타이핑하게 되고, 그러면 테넌트가 바뀔 때
+ * 문안이 통째로 틀린다. (lib/sms.ts · lib/notify.ts 가 채운다.)
+ */
+const AUTO_VARS: Record<string, VariableDef[]> = {
+  sms: [
+    { name: "brand", auto: true, sample: "브랜드", description: "상호 — 발송 시 자동" },
+    { name: "contact_phone", auto: true, sample: "061-123-4567", description: "대표 문의번호 — 발송 시 자동" },
+  ],
+  email: [{ name: "brand", auto: true, sample: "브랜드", description: "상호 — 발송 시 자동" }],
+};
 
 /** {{var}} substitution mirroring the server engine, for the live preview. */
 function render(tpl: string, vars: Record<string, string>): string {
@@ -88,6 +104,19 @@ export default function DocumentTemplateEdit() {
     if (!v.brand) v.brand = "브랜드";
     return v;
   }, [tpl]);
+
+  /* 삽입 목록 = 문안이 선언한 변수 + 서버가 채우는 변수. 표본값을 함께 보여
+     "이 자리에 무엇이 들어가는지" 를 이름만으로 짐작하지 않게 한다. */
+  const variableDefs: VariableDef[] = useMemo(() => {
+    const declared = Object.entries(tpl?.variables_schema ?? {}).map(([name, def]) => ({
+      name, type: def?.type ?? "string", sample: vars[name],
+    }));
+    const auto = (AUTO_VARS[tpl?.kind ?? ""] ?? []).filter((a) => !declared.some((d) => d.name === a.name));
+    return [...declared, ...auto];
+  }, [tpl, vars]);
+
+  const bodyRef = useRef<HTMLTextAreaElement>(null);
+  const ac = useVariableAutocomplete(bodyRef, cur.body_html, (next) => setCur({ body_html: next }), variableDefs);
 
   /* 문자 길이는 **표본을 치환한 뒤** 재야 한다 — {{변수}} 리터럴로 재면 실제
      발송분이 LMS 로 넘어가도 화면에서는 SMS 로 보인다. 시드 검증기와 같은 규칙. */
@@ -190,7 +219,12 @@ export default function DocumentTemplateEdit() {
             )}
             <div className="grid gap-1.5">
               <div className="flex items-center justify-between">
-                <Label>{t("documentTemplate.f_body")}</Label>
+                <div className="flex items-center gap-2">
+                  <Label>{t("documentTemplate.f_body")}</Label>
+                  {mode !== "visual" && (
+                    <VariablePickerButton variables={variableDefs} onInsert={ac.insertAtCaret} />
+                  )}
+                </div>
                 {isSms ? (
                   <span className={`text-xs font-mono ${smsKind === "OVER" ? "text-destructive" : smsKind === "LMS" ? "text-amber-600" : "text-muted-foreground"}`}>
                     {smsSize} B · {smsKind === "OVER" ? t("documentTemplate.sms_too_long", "too long") : smsKind}
@@ -205,8 +239,15 @@ export default function DocumentTemplateEdit() {
               </div>
               {isSms ? (
                 <>
-                  <Textarea value={cur.body_html} onChange={(e) => setCur({ body_html: e.target.value })} rows={6}
-                    placeholder="[{{brand}}] …" />
+                  <Textarea
+                    ref={bodyRef}
+                    value={cur.body_html}
+                    onChange={(e) => setCur({ body_html: e.target.value })}
+                    rows={6}
+                    placeholder="[{{brand}}] …"
+                    {...ac.inputProps}
+                  />
+                  <VariableSuggestions ac={ac} />
                   <p className="text-xs text-muted-foreground">{t("documentTemplate.sms_hint", "Up to 90 bytes goes as SMS (Korean = 2 bytes per character); longer texts go as LMS at about 3× the cost. Emoji and HTML cannot be sent, and the brand name is filled in automatically as {{brand}}.")}</p>
                   <div className="rounded-2xl border bg-muted/40 p-4 max-w-sm mt-1">
                     <p className="text-[11px] text-muted-foreground mb-1.5">{t("documentTemplate.preview")}</p>
@@ -216,9 +257,20 @@ export default function DocumentTemplateEdit() {
                   </div>
                 </>
               ) : mode === "visual" ? (
-                <RichTextEditor value={cur.body_html} onChange={(html) => setCur({ body_html: html })} placeholder="Hi {{name}}, …" />
+                <RichTextEditor value={cur.body_html} onChange={(html) => setCur({ body_html: html })} placeholder="Hi {{name}}, …" variables={variableDefs} />
               ) : mode === "html" ? (
-                <Textarea value={cur.body_html} onChange={(e) => setCur({ body_html: e.target.value })} rows={18} className="font-mono text-xs" placeholder="<p>Hi {{name}}, …</p>" />
+                <>
+                  <Textarea
+                    ref={bodyRef}
+                    value={cur.body_html}
+                    onChange={(e) => setCur({ body_html: e.target.value })}
+                    rows={18}
+                    className="font-mono text-xs"
+                    placeholder="<p>Hi {{name}}, …</p>"
+                    {...ac.inputProps}
+                  />
+                  <VariableSuggestions ac={ac} />
+                </>
               ) : (
                 <div className="border rounded-md p-4 bg-white min-h-[300px]">
                   {isEmail && <div className="text-xs text-muted-foreground mb-2 pb-2 border-b">{t("documentTemplate.f_subject")}: <span className="font-medium text-foreground">{render(cur.subject, vars)}</span></div>}
@@ -233,13 +285,22 @@ export default function DocumentTemplateEdit() {
             <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">{t("documentTemplate.variables")}</p>
             <p className="text-[11px] text-muted-foreground mb-2">{t("documentTemplate.variables_hint")}</p>
             <div className="space-y-1">
-              {Object.keys(tpl.variables_schema ?? {}).length === 0 ? (
+              {variableDefs.length === 0 ? (
                 <p className="text-xs text-muted-foreground/60">—</p>
-              ) : Object.entries(tpl.variables_schema).map(([name, def]) => (
-                <button key={name} onClick={() => setCur({ body_html: `${cur.body_html}{{${name}}}` })}
-                  className="w-full text-left text-xs border rounded px-2 py-1 hover:bg-muted/50 flex items-center justify-between">
-                  <span className="font-mono">{`{{${name}}}`}</span>
-                  <span className="text-[10px] text-muted-foreground">{def?.type ?? "string"}</span>
+              ) : variableDefs.map((v) => (
+                // 종전에는 본문 **맨 끝**에 붙어, 문장 중간에 넣으려면 잘라 옮겨야 했다.
+                // 이제 커서 자리에 들어간다(서식 편집기에서는 툴바 버튼을 쓴다).
+                <button
+                  key={v.name}
+                  onMouseDown={(e) => { e.preventDefault(); ac.insertAtCaret(v.name); }}
+                  disabled={mode === "visual" && !isSms}
+                  title={v.sample ? `→ ${v.sample}` : undefined}
+                  className="w-full text-left text-xs border rounded px-2 py-1 hover:bg-muted/50 disabled:opacity-50 flex items-center justify-between"
+                >
+                  <span className="font-mono">{`{{${v.name}}}`}</span>
+                  <span className="text-[10px] text-muted-foreground">
+                    {v.auto ? t("templateVars.auto", "auto") : (v.type ?? "string")}
+                  </span>
                 </button>
               ))}
             </div>

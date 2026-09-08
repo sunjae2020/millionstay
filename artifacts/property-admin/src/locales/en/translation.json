@@ -6485,7 +6485,19 @@
     "sender_none_registered": "This account has no registered sender number yet.",
     "sender_fix": "Register the number in the SOLAPI console (business registration + a telecom service certificate, approved in 1–2 business days), or set an already-approved number in the connection settings.",
     "open_console": "SOLAPI console",
-    "not_registered_hint": "Register the sender number before sending."
+    "not_registered_hint": "Register the sender number before sending.",
+    "var_name": "Recipient's name",
+    "var_brand": "Company name — filled in on send",
+    "var_contact": "Support number — filled in on send"
+  },
+  "templateVars": {
+    "button": "Variables",
+    "auto": "auto",
+    "search": "Search variables…",
+    "no_match": "No match.",
+    "none": "This template has no variables.",
+    "pick_hint": "↑↓ to choose · Enter to insert · Esc to close",
+    "insert_hint": "Inserts at the cursor. Typing {{ in the body opens this too."
   },
   "entity_docs": {
     "tab_title": "Documents",
