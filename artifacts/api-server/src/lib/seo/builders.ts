@@ -114,6 +114,8 @@ export interface SeoHeadInput {
   /** Path the page is served at, leading slash included. */
   path: string;
   brandName: string;
+  /** Other spellings of the brand, so it is never printed twice. */
+  brandAliases?: string[];
   siteLabel: string;
   /** seo_defaults.organizationSchema, if the site has one. */
   organizationSchema: Record<string, unknown> | null;
@@ -147,7 +149,15 @@ export function buildSeoHead(input: SeoHeadInput): SeoHeadResult {
   const { subject, brandName } = input;
   const authored = nonEmpty(subject.seoTitle);
   const plain = nonEmpty(subject.title);
-  const title = authored ?? (plain ? `${plain} — ${brandName}` : brandName);
+  // The brand suffix exists so a bare page name is identifiable. A name that
+  // already says the brand does not need it said again.
+  const carriesBrand = (text: string): boolean =>
+    [brandName, ...(input.brandAliases ?? [])]
+      .map((alias) => alias?.trim().toLowerCase())
+      .filter(Boolean)
+      .some((alias) => text.toLowerCase().includes(alias!));
+  const title =
+    authored ?? (plain ? (carriesBrand(plain) ? plain : `${plain} — ${brandName}`) : brandName);
 
   const description = nonEmpty(subject.seoDescription) ?? nonEmpty(subject.geoAnswerSummary);
   const canonical = nonEmpty(subject.canonicalUrl) ?? absoluteUrl(input.origin, input.path);

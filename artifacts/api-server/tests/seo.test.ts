@@ -360,6 +360,22 @@ test("an authored title is used verbatim, a plain one gets the brand", () => {
   assert.equal(plain.title, "소개 — Metheim");
 });
 
+test("a page name that already says the brand does not repeat it", () => {
+  const base = {
+    origin: "https://example.test",
+    path: "/buy/5",
+    brandName: "Metheim",
+    brandAliases: ["메트하임"],
+    siteLabel: "Metheim",
+    organizationSchema: null,
+    alternateLocales: [],
+  };
+  const carries = buildSeoHead({ ...base, subject: emptySubject({ title: "23㎡ | 메트하임 여수 분양" }) });
+  assert.equal(carries.title, "23㎡ | 메트하임 여수 분양");
+  const bare = buildSeoHead({ ...base, subject: emptySubject({ title: "23㎡ 스튜디오" }) });
+  assert.equal(bare.title, "23㎡ 스튜디오 — Metheim");
+});
+
 test("head falls back to a built canonical and default robots", () => {
   const head = buildSeoHead({
     subject: emptySubject({ title: "소개" }),
