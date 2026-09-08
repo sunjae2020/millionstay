@@ -29,7 +29,8 @@ export type AiTaskId =
   | "id_document_ocr"
   | "document_intake"
   | "website_enrich"
-  | "match_rationale";
+  | "match_rationale"
+  | "seo_geo_draft";
 
 /** How safe it is to move this task off the strongest model. */
 export type Movability = "yes" | "verify" | "no";
@@ -255,6 +256,22 @@ export const AI_TASKS: Record<AiTaskId, AiTask> = {
       "Proposes how one receipt fans out into owner payout + retained fee. The contract's payout " +
       "terms already give the arithmetic, so the model only handles the leftovers; the server " +
       "re-checks that the legs never exceed the source before anything is written.",
+  },
+  seo_geo_draft: {
+    id: "seo_geo_draft",
+    label: "seo_geo_draft",
+    area: "data",
+    envKey: "SEO_GEO_DRAFT_MODEL",
+    fallbackEnvKey: "CS_TRANSLATE_MODEL",
+    defaultModel: "claude-haiku-4-5",
+    needs: {},
+    volume: "low",
+    movable: "yes",
+    source: "lib/seo/drafts.ts (CMS \u2192 SEO \u00b7 GEO refresh)",
+    rationale:
+      "Drafts a meta description, an answer summary and FAQ pairs from a page's own title and " +
+      "body. Plain text in, JSON out, and nothing it writes goes live \u2014 the draft sits in the " +
+      "audit row until a human approves it, so the cheapest model is the right one.",
   },
 };
 

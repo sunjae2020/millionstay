@@ -24,6 +24,15 @@ export const blogPostsTable = pgTable("blog_posts", {
   seo_title: text("seo_title"),
   seo_description: text("seo_description"),
   seo_keywords: text("seo_keywords"),
+  // ── SEO / GEO (0090) ─────────────────────────────────────────────────
+  // Base-row values, inherited by every locale unless a translation row
+  // overrides them. `geo_*` give an answer engine something self-contained
+  // to quote. See docs/SEO_GEO_OPTIMISATION.md.
+  canonical_url: text("canonical_url"),
+  robots_directives: text("robots_directives"),
+  json_ld: jsonb("json_ld"),
+  geo_answer_summary: text("geo_answer_summary"),
+  geo_faq: jsonb("geo_faq"),
   translations: jsonb("translations").default({}),
   deleted_at: timestamp("deleted_at", { withTimezone: true }),
   created_at: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),

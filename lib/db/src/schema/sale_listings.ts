@@ -19,6 +19,15 @@ export const saleListingsTable = pgTable("sale_listings", {
   price_amount: numeric("price_amount", { precision: 14, scale: 2 }), // optional structured price
   sort_order: integer("sort_order").notNull().default(0),
   published: boolean("published").notNull().default(false),
+  // ── SEO / GEO (0090) ─────────────────────────────────────────────────
+  // Base-row values, inherited by every locale unless a translation row
+  // overrides them. `geo_*` give an answer engine something self-contained
+  // to quote. See docs/SEO_GEO_OPTIMISATION.md.
+  canonical_url: text("canonical_url"),
+  robots_directives: text("robots_directives"),
+  json_ld: jsonb("json_ld"),
+  geo_answer_summary: text("geo_answer_summary"),
+  geo_faq: jsonb("geo_faq"),
   // { [lang]: { title, subtitle, location, price_label, description } }
   translations: jsonb("translations").default({}),
   deleted_at: timestamp("deleted_at", { withTimezone: true }),

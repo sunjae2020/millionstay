@@ -9,7 +9,8 @@
     "start": "node --enable-source-maps ./dist/index.mjs",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "seed:homestay-samples": "node --env-file-if-exists=.env scripts/seed-homestay-samples.mjs",
-    "cleanup:homestay-samples": "node --env-file-if-exists=.env scripts/cleanup-homestay-samples.mjs"
+    "cleanup:homestay-samples": "node --env-file-if-exists=.env scripts/cleanup-homestay-samples.mjs",
+    "test": "node --test tests/*.test.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.100.1",

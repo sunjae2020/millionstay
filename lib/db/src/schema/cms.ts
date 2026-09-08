@@ -73,6 +73,15 @@ export const cmsPagesTable = pgTable(
     seo_description: text("seo_description"),
     seo_keywords: text("seo_keywords"),
     seo_image_url: text("seo_image_url"),
+    // ── SEO / GEO (0090) ─────────────────────────────────────────────────
+    // Base-row values, inherited by every locale unless a translation row
+    // overrides them. `geo_*` give an answer engine something self-contained
+    // to quote. See docs/SEO_GEO_OPTIMISATION.md.
+    canonical_url: text("canonical_url"),
+    robots_directives: text("robots_directives"),
+    json_ld: jsonb("json_ld"),
+    geo_answer_summary: text("geo_answer_summary"),
+    geo_faq: jsonb("geo_faq"),
     published_at: timestamp("published_at", { withTimezone: true }),
     deleted_at: timestamp("deleted_at", { withTimezone: true }),
     created_at: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
@@ -100,6 +109,12 @@ export const cmsPageTranslationsTable = pgTable(
     seo_keywords: text("seo_keywords"),
     /** { blocks: Block[] } — the page builder tree. */
     body_json: jsonb("body_json").notNull().default({ blocks: [] }),
+    // ── SEO / GEO per locale (0090) ──────────────────────────────────────
+    og_title: text("og_title"),
+    og_description: text("og_description"),
+    seo_image_url: text("seo_image_url"),
+    geo_answer_summary: text("geo_answer_summary"),
+    json_ld: jsonb("json_ld"),
     status: text("status").notNull().default("Draft"),
     /** 'human' | 'machine' — AI-drafted copy is flagged until a human reviews it. */
     source: text("source"),
@@ -126,6 +141,12 @@ export const cmsPostTranslationsTable = pgTable(
     seo_description: text("seo_description"),
     seo_keywords: text("seo_keywords"),
     body_json: jsonb("body_json").notNull().default({ blocks: [] }),
+    // ── SEO / GEO per locale (0090) ──────────────────────────────────────
+    og_title: text("og_title"),
+    og_description: text("og_description"),
+    seo_image_url: text("seo_image_url"),
+    geo_answer_summary: text("geo_answer_summary"),
+    json_ld: jsonb("json_ld"),
     status: text("status").notNull().default("Draft"),
     source: text("source"),
     translated_at: timestamp("translated_at", { withTimezone: true }),

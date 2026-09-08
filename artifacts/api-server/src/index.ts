@@ -17,6 +17,7 @@ import { generateLeaseRentInvoices } from "./lib/billing/leaseRentInvoices";
 import { sendRentDunning, sendRentDueNotices } from "./lib/billing/rentDunning";
 import { generateConsolidatedInvoices } from "./lib/billing/consolidatedInvoices";
 import { checkWorkOrderSla } from "./lib/dispatch/workOrderDispatch";
+import { runSeoGeoAudit } from "./lib/seo/cron.js";
 import { runCampaignSends } from "./lib/marketing/worker";
 
 // Structured, greppable failure record for scheduled jobs. Every cron catch
@@ -314,6 +315,14 @@ cron.schedule("*/5 * * * *", () => {
   runCampaignSends()
     .then((r) => { if (r.enabled && (r.sent || r.failed || r.deferred)) logger.info({ ...r }, "Cron marketing campaign sends"); })
     .catch(cronFailure("marketing-campaign-sends"));
+});
+
+// SEO · GEO 야간 감사 — 02:40 UTC. 점수 스냅숏만 남기고 라이브 SEO는 건드리지
+// 않는다(AI 초안·승인 없음). 아침에 drift 컬럼이 의미를 갖는 이유.
+cron.schedule("40 2 * * *", () => {
+  runSeoGeoAudit()
+    .then((r) => logger.info({ ...r }, "Cron SEO/GEO audit"))
+    .catch(cronFailure("seo-geo-audit"));
 });
 
 cron.schedule("*/10 * * * *", () => {

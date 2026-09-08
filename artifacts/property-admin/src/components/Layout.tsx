@@ -22,6 +22,7 @@ import {
   Briefcase,
   CheckSquare,
   TrendingUp,
+  Gauge,
   Building,
   Layers,
   MapPin,
@@ -233,6 +234,7 @@ function getNav(
         { href: "/cms/media", label: t("nav.cms_media"), icon: Images },
         { href: "/cms/design", label: t("nav.cms_design"), icon: Palette },
         { href: "/cms/blocks", label: t("nav.cms_blocks"), icon: LayoutTemplate },
+        { href: "/cms/seo", label: t("nav.cms_seo"), icon: Gauge },
       ],
     },
     {

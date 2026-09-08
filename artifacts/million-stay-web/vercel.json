@@ -2,6 +2,29 @@
   "outputDirectory": "dist/public",
   "rewrites": [
     {
+      "source": "/robots.txt",
+      "destination": "https://workspaceapi-server-production-ff8e.up.railway.app/robots.txt?site=www"
+    },
+    {
+      "source": "/llms.txt",
+      "destination": "https://workspaceapi-server-production-ff8e.up.railway.app/llms.txt?site=www"
+    },
+    {
+      "source": "/sitemap.xml",
+      "destination": "https://workspaceapi-server-production-ff8e.up.railway.app/sitemap.xml?site=www"
+    },
+    {
+      "source": "/:path*",
+      "has": [
+        {
+          "type": "header",
+          "key": "user-agent",
+          "value": ".*(GPTBot|OAI-SearchBot|ChatGPT-User|ClaudeBot|Claude-User|anthropic-ai|PerplexityBot|Perplexity-User|Google-Extended|GoogleOther|Applebot|Amazonbot|Bytespider|CCBot|cohere-ai|Diffbot|FacebookBot|meta-externalagent|YouBot|Timpibot|Meltwater|Seekr|ImagesiftBot|Omgilibot|DuckAssistBot|Googlebot|bingbot|Twitterbot|facebookexternalhit|LinkedInBot|Slackbot|Discordbot).*"
+        }
+      ],
+      "destination": "https://workspaceapi-server-production-ff8e.up.railway.app/seo/head?site=www&path=/:path*"
+    },
+    {
       "source": "/((?!assets/|.*\\..*).*)",
       "destination": "/index.html"
     }

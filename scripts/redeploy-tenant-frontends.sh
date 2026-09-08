@@ -152,11 +152,20 @@ deploy_one() {
 
   # Stage an isolated prebuilt deploy dir: dist/public mirrored + a vercel.json
   # that skips install/build (echo) and serves the prebuilt files.
+  # Which CMS site this tenant's guest web serves, and the crawlers that get the
+  # server-rendered head. Kept next to the rewrites they feed.
+  site_key="${CMS_SITE_KEY:-dev}"
+  crawler_ua=".*(GPTBot|OAI-SearchBot|ChatGPT-User|ClaudeBot|Claude-User|anthropic-ai|PerplexityBot|Perplexity-User|Google-Extended|GoogleOther|Applebot|Amazonbot|Bytespider|CCBot|cohere-ai|Diffbot|FacebookBot|meta-externalagent|YouBot|Timpibot|Meltwater|Seekr|ImagesiftBot|Omgilibot|DuckAssistBot|Googlebot|bingbot|Twitterbot|facebookexternalhit|LinkedInBot|Slackbot|Discordbot).*"
+
   stage="$STAGE_ROOT/$app"; mkdir -p "$stage/dist/public"
   cp -R "$out/." "$stage/dist/public/"
   vjson="$stage/vercel.json"
   if [[ "$app" == "web" ]]; then
-    # Absolute API baked → SPA fallback only.
+    # Absolute API baked into the bundle, so no /api proxy is needed. What IS
+    # proxied: the three crawler files and, for a crawler user-agent, the page
+    # itself — those must come from the API because this bundle only renders
+    # once JavaScript runs, and an AI crawler does not run it. The site is
+    # named by a query parameter: the original Host does not survive the CDN hop.
     cat > "$vjson" <<JSON
 {
   "buildCommand": "echo prebuilt",
@@ -164,6 +173,14 @@ deploy_one() {
   "outputDirectory": "dist/public",
   "framework": null,
   "rewrites": [
+    { "source": "/robots.txt",  "destination": "$API_URL/robots.txt?site=$site_key" },
+    { "source": "/llms.txt",    "destination": "$API_URL/llms.txt?site=$site_key" },
+    { "source": "/sitemap.xml", "destination": "$API_URL/sitemap.xml?site=$site_key" },
+    {
+      "source": "/:path*",
+      "has": [{ "type": "header", "key": "user-agent", "value": "$crawler_ua" }],
+      "destination": "$API_URL/seo/head?site=$site_key&path=/:path*"
+    },
     { "source": "/((?!assets/|.*\\\\..*).*)", "destination": "/index.html" }
   ]
 }

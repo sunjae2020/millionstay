@@ -126,6 +126,7 @@ import CmsBlog, { CmsBlogCategories } from "@/pages/cms/CmsBlog";
 import CmsCompany from "@/pages/cms/CmsCompany";
 import CmsDesign from "@/pages/cms/CmsDesign";
 import CmsBlockTemplates from "@/pages/cms/CmsBlockTemplates";
+import CmsSeo from "@/pages/cms/CmsSeo";
 import KnowledgeBase from "@/pages/ai/KnowledgeBase";
 import Conversations from "@/pages/ai/Conversations";
 import ChatWidgetSettings from "@/pages/ai/ChatWidgetSettings";
@@ -340,6 +341,7 @@ function Router() {
       <Route path="/cms/media" component={MediaLibrary} />
       <Route path="/cms/design" component={CmsDesign} />
       <Route path="/cms/blocks" component={CmsBlockTemplates} />
+      <Route path="/cms/seo" component={CmsSeo} />
 
       {/* Legacy /content/* addresses stay working — bookmarks and old links
           redirect into the CMS group rather than 404ing. The fixed-field page

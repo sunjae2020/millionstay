@@ -39,6 +39,7 @@ import {
 } from "./routes/document-email";
 import { documentSmsAdminRouter, documentSmsPublicRouter } from "./routes/document-sms";
 import helpDocsRouter from "./routes/help-docs";
+import { seoAdminRouter, seoPublicRouter } from "./routes/seo";
 import { homestayStudentPublicRouter } from "./routes/homestay-students";
 import { shortTermPublicRouter } from "./routes/short-term";
 import pageContentsRouter from "./routes/page-contents";
@@ -294,6 +295,11 @@ app.use("/api", documentEmailPublicRouter);
 // 문자로 보낸 문서 열람 링크 `/d/<token>` — /api 밖의 가장 짧은 경로(문자 길이가
 // 곧 요금). 토큰이 곧 인증이라 가드 앞에 둔다.
 app.use(documentSmsPublicRouter);
+// robots.txt / llms.txt / sitemap.xml and the crawler-facing <head>. Bare paths
+// outside /api: that is what a crawler asks for, it carries no session, and the
+// CDN rewrites straight to here. Mounted before the SPA static handler so these
+// win over any file of the same name shipped in the web bundle.
+app.use(seoPublicRouter);
 app.use("/api", chatRouter);
 app.use("/api", privacyRouter);
 // Resend campaign event webhook — the caller is Resend, not an admin, so it is
@@ -373,6 +379,8 @@ app.use("/api", documentEmailAdminRouter);
 // 문서 문자 보내기(열람 링크 발급) — 관리자.
 app.use("/api", documentSmsAdminRouter);
 // 내부 문서함 — 운영 지도·정책 문서·세입자 링크 목록(직원 교육용).
+// SEO · GEO 관리 — 감사 이력·점수·AI 초안 승인 (requireAuth 뒤).
+app.use("/api", seoAdminRouter);
 app.use("/api", helpDocsRouter);
 app.use("/api", router);
 
