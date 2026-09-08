@@ -121,6 +121,20 @@ Overviews 같은 답변 엔진이 우리 페이지를 **인용하게 만드는 �
 | `/llms.txt` | 사람이 고른 마크다운 색인. 각 항목의 설명은 그 페이지의 GEO 요약 |
 | `/sitemap.xml` | 발행된 페이지·글·매물 + `xhtml:link` 언어 대체 링크 |
 | `/seo/head` | 크롤러 UA일 때 제목·OG·JSON-LD·요약·FAQ가 담긴 무자바스크립트 HTML |
+| `/seo/meta` | 같은 내용을 JSON으로. 빌드 단계가 정적 HTML에 구워 넣을 때 씁니다 |
+| `/seo/routes` | 이 사이트가 발행하는 경로 목록(slug → 공개 주소 변환 적용) |
+
+### 정적 페이지는 왜 빌드 때 굽는가
+
+Vercel은 **리라이트보다 파일시스템을 먼저** 확인합니다. 그래서 프리렌더로
+`index.html`이 생긴 경로(CMS 페이지 12개)는 크롤러 UA 리라이트가 절대 잡지
+못합니다. 파일이 없는 경로(`/buy/5`, `/blog/…`)에서만 리라이트가 이깁니다.
+
+정적 경로는 대신 [scripts/prerender-share-meta.mjs](../scripts/prerender-share-meta.mjs)가
+빌드 후 `/seo/meta`를 불러 canonical·hreflang·JSON-LD를 문서에 직접 넣습니다.
+사실 이쪽이 더 낫습니다. 정적이라 캐시되고, UA 목록에 없는 크롤러에게도 통합니다.
+인용 대상 문장(GEO 요약)은 JSON-LD의 `abstract`와 FAQPage 항목으로 들어갑니다 —
+본문에 심으면 사람에게 잠깐 보였다 사라지는 깜빡임이 생깁니다.
 
 주의할 점 셋:
 
@@ -139,6 +153,18 @@ Overviews 같은 답변 엔진이 우리 페이지를 **인용하게 만드는 �
 - Metheim 게스트 웹: [scripts/redeploy-tenant-frontends.sh](../scripts/redeploy-tenant-frontends.sh) — 프리빌트 업로드라 리포의 `vercel.json`을 **쓰지 않고** 스크립트가 즉석에서 만듭니다.
 
 둘 중 하나만 고치면 한쪽 테넌트에서 조용히 동작하지 않습니다.
+
+### slug와 공개 주소는 같지 않다
+
+메트하임 사이트는 페르소나 페이지를 대상 이름으로 서비스합니다(`/for-resident`).
+그 페이지를 채우는 CMS 페이지의 slug는 `resident`입니다. `stayplan`은 `/stay-plan`,
+`manage`는 `/management`입니다. slug를 그대로 URL로 publish하면 사이트맵에 not-found
+화면이 뜨는 주소가 실립니다 — 사이트맵이 없는 것보다 나쁩니다.
+
+변환표의 정본은 [lib/seo/publicRoutes.ts](../artifacts/api-server/src/lib/seo/publicRoutes.ts)
+하나입니다. 프리렌더 스크립트는 자기 사본을 두지 않고 `/seo/routes`로 받아 갑니다
+(API 호출이 실패하면 스크립트 안의 폴백 맵을 씁니다). 이 표가 맞춰야 할 대상은
+게스트 웹의 `DevRouter.tsx`입니다.
 
 ## 관리자 화면
 
@@ -186,7 +212,7 @@ Overviews 같은 답변 엔진이 우리 페이지를 **인용하게 만드는 �
 pnpm --filter @workspace/api-server test
 ```
 
-순수 함수(채점·drift·빌더) 22개 케이스. 빈 초안 9점, 완비 100점, 8개 항목 합 100,
+순수 함수(채점·drift·빌더·경로 변환) 25개 케이스. 빈 초안 9점, 완비 100점, 8개 항목 합 100,
 GEO가 최대 가중, robots.txt의 크롤러 27종 전부 포함 등을 회귀로 잠급니다.
 
 ## 남은 일

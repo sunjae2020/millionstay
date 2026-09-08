@@ -31,6 +31,7 @@ import {
   type SeoSubject,
 } from "./scoring.js";
 import { generateSeoGeoDrafts, type SeoDrafts } from "./drafts.js";
+import { publicPathForPage } from "./publicRoutes.js";
 
 export const SEO_ENTITY_TYPES: SeoEntityType[] = ["page", "blog", "listing"];
 
@@ -156,10 +157,7 @@ function faqOf(value: unknown): SeoFaqPair[] {
     .filter((pair) => pair.q.trim() && pair.a.trim());
 }
 
-function pagePath(slug: string): string {
-  const clean = (slug ?? "").replace(/^\/+/, "");
-  return clean && clean !== "home" ? `/${clean}` : "/";
-}
+
 
 /** Every auditable entity for one site, resolved at the site's default locale. */
 export async function resolveAllEntities(site: SeoSiteMeta): Promise<ResolvedEntity[]> {
@@ -221,7 +219,7 @@ export async function resolveAllEntities(site: SeoSiteMeta): Promise<ResolvedEnt
           entityId: page.id,
           title: tr?.title ?? page.title ?? page.slug ?? "",
           slug: page.slug,
-          path: pagePath(page.slug),
+          path: publicPathForPage(site.siteKey, page.slug),
           status: page.status,
           localeCount: rows.length,
           editHref: `/cms/pages/${page.id}`,

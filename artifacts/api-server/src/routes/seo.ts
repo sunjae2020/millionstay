@@ -19,6 +19,7 @@ import {
   type SitemapEntry,
 } from "../lib/seo/builders.js";
 import { extractBodySignals } from "../lib/seo/scoring.js";
+import { publicPathForPage } from "../lib/seo/publicRoutes.js";
 import {
   applyApprovedDraft,
   auditAndPersist,
@@ -425,6 +426,90 @@ publicRouter.get("/sitemap.xml", async (req, res): Promise<void> => {
 
   crawlerHeaders(res, "application/xml; charset=utf-8", Boolean(origin));
   res.send(buildSitemapXml(origin || "https://example.invalid", entries));
+});
+
+/**
+ * Which routes the build step should prerender for this site: the public path,
+ * the CMS slug, and the legacy page key its older copy lives under. Serving it
+ * from here keeps ONE map of slug-to-URL instead of one in the API and a second
+ * in the build script that quietly drifts from it.
+ */
+publicRouter.get("/seo/routes", async (req, res): Promise<void> => {
+  const site = await resolveRequestSite(req);
+  if (!site) {
+    crawlerHeaders(res, "application/json; charset=utf-8", false);
+    res.status(404).json({ error: "Unknown site" });
+    return;
+  }
+  const pages = await db
+    .select({
+      slug: cmsPagesTable.slug,
+      legacy_page_key: cmsPagesTable.legacy_page_key,
+      status: cmsPagesTable.status,
+    })
+    .from(cmsPagesTable)
+    .where(
+      and(
+        eq(cmsPagesTable.site_key, site.siteKey),
+        eq(cmsPagesTable.status, "Published"),
+        isNull(cmsPagesTable.deleted_at),
+      ),
+    )
+    .orderBy(asc(cmsPagesTable.sort_order), asc(cmsPagesTable.id));
+
+  crawlerHeaders(res, "application/json; charset=utf-8", true);
+  res.json({
+    site: site.siteKey,
+    routes: pages.map((page) => ({
+      path: publicPathForPage(site.siteKey, page.slug),
+      slug: page.slug,
+      legacyPageKey: page.legacy_page_key,
+    })),
+  });
+});
+
+/**
+ * The same head, as JSON, for the build step that bakes it into the static HTML.
+ *
+ * Vercel checks the filesystem BEFORE it applies a rewrite, so a route that was
+ * prerendered to its own index.html can never be intercepted at request time —
+ * the crawler rewrite only wins for paths with no file behind them. Those routes
+ * therefore get their metadata baked in at build time instead, which is better
+ * anyway: it is static, cached, and reaches every crawler rather than only the
+ * user-agents we thought to list.
+ */
+publicRouter.get("/seo/meta", async (req, res): Promise<void> => {
+  const site = await resolveRequestSite(req);
+  if (!site) {
+    crawlerHeaders(res, "application/json; charset=utf-8", false);
+    res.status(404).json({ error: "Unknown site" });
+    return;
+  }
+  const path = String(req.query["path"] ?? "/") || "/";
+  const entities = await resolveAllEntities(site);
+  const match = entities.find((entity) => entity.display.path === path) ?? null;
+  if (!match) {
+    crawlerHeaders(res, "application/json; charset=utf-8", false);
+    res.status(404).json({ error: "Not found" });
+    return;
+  }
+  const head = buildSeoHead({
+    subject: match.subject,
+    origin: originFor(site, req),
+    path,
+    brandName: site.label,
+    siteLabel: site.label,
+    organizationSchema: site.organizationSchema,
+    alternateLocales: site.locales,
+  });
+  crawlerHeaders(res, "application/json; charset=utf-8", true);
+  res.json({
+    ...head,
+    keywords: match.subject.seoKeywords ?? null,
+    answerSummary: match.subject.geoAnswerSummary ?? null,
+    faq: match.subject.geoFaq ?? [],
+    locale: match.subject.locale,
+  });
 });
 
 /**

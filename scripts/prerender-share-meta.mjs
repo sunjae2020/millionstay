@@ -12,6 +12,13 @@
 // taken from the CMS. The app still boots and takes over routing, so behaviour
 // for real visitors is unchanged — only the pre-JavaScript document differs.
 //
+// It also bakes in the canonical link, the hreflang alternates and the JSON-LD
+// that answer engines read. That has to happen here rather than at request time:
+// Vercel checks the filesystem BEFORE it applies a rewrite, so a route with its
+// own index.html can never be intercepted by the crawler rewrite. Baking is the
+// better half of the deal anyway — it is static, and it reaches every crawler
+// rather than only the user-agents someone remembered to list.
+//
 // Usage:
 //   API_URL=https://…  SITE_KEY=dev  [LANG=ko] node scripts/prerender-share-meta.mjs [dist-dir]
 
@@ -43,8 +50,10 @@ if (!fs.existsSync(shellPath)) {
 const shell = fs.readFileSync(shellPath, "utf8");
 
 /**
- * Which CMS page key backs which public route, per site. A route missing from
- * the map keeps the site-wide card rather than getting a wrong one.
+ * Fallback route map: which CMS page key backs which public route, per site.
+ * The API is asked first (GET /seo/routes) so the slug-to-URL translation lives
+ * in ONE place; this copy is what keeps a release working if that call fails.
+ * A route missing from the map keeps the site-wide card rather than a wrong one.
  */
 const ROUTES_BY_SITE = {
   dev: {
@@ -53,7 +62,7 @@ const ROUTES_BY_SITE = {
     buy: "dev-buy",
     rent: "dev-rent",
     management: "dev-manage",
-    stayplan: "dev-stayplan",
+    "stay-plan": "dev-stayplan",
     "for-resident": "dev-resident",
     "for-owner": "dev-owner",
     "for-partner": "dev-partner",
@@ -80,11 +89,7 @@ const ROUTES_BY_SITE = {
   },
 };
 
-const ROUTES = ROUTES_BY_SITE[SITE_KEY];
-if (!ROUTES) {
-  console.log(`prerender-share-meta: no route map for site "${SITE_KEY}" — skipping`);
-  process.exit(0);
-}
+const FALLBACK_ROUTES = ROUTES_BY_SITE[SITE_KEY];
 
 const escapeAttr = (value) =>
   String(value ?? "")
@@ -102,6 +107,28 @@ function setMeta(html, selectorAttr, name, value) {
   return html.replace("</head>", `    <meta ${selectorAttr}="${name}" content="${safe}" />\n  </head>`);
 }
 
+/** Drop tags in just before </head>, after clearing any previous run's copies. */
+function setHeadExtras(html, { canonical, alternates, jsonLd }) {
+  let out = html.replace(/\s*<link rel="canonical"[^>]*>/g, "");
+  out = out.replace(/\s*<link rel="alternate" hreflang="[^"]*"[^>]*>/g, "");
+  out = out.replace(/\s*<script type="application\/ld\+json">[\s\S]*?<\/script>/g, "");
+
+  const tags = [];
+  if (canonical) tags.push(`<link rel="canonical" href="${escapeAttr(canonical)}" />`);
+  for (const alternate of alternates ?? []) {
+    tags.push(
+      `<link rel="alternate" hreflang="${escapeAttr(alternate.locale)}" href="${escapeAttr(alternate.href)}" />`,
+    );
+  }
+  for (const node of jsonLd ?? []) {
+    // `</` is the only sequence that can break out of a script element.
+    const json = JSON.stringify(node).replace(/<\//g, "<\\/");
+    tags.push(`<script type="application/ld+json">${json}</script>`);
+  }
+  if (tags.length === 0) return out;
+  return out.replace("</head>", `    ${tags.join("\n    ")}\n  </head>`);
+}
+
 async function getJson(url) {
   try {
     const res = await fetch(url);
@@ -112,21 +139,48 @@ async function getJson(url) {
   }
 }
 
+// Ask the API which routes this site publishes. Its answer already applies the
+// slug-to-URL map, so a page stored as `resident` is prerendered at
+// /for-resident where the router actually serves it.
+const live = await getJson(`${API_URL}/seo/routes?site=${encodeURIComponent(SITE_KEY)}`);
+const ROUTES = live?.routes?.length
+  ? Object.fromEntries(
+      live.routes.map((entry) => [String(entry.path ?? "/").replace(/^\//, ""), entry.legacyPageKey ?? ""]),
+    )
+  : FALLBACK_ROUTES;
+if (!ROUTES) {
+  console.log(`prerender-share-meta: no route map for site "${SITE_KEY}" — skipping`);
+  process.exit(0);
+}
+console.log(
+  `prerender-share-meta: ${Object.keys(ROUTES).length} routes (${live?.routes?.length ? "from the API" : "from the fallback map"})`,
+);
+
 let written = 0;
 let skipped = 0;
 
 try {
 for (const [route, pageKey] of Object.entries(ROUTES)) {
-  const data = await getJson(`${API_URL}/api/v1/public/page-contents/${pageKey}/${LANG}`);
-  const title = data?.seo_title?.trim();
-  const description = data?.seo_description?.trim();
+  // The SEO service resolves the CMS block page and builds the same head the
+  // API serves crawlers, so a prerendered route and a live one cannot drift.
+  // The legacy page-contents overlay stays as the fallback for anything the
+  // service does not know about.
+  const meta = await getJson(
+    `${API_URL}/seo/meta?site=${encodeURIComponent(SITE_KEY)}&path=${encodeURIComponent(route === "" ? "/" : `/${route}`)}`,
+  );
+  const data = pageKey
+    ? await getJson(`${API_URL}/api/v1/public/page-contents/${pageKey}/${LANG}`)
+    : null;
+  const title = meta?.title?.trim() || data?.seo_title?.trim();
+  const description = meta?.description?.trim() || data?.seo_description?.trim();
   if (!title && !description) {
     skipped += 1;
     continue;
   }
 
   const content = data?.content ?? {};
-  const image = content.seo_image || content.hero_image_url || content.hero_1_image || "";
+  const image =
+    meta?.og?.["og:image"] || content.seo_image || content.hero_image_url || content.hero_1_image || "";
 
   let html = shell;
   if (title) html = html.replace(/<title>[\s\S]*?<\/title>/, `<title>${escapeAttr(title)}</title>`);
@@ -137,6 +191,14 @@ for (const [route, pageKey] of Object.entries(ROUTES)) {
   html = setMeta(html, "name", "twitter:title", title);
   html = setMeta(html, "name", "twitter:description", description);
   html = setMeta(html, "name", "twitter:image", image);
+  html = setMeta(html, "name", "keywords", meta?.keywords);
+  if (meta) {
+    html = setHeadExtras(html, {
+      canonical: meta.canonical,
+      alternates: meta.alternates,
+      jsonLd: meta.jsonLd,
+    });
+  }
 
   // "" is the home route and its file is the shell itself.
   const outPath = route === "" ? shellPath : path.join(DIST, route, "index.html");

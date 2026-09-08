@@ -221,6 +221,11 @@ function buildJsonLd(
       inLanguage: input.subject.locale,
     };
     if (input.description) node["description"] = input.description;
+    // The answer summary is the passage we actually want quoted, so it travels
+    // in the structured data too — that is how it reaches a crawler on a page
+    // whose prose only appears after JavaScript runs.
+    const summary = nonEmpty(input.subject.geoAnswerSummary);
+    if (summary) node["abstract"] = summary;
     if (input.image) node["image"] = input.image;
     if (input.subject.entityType === "blog") {
       node["headline"] = input.title;

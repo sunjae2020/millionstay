@@ -16,6 +16,7 @@ import {
   type SeoSiteContext,
   type SeoSubject,
 } from "../src/lib/seo/scoring.ts";
+import { publicPathForPage } from "../src/lib/seo/publicRoutes.ts";
 import {
   AI_CRAWLERS,
   buildLlmsTxt,
@@ -252,6 +253,27 @@ test("drift reports what was fixed and what appeared", () => {
   assert.equal(drift.scoreDelta, 15);
   assert.deepEqual(drift.added.map((g) => g.code), ["c"]);
   assert.deepEqual(drift.resolved.map((g) => g.code), ["a"]);
+});
+
+// ── Public routes ──────────────────────────────────────────────────────────
+
+test("a page slug maps to the address the site actually serves", () => {
+  // These five differ on the Metheim site; publishing the slug would put
+  // addresses in sitemap.xml that render the not-found screen.
+  assert.equal(publicPathForPage("dev", "manage"), "/management");
+  assert.equal(publicPathForPage("dev", "stayplan"), "/stay-plan");
+  assert.equal(publicPathForPage("dev", "resident"), "/for-resident");
+  assert.equal(publicPathForPage("dev", "owner"), "/for-owner");
+  assert.equal(publicPathForPage("dev", "partner"), "/for-partner");
+  assert.equal(publicPathForPage("dev", "privacy"), "/privacy-policy");
+});
+
+test("an unmapped slug is its own address, and home is the root", () => {
+  assert.equal(publicPathForPage("dev", "about"), "/about");
+  assert.equal(publicPathForPage("www", "about"), "/about");
+  assert.equal(publicPathForPage("dev", ""), "/");
+  assert.equal(publicPathForPage("dev", "home"), "/");
+  assert.equal(publicPathForPage("www", "manage"), "/manage");
 });
 
 // ── Builders ───────────────────────────────────────────────────────────────
