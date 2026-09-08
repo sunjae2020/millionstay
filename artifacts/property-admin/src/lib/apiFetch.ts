@@ -92,7 +92,14 @@ export function refreshAccessToken(): Promise<boolean> {
         body: JSON.stringify({ refresh_token: rt }),
       });
       const data = await res.json().catch(() => null);
-      if (!res.ok || !data?.success || !data.token) return false;
+      if (!res.ok || !data?.success || !data.token) {
+        // The server has rejected this refresh token for good (rotated away,
+        // revoked, expired). Keeping it means every later call re-presents it,
+        // which the server reads as token theft — one stale tab used to keep
+        // re-triggering that alarm and kill freshly opened sessions with it.
+        if (res.status === 401 || res.status === 403) storeSession(null, null);
+        return false;
+      }
       storeSession(data.token, data.refresh_token ?? undefined);
       return true;
     } catch {
@@ -172,6 +179,18 @@ function clearAuthAndRedirect(): void {
 
 function isLoginPath(path: string): boolean {
   return /\/auth\/(login|guest\/login|partner\/login|refresh|passkey\/login)/.test(path);
+}
+
+/**
+ * Shared 401 recovery: rotate the access token, and when that is impossible
+ * send the user to the login page (remembering where they were) instead of
+ * leaving them on a screen whose every action fails. Returns true when the
+ * caller may replay its request.
+ */
+export async function recoverFromUnauthorized(): Promise<boolean> {
+  if (await refreshAccessToken()) return true;
+  clearAuthAndRedirect();
+  return false;
 }
 
 /**

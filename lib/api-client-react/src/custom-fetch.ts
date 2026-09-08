@@ -8,6 +8,13 @@ export type BodyType<T> = T;
 
 export type AuthTokenGetter = () => Promise<string | null> | string | null;
 
+/**
+ * Called when a request comes back 401. Return `true` if the session was
+ * recovered (a fresh token is now available) and the request should be
+ * replayed once; return `false` to let the ApiError through.
+ */
+export type UnauthorizedHandler = () => Promise<boolean> | boolean;
+
 const NO_BODY_STATUS = new Set([204, 205, 304]);
 const DEFAULT_JSON_ACCEPT = "application/json, application/problem+json";
 
@@ -17,6 +24,7 @@ const DEFAULT_JSON_ACCEPT = "application/json, application/problem+json";
 
 let _baseUrl: string | null = null;
 let _authTokenGetter: AuthTokenGetter | null = null;
+let _unauthorizedHandler: UnauthorizedHandler | null = null;
 
 /**
  * Set a base URL that is prepended to every relative request URL
@@ -42,6 +50,17 @@ export function setBaseUrl(url: string | null): void {
  */
 export function setAuthTokenGetter(getter: AuthTokenGetter | null): void {
   _authTokenGetter = getter;
+}
+
+/**
+ * Register the app's 401 recovery. Without one, a 401 on a generated-client
+ * call surfaced as a bare `HTTP 401` error while the user sat on a page whose
+ * session was already gone — every save silently failed and the typed-in form
+ * was lost. Apps wire this to the same refresh/redirect path their hand-written
+ * fetch helper uses. Pass `null` to clear.
+ */
+export function setUnauthorizedHandler(handler: UnauthorizedHandler | null): void {
+  _unauthorizedHandler = handler;
 }
 
 function isRequest(input: RequestInfo | URL): input is Request {
@@ -360,7 +379,23 @@ export async function customFetch<T = unknown>(
 
   const requestInfo = { method, url: resolveUrl(input) };
 
-  const response = await fetch(input, { ...init, method, headers });
+  let response = await fetch(input, { ...init, method, headers });
+
+  // An expired access token is recoverable: let the app refresh it, then
+  // replay once with the new token. A Request input is not replayable (its
+  // body stream is already consumed), so those fall through to the error.
+  if (response.status === 401 && _unauthorizedHandler && !isRequest(input)) {
+    const recovered = await _unauthorizedHandler();
+    if (recovered) {
+      const retryHeaders = new Headers(headers);
+      retryHeaders.delete("authorization");
+      if (_authTokenGetter) {
+        const token = await _authTokenGetter();
+        if (token) retryHeaders.set("authorization", `Bearer ${token}`);
+      }
+      response = await fetch(input, { ...init, method, headers: retryHeaders });
+    }
+  }
 
   if (!response.ok) {
     const errorData = await parseErrorBody(response, method);

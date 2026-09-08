@@ -7,13 +7,13 @@
  * - Tokens are random 64-byte strings; only their SHA-256 hash is stored.
  * - Rotation is atomic: old token is revoked, a new one is issued.
  * - If a revoked token is presented for verification, that is treated as
- *   theft → all refresh tokens for that user are mass-revoked AND
- *   `tokens_invalid_after` is bumped on the user row, invalidating any
- *   outstanding access tokens too.
+ *   theft → every token in that login's *family* is revoked. Other logins of
+ *   the same account (a second browser, a phone) are left alone: a stale tab
+ *   must not be able to sign the user out of the machine they are working on.
  */
-import { randomBytes, createHash } from "crypto";
-import { db, refreshTokensTable, usersTable, guestUsersTable, partnerUsersTable } from "@workspace/db";
-import { and, eq, isNull, gt, lt } from "drizzle-orm";
+import { randomBytes, createHash, randomUUID } from "crypto";
+import { db, refreshTokensTable } from "@workspace/db";
+import { and, eq, isNull, lt } from "drizzle-orm";
 
 export type UserType = "admin" | "guest" | "partner";
 
@@ -78,6 +78,8 @@ export interface IssueOptions {
   userType: UserType;
   ipAddress?: string | null;
   userAgent?: string | null;
+  /** Continue an existing login's family (rotation). Omit to start a new one. */
+  familyId?: string | null;
 }
 
 export async function issueRefreshToken(opts: IssueOptions): Promise<string> {
@@ -88,6 +90,7 @@ export async function issueRefreshToken(opts: IssueOptions): Promise<string> {
   await db.insert(refreshTokensTable).values({
     user_id: opts.userId,
     user_type: opts.userType,
+    family_id: opts.familyId ?? randomUUID(),
     token_hash: tokenHash,
     expires_at: expiresAt,
     ip_address: opts.ipAddress?.slice(0, 45) ?? null,
@@ -101,30 +104,16 @@ export interface VerifiedRefreshToken {
   id: string;
   user_id: number;
   user_type: UserType;
-}
-
-async function bumpTokensInvalidAfter(userId: number, userType: UserType): Promise<void> {
-  const now = new Date();
-  try {
-    if (userType === "admin") {
-      await db.update(usersTable).set({ tokens_invalid_after: now }).where(eq(usersTable.id, userId));
-    } else if (userType === "guest") {
-      await db.update(guestUsersTable).set({ tokens_invalid_after: now }).where(eq(guestUsersTable.id, userId));
-    } else {
-      await db.update(partnerUsersTable).set({ tokens_invalid_after: now }).where(eq(partnerUsersTable.id, userId));
-    }
-  } catch (err) {
-    console.error("[refresh-tokens] bumpTokensInvalidAfter failed", err);
-  }
+  family_id: string | null;
 }
 
 /**
  * Verify and consume a refresh token.
  *
  * - Active token: returns its row.
- * - Already-revoked token (REUSE): triggers mass-revocation for that user
- *   and returns null. This is the OAuth 2.0 BCP defence against stolen
- *   refresh tokens.
+ * - Already-revoked token (REUSE): revokes that token's family and returns
+ *   null. This is the OAuth 2.0 BCP defence against stolen refresh tokens,
+ *   scoped to the compromised login rather than the whole account.
  * - Unknown / expired token: returns null silently.
  */
 export async function verifyRefreshToken(
@@ -155,16 +144,38 @@ export async function verifyRefreshToken(
     // between two clients of the same session, not a stolen token.
     if (recallRotation(tokenHash)) return null;
     console.warn(
-      `[refresh-tokens] REUSE DETECTED: user ${row.user_id} (${ut}) presented a revoked token. Mass-revoking all sessions.`,
+      `[refresh-tokens] REUSE DETECTED: user ${row.user_id} (${ut}) presented a revoked token. ` +
+        `Revoking family ${row.family_id ?? row.id}.`,
     );
-    await revokeAllForUser(row.user_id, ut);
-    await bumpTokensInvalidAfter(row.user_id, ut);
+    await revokeFamily(row.family_id, row.id);
     return null;
   }
 
   if (new Date(row.expires_at as any) <= now) return null;
 
-  return { id: row.id, user_id: row.user_id, user_type: row.user_type as UserType };
+  return {
+    id: row.id,
+    user_id: row.user_id,
+    user_type: row.user_type as UserType,
+    family_id: row.family_id ?? null,
+  };
+}
+
+/**
+ * Revoke every live token descended from one login. Rows predating `family_id`
+ * were backfilled with their own id, so `familyId` is only ever null for a row
+ * written between the migration and this deploy — fall back to that one row.
+ */
+export async function revokeFamily(familyId: string | null, fallbackRowId: string): Promise<void> {
+  await db
+    .update(refreshTokensTable)
+    .set({ revoked_at: new Date() })
+    .where(
+      and(
+        familyId ? eq(refreshTokensTable.family_id, familyId) : eq(refreshTokensTable.id, fallbackRowId),
+        isNull(refreshTokensTable.revoked_at),
+      ),
+    );
 }
 
 /** Mark a refresh token as revoked. Safe to call on already-revoked tokens. */
@@ -214,6 +225,7 @@ export async function rotateRefreshToken(
   const newToken = await issueRefreshToken({
     userId: verified.user_id,
     userType: verified.user_type,
+    familyId: verified.family_id ?? verified.id,
     ipAddress: opts?.ipAddress ?? null,
     userAgent: opts?.userAgent ?? null,
   });

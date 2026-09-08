@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect, useCallback, useRef, type ReactNode } from "react";
-import { setAuthTokenGetter } from "@workspace/api-client-react";
+import { setAuthTokenGetter, setUnauthorizedHandler } from "@workspace/api-client-react";
 import {
   getStoredToken,
   getStoredRefreshToken,
@@ -7,6 +7,7 @@ import {
   onTokenChange,
   refreshAccessToken,
   msUntilTokenExpiry,
+  recoverFromUnauthorized,
   rememberLoginEmail,
   apiJson,
   ApiError,
@@ -59,7 +60,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
       return getStoredToken() ?? tokenRef.current;
     });
-    return () => setAuthTokenGetter(null);
+    // …and give it the same 401 recovery the hand-written helper has, so a
+    // generated-client save on a dead session refreshes and replays instead of
+    // failing with a bare "HTTP 401" toast over a half-filled form.
+    setUnauthorizedHandler(() => recoverFromUnauthorized());
+    return () => {
+      setAuthTokenGetter(null);
+      setUnauthorizedHandler(null);
+    };
   }, []);
 
   // A refresh can be triggered from anywhere (a stray API call retrying a 401).
