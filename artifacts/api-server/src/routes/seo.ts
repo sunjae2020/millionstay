@@ -395,7 +395,7 @@ publicRouter.get("/sitemap.xml", async (req, res): Promise<void> => {
   }
 
   const entries: SitemapEntry[] = pages.map((page) => ({
-    path: page.slug && page.slug !== "home" ? `/${page.slug}` : "/",
+    path: publicPathForPage(site.siteKey, page.slug),
     updatedAt: page.updated_at,
     locales: localesByPage.get(page.id) ?? [],
   }));
