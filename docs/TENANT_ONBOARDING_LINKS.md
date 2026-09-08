@@ -1,7 +1,7 @@
 ---
 status: live
 domain: 계약
-last_verified: 2026-09-05
+last_verified: 2026-09-08
 ---
 
 # 세입자 온보딩 링크 (무로그인 토큰)
@@ -34,6 +34,42 @@ last_verified: 2026-09-05
 | 작업지시 확인 | `/work-order/:token` | `POST /v1/work-orders/:id/sign-link` | `contract_signing_requests` |
 | 퇴거 세대점검 | `/inspection/:token` | `POST /v1/inspections/:id/sign-link` | `condition_reports` |
 | 퇴거 정산 확인 | `/sign/:token` | `POST /v1/deposit-settlements/:id/sign-link` | `contract_signing_requests` |
+
+## 안내 문자 — 단계별 문안과 링크
+
+공개 안내 페이지 **[/for-tenant](https://metheim-web.vercel.app/for-tenant)** 가
+세입자에게 약속하는 7단계와 같은 순서다. 세입자 쪽에서는 링크가 예고 없이 도착하는
+셈이라, 문자 본문이 "무엇을 하라는 링크인지"를 먼저 말해야 한다. 아래 문안은
+전부 `document_templates` (`kind='sms'`, `locale='ko'`) 에 있고 관리자
+**설정 → 문서 템플릿 → 문자** 탭에서 고친다. 보낼 때는 **설정 → 문자 발송 →
+직접 발송**에서 문안을 불러와 `{{url}}` 자리에 발급된 링크를 넣는다.
+
+| # | /for-tenant 단계 | 문안 키 | 링크 발급 | 세입자가 여는 주소 |
+|---|---|---|---|---|
+| ① | 임차 신청 | `sms.application_link` | `POST /v1/leads/:id/apply-link` | `/apply/:token` |
+| ② | 공실 확인 · 방문 | `sms.viewing_confirmed` → 전일 `sms.appointment_reminder` | 없음(업무 캘린더의 Viewing) | — |
+| ③ | 서류 제출 | `sms.document_request` | `POST /v1/contracts/:id/document-request` | `/documents/:token` |
+| ④ | 계약서 | `sms.signature_request` | `POST /v1/contracts/:id/issue-signing` | `/sign/:token` |
+| ⑤ | 계약금 · 보증금 납부 | `sms.payment_request` | `POST /v1/invoices/:id/pay-link` | `/pay/:token` |
+| ⑥ | 입주 | `sms.intake_request` → 점검 `sms.signature_request` | `POST /v1/contracts/:id/intake-request` · `POST /v1/inspections/:id/sign-link` | `/intake/:token` · `/inspection/:token` |
+| ⑦ | 퇴거 | 점검 `sms.inspection_notice` → 정산 `sms.moveout_settlement` | `POST /v1/inspections/:id/sign-link` · `POST /v1/deposit-settlements/:id/sign-link` | `/inspection/:token` · `/sign/:token` |
+
+거주 중에 나가는 정기 문자는 이 순서 밖이다 — 월세 기한 `sms.rent_due`,
+연체 `sms.rent_overdue`, 수납 확인 `sms.payment_received`, 단수·정전
+`sms.maintenance_notice`, 하자 접수 `sms.defect_registered`. 서류 자체를 보낼 때는
+문서 미리보기의 **문자 보내기**(`sms.document_link`)를 쓴다.
+
+⚠️ **`{{url}}` 에는 반드시 발급 엔드포인트가 돌려준 토큰 링크를 넣는다.** 공개
+주소(`/apply`)를 그대로 보내면 누가 낸 신청서인지 문의(lead)에 이어지지 않아
+담당자가 손으로 맞춰야 한다. 발급 엔드포인트는 같은 대상에 대해 **살아 있는 링크를
+하나만** 유지하므로(재발급 시 이전 링크 취소), 늘 마지막에 보낸 것이 유효하다.
+
+⚠️ **링크 문자는 대부분 LMS 로 나간다(요금 약 3배).** 토큰이 `randomBytes(32)` 의
+64자 16진수라 주소가 100자 안팎이 되고, 그것만으로 SMS 한도(90바이트)를 넘긴다.
+문안 자체는 전부 SMS 등급으로 다듬어 두었으므로(66~85바이트), 요금을 낮추려면
+문안이 아니라 **주소를 줄여야 한다** — 짧은 도메인을 `SIGNING_BASE_URL` 에 걸거나,
+문서 링크(`/d/<12자>`)처럼 단축 토큰 경로를 두는 방법이 있다. 현재 Metheim 은
+`https://metheim-web.vercel.app` 을 쓴다.
 
 ## 두 원장을 나눈 이유
 
