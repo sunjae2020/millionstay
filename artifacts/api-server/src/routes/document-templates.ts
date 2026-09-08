@@ -2,6 +2,7 @@
 // Studio. Single-tenant (no auto-fork): edits update the row in place.
 // Mounted behind requireAuth by routes/index.ts.
 import { Router, type IRouter } from "express";
+import { buildVariableCatalog } from "../lib/documents/variableCatalog";
 import { and, asc, eq } from "drizzle-orm";
 import { db, documentTemplatesTable, documentTemplateTranslationsTable } from "@workspace/db";
 import { resolveTemplate, renderString, sampleVarsFromSchema } from "../lib/documents/templateEngine.js";
@@ -41,6 +42,25 @@ router.get("/v1/document-templates", async (req, res): Promise<void> => {
     console.error("[document-templates] list failed:", err);
     res.status(500).json({ error: "Failed to list templates" });
   }
+});
+
+/**
+ * GET /v1/document-templates/:id/variable-catalog
+ *
+ * 편집 화면의 변수 목록. 이 문안이 선언한 변수(declared)·서버가 채우는 변수(auto)·
+ * 같은 종류의 다른 문안이 쓰는 변수(related)를 갈라서 준다. related 를 문안에 넣으면
+ * 발송 코드도 함께 고쳐야 한다 — 안 그러면 빈칸으로 나간다(renderString 규칙).
+ */
+router.get("/v1/document-templates/:id/variable-catalog", async (req, res): Promise<void> => {
+  const id = Number(req.params.id);
+  if (!Number.isFinite(id)) { res.status(400).json({ error: "Invalid id" }); return; }
+  const [tpl] = await db.select().from(documentTemplatesTable).where(eq(documentTemplatesTable.id, id)).limit(1);
+  if (!tpl) { res.status(404).json({ error: "Not found" }); return; }
+  const siblings = await db
+    .select({ key: documentTemplatesTable.key, kind: documentTemplatesTable.kind, variables_schema: documentTemplatesTable.variables_schema })
+    .from(documentTemplatesTable)
+    .where(eq(documentTemplatesTable.kind, tpl.kind));
+  res.json({ data: buildVariableCatalog({ key: tpl.key, kind: tpl.kind, variables_schema: tpl.variables_schema }, siblings) });
 });
 
 // GET /v1/document-templates/:id — template + all translations.

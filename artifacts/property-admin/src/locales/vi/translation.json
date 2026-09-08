@@ -6406,7 +6406,20 @@
     "no_match": "Không có kết quả.",
     "none": "Mẫu tin này không có biến.",
     "pick_hint": "↑↓ chọn · Enter chèn · Esc đóng",
-    "insert_hint": "Chèn tại vị trí con trỏ. Gõ {{ trong nội dung cũng mở danh sách này."
+    "insert_hint": "Chèn tại vị trí con trỏ. Gõ {{ trong nội dung cũng mở danh sách này.",
+    "sec_declared": "Giá trị mẫu tin này nhận",
+    "sec_auto": "Tự động điền",
+    "sec_related": "Giá trị mẫu tin khác dùng",
+    "related_note": "Không được truyền cho mẫu tin này — nếu mã gửi không cung cấp, nội dung sẽ trống.",
+    "sidebar_more": "Còn {{n}} biến được các mẫu tin khác sử dụng. Mở nút Biến để xem theo nhóm.",
+    "group_link": "Liên kết",
+    "group_money": "Số tiền",
+    "group_date": "Ngày giờ",
+    "group_person": "Người",
+    "group_place": "Căn hộ·Địa chỉ",
+    "group_contact": "Liên hệ·Mã",
+    "group_doc": "Tài liệu·Tham chiếu",
+    "group_other": "Khác"
   },
   "entity_docs": {
     "tab_title": "Tài liệu",
