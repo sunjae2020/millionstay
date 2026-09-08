@@ -8100,9 +8100,7 @@
     "source_manual": "Manual",
     "source_scheduled": "Scheduled",
     "gap_title_missing": "No title",
-    "gap_title_length": "Title is outside 30-60 characters",
     "gap_description_missing": "No search result description",
-    "gap_description_length": "Description is outside 120-165 characters",
     "gap_canonical_missing": "No canonical URL",
     "gap_og_title_missing": "No share title",
     "gap_og_description_missing": "No share description",
@@ -8125,7 +8123,12 @@
     "gap_llms_txt_missing": "The llms.txt intro is empty",
     "gap_organization_schema_missing": "No Organization schema",
     "gap_brand_absent_from_title": "Brand name is not in the title",
-    "session_expired": "Your session has expired. Sign in again and retry."
+    "session_expired": "Your session has expired. Sign in again and retry.",
+    "gap_title_too_long": "Title will be cut off in results",
+    "gap_title_too_short": "Title is shorter than the space results give it",
+    "gap_description_too_long": "Description will be cut off in results",
+    "gap_description_too_short": "Description is shorter than the snippet allows",
+    "gap_canonical_generated": "Using the generated canonical URL"
   },
   "seo_defaults": {
     "title": "SEO defaults",
@@ -8156,6 +8159,8 @@
     "canonical_title": "Canonical base",
     "canonical_desc": "The address used in the sitemap and in canonical links. Empty falls back to the site's registered address.",
     "robots_title": "Extra robots.txt rules",
-    "robots_desc": "Appended verbatim to the generated robots.txt. Use it only when a path should stay out of the index."
+    "robots_desc": "Appended verbatim to the generated robots.txt. Use it only when a path should stay out of the index.",
+    "brand_aliases": "Brand aliases",
+    "brand_aliases_hint": "Other spellings accepted when checking whether a title carries the brand. One per line."
   }
 }

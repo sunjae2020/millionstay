@@ -8100,9 +8100,7 @@
     "source_manual": "수동",
     "source_scheduled": "자동",
     "gap_title_missing": "제목이 없습니다",
-    "gap_title_length": "제목이 30~60자 범위를 벗어납니다",
     "gap_description_missing": "검색 결과에 보일 설명이 없습니다",
-    "gap_description_length": "설명이 120~165자 범위를 벗어납니다",
     "gap_canonical_missing": "대표 주소(canonical)가 없습니다",
     "gap_og_title_missing": "공유용 제목이 없습니다",
     "gap_og_description_missing": "공유용 설명이 없습니다",
@@ -8125,7 +8123,12 @@
     "gap_llms_txt_missing": "llms.txt 안내문이 비어 있습니다",
     "gap_organization_schema_missing": "회사 스키마가 없습니다",
     "gap_brand_absent_from_title": "제목에 브랜드명이 없습니다",
-    "session_expired": "로그인이 만료되었습니다. 다시 로그인한 뒤 시도해 주세요."
+    "session_expired": "로그인이 만료되었습니다. 다시 로그인한 뒤 시도해 주세요.",
+    "gap_title_too_long": "제목이 검색 결과에서 잘립니다",
+    "gap_title_too_short": "제목이 검색 결과가 주는 자리보다 짧습니다",
+    "gap_description_too_long": "설명이 검색 결과에서 잘립니다",
+    "gap_description_too_short": "설명이 검색 결과가 주는 자리보다 짧습니다",
+    "gap_canonical_generated": "자동 생성된 대표 주소를 쓰고 있습니다"
   },
   "seo_defaults": {
     "title": "SEO 기본값",
@@ -8156,6 +8159,8 @@
     "canonical_title": "대표 주소",
     "canonical_desc": "사이트맵과 대표 주소(canonical)에 쓰이는 주소입니다. 비우면 사이트에 등록된 주소를 씁니다.",
     "robots_title": "robots.txt 추가 규칙",
-    "robots_desc": "자동 생성되는 robots.txt 뒤에 그대로 붙습니다. 색인에서 빼고 싶은 경로가 있을 때만 쓰세요."
+    "robots_desc": "자동 생성되는 robots.txt 뒤에 그대로 붙습니다. 색인에서 빼고 싶은 경로가 있을 때만 쓰세요.",
+    "brand_aliases": "브랜드 별칭",
+    "brand_aliases_hint": "제목에 브랜드가 들어갔는지 판단할 때 함께 인정할 표기입니다. 한 줄에 하나씩. 예: 메트하임"
   }
 }

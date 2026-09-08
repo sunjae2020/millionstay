@@ -8055,9 +8055,7 @@
     "source_manual": "手動",
     "source_scheduled": "自動",
     "gap_title_missing": "タイトルがありません",
-    "gap_title_length": "タイトルが30〜60文字の範囲外です",
     "gap_description_missing": "検索結果に出す説明文がありません",
-    "gap_description_length": "説明文が120〜165文字の範囲外です",
     "gap_canonical_missing": "正規URL（canonical）がありません",
     "gap_og_title_missing": "共有用タイトルがありません",
     "gap_og_description_missing": "共有用の説明文がありません",
@@ -8080,7 +8078,12 @@
     "gap_llms_txt_missing": "llms.txt の紹介文が空です",
     "gap_organization_schema_missing": "会社スキーマがありません",
     "gap_brand_absent_from_title": "タイトルにブランド名がありません",
-    "session_expired": "ログインの有効期限が切れました。再度ログインしてお試しください。"
+    "session_expired": "ログインの有効期限が切れました。再度ログインしてお試しください。",
+    "gap_title_too_long": "タイトルが検索結果で切れます",
+    "gap_title_too_short": "タイトルが検索結果の表示幅より短いです",
+    "gap_description_too_long": "説明文が検索結果で切れます",
+    "gap_description_too_short": "説明文が検索結果の表示幅より短いです",
+    "gap_canonical_generated": "自動生成された正規URLを使っています"
   },
   "seo_defaults": {
     "title": "SEO 既定値",
@@ -8111,6 +8114,8 @@
     "canonical_title": "正規URL",
     "canonical_desc": "サイトマップと正規URL（canonical）に使うアドレスです。空欄ならサイトに登録された住所を使います。",
     "robots_title": "robots.txt 追加ルール",
-    "robots_desc": "自動生成された robots.txt の後ろにそのまま付きます。インデックスから外したいパスがある時だけ使ってください。"
+    "robots_desc": "自動生成された robots.txt の後ろにそのまま付きます。インデックスから外したいパスがある時だけ使ってください。",
+    "brand_aliases": "ブランド表記ゆれ",
+    "brand_aliases_hint": "タイトルにブランドが入っているかを判定する際に併せて認める表記です。1行に1つ。"
   }
 }

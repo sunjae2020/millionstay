@@ -12,6 +12,7 @@ import {
   auditSeoGeo,
   computeDrift,
   countWords,
+  displayWidth,
   extractBodySignals,
   type SeoSiteContext,
   type SeoSubject,
@@ -60,6 +61,8 @@ const BARE_SITE: SeoSiteContext = {
   hasOrganizationSchema: false,
   robotsHasAiRules: false,
   servesLlmsTxt: false,
+  canBuildCanonical: false,
+  brandAliases: [],
 };
 
 const FULL_SITE: SeoSiteContext = {
@@ -67,14 +70,16 @@ const FULL_SITE: SeoSiteContext = {
   hasOrganizationSchema: true,
   robotsHasAiRules: true,
   servesLlmsTxt: true,
+  canBuildCanonical: true,
+  brandAliases: ["메트하임"],
 };
 
 // ── Scoring ────────────────────────────────────────────────────────────────
 
 test("an empty draft on a bare site scores almost nothing", () => {
   const result = auditSeoGeo(emptySubject(), BARE_SITE, NOW);
-  // Only the two things that are true by default: the baseline schema node the
-  // renderer always emits, and the absence of a noindex directive.
+  // Only the two things true by default on a site with nothing configured: the
+  // baseline schema node the renderer always emits, and no noindex directive.
   assert.equal(result.scoreTotal, 9);
   assert.ok(result.gaps.length >= 12);
   assert.equal(result.gaps[0]?.severity, "high");
@@ -84,8 +89,9 @@ test("a fully filled page on a fully configured site scores 100", () => {
   const summary = Array.from({ length: 80 }, (_, i) => `word${i}`).join(" ");
   const subject = emptySubject({
     title: "Metheim Yeosu",
-    seoTitle: "Metheim Yeosu — 여수 원도심 269세대 도시형 주거 안내입니다",
-    seoDescription: "가".repeat(140),
+    // 26 Korean characters ≈ 52 display columns, the length a title wants.
+    seoTitle: "메트하임 여수 도시형 생활주택 공식 안내 페이지",
+    seoDescription: "가".repeat(70),
     seoImageUrl: "https://example.test/og.jpg",
     ogTitle: "Metheim Yeosu",
     ogDescription: "설명",
@@ -173,13 +179,58 @@ test("scoring is deterministic", () => {
 
 // ── Word counting ──────────────────────────────────────────────────────────
 
-test("word count handles spaced and unspaced scripts", () => {
+test("word count is measured in English-word equivalents", () => {
   assert.equal(countWords("one two three"), 3);
-  assert.equal(countWords("여수 원도심 주거"), 3);
-  // Chinese has no spaces, so its characters are counted and halved: the four
-  // Han characters count as two, plus the one Hangul word.
-  assert.equal(countWords("여수租赁管理"), 1 + 2);
+  // Three Korean 어절 say about as much as four and a half English words.
+  assert.equal(countWords("여수 원도심 주거"), 5);
+  // Han characters are counted per character, not per whitespace token.
+  assert.equal(countWords("여수租赁管理"), Math.round(1.5 + 4 * 0.6));
   assert.equal(countWords(null), 0);
+});
+
+test("display width counts a Korean glyph as two columns", () => {
+  assert.equal(displayWidth("abc"), 3);
+  assert.equal(displayWidth("메트하임"), 8);
+  assert.equal(displayWidth("Metheim 여수"), 7 + 1 + 4);
+  assert.equal(displayWidth(null), 0);
+});
+
+test("a Korean title and description of the right length score full marks", () => {
+  // The real Metheim home page: 26-character title, 66-character description.
+  // Judged as characters both looked far too short; judged as width they are
+  // the length a search result wants.
+  const subject = emptySubject({
+    seoTitle: "메트하임 여수 | 여수 원도심 풀옵션 소형 주거",
+    seoDescription:
+      "여수 연등동 도보권 269세대 도시형 생활주택. 분양·임대·위탁관리를 한 곳에서 상담하고, 짐만 들고 바로 입주하세요.",
+  });
+  const result = auditSeoGeo(subject, BARE_SITE, NOW);
+  assert.ok(!result.gaps.some((gap) => gap.code === "title_too_short"), "title flagged");
+  assert.ok(!result.gaps.some((gap) => gap.code === "title_too_long"), "title flagged");
+});
+
+test("a title that overflows is a heavier gap than one that is short", () => {
+  const long = auditSeoGeo(emptySubject({ seoTitle: "가".repeat(40) }), BARE_SITE, NOW);
+  const short = auditSeoGeo(emptySubject({ seoTitle: "짧은 제목" }), BARE_SITE, NOW);
+  assert.equal(long.gaps.find((gap) => gap.code === "title_too_long")?.severity, "medium");
+  assert.equal(short.gaps.find((gap) => gap.code === "title_too_short")?.severity, "low");
+});
+
+test("a generated canonical costs one point, not two", () => {
+  const withSite = auditSeoGeo(emptySubject(), { ...BARE_SITE, canBuildCanonical: true }, NOW);
+  const withoutSite = auditSeoGeo(emptySubject(), BARE_SITE, NOW);
+  assert.equal(withSite.scoreTotal - withoutSite.scoreTotal, 1);
+  assert.ok(withSite.gaps.some((gap) => gap.code === "canonical_generated"));
+  assert.ok(withoutSite.gaps.some((gap) => gap.code === "canonical_missing"));
+});
+
+test("the brand counts when the title uses its Korean spelling", () => {
+  const subject = emptySubject({ seoTitle: "메트하임 여수 안내" });
+  const latinOnly = auditSeoGeo(subject, { ...BARE_SITE, brandAliases: [] }, NOW);
+  const withAlias = auditSeoGeo(subject, { ...BARE_SITE, brandAliases: ["메트하임"] }, NOW);
+  assert.ok(latinOnly.gaps.some((gap) => gap.code === "brand_absent_from_title"));
+  assert.ok(!withAlias.gaps.some((gap) => gap.code === "brand_absent_from_title"));
+  assert.equal(withAlias.scoreTotal - latinOnly.scoreTotal, 3);
 });
 
 // ── Body signals ───────────────────────────────────────────────────────────
@@ -224,6 +275,7 @@ test("URLs, links and colours are not counted as prose", () => {
   });
   assert.ok(signals.text.includes("실제 문장 하나"));
   assert.ok(!signals.text.includes("cdn.example.test"));
+  assert.deepEqual(signals.images, ["https://cdn.example.test/a-very-long-image-name.jpg"]);
   assert.ok(!signals.text.includes("/buy"));
   assert.ok(!signals.text.includes("#ff8800"));
 });

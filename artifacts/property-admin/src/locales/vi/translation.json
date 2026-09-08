@@ -8000,9 +8000,7 @@
     "source_manual": "Thủ công",
     "source_scheduled": "Theo lịch",
     "gap_title_missing": "Không có tiêu đề",
-    "gap_title_length": "Tiêu đề ngoài khoảng 30-60 ký tự",
     "gap_description_missing": "Không có mô tả cho kết quả tìm kiếm",
-    "gap_description_length": "Mô tả ngoài khoảng 120-165 ký tự",
     "gap_canonical_missing": "Không có URL chuẩn (canonical)",
     "gap_og_title_missing": "Không có tiêu đề chia sẻ",
     "gap_og_description_missing": "Không có mô tả chia sẻ",
@@ -8025,7 +8023,12 @@
     "gap_llms_txt_missing": "Lời giới thiệu llms.txt đang trống",
     "gap_organization_schema_missing": "Không có schema công ty",
     "gap_brand_absent_from_title": "Tiêu đề không chứa tên thương hiệu",
-    "session_expired": "Phiên đăng nhập đã hết hạn. Hãy đăng nhập lại và thử lại."
+    "session_expired": "Phiên đăng nhập đã hết hạn. Hãy đăng nhập lại và thử lại.",
+    "gap_title_too_long": "Tiêu đề sẽ bị cắt trong kết quả tìm kiếm",
+    "gap_title_too_short": "Tiêu đề ngắn hơn khoảng trống kết quả dành cho nó",
+    "gap_description_too_long": "Mô tả sẽ bị cắt trong kết quả tìm kiếm",
+    "gap_description_too_short": "Mô tả ngắn hơn khoảng trống đoạn trích cho phép",
+    "gap_canonical_generated": "Đang dùng URL chuẩn tự sinh"
   },
   "seo_defaults": {
     "title": "Mặc định SEO",
@@ -8056,6 +8059,8 @@
     "canonical_title": "URL chuẩn",
     "canonical_desc": "Địa chỉ dùng trong sitemap và liên kết canonical. Bỏ trống sẽ dùng địa chỉ đã đăng ký của site.",
     "robots_title": "Quy tắc robots.txt bổ sung",
-    "robots_desc": "Được nối nguyên văn vào cuối robots.txt tự sinh. Chỉ dùng khi có đường dẫn cần loại khỏi chỉ mục."
+    "robots_desc": "Được nối nguyên văn vào cuối robots.txt tự sinh. Chỉ dùng khi có đường dẫn cần loại khỏi chỉ mục.",
+    "brand_aliases": "Tên gọi khác của thương hiệu",
+    "brand_aliases_hint": "Các cách viết khác được chấp nhận khi kiểm tra tiêu đề có tên thương hiệu. Mỗi dòng một mục."
   }
 }

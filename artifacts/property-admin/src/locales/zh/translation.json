@@ -8059,9 +8059,7 @@
     "source_manual": "手动",
     "source_scheduled": "定时",
     "gap_title_missing": "没有标题",
-    "gap_title_length": "标题不在 30-60 字范围内",
     "gap_description_missing": "没有搜索结果描述",
-    "gap_description_length": "描述不在 120-165 字范围内",
     "gap_canonical_missing": "没有规范网址（canonical）",
     "gap_og_title_missing": "没有分享标题",
     "gap_og_description_missing": "没有分享描述",
@@ -8084,7 +8082,12 @@
     "gap_llms_txt_missing": "llms.txt 简介为空",
     "gap_organization_schema_missing": "没有公司结构化数据",
     "gap_brand_absent_from_title": "标题中没有品牌名",
-    "session_expired": "登录已过期，请重新登录后再试。"
+    "session_expired": "登录已过期，请重新登录后再试。",
+    "gap_title_too_long": "标题在搜索结果中会被截断",
+    "gap_title_too_short": "标题短于搜索结果给出的空间",
+    "gap_description_too_long": "描述在搜索结果中会被截断",
+    "gap_description_too_short": "描述短于摘要可用的空间",
+    "gap_canonical_generated": "正在使用自动生成的规范网址"
   },
   "seo_defaults": {
     "title": "SEO 默认值",
@@ -8115,6 +8118,8 @@
     "canonical_title": "规范网址",
     "canonical_desc": "用于站点地图和规范网址（canonical）的地址。留空则使用站点已登记的地址。",
     "robots_title": "robots.txt 附加规则",
-    "robots_desc": "原样追加到自动生成的 robots.txt 之后。仅在需要将某些路径排除出索引时使用。"
+    "robots_desc": "原样追加到自动生成的 robots.txt 之后。仅在需要将某些路径排除出索引时使用。",
+    "brand_aliases": "品牌别名",
+    "brand_aliases_hint": "判断标题是否包含品牌时一并认可的写法。每行一个。"
   }
 }

@@ -27,6 +27,7 @@ import { SiteSwitcher } from "@/pages/cms/CmsPagesList";
 
 interface SeoDefaults {
   organizationSchema?: Record<string, unknown>;
+  brandAliases?: string[];
   robotsExtra?: string;
   llmsTxtIntro?: string;
   defaultCanonicalBase?: string;
@@ -136,6 +137,7 @@ export default function SeoDefaultsSettings() {
   const { sites, siteKey, setSiteKey, activeSite } = useCmsSites();
 
   const [org, setOrg] = useState<OrgForm>({ ...EMPTY_ORG });
+  const [brandAliases, setBrandAliases] = useState("");
   const [llmsTxtIntro, setLlmsTxtIntro] = useState("");
   const [robotsExtra, setRobotsExtra] = useState("");
   const [canonicalBase, setCanonicalBase] = useState("");
@@ -153,6 +155,7 @@ export default function SeoDefaultsSettings() {
   useEffect(() => {
     const defaults = settings?.seo_defaults ?? {};
     setOrg(orgToForm(defaults.organizationSchema));
+    setBrandAliases((defaults.brandAliases ?? []).join("\n"));
     setLlmsTxtIntro(defaults.llmsTxtIntro ?? "");
     setRobotsExtra(defaults.robotsExtra ?? "");
     setCanonicalBase(defaults.defaultCanonicalBase ?? "");
@@ -163,6 +166,10 @@ export default function SeoDefaultsSettings() {
       const previous = settings?.seo_defaults ?? {};
       const next: SeoDefaults = {
         ...previous,
+        brandAliases: brandAliases
+          .split("\n")
+          .map((line) => line.trim())
+          .filter(Boolean),
         llmsTxtIntro: llmsTxtIntro.trim(),
         robotsExtra: robotsExtra.trim(),
         defaultCanonicalBase: canonicalBase.trim(),
@@ -289,6 +296,18 @@ export default function SeoDefaultsSettings() {
                 {field("addressRegion", t("seo_defaults.org_region"))}
                 {field("postalCode", t("seo_defaults.org_postcode"))}
                 {field("addressCountry", t("seo_defaults.org_country"), "KR")}
+                <div className="space-y-1 sm:col-span-2">
+                  <Label className="text-xs">{t("seo_defaults.brand_aliases")}</Label>
+                  <Textarea
+                    rows={2}
+                    value={brandAliases}
+                    placeholder={"메트하임"}
+                    onChange={(event) => setBrandAliases(event.target.value)}
+                  />
+                  <p className="text-[11px] text-muted-foreground">
+                    {t("seo_defaults.brand_aliases_hint")}
+                  </p>
+                </div>
                 <div className="space-y-1 sm:col-span-2">
                   <Label className="text-xs">{t("seo_defaults.org_same_as")}</Label>
                   <Textarea

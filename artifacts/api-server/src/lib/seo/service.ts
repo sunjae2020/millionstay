@@ -16,12 +16,15 @@ import {
   cmsPageTranslationsTable,
   cmsPostTranslationsTable,
   blogPostsTable,
+  pageContentsTable,
   saleListingsTable,
   seoAuditsTable,
 } from "@workspace/db";
 import {
   auditSeoGeo,
   computeDrift,
+  extractBodySignals,
+  firstImageUrl,
   type SeoAuditResult,
   type SeoDrift,
   type SeoEntityType,
@@ -63,6 +66,8 @@ interface SeoDefaults {
   defaultCanonicalBase?: string;
   /** Escape hatch: stop advertising the AI crawlers for this site. */
   crawlerFilesDisabled?: boolean;
+  /** Other spellings of the brand, e.g. the Korean name. */
+  brandAliases?: string[];
 }
 
 function readDefaults(value: unknown): SeoDefaults {
@@ -109,6 +114,16 @@ export async function loadSiteMeta(siteKey: string): Promise<SeoSiteMeta | null>
   const llmsTxtIntro = (defaults.llmsTxtIntro ?? "").trim() || null;
   const locales = Array.isArray(site.locales) ? (site.locales as string[]) : [site.default_locale];
 
+  // Every spelling of the brand a title might legitimately use. Without the
+  // Korean name, a Korean title is scored as if it never mentioned the brand.
+  const brandAliases = [
+    ...(Array.isArray(defaults.brandAliases) ? defaults.brandAliases : []),
+    typeof organizationSchema?.["name"] === "string" ? (organizationSchema["name"] as string) : "",
+    typeof organizationSchema?.["alternateName"] === "string"
+      ? (organizationSchema["alternateName"] as string)
+      : "",
+  ].filter((alias) => alias.trim().length > 0);
+
   return {
     siteKey,
     label: site.label,
@@ -128,6 +143,8 @@ export async function loadSiteMeta(siteKey: string): Promise<SeoSiteMeta | null>
       // llms.txt is only worth a score when someone curated the intro; an
       // auto-listing of every page is what sitemap.xml is already for.
       servesLlmsTxt: defaults.crawlerFilesDisabled !== true && Boolean(llmsTxtIntro),
+      canBuildCanonical: Boolean(origin),
+      brandAliases,
     },
   };
 }
@@ -147,6 +164,18 @@ export interface ResolvedEntity {
     /** Admin address for the row's edit screen. */
     editHref: string;
   };
+}
+
+/**
+ * The share image a crawler will actually get: the one someone set, else the
+ * first picture in the body. The guest site already falls back this way when it
+ * builds its share card, so scoring only the stored column reported a missing
+ * image for pages that visibly have one.
+ */
+function effectiveImage(stored: string | null, bodyJson: unknown, legacyHtml: string | null): string | null {
+  if (stored && stored.trim()) return stored;
+  const first = extractBodySignals(bodyJson, legacyHtml).images[0];
+  return first ?? null;
 }
 
 function faqOf(value: unknown): SeoFaqPair[] {
@@ -172,6 +201,29 @@ export async function resolveAllEntities(site: SeoSiteMeta): Promise<ResolvedEnt
     .orderBy(asc(cmsPagesTable.sort_order), asc(cmsPagesTable.id));
 
   if (pages.length > 0) {
+    // A page still rendered from the legacy copy keeps its hero picture there.
+    // Without this the audit reports "no share image" for a page that visibly
+    // has one, because the block body it checks is only an imported mirror.
+    const legacyKeys = pages
+      .map((page) => page.legacy_page_key)
+      .filter((key): key is string => Boolean(key));
+    const legacyRows =
+      legacyKeys.length > 0
+        ? await db
+            .select({
+              page_key: pageContentsTable.page_key,
+              content: pageContentsTable.content,
+            })
+            .from(pageContentsTable)
+            .where(
+              and(
+                inArray(pageContentsTable.page_key, legacyKeys),
+                eq(pageContentsTable.language, locale),
+              ),
+            )
+        : [];
+    const legacyByKey = new Map(legacyRows.map((row) => [row.page_key, row.content]));
+
     const translations = await db
       .select()
       .from(cmsPageTranslationsTable)
@@ -190,6 +242,11 @@ export async function resolveAllEntities(site: SeoSiteMeta): Promise<ResolvedEnt
     for (const page of pages) {
       const rows = byPage.get(page.id) ?? [];
       const tr = rows.find((row) => row.locale === locale) ?? null;
+      // What the public actually serves. A 'blocks' page is only live once its
+      // translation is published; a 'legacy' page is drawn from the legacy copy,
+      // so its translation row's status says nothing about whether it is live.
+      const liveStatus = page.render_mode === "blocks" ? (tr?.status ?? page.status) : page.status;
+      const legacyImage = firstImageUrl(legacyByKey.get(page.legacy_page_key ?? "") ?? null);
       out.push({
         subject: {
           entityType: "page",
@@ -200,7 +257,11 @@ export async function resolveAllEntities(site: SeoSiteMeta): Promise<ResolvedEnt
           seoTitle: tr?.seo_title ?? page.seo_title,
           seoDescription: tr?.seo_description ?? page.seo_description,
           seoKeywords: tr?.seo_keywords ?? page.seo_keywords,
-          seoImageUrl: tr?.seo_image_url ?? page.seo_image_url,
+          seoImageUrl: effectiveImage(
+            tr?.seo_image_url ?? page.seo_image_url ?? legacyImage ?? null,
+            tr?.body_json ?? null,
+            null,
+          ),
           ogTitle: tr?.og_title ?? null,
           ogDescription: tr?.og_description ?? null,
           canonicalUrl: page.canonical_url,
@@ -208,7 +269,7 @@ export async function resolveAllEntities(site: SeoSiteMeta): Promise<ResolvedEnt
           jsonLd: tr?.json_ld ?? page.json_ld,
           geoAnswerSummary: tr?.geo_answer_summary ?? page.geo_answer_summary,
           geoFaq: faqOf(page.geo_faq),
-          status: tr?.status ?? page.status,
+          status: liveStatus,
           updatedAt: tr?.updated_at ?? page.updated_at,
           localeCount: rows.length,
           bodyJson: tr?.body_json ?? null,
@@ -220,7 +281,7 @@ export async function resolveAllEntities(site: SeoSiteMeta): Promise<ResolvedEnt
           title: tr?.title ?? page.title ?? page.slug ?? "",
           slug: page.slug,
           path: publicPathForPage(site.siteKey, page.slug),
-          status: page.status,
+          status: liveStatus,
           localeCount: rows.length,
           editHref: `/cms/pages/${page.id}`,
         },
@@ -261,6 +322,7 @@ export async function resolveAllEntities(site: SeoSiteMeta): Promise<ResolvedEnt
           ? Object.keys(post.translations as object).length
           : 0;
       const localeCount = Math.max(rows.length, legacyLocales);
+      const liveStatus = post.render_mode === "blocks" ? (tr?.status ?? post.status) : post.status;
       out.push({
         subject: {
           entityType: "blog",
@@ -271,7 +333,11 @@ export async function resolveAllEntities(site: SeoSiteMeta): Promise<ResolvedEnt
           seoTitle: tr?.seo_title ?? post.seo_title,
           seoDescription: tr?.seo_description ?? post.seo_description ?? post.excerpt,
           seoKeywords: tr?.seo_keywords ?? post.seo_keywords,
-          seoImageUrl: tr?.seo_image_url ?? post.cover_image_url,
+          seoImageUrl: effectiveImage(
+            tr?.seo_image_url ?? post.cover_image_url,
+            tr?.body_json ?? post.body_json,
+            post.content,
+          ),
           ogTitle: tr?.og_title ?? null,
           ogDescription: tr?.og_description ?? null,
           canonicalUrl: post.canonical_url,
@@ -279,7 +345,7 @@ export async function resolveAllEntities(site: SeoSiteMeta): Promise<ResolvedEnt
           jsonLd: tr?.json_ld ?? post.json_ld,
           geoAnswerSummary: tr?.geo_answer_summary ?? post.geo_answer_summary,
           geoFaq: faqOf(post.geo_faq),
-          status: tr?.status ?? post.status,
+          status: liveStatus,
           updatedAt: tr?.updated_at ?? post.updated_at,
           localeCount,
           bodyJson: tr?.body_json ?? post.body_json,
@@ -291,7 +357,7 @@ export async function resolveAllEntities(site: SeoSiteMeta): Promise<ResolvedEnt
           title: tr?.title ?? post.title,
           slug: post.slug,
           path: `/blog/${post.slug}`,
-          status: post.status,
+          status: liveStatus,
           localeCount,
           editHref: `/cms/blog/${post.id}`,
         },
@@ -326,7 +392,7 @@ export async function resolveAllEntities(site: SeoSiteMeta): Promise<ResolvedEnt
           seoTitle: null,
           seoDescription: description,
           seoKeywords: null,
-          seoImageUrl: listing.cover_image,
+          seoImageUrl: effectiveImage(listing.cover_image, null, description),
           ogTitle: null,
           ogDescription: null,
           canonicalUrl: listing.canonical_url,

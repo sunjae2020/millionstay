@@ -66,6 +66,10 @@ export interface SeoSiteContext {
   robotsHasAiRules: boolean;
   /** The instance serves a curated llms.txt. */
   servesLlmsTxt: boolean;
+  /** The site has an address, so a canonical link can always be built. */
+  canBuildCanonical: boolean;
+  /** Other spellings of the brand: the Korean name, a trading name. */
+  brandAliases: string[];
 }
 
 export interface SeoGap {
@@ -92,6 +96,8 @@ export interface BodySignals {
   words: number;
   headings: number;
   lists: number;
+  /** Image URLs found in the body, in document order. */
+  images: string[];
 }
 
 const CATEGORY_MAX: Record<SeoCategory, number> = {
@@ -110,23 +116,64 @@ const SEVERITY_ORDER: Record<GapSeverity, number> = { high: 0, medium: 1, low: 2
 // ── Text helpers ───────────────────────────────────────────────────────────
 
 // Chinese and Japanese write without spaces, so splitting on whitespace would
-// score a full CJK paragraph as one word. Count those scripts by character and
-// halve it — roughly a word. Korean is written with spaces and needs no such
-// treatment, so Hangul is deliberately absent from this range.
+// score a whole CJK paragraph as one word; those scripts are counted by
+// character instead. Korean does use spaces and is handled separately below.
 const CJK = /[぀-ヿ㐀-䶿一-鿿豈-﫿]/g;
 
+const HANGUL = /[가-힣ᄀ-ᇿ]/;
+
+/** One CJK character, in English-word equivalents. */
+const CJK_CHAR_WORDS = 0.6;
+/** One Korean 어절, in English-word equivalents. */
+const HANGUL_WORD_WORDS = 1.5;
+
+/**
+ * Length in ENGLISH-WORD EQUIVALENTS, not raw tokens.
+ *
+ * The thresholds this feeds — a 600-word body, a 40 to 200 word summary — come
+ * from English writing advice. Applied to raw token counts they mark every
+ * Korean page as thin when it says exactly as much, because a Korean 어절
+ * carries a noun plus its particles. So each script is converted to the number
+ * of English words it would take to say the same thing.
+ */
 export function countWords(text: string | null | undefined): number {
   if (!text) return 0;
   const cjkChars = text.match(CJK)?.length ?? 0;
   const rest = text.replace(CJK, " ");
-  const words = rest.split(/\s+/).filter(Boolean).length;
-  return words + Math.ceil(cjkChars / 2);
+  let words = 0;
+  for (const token of rest.split(/\s+/)) {
+    if (!token) continue;
+    words += HANGUL.test(token) ? HANGUL_WORD_WORDS : 1;
+  }
+  return Math.round(words + cjkChars * CJK_CHAR_WORDS);
 }
 
-/** Characters, counted by code point so emoji and CJK count as one each. */
-export function countChars(text: string | null | undefined): number {
+/**
+ * Length as a search engine sees it: display width, where a CJK or Hangul glyph
+ * occupies the room of two Latin ones.
+ *
+ * Result snippets are cut by pixel width, not by character count. Judging a
+ * Korean title by characters marked every well-written Korean title as too
+ * short — 26 Korean characters take the width of about 52 Latin ones, which is
+ * exactly the length a title wants to be.
+ */
+export function displayWidth(text: string | null | undefined): number {
   if (!text) return 0;
-  return [...text.trim()].length;
+  let width = 0;
+  for (const ch of text.trim()) {
+    const code = ch.codePointAt(0) ?? 0;
+    const wide =
+      (code >= 0x1100 && code <= 0x115f) ||
+      (code >= 0x2e80 && code <= 0xa4cf) ||
+      (code >= 0xac00 && code <= 0xd7a3) ||
+      (code >= 0xf900 && code <= 0xfaff) ||
+      (code >= 0xfe30 && code <= 0xfe6f) ||
+      (code >= 0xff00 && code <= 0xff60) ||
+      (code >= 0xffe0 && code <= 0xffe6) ||
+      (code >= 0x20000 && code <= 0x3fffd);
+    width += wide ? 2 : 1;
+  }
+  return width;
 }
 
 function isFilled(value: string | null | undefined): boolean {
@@ -146,6 +193,35 @@ function stripHtml(html: string): string {
 
 // ── Body signals ───────────────────────────────────────────────────────────
 
+const IMAGE_URL = /^https?:\/\/\S+\.(jpe?g|png|webp|avif|gif)(\?|$)/i;
+
+export function looksLikeImageUrl(value: string): boolean {
+  return IMAGE_URL.test(value.trim());
+}
+
+/**
+ * The first picture anywhere in a JSON blob. Legacy page copy stores its images
+ * under whatever key the tenant's template used (`hero_slide_1_image`,
+ * `intro_image`, …), so looking for a fixed key name finds nothing.
+ */
+export function firstImageUrl(value: unknown): string | null {
+  if (typeof value === "string") return looksLikeImageUrl(value) ? value.trim() : null;
+  if (Array.isArray(value)) {
+    for (const entry of value) {
+      const found = firstImageUrl(entry);
+      if (found) return found;
+    }
+    return null;
+  }
+  if (value && typeof value === "object") {
+    for (const inner of Object.values(value as Record<string, unknown>)) {
+      const found = firstImageUrl(inner);
+      if (found) return found;
+    }
+  }
+  return null;
+}
+
 /** A URL, path, colour or bare token — present in props, but not prose. */
 function isNotProse(value: string): boolean {
   const text = value.trim();
@@ -164,6 +240,7 @@ function isNotProse(value: string): boolean {
  */
 export function extractBodySignals(bodyJson: unknown, legacyHtml?: string | null): BodySignals {
   const parts: string[] = [];
+  const images: string[] = [];
   let headings = 0;
   let lists = 0;
 
@@ -189,6 +266,12 @@ export function extractBodySignals(bodyJson: unknown, legacyHtml?: string | null
     if (typeof value === "string") {
       // Image URLs, links and colour tokens are props too, and counting them as
       // prose would inflate the word count of a page that says almost nothing.
+      // The pictures are still worth keeping: a page with a hero image has a
+      // share card even when nobody filled the share-image field.
+      if (looksLikeImageUrl(value)) {
+        images.push(value.trim());
+        return;
+      }
       if (isNotProse(value)) return;
       const text = value.includes("<") ? stripHtml(value) : value;
       if (text.trim()) parts.push(text.trim());
@@ -222,11 +305,14 @@ export function extractBodySignals(bodyJson: unknown, legacyHtml?: string | null
     const html = legacyHtml as string;
     headings += html.match(/<h[1-3][\s>]/gi)?.length ?? 0;
     lists += html.match(/<(ul|ol)[\s>]/gi)?.length ?? 0;
+    for (const match of html.matchAll(/<img[^>]+src="([^"]+)"/gi)) {
+      if (match[1]) images.push(match[1]);
+    }
     parts.push(stripHtml(html));
   }
 
   const text = parts.join(" ").replace(/\s+/g, " ").trim();
-  return { text, words: countWords(text), headings, lists };
+  return { text, words: countWords(text), headings, lists, images };
 }
 
 // ── Scoring ────────────────────────────────────────────────────────────────
@@ -292,24 +378,39 @@ export function auditSeoGeo(
   const effectiveTitle = isFilled(subject.seoTitle) ? subject.seoTitle! : (subject.title ?? "");
   if (isFilled(effectiveTitle)) {
     scores.meta.score += 4;
-    const titleChars = countChars(effectiveTitle);
-    if (titleChars >= 30 && titleChars <= 60) scores.meta.score += 2;
-    else add("title_length", "Title is outside the 30–60 character sweet spot", "low", "meta");
+    // Over-length is a real defect: the result gets cut off. Under-length only
+    // leaves room unused, so it is worth saying but not worth alarming about.
+    const titleWidth = displayWidth(effectiveTitle);
+    if (titleWidth >= 30 && titleWidth <= 60) scores.meta.score += 2;
+    else if (titleWidth > 60) add("title_too_long", "Title will be cut off in results", "medium", "meta");
+    else add("title_too_short", "Title is shorter than the space results give it", "low", "meta");
   } else {
     add("title_missing", "No title", "high", "meta");
   }
 
   if (isFilled(subject.seoDescription)) {
     scores.meta.score += 5;
-    const descChars = countChars(subject.seoDescription);
-    if (descChars >= 120 && descChars <= 165) scores.meta.score += 2;
-    else add("description_length", "Description is outside 120–165 characters", "medium", "meta");
+    const descWidth = displayWidth(subject.seoDescription);
+    if (descWidth >= 120 && descWidth <= 165) scores.meta.score += 2;
+    else if (descWidth > 165)
+      add("description_too_long", "Description will be cut off in results", "medium", "meta");
+    else
+      add("description_too_short", "Description is shorter than the snippet allows", "low", "meta");
   } else {
     add("description_missing", "No meta description", "high", "meta");
   }
 
-  if (isFilled(subject.canonicalUrl)) scores.meta.score += 2;
-  else add("canonical_missing", "No canonical URL", "medium", "meta");
+  // A canonical link is rendered for every page once the site has an address,
+  // so the absence of an EXPLICIT one costs a point rather than failing. It only
+  // truly fails when there is no site address to build one from.
+  if (isFilled(subject.canonicalUrl)) {
+    scores.meta.score += 2;
+  } else if (site.canBuildCanonical) {
+    scores.meta.score += 1;
+    add("canonical_generated", "Using the generated canonical URL", "low", "meta");
+  } else {
+    add("canonical_missing", "No canonical URL and no site address", "medium", "meta");
+  }
 
   if (isFilled(subject.ogTitle) || isFilled(effectiveTitle)) scores.meta.score += 1;
   else add("og_title_missing", "No Open Graph title", "low", "meta");
@@ -392,8 +493,14 @@ export function auditSeoGeo(
   // ── brand (6) ────────────────────────────────────────────────────────────
   if (site.hasOrganizationSchema) scores.brand.score += 3;
   else add("organization_schema_missing", "No Organization schema for the site", "medium", "brand");
-  const brand = site.brandName.trim().toLowerCase();
-  if (brand && effectiveTitle.toLowerCase().includes(brand)) scores.brand.score += 3;
+  // A Korean page writes the brand in Korean while the site record spells it in
+  // Latin, so matching the site label alone marks every localised title as
+  // brandless. The other spellings come from the site's own SEO defaults.
+  const aliases = [site.brandName, ...(site.brandAliases ?? [])]
+    .map((alias) => alias?.trim().toLowerCase())
+    .filter((alias): alias is string => Boolean(alias));
+  const loweredTitle = effectiveTitle.toLowerCase();
+  if (aliases.some((alias) => loweredTitle.includes(alias))) scores.brand.score += 3;
   else add("brand_absent_from_title", "Brand name is not in the title", "low", "brand");
 
   gaps.sort(
