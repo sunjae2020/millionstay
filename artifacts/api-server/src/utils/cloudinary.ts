@@ -43,6 +43,8 @@ export async function uploadToCloudinary(
   version: number;
   width: number;
   height: number;
+  /** Face boxes, only present when the caller passes `faces: true`. */
+  faces: unknown;
 }> {
   const result = await new Promise<{
     secure_url: string;
@@ -52,6 +54,7 @@ export async function uploadToCloudinary(
     version: number;
     width: number;
     height: number;
+    faces?: unknown;
   }>((resolve, reject) => {
     const stream = cloudinary.uploader.upload_stream(
       {
@@ -65,7 +68,7 @@ export async function uploadToCloudinary(
       },
       (error, res) => {
         if (error || !res) reject(error ?? new Error("Cloudinary upload failed"));
-        else resolve(res as { secure_url: string; public_id: string; bytes: number; format: string; version: number; width: number; height: number });
+        else resolve(res as { secure_url: string; public_id: string; bytes: number; format: string; version: number; width: number; height: number; faces?: unknown });
       }
     );
     stream.end(buffer);
@@ -89,6 +92,7 @@ export async function uploadToCloudinary(
     version: result.version,
     width: Number(result.width ?? 0),
     height: Number(result.height ?? 0),
+    faces: result.faces,
   };
 }
 
@@ -297,6 +301,41 @@ export async function deleteFromCloudinary(publicId: string, resourceType = "ima
   } catch (err) {
     console.error("Cloudinary delete error:", err);
   }
+}
+
+/**
+ * Read an asset's dimensions and detected face boxes. Used to re-frame avatars
+ * that were uploaded before face normalisation existed, without re-uploading.
+ */
+export async function getCloudinaryFaces(
+  publicId: string,
+): Promise<{ faces: unknown; width: number; height: number; version: number }> {
+  const info = (await cloudinary.api.resource(publicId, { faces: true })) as {
+    faces?: unknown; width?: number; height?: number; version?: number;
+  };
+  return {
+    faces: info.faces,
+    width: Number(info.width ?? 0),
+    height: Number(info.height ?? 0),
+    version: Number(info.version ?? 0),
+  };
+}
+
+/**
+ * Recover the public_id from a Cloudinary delivery URL, dropping any
+ * transformation and version segments. Returns null for anything that is not a
+ * Cloudinary image URL (an avatar can also be a hand-typed external URL).
+ */
+export function publicIdFromUrl(url: string): string | null {
+  const match = /^https?:\/\/res\.cloudinary\.com\/[^/]+\/image\/upload\/(.+)$/.exec(url.trim());
+  if (!match?.[1]) return null;
+  const segments = match[1].split("/");
+  // Everything up to and including the version segment is delivery metadata.
+  const versionAt = segments.findIndex((seg) => /^v\d+$/.test(seg));
+  const path = versionAt >= 0 ? segments.slice(versionAt + 1) : segments.filter((seg) => !seg.includes(","));
+  if (!path.length) return null;
+  const withoutQuery = path.join("/").split("?")[0] ?? "";
+  return withoutQuery.replace(/\.[a-z0-9]+$/i, "") || null;
 }
 
 export default cloudinary;

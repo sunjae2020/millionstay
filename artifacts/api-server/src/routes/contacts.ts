@@ -11,9 +11,13 @@ import {
   generateSignedUrl,
   deleteFromCloudinary,
   cldFolder,
+  cloudinaryUrl,
+  getCloudinaryFaces,
+  publicIdFromUrl,
 } from "../utils/cloudinary";
 import { calcRetentionDate } from "../lib/retention";
 import { scanBusinessCard, isSupportedCardMime } from "../lib/contacts/businessCardOcr";
+import { buildFaceCrop, parseFaces } from "../lib/contacts/faceCrop";
 import {
   scanIdDocument,
   isSupportedIdMime,
@@ -139,6 +143,12 @@ function filesOf(req: unknown): Record<string, UploadedFile[] | undefined> {
 // POST /v1/contacts/photo (multipart: image) — upload a profile photo and return
 // its URL. Deliberately NOT tied to a contact id so the "new contact" form can
 // upload before the record exists; the URL is persisted by the normal create/update.
+//
+// The photo is face-normalised: Cloudinary detects faces on upload (`faces: true`)
+// and lib/contacts/faceCrop.ts turns the largest one into a square crop that puts
+// the face in the same place, at the same size, on every avatar. The uploaded
+// image is stored untouched — the avatar is a derived URL — so the client can
+// offer the original as an escape hatch when the detection framed it badly.
 router.post("/v1/contacts/photo", upload.single("image"), async (req, res): Promise<void> => {
   const file = (req as unknown as { file?: UploadedFile }).file;
   if (!file) { res.status(400).json({ error: "No file provided" }); return; }
@@ -147,15 +157,55 @@ router.post("/v1/contacts/photo", upload.single("image"), async (req, res): Prom
   try {
     const result = await uploadToCloudinary(file.buffer, {
       folder: cldFolder("avatars"),
+      faces: true,
       transformation: [
         { quality: "auto:good", fetch_format: "auto" },
         { width: 800, height: 800, crop: "limit" },
       ],
     });
-    res.json({ success: true, url: result.secure_url, public_id: result.public_id });
+    const crop = buildFaceCrop(parseFaces(result.faces), result.width, result.height);
+    const url = cloudinaryUrl(result.public_id, {
+      transformation: crop.transformation,
+      version: result.version,
+    });
+    res.json({
+      success: true,
+      url,
+      original_url: result.secure_url,
+      public_id: result.public_id,
+      face_detected: crop.faceDetected,
+      face_count: crop.faceCount,
+    });
   } catch (err) {
     console.error("[contacts] profile photo upload failed:", err instanceof Error ? err.message : err);
     res.status(500).json({ error: "Image upload failed" });
+  }
+});
+
+// POST /v1/contacts/photo/refit { url } — re-frame an avatar that is already in
+// storage (uploaded before face normalisation existed, or hand-picked from the
+// media library) around its detected face. Nothing is re-uploaded: the answer is
+// a derived URL of the same asset, so the caller still has the original.
+router.post("/v1/contacts/photo/refit", async (req, res): Promise<void> => {
+  const url = String((req.body as { url?: string })?.url ?? "");
+  if (!isCloudinaryConfigured()) { res.status(503).json({ error: "Image storage is not configured" }); return; }
+  const publicId = publicIdFromUrl(url);
+  if (!publicId || !publicId.startsWith(`${cldFolder("avatars")}/`)) {
+    res.status(400).json({ error: "Not an avatar asset" });
+    return;
+  }
+  try {
+    const info = await getCloudinaryFaces(publicId);
+    const crop = buildFaceCrop(parseFaces(info.faces), info.width, info.height);
+    res.json({
+      success: true,
+      url: cloudinaryUrl(publicId, { transformation: crop.transformation, version: info.version }),
+      face_detected: crop.faceDetected,
+      face_count: crop.faceCount,
+    });
+  } catch (err) {
+    console.error("[contacts] avatar refit failed:", err instanceof Error ? err.message : err);
+    res.status(502).json({ error: "Face detection failed" });
   }
 });
 

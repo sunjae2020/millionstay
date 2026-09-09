@@ -8,7 +8,7 @@ import {
   Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
 } from "@/components/ui/dialog";
 import { apiFetch } from "@/lib/apiFetch";
-import { Loader2, Sparkles, Trash2, Upload, User, IdCard, ScanLine, ShieldCheck } from "lucide-react";
+import { Loader2, Sparkles, Trash2, Upload, User, IdCard, ScanLine, ScanFace, ShieldCheck } from "lucide-react";
 import { CameraButton } from "@/components/CameraButton";
 import { OCR_MAX_EDGE } from "@/lib/photo";
 
@@ -117,6 +117,11 @@ export function ContactMediaPanel({
 
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [photoError, setPhotoError] = useState<string | null>(null);
+  const [refittingPhoto, setRefittingPhoto] = useState(false);
+  /** Last upload's two framings + whether a face was actually found. */
+  const [photoCrop, setPhotoCrop] = useState<
+    { cropped: string; original: string; faceDetected: boolean } | null
+  >(null);
 
   const [frontFile, setFrontFile] = useState<File | null>(null);
   const [backFile, setBackFile] = useState<File | null>(null);
@@ -176,12 +181,42 @@ export function ContactMediaPanel({
       const res = await apiFetch("/api/v1/contacts/photo", { method: "POST", body: form });
       const data = await res.json();
       if (!res.ok || !data?.url) throw new Error(data?.error ?? t("contact.photo_upload_failed"));
+      // The server returns both framings: the face-normalised crop (used by
+      // default) and the untouched upload, so the admin can fall back when the
+      // detection framed the shot badly.
+      setPhotoCrop({
+        cropped: data.url as string,
+        original: (data.original_url as string) ?? (data.url as string),
+        faceDetected: data.face_detected === true,
+      });
       onPhotoChange(data.url as string);
     } catch (err) {
       setPhotoError(err instanceof Error ? err.message : t("contact.photo_upload_failed"));
     } finally {
       setUploadingPhoto(false);
       if (photoInputRef.current) photoInputRef.current.value = "";
+    }
+  }
+
+  /** Re-frame an avatar that is already stored (uploaded before this existed). */
+  async function handlePhotoRefit() {
+    if (!photoUrl) return;
+    setPhotoError(null);
+    setRefittingPhoto(true);
+    try {
+      const res = await apiFetch("/api/v1/contacts/photo/refit", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url: photoUrl }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data?.url) throw new Error(data?.error ?? t("contact.photo_refit_failed"));
+      setPhotoCrop({ cropped: data.url as string, original: photoUrl, faceDetected: data.face_detected === true });
+      onPhotoChange(data.url as string);
+    } catch (err) {
+      setPhotoError(err instanceof Error ? err.message : t("contact.photo_refit_failed"));
+    } finally {
+      setRefittingPhoto(false);
     }
   }
 
@@ -357,6 +392,13 @@ export function ContactMediaPanel({
               className="inline-flex items-center gap-1.5 rounded-md border px-3 py-1.5 text-sm font-medium hover:bg-accent disabled:opacity-60"
               onCapture={(files) => void handleIdPick(files[0])}
             />
+            {photoUrl && photoUrl !== photoCrop?.cropped && (
+              <Button type="button" variant="outline" size="sm" className="gap-1.5"
+                disabled={refittingPhoto} onClick={() => void handlePhotoRefit()}>
+                {refittingPhoto ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <ScanFace className="h-3.5 w-3.5" />}
+                {t("contact.photo_refit")}
+              </Button>
+            )}
             {photoUrl && (
               <Button type="button" variant="ghost" size="sm" className="gap-1.5 text-destructive"
                 onClick={() => onPhotoChange("")}>
@@ -367,6 +409,23 @@ export function ContactMediaPanel({
         </div>
         {photoError && <p className="text-xs text-destructive">{photoError}</p>}
         {idError && <p className="text-xs text-destructive">{idError}</p>}
+        {photoCrop && (photoUrl === photoCrop.cropped || photoUrl === photoCrop.original) && (
+          <p className="text-xs text-muted-foreground flex items-center gap-1.5 flex-wrap">
+            <ScanFace className="h-3.5 w-3.5 shrink-0" />
+            {photoCrop.faceDetected ? t("contact.photo_face_cropped") : t("contact.photo_face_not_found")}
+            {photoCrop.cropped !== photoCrop.original && (
+              <button
+                type="button"
+                className="underline underline-offset-2 hover:text-foreground"
+                onClick={() =>
+                  onPhotoChange(photoUrl === photoCrop.cropped ? photoCrop.original : photoCrop.cropped)
+                }
+              >
+                {photoUrl === photoCrop.cropped ? t("contact.photo_use_original") : t("contact.photo_use_face_crop")}
+              </button>
+            )}
+          </p>
+        )}
         <p className="text-xs text-muted-foreground flex items-start gap-1">
           <ShieldCheck className="h-3.5 w-3.5 shrink-0 mt-0.5" />
           {t("contact.id_privacy_hint")}
