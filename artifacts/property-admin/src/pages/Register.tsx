@@ -1,5 +1,6 @@
 import { useState, FormEvent } from "react";
 import { useTranslation } from "react-i18next";
+import { useKoreanNameOrder, orderNameFields } from "@/lib/personNameUi";
 import { Link, useLocation } from "wouter";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -13,6 +14,7 @@ const BRAND = "hsl(var(--primary))";
 
 export default function RegisterPage() {
   const { t } = useTranslation();
+  const koNameOrder = useKoreanNameOrder();
   const [, navigate] = useLocation();
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
@@ -162,28 +164,30 @@ export default function RegisterPage() {
           <form onSubmit={handleSubmit} className="space-y-4">
             {/* Name row */}
             <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1.5">
-                <Label htmlFor="firstName" className="text-sm font-medium text-slate-700">{t("register.first_name")}</Label>
-                <Input
-                  id="firstName"
-                  required
-                  value={firstName}
-                  onChange={e => setFirstName(e.target.value)}
-                  placeholder={t("register.first_name_placeholder")}
-                  className="h-11 bg-white border-slate-200 text-slate-900 placeholder:text-slate-400"
-                />
-              </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="lastName" className="text-sm font-medium text-slate-700">{t("register.last_name")}</Label>
-                <Input
-                  id="lastName"
-                  required
-                  value={lastName}
-                  onChange={e => setLastName(e.target.value)}
-                  placeholder={t("register.last_name_placeholder")}
-                  className="h-11 bg-white border-slate-200 text-slate-900 placeholder:text-slate-400"
-                />
-              </div>
+              {orderNameFields(koNameOrder,
+                <div key="firstName" className="space-y-1.5">
+                  <Label htmlFor="firstName" className="text-sm font-medium text-slate-700">{t("register.first_name")}</Label>
+                  <Input
+                    id="firstName"
+                    required
+                    value={firstName}
+                    onChange={e => setFirstName(e.target.value)}
+                    placeholder={t("register.first_name_placeholder")}
+                    className="h-11 bg-white border-slate-200 text-slate-900 placeholder:text-slate-400"
+                  />
+                </div>,
+                <div key="lastName" className="space-y-1.5">
+                  <Label htmlFor="lastName" className="text-sm font-medium text-slate-700">{t("register.last_name")}</Label>
+                  <Input
+                    id="lastName"
+                    required
+                    value={lastName}
+                    onChange={e => setLastName(e.target.value)}
+                    placeholder={t("register.last_name_placeholder")}
+                    className="h-11 bg-white border-slate-200 text-slate-900 placeholder:text-slate-400"
+                  />
+                </div>,
+              )}
             </div>
 
             {/* Email */}

@@ -318,7 +318,7 @@ function PaidNotices({ link }: { link: TenantLink }) {
 
 /** 입주 신청서에 세입자가 적어 보낸 값 + 반영 버튼. */
 const INTAKE_GROUPS: Array<{ title: string; fields: string[] }> = [
-  { title: "본인 정보", fields: ["first_name", "last_name", "mobile_number", "email", "sns_type", "sns_id", "date_of_birth", "nationality"] },
+  { title: "본인 정보", fields: ["last_name", "first_name", "mobile_number", "email", "sns_type", "sns_id", "date_of_birth", "nationality"] },
   { title: "주소", fields: ["address_line1", "suburb", "state", "postcode", "country"] },
   { title: "비상 연락처", fields: ["emergency_contact_name", "emergency_contact_relation", "emergency_contact_phone"] },
   { title: "입주 정보", fields: ["move_in_date", "cohabitants", "vehicle_no", "pet_note"] },
@@ -390,7 +390,7 @@ function IntakeAnswers({ link, onApplied }: { link: TenantLink; onApplied: () =>
  * 검증된 연락처를 덮으면 되돌릴 방법이 없다.
  */
 const APPLICATION_GROUPS: Array<{ title: string; fields: string[] }> = [
-  { title: "본인 정보", fields: ["first_name", "last_name", "mobile_number", "email", "sns_type", "sns_id", "date_of_birth", "nationality"] },
+  { title: "본인 정보", fields: ["last_name", "first_name", "mobile_number", "email", "sns_type", "sns_id", "date_of_birth", "nationality"] },
   { title: "재직 · 재학", fields: ["company_name", "job_title"] },
   { title: "주소", fields: ["address_line1", "suburb", "state", "postcode", "country"] },
   { title: "희망 조건", fields: ["preferred_move_in_date", "preferred_duration_months", "preferred_space_type", "preferred_budget"] },
@@ -399,7 +399,7 @@ const APPLICATION_GROUPS: Array<{ title: string; fields: string[] }> = [
 
 /** 신청서와 입주 신청서가 겹치는 칸은 기존 번역 키를 그대로 쓴다. */
 const SHARED_FIELD_KEYS = new Set([
-  "first_name", "last_name", "mobile_number", "email", "sns_type", "sns_id",
+  "last_name", "first_name", "mobile_number", "email", "sns_type", "sns_id",
   "date_of_birth", "nationality", "address_line1", "suburb", "state", "postcode", "country",
 ]);
 

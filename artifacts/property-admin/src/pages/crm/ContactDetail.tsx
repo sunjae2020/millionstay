@@ -24,6 +24,7 @@ import { LinkContactAccountDialog } from "@/components/LinkContactAccountDialog"
 import { accountTypeLabel } from "@/lib/accountTypes";
 import { useToast } from "@/hooks/use-toast";
 import { formatPersonName, formatPersonLabel } from "@/lib/nameFormat";
+import { useKoreanNameOrder, orderNameFields } from "@/lib/personNameUi";
 import { COUNTRIES, normaliseCountry, defaultCountry } from "@/lib/countries";
 import { KoreanAddressSearch } from "@/components/KoreanAddressSearch";
 import { differenceInDays, parseISO } from "date-fns";
@@ -101,6 +102,7 @@ function ExpiryWarning({ label, dateStr }: { label: string; dateStr?: string | n
 
 export default function ContactDetail() {
   const { t } = useTranslation();
+  const koNameOrder = useKoreanNameOrder();
   const params = useParams<{ id: string }>();
   // `/account/contacts/new` matches its own literal route, so no `:id` param is
   // bound there — treat a missing id as "new" too, or the save falls through to
@@ -370,31 +372,36 @@ export default function ContactDetail() {
                 <div className="rounded-lg border p-4 space-y-4">
                   <h3 className="font-semibold text-sm">{t('contact.section_personal')}</h3>
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                    <div className="grid gap-1.5">
-                      <Label>{t('common.title')}</Label>
-                      <Controller name="title" control={control} render={({ field }) => (
-                        <Select value={field.value || "__none"} onValueChange={(v) => field.onChange(v === "__none" ? "" : v)}>
-                          <SelectTrigger><SelectValue placeholder="—" /></SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="__none">—</SelectItem>
-                            <SelectItem value="Mr">Mr</SelectItem>
-                            <SelectItem value="Ms">Ms</SelectItem>
-                            <SelectItem value="Mrs">Mrs</SelectItem>
-                            <SelectItem value="Dr">Dr</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      )} />
-                    </div>
-                    <div className="grid gap-1.5">
-                      <Label>{t('contact.label_first_name')} *</Label>
-                      <Input {...register("first_name", { required: true })} />
-                      {errors.first_name && <p className="text-xs text-destructive">{t('common.field_required')}</p>}
-                    </div>
-                    <div className="grid gap-1.5">
-                      <Label>{t('contact.label_last_name')} *</Label>
-                      <Input {...register("last_name", { required: true })} />
-                      {errors.last_name && <p className="text-xs text-destructive">{t('common.field_required')}</p>}
-                    </div>
+                    {/* 한국어 화면에는 Mr/Ms에 대응하는 호칭이 없어 칸 자체를 감춘다. */}
+                    {!koNameOrder && (
+                      <div className="grid gap-1.5">
+                        <Label>{t('common.title')}</Label>
+                        <Controller name="title" control={control} render={({ field }) => (
+                          <Select value={field.value || "__none"} onValueChange={(v) => field.onChange(v === "__none" ? "" : v)}>
+                            <SelectTrigger><SelectValue placeholder="—" /></SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="__none">—</SelectItem>
+                              <SelectItem value="Mr">Mr</SelectItem>
+                              <SelectItem value="Ms">Ms</SelectItem>
+                              <SelectItem value="Mrs">Mrs</SelectItem>
+                              <SelectItem value="Dr">Dr</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        )} />
+                      </div>
+                    )}
+                    {orderNameFields(koNameOrder,
+                      <div key="first_name" className="grid gap-1.5">
+                        <Label>{t('contact.label_first_name')} *</Label>
+                        <Input {...register("first_name", { required: true })} />
+                        {errors.first_name && <p className="text-xs text-destructive">{t('common.field_required')}</p>}
+                      </div>,
+                      <div key="last_name" className="grid gap-1.5">
+                        <Label>{t('contact.label_last_name')} *</Label>
+                        <Input {...register("last_name", { required: true })} />
+                        {errors.last_name && <p className="text-xs text-destructive">{t('common.field_required')}</p>}
+                      </div>,
+                    )}
                     <div className="grid gap-1.5">
                       <Label>{t('contact.label_other_name')}</Label>
                       <Input {...register("other_name")} />

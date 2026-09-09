@@ -12,6 +12,7 @@ import { ExportableTable } from "@/components/ui/ExportCsvButton";
 import { apiFetch, apiJson } from "@/lib/apiFetch";
 import { formatDate } from "@/lib/date";
 import { formatPersonName } from "@/lib/nameFormat";
+import { useKoreanNameOrder, orderNameFields } from "@/lib/personNameUi";
 import { KeyRound, Mail, Trash2, UserPlus, Eye, EyeOff, ExternalLink, Pencil } from "lucide-react";
 
 /**
@@ -288,6 +289,7 @@ function PortalUserDialog({
   onSaved: (message?: string) => void;
 }) {
   const { t } = useTranslation();
+  const koNameOrder = useKoreanNameOrder();
   const isNew = target === "new";
   const user = target && target !== "new" ? target : null;
   const open = target !== null;
@@ -412,14 +414,16 @@ function PortalUserDialog({
           </div>
 
           <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1.5">
-              <Label>{t("account.portal_last_name")}</Label>
-              <Input value={form.last_name} onChange={(e) => setForm((f) => ({ ...f, last_name: e.target.value }))} />
-            </div>
-            <div className="space-y-1.5">
-              <Label>{t("account.portal_first_name")}</Label>
-              <Input value={form.first_name} onChange={(e) => setForm((f) => ({ ...f, first_name: e.target.value }))} />
-            </div>
+            {orderNameFields(koNameOrder,
+              <div key="first_name" className="space-y-1.5">
+                <Label>{t("account.portal_first_name")}</Label>
+                <Input value={form.first_name} onChange={(e) => setForm((f) => ({ ...f, first_name: e.target.value }))} />
+              </div>,
+              <div key="last_name" className="space-y-1.5">
+                <Label>{t("account.portal_last_name")}</Label>
+                <Input value={form.last_name} onChange={(e) => setForm((f) => ({ ...f, last_name: e.target.value }))} />
+              </div>,
+            )}
           </div>
 
           <div className="space-y-1.5">

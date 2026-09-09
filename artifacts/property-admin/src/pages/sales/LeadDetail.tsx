@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useLocation, useParams } from "wouter";
 import { formatDateTime } from "@/lib/date";
 import { formatPersonName } from "@/lib/nameFormat";
+import { useKoreanNameOrder, orderNameFields } from "@/lib/personNameUi";
 import { useTranslation } from "react-i18next";
 import { Layout, PageHeader } from "@/components/Layout";
 import { Button } from "@/components/ui/button";
@@ -76,6 +77,7 @@ interface ConvertForm {
 
 export default function LeadDetail() {
   const { t } = useTranslation();
+  const koNameOrder = useKoreanNameOrder();
   const { currency: brandCurrency } = useBrand();
   const params = useParams<{ id: string }>();
   const isNew = !params.id || params.id === "new";
@@ -309,16 +311,18 @@ export default function LeadDetail() {
             <div className="bg-primary/10 border-b px-4 py-2 text-xs font-semibold text-primary uppercase tracking-wider">{t("lead.section_general")}</div>
             <div className="p-4 grid gap-4">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="grid gap-1.5">
-                  <Label>{t("lead.label_first_name")} *</Label>
-                  <Input {...register("first_name", { required: true })} placeholder={t("lead.ph_first_name")} />
-                  {errors.first_name && <p className="text-xs text-destructive">{t("lead.err_required")}</p>}
-                </div>
-                <div className="grid gap-1.5">
-                  <Label>{t("lead.label_last_name")} *</Label>
-                  <Input {...register("last_name", { required: true })} placeholder={t("lead.ph_last_name")} />
-                  {errors.last_name && <p className="text-xs text-destructive">{t("lead.err_required")}</p>}
-                </div>
+                {orderNameFields(koNameOrder,
+                  <div key="first_name" className="grid gap-1.5">
+                    <Label>{t("lead.label_first_name")} *</Label>
+                    <Input {...register("first_name", { required: true })} placeholder={t("lead.ph_first_name")} />
+                    {errors.first_name && <p className="text-xs text-destructive">{t("lead.err_required")}</p>}
+                  </div>,
+                  <div key="last_name" className="grid gap-1.5">
+                    <Label>{t("lead.label_last_name")} *</Label>
+                    <Input {...register("last_name", { required: true })} placeholder={t("lead.ph_last_name")} />
+                    {errors.last_name && <p className="text-xs text-destructive">{t("lead.err_required")}</p>}
+                  </div>,
+                )}
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="grid gap-1.5">

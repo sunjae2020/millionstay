@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { useKoreanNameOrder, orderNameFields } from "@/lib/personNameUi";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -30,6 +31,7 @@ interface Props {
 
 export function AddAccountContactDialog({ accountId, open, onOpenChange, linkedContactIds, onSaved }: Props) {
   const { t } = useTranslation();
+  const koNameOrder = useKoreanNameOrder();
   const [mode, setMode] = useState<"new" | "existing">("new");
   const [role, setRole] = useState<ContactRoleChoice>("member");
   const [roleLabel, setRoleLabel] = useState("");
@@ -111,16 +113,18 @@ export function AddAccountContactDialog({ accountId, open, onOpenChange, linkedC
           ) : (
             <div className="space-y-3">
               <div className="grid grid-cols-2 gap-3">
-                <div className="grid gap-1.5">
-                  <Label>{t("contact.label_last_name")} *</Label>
-                  <Input value={form.last_name}
-                    onChange={(e) => setForm({ ...form, last_name: e.target.value })} />
-                </div>
-                <div className="grid gap-1.5">
-                  <Label>{t("contact.label_first_name")}</Label>
-                  <Input value={form.first_name}
-                    onChange={(e) => setForm({ ...form, first_name: e.target.value })} />
-                </div>
+                {orderNameFields(koNameOrder,
+                  <div key="first_name" className="grid gap-1.5">
+                    <Label>{t("contact.label_first_name")}</Label>
+                    <Input value={form.first_name}
+                      onChange={(e) => setForm({ ...form, first_name: e.target.value })} />
+                  </div>,
+                  <div key="last_name" className="grid gap-1.5">
+                    <Label>{t("contact.label_last_name")} *</Label>
+                    <Input value={form.last_name}
+                      onChange={(e) => setForm({ ...form, last_name: e.target.value })} />
+                  </div>,
+                )}
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div className="grid gap-1.5">
