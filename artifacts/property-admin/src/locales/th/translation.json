@@ -7348,6 +7348,7 @@
       "website_enrich": "ดึงข้อมูลเว็บไซต์ของบัญชี",
       "match_rationale": "เหตุผลการจับคู่โฮมสเตย์",
       "id_document_ocr": "OCR เอกสารแสดงตน (ตัดรูปถ่าย)",
+      "face_locate": "ระบุตำแหน่งใบหน้า (สำรอง)",
       "transaction_categorise": "แนะนำรหัสบัญชีรายการ",
       "transaction_receipt_ocr": "อ่านใบเสร็จ",
       "transaction_split_suggest": "แนะนำการแบ่ง",

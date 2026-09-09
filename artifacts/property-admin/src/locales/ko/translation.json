@@ -7407,6 +7407,7 @@
       "website_enrich": "계정 웹사이트 자동채움",
       "match_rationale": "홈스테이 매칭 사유",
       "id_document_ocr": "신분증 판독(사진 추출)",
+      "face_locate": "얼굴 위치 찾기(보조)",
       "transaction_categorise": "거래 계정과목 제안",
       "transaction_receipt_ocr": "영수증 판독",
       "transaction_split_suggest": "분할 배분 제안",

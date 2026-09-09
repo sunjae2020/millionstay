@@ -7362,6 +7362,7 @@
       "website_enrich": "アカウントのサイト情報取得",
       "match_rationale": "ホームステイのマッチ理由",
       "id_document_ocr": "身分証 OCR（顔写真抽出）",
+      "face_locate": "顔位置検出（フォールバック）",
       "transaction_categorise": "取引の勘定科目提案",
       "transaction_receipt_ocr": "領収書読取",
       "transaction_split_suggest": "分割配分の提案",

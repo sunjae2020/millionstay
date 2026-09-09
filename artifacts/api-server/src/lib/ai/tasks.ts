@@ -27,6 +27,7 @@ export type AiTaskId =
   | "content_translate"
   | "business_card_ocr"
   | "id_document_ocr"
+  | "face_locate"
   | "document_intake"
   | "website_enrich"
   | "match_rationale"
@@ -165,6 +166,23 @@ export const AI_TASKS: Record<AiTaskId, AiTask> = {
       "document numbers are refused by prompt and scrubbed from the output. Sending an identity " +
       "document to a vendor is a privacy decision, not a cost one, so the engine stays where the " +
       "data-handling terms are known.",
+  },
+  face_locate: {
+    id: "face_locate",
+    label: "face_locate",
+    area: "documents",
+    envKey: "FACE_LOCATE_MODEL",
+    fallbackEnvKey: "CHAT_MODEL",
+    defaultModel: "claude-sonnet-4-6",
+    needs: { vision: true },
+    volume: "low",
+    movable: "yes",
+    source: "lib/contacts/faceLocate.ts",
+    rationale:
+      "Second-chance face finder for profile photos, used only when Cloudinary's detector " +
+      "returns nothing (blurry scans, photos of printed photos, faces cut by the frame). The " +
+      "answer is one bounding box that only decides how an avatar is cropped, so a weak model " +
+      "costs a badly framed thumbnail and nothing else.",
   },
   document_intake: {
     id: "document_intake",

@@ -17,7 +17,8 @@ import {
 } from "../utils/cloudinary";
 import { calcRetentionDate } from "../lib/retention";
 import { scanBusinessCard, isSupportedCardMime } from "../lib/contacts/businessCardOcr";
-import { buildFaceCrop, parseFaces } from "../lib/contacts/faceCrop";
+import { buildFaceCrop, parseFaces, faceBoxFromRelative, type FaceBox } from "../lib/contacts/faceCrop";
+import { locateFace } from "../lib/contacts/faceLocate";
 import {
   scanIdDocument,
   isSupportedIdMime,
@@ -140,6 +141,48 @@ function filesOf(req: unknown): Record<string, UploadedFile[] | undefined> {
   return ((req as { files?: Record<string, UploadedFile[]> }).files ?? {}) as Record<string, UploadedFile[] | undefined>;
 }
 
+type FaceSource = "cloudinary" | "ai";
+
+/**
+ * Face detection with a second chance.
+ *
+ * Cloudinary's detector handles sharp, frontal faces for free; when it comes back
+ * empty the vision model is asked the same question, because "no face" from the
+ * cheap detector usually means "blurry / angled / cut off", not "no person".
+ * Either way the answer is one box in the stored asset's pixel space.
+ */
+async function detectFaces(
+  cloudinaryFaces: FaceBox[],
+  image: { buffer: Buffer; mimetype: string },
+  width: number,
+  height: number,
+): Promise<{ faces: FaceBox[]; source: FaceSource }> {
+  if (cloudinaryFaces.length) return { faces: cloudinaryFaces, source: "cloudinary" };
+  if (width <= 0 || height <= 0) return { faces: [], source: "cloudinary" };
+  const box = await locateFace(image);
+  if (!box) return { faces: [], source: "cloudinary" };
+  return { faces: [faceBoxFromRelative(box, width, height)], source: "ai" };
+}
+
+/** Fetch a stored avatar back as JPEG bytes, capped so the model gets a sane payload. */
+async function fetchAvatarBytes(
+  publicId: string,
+  version: number,
+): Promise<{ buffer: Buffer; mimetype: string } | null> {
+  try {
+    const url = cloudinaryUrl(publicId, {
+      version,
+      transformation: [{ width: 1024, height: 1024, crop: "limit" }, { quality: "auto:good", fetch_format: "jpg" }],
+    });
+    const response = await fetch(url);
+    if (!response.ok) return null;
+    return { buffer: Buffer.from(await response.arrayBuffer()), mimetype: "image/jpeg" };
+  } catch (err) {
+    console.error("[contacts] avatar fetch for face detection failed:", err instanceof Error ? err.message : err);
+    return null;
+  }
+}
+
 // POST /v1/contacts/photo (multipart: image) — upload a profile photo and return
 // its URL. Deliberately NOT tied to a contact id so the "new contact" form can
 // upload before the record exists; the URL is persisted by the normal create/update.
@@ -163,7 +206,13 @@ router.post("/v1/contacts/photo", upload.single("image"), async (req, res): Prom
         { width: 800, height: 800, crop: "limit" },
       ],
     });
-    const crop = buildFaceCrop(parseFaces(result.faces), result.width, result.height);
+    const found = await detectFaces(
+      parseFaces(result.faces),
+      { buffer: file.buffer, mimetype: file.mimetype },
+      result.width,
+      result.height,
+    );
+    const crop = buildFaceCrop(found.faces, result.width, result.height);
     const url = cloudinaryUrl(result.public_id, {
       transformation: crop.transformation,
       version: result.version,
@@ -175,6 +224,7 @@ router.post("/v1/contacts/photo", upload.single("image"), async (req, res): Prom
       public_id: result.public_id,
       face_detected: crop.faceDetected,
       face_count: crop.faceCount,
+      face_source: crop.faceDetected ? found.source : null,
     });
   } catch (err) {
     console.error("[contacts] profile photo upload failed:", err instanceof Error ? err.message : err);
@@ -196,7 +246,19 @@ router.post("/v1/contacts/photo/refit", async (req, res): Promise<void> => {
   }
   try {
     const info = await getCloudinaryFaces(publicId);
-    const crop = buildFaceCrop(parseFaces(info.faces), info.width, info.height);
+    let faces = parseFaces(info.faces);
+    let source: FaceSource = "cloudinary";
+    if (!faces.length) {
+      // The bytes are in storage, not in this request — pull a capped copy back
+      // so the model has something to look at.
+      const bytes = await fetchAvatarBytes(publicId, info.version);
+      if (bytes) {
+        const found = await detectFaces([], bytes, info.width, info.height);
+        faces = found.faces;
+        source = found.source;
+      }
+    }
+    const crop = buildFaceCrop(faces, info.width, info.height);
     // No face → the fallback square would silently replace the URL with a
     // near-identical image. Say so instead and leave the photo alone; a photo
     // that holds no detectable face needs a different photo, not a new crop.
@@ -209,6 +271,7 @@ router.post("/v1/contacts/photo/refit", async (req, res): Promise<void> => {
       url: cloudinaryUrl(publicId, { transformation: crop.transformation, version: info.version }),
       face_detected: true,
       face_count: crop.faceCount,
+      face_source: source,
     });
   } catch (err) {
     console.error("[contacts] avatar refit failed:", err instanceof Error ? err.message : err);

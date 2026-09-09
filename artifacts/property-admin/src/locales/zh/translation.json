@@ -7366,6 +7366,7 @@
       "website_enrich": "账户网站信息补全",
       "match_rationale": "寄宿家庭匹配理由",
       "id_document_ocr": "证件 OCR（提取证件照）",
+      "face_locate": "人脸定位（兜底）",
       "transaction_categorise": "交易科目建议",
       "transaction_receipt_ocr": "收据识别",
       "transaction_split_suggest": "拆分建议",

@@ -7307,6 +7307,7 @@
       "website_enrich": "Bổ sung thông tin website của tài khoản",
       "match_rationale": "Lý do ghép nối homestay",
       "id_document_ocr": "OCR giấy tờ tuỳ thân (cắt ảnh chân dung)",
+      "face_locate": "Định vị khuôn mặt (dự phòng)",
       "transaction_categorise": "Gợi ý tài khoản giao dịch",
       "transaction_receipt_ocr": "Đọc biên nhận",
       "transaction_split_suggest": "Gợi ý phân bổ",

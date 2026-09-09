@@ -54,6 +54,15 @@ export function parseFaces(raw: unknown): FaceBox[] {
   return boxes;
 }
 
+/** Convert a relative (0–1) box, as the AI locator returns, into pixel coordinates. */
+export function faceBoxFromRelative(
+  box: { x: number; y: number; w: number; h: number },
+  imageWidth: number,
+  imageHeight: number,
+): FaceBox {
+  return [box.x * imageWidth, box.y * imageHeight, box.w * imageWidth, box.h * imageHeight];
+}
+
 /** The subject of a group photo is the largest face — pick it. */
 function largestFace(faces: FaceBox[]): FaceBox | null {
   let best: FaceBox | null = null;

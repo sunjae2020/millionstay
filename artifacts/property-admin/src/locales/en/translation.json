@@ -7408,6 +7408,7 @@
       "website_enrich": "Account website enrichment",
       "match_rationale": "Homestay match rationale",
       "id_document_ocr": "Identity document OCR",
+      "face_locate": "Face location (fallback)",
       "transaction_categorise": "Transaction categorisation",
       "transaction_receipt_ocr": "Receipt reading",
       "transaction_split_suggest": "Split suggestion",
