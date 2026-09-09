@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
+import { useKoreanNameOrder, orderNameFields } from "@/lib/personNameUi";
 import { useLocation, Link } from "wouter";
 import { getApiBase } from "@/lib/api-base";
 import { formatDate } from "@/lib/dateFormat";
@@ -268,6 +269,7 @@ const DEV_SITE = isDevelopmentSite();
 
 export default function BookingNew() {
   const { t } = useTranslation();
+  const koNameOrder = useKoreanNameOrder();
   const [location, setLocation] = useLocation();
   const { token, guest, logout } = useAuthStore();
   const { toast } = useToast();
@@ -631,14 +633,16 @@ export default function BookingNew() {
                 <h2 className="font-semibold text-lg text-gray-800">{t("booking_new.guest_details")}</h2>
                 {guest ? (
                   <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <label className="text-xs text-gray-500 font-medium">{t("booking_new.first_name")}</label>
-                      <div className="mt-1 h-10 border border-gray-100 bg-gray-50 rounded-lg px-3 flex items-center text-sm text-gray-700">{guest.first_name ?? ""}</div>
-                    </div>
-                    <div>
-                      <label className="text-xs text-gray-500 font-medium">{t("booking_new.last_name")}</label>
-                      <div className="mt-1 h-10 border border-gray-100 bg-gray-50 rounded-lg px-3 flex items-center text-sm text-gray-700">{guest.last_name ?? ""}</div>
-                    </div>
+                    {orderNameFields(koNameOrder,
+                      <div key="first_name">
+                        <label className="text-xs text-gray-500 font-medium">{t("booking_new.first_name")}</label>
+                        <div className="mt-1 h-10 border border-gray-100 bg-gray-50 rounded-lg px-3 flex items-center text-sm text-gray-700">{guest.first_name ?? ""}</div>
+                      </div>,
+                      <div key="last_name">
+                        <label className="text-xs text-gray-500 font-medium">{t("booking_new.last_name")}</label>
+                        <div className="mt-1 h-10 border border-gray-100 bg-gray-50 rounded-lg px-3 flex items-center text-sm text-gray-700">{guest.last_name ?? ""}</div>
+                      </div>,
+                    )}
                     <div className="col-span-2">
                       <label className="text-xs text-gray-500 font-medium">{t("booking_new.email")}</label>
                       <div className="mt-1 h-10 border border-gray-100 bg-gray-50 rounded-lg px-3 flex items-center text-sm text-gray-700">{guest.email}</div>
@@ -651,14 +655,16 @@ export default function BookingNew() {
                 ) : (
                   /* Long-term guest preview — no login yet */
                   <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <label className="text-xs text-gray-500 font-medium">{t("booking_new.first_name")} <span className="text-red-400">*</span></label>
-                      <Input value={guestName.split(" ")[0] ?? ""} onChange={(e) => setGuestName(e.target.value + " " + (guestName.split(" ")[1] ?? ""))} placeholder={t("booking_new.ph_first_name")} className="mt-1 h-10" />
-                    </div>
-                    <div>
-                      <label className="text-xs text-gray-500 font-medium">{t("booking_new.last_name")} <span className="text-red-400">*</span></label>
-                      <Input value={guestName.split(" ").slice(1).join(" ")} onChange={(e) => setGuestName((guestName.split(" ")[0] ?? "") + " " + e.target.value)} placeholder={t("booking_new.ph_last_name")} className="mt-1 h-10" />
-                    </div>
+                    {orderNameFields(koNameOrder,
+                      <div key="first_name">
+                        <label className="text-xs text-gray-500 font-medium">{t("booking_new.first_name")} <span className="text-red-400">*</span></label>
+                        <Input value={guestName.split(" ")[0] ?? ""} onChange={(e) => setGuestName(e.target.value + " " + (guestName.split(" ")[1] ?? ""))} placeholder={t("booking_new.ph_first_name")} className="mt-1 h-10" />
+                      </div>,
+                      <div key="last_name">
+                        <label className="text-xs text-gray-500 font-medium">{t("booking_new.last_name")} <span className="text-red-400">*</span></label>
+                        <Input value={guestName.split(" ").slice(1).join(" ")} onChange={(e) => setGuestName((guestName.split(" ")[0] ?? "") + " " + e.target.value)} placeholder={t("booking_new.ph_last_name")} className="mt-1 h-10" />
+                      </div>,
+                    )}
                     <div className="col-span-2">
                       <label className="text-xs text-gray-500 font-medium">{t("booking_new.email")} <span className="text-red-400">*</span></label>
                       <Input type="email" value={guestEmail} onChange={(e) => setGuestEmail(e.target.value)} placeholder="jane@example.com" className="mt-1 h-10" />

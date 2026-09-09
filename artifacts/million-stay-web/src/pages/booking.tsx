@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useParams, useLocation } from "wouter";
 import { useTranslation } from "react-i18next";
+import { useKoreanNameOrder, orderNameFields } from "@/lib/personNameUi";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -59,6 +60,7 @@ export default function Booking() {
   const { spaceId } = useParams<{ spaceId: string }>();
   const [, setLocation] = useLocation();
   const { t } = useTranslation();
+  const koNameOrder = useKoreanNameOrder();
   const { toast } = useToast();
   const { token, guest: authGuest, setAuth } = useAuthStore();
   const { formatDisplayPrice } = useDisplayCurrency();
@@ -395,20 +397,22 @@ export default function Booking() {
                     <Form {...guestForm}>
                       <form onSubmit={guestForm.handleSubmit(onGuestInfoSubmit)} className="space-y-4">
                         <div className="grid grid-cols-2 gap-4">
-                          <FormField control={guestForm.control} name="first_name" render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>{t("booking.first_name")}</FormLabel>
-                              <FormControl><Input {...field} data-testid="input-first-name" /></FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )} />
-                          <FormField control={guestForm.control} name="last_name" render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>{t("booking.last_name")}</FormLabel>
-                              <FormControl><Input {...field} data-testid="input-last-name" /></FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )} />
+                          {orderNameFields(koNameOrder,
+                            <FormField key="first_name" control={guestForm.control} name="first_name" render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>{t("booking.first_name")}</FormLabel>
+                                <FormControl><Input {...field} data-testid="input-first-name" /></FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )} />,
+                            <FormField key="last_name" control={guestForm.control} name="last_name" render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>{t("booking.last_name")}</FormLabel>
+                                <FormControl><Input {...field} data-testid="input-last-name" /></FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )} />,
+                          )}
                         </div>
                         <FormField control={guestForm.control} name="email" render={({ field }) => (
                           <FormItem>

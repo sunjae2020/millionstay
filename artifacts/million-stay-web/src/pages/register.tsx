@@ -1,6 +1,7 @@
 import { useState, useMemo } from "react";
 import { useLocation } from "wouter";
 import { useTranslation } from "react-i18next";
+import { useKoreanNameOrder, orderNameFields } from "@/lib/personNameUi";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -24,6 +25,7 @@ const COUNTRIES = [
 
 export default function Register() {
   const { t } = useTranslation();
+  const koNameOrder = useKoreanNameOrder();
   const [location, setLocation] = useLocation();
   const { setAuth } = useAuthStore();
   const { toast } = useToast();
@@ -106,32 +108,36 @@ export default function Register() {
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
                 <div className="grid grid-cols-2 gap-3">
-                  <FormField
-                    control={form.control}
-                    name="first_name"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-sm font-medium">{t("auth.first_name")} *</FormLabel>
-                        <FormControl>
-                          <Input {...field} placeholder={t("auth.first_name_placeholder")} className="h-11" data-testid="input-first-name" />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="last_name"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-sm font-medium">{t("auth.last_name")} *</FormLabel>
-                        <FormControl>
-                          <Input {...field} placeholder={t("auth.last_name_placeholder")} className="h-11" data-testid="input-last-name" />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                  {orderNameFields(koNameOrder,
+                    <FormField
+                      key="first_name"
+                      control={form.control}
+                      name="first_name"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-sm font-medium">{t("auth.first_name")} *</FormLabel>
+                          <FormControl>
+                            <Input {...field} placeholder={t("auth.first_name_placeholder")} className="h-11" data-testid="input-first-name" />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />,
+                    <FormField
+                      key="last_name"
+                      control={form.control}
+                      name="last_name"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-sm font-medium">{t("auth.last_name")} *</FormLabel>
+                          <FormControl>
+                            <Input {...field} placeholder={t("auth.last_name_placeholder")} className="h-11" data-testid="input-last-name" />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />,
+                  )}
                 </div>
 
                 <FormField

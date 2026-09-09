@@ -1,5 +1,6 @@
 import { useEffect, useState, useRef } from "react";
 import { useTranslation } from "react-i18next";
+import { useKoreanNameOrder, orderNameFields } from "@/lib/personNameUi";
 import { useLocation } from "wouter";
 import { useAuthStore } from "@/lib/store";
 import { PortalLayout } from "@/components/portal-layout";
@@ -104,6 +105,7 @@ function SelectField({ label, value, onChange, options }: {
 
 export default function PortalProfile() {
   const { t } = useTranslation();
+  const koNameOrder = useKoreanNameOrder();
   const [, setLocation] = useLocation();
   const { token, guest, setGuest, logout } = useAuthStore();
   const { toast } = useToast();
@@ -481,18 +483,20 @@ export default function PortalProfile() {
           <SectionHeader icon={User} title={t("portal.profile.personal_title")} />
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <label className={labelCls}>{t("portal.profile.first_name", "First Name")}</label>
-              <input type="text" value={profileForm.first_name}
-                onChange={(e) => setProfileForm((f) => ({ ...f, first_name: e.target.value }))}
-                className={inputCls} />
-            </div>
-            <div>
-              <label className={labelCls}>{t("portal.profile.last_name", "Last Name")}</label>
-              <input type="text" value={profileForm.last_name}
-                onChange={(e) => setProfileForm((f) => ({ ...f, last_name: e.target.value }))}
-                className={inputCls} />
-            </div>
+            {orderNameFields(koNameOrder,
+              <div key="first_name">
+                <label className={labelCls}>{t("portal.profile.first_name", "First Name")}</label>
+                <input type="text" value={profileForm.first_name}
+                  onChange={(e) => setProfileForm((f) => ({ ...f, first_name: e.target.value }))}
+                  className={inputCls} />
+              </div>,
+              <div key="last_name">
+                <label className={labelCls}>{t("portal.profile.last_name", "Last Name")}</label>
+                <input type="text" value={profileForm.last_name}
+                  onChange={(e) => setProfileForm((f) => ({ ...f, last_name: e.target.value }))}
+                  className={inputCls} />
+              </div>,
+            )}
             <div>
               <label className={`${labelCls} flex items-center gap-1`}><Mail className="h-3 w-3" /> {t("portal.profile.email_address", "Email Address")}</label>
               <input type="email" value={guest?.email ?? ""} readOnly
