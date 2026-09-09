@@ -8,6 +8,7 @@ import { Router, type IRouter } from "express";
 import { and, desc, eq, ilike, like, or, sql } from "drizzle-orm";
 import { db, emailLogsTable, documentTemplatesTable, documentTemplateTranslationsTable } from "@workspace/db";
 import { normalizeKrPhone, sendSms, smsBalance, smsBytes, smsConfigStatus, smsSenderIds, smsType } from "../lib/sms";
+import { smsAutomationPaused } from "../lib/notify";
 import { renderString } from "../lib/documents/templateEngine.js";
 import { resolveEmailBrand } from "../lib/emailBrand.js";
 import { buildOrderBy, parseListPage, parseSortParams, sendList, type SortMap } from "../utils/pagination";
@@ -37,6 +38,8 @@ router.get("/v1/sms/status", async (_req, res): Promise<void> => {
       balance,
       brand,
       registered_senders: senders,
+      // 자동 발송이 멈춰 있으면 "왜 통보가 안 나가지" 를 화면이 먼저 말해 준다.
+      automation_paused: smsAutomationPaused(),
       // null = 조회 실패(모름), false = 목록에 없음.
       sender_registered: senders == null ? null : !!config.sender_number && senders.includes(config.sender_number),
     },

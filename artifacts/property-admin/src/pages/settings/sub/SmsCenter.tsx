@@ -17,7 +17,7 @@ import {
 } from "@/components/TemplateVariables";
 import { formatDateTime } from "@/lib/date";
 import { useToast } from "@/hooks/use-toast";
-import { AlertTriangle, ArrowLeft, CheckCircle2, ExternalLink, Loader2, MessageSquare, RefreshCw, Send, XCircle, Ban } from "lucide-react";
+import { AlertTriangle, ArrowLeft, CheckCircle2, ExternalLink, Loader2, MessageSquare, PauseCircle, PlayCircle, RefreshCw, Send, XCircle, Ban } from "lucide-react";
 
 /* ── 서버 응답 ────────────────────────────────────────────────────────── */
 interface SmsStatus {
@@ -30,6 +30,8 @@ interface SmsStatus {
   registered_senders: string[] | null;
   /** 설정된 발신번호가 그 목록에 있나. null = 모름. */
   sender_registered: boolean | null;
+  /** 자동(이벤트·크론) 발송이 멈춰 있나. 손으로 누르는 발송은 그대로 나간다. */
+  automation_paused: boolean;
 }
 interface SmsSummary { today: number; month: number; failed_month: number }
 interface SmsTemplate { key: string; name: string; description: string | null; body: string; variables: string[] }
@@ -141,6 +143,32 @@ export default function SmsCenterPage() {
     }
   };
 
+  /* ── 자동 발송 스위치 ───────────────────────────────────────────────
+     문안·발신번호 사고가 나면 배포를 기다릴 수 없다. 여기서 끄면 이벤트·크론발
+     문자가 즉시 멈추고, 이 화면의 직접 발송과 문서 링크 발송은 그대로 남는다. */
+  const [pausing, setPausing] = useState(false);
+  const togglePause = async () => {
+    const paused = !!status.data?.automation_paused;
+    setPausing(true);
+    try {
+      const res = await apiFetch("/api/v1/integrations/update-env", {
+        method: "POST",
+        body: JSON.stringify({ key: "SMS_AUTOMATION_ENABLED", value: paused ? "true" : "false" }),
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      await status.refetch();
+      toast({
+        title: paused
+          ? t("sms_center.auto_resumed", "Automatic texts resumed")
+          : t("sms_center.auto_paused", "Automatic texts paused"),
+      });
+    } catch (err) {
+      toast({ title: t("common.error", "Error"), description: err instanceof Error ? err.message : String(err), variant: "destructive" });
+    } finally {
+      setPausing(false);
+    }
+  };
+
   /* ── 발송 내역 ─────────────────────────────────────────────────────── */
   const [q, setQ] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>(ALL);
@@ -203,6 +231,19 @@ export default function SmsCenterPage() {
             <Button variant="outline" size="sm" onClick={() => { void status.refetch(); void summary.refetch(); logs.invalidate(); void links.refetch(); }}>
               <RefreshCw className="h-4 w-4 mr-1.5" /> {t("common.refresh", "Refresh")}
             </Button>
+            <Button
+              variant={s?.automation_paused ? "default" : "outline"}
+              size="sm"
+              onClick={togglePause}
+              disabled={pausing || status.isLoading}
+            >
+              {pausing ? <Loader2 className="h-4 w-4 mr-1.5 animate-spin" />
+                : s?.automation_paused ? <PlayCircle className="h-4 w-4 mr-1.5" />
+                  : <PauseCircle className="h-4 w-4 mr-1.5" />}
+              {s?.automation_paused
+                ? t("sms_center.resume_auto", "Resume automatic texts")
+                : t("sms_center.pause_auto", "Pause automatic texts")}
+            </Button>
             <Link href="/settings/integrations">
               <Button variant="outline" size="sm"><ArrowLeft className="h-4 w-4 mr-1.5" /> {t("sms_center.go_integrations", "Connection settings")}</Button>
             </Link>
@@ -233,6 +274,17 @@ export default function SmsCenterPage() {
             <span className={summary.data?.failed_month ? "text-destructive" : ""}>{summary.data?.failed_month ?? "—"}</span>
           </StatCard>
         </div>
+        {s?.automation_paused && (
+          <div className="rounded-md border border-amber-300 bg-amber-50 dark:bg-amber-950/30 px-4 py-3 text-sm">
+            <p className="font-medium text-amber-800 dark:text-amber-200 flex items-center gap-1.5">
+              <PauseCircle className="h-4 w-4" />
+              {t("sms_center.auto_paused_title", "Automatic texts are paused")}
+            </p>
+            <p className="text-xs text-muted-foreground mt-1">
+              {t("sms_center.auto_paused_desc", "Event and scheduled messages (dispatch, SLA alerts, payment receipts, settlements) are not being sent. Sending from this page and document links still work.")}
+            </p>
+          </div>
+        )}
         {s && !s.configured && (
           <div className="rounded-md border border-amber-300 bg-amber-50 dark:bg-amber-950/30 px-4 py-3 text-sm">
             <p className="font-medium text-amber-800 dark:text-amber-200">{t("sms_center.missing_title", "Nothing will be sent until these are set:")}</p>

@@ -917,6 +917,7 @@ router.post("/v1/work-orders/:id/sign-link", async (req, res): Promise<void> => 
         name,
         entity: { type: "work_order", id },
         vars: { url, due_date: String(signing.expiresAt ?? "").slice(0, 10) },
+        manual: true,
       });
       smsResult = { sent: r.sent, reason: r.reason };
     }

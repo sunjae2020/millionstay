@@ -50,6 +50,8 @@ function allowedKeys(): string[] {
     "SOLAPI_API_SECRET",
     "SMS_SENDER_NUMBER",
     "SMS_AD_OPT_OUT_NUMBER",
+    // 자동(이벤트·크론) 문자 일시중지 스위치. "false" 면 손으로 누르는 발송만 나간다.
+    "SMS_AUTOMATION_ENABLED",
     "KAKAO_PF_ID",
     // 문안의 {{contact_phone}} 과 장애·SLA 알림을 받을 당번 번호(쉼표 구분).
     "SUPPORT_PHONE",

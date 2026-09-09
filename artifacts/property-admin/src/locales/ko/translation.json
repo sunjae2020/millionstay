@@ -6435,6 +6435,12 @@
     "invalid": "번호를 확인해 주세요: {{phone}}"
   },
   "sms_center": {
+    "pause_auto": "자동 발송 일시중지",
+    "resume_auto": "자동 발송 재개",
+    "auto_paused": "자동 발송을 멈췄습니다",
+    "auto_resumed": "자동 발송을 다시 시작했습니다",
+    "auto_paused_title": "자동 발송이 멈춰 있습니다",
+    "auto_paused_desc": "배정·SLA 알림·입금 확인·정산 같은 이벤트와 예약 작업 문자가 나가지 않습니다. 이 화면의 직접 발송과 문서 링크 발송은 그대로 동작합니다.",
     "subtitle": "문자를 직접 보내고, 발송 내역과 문서 링크를 관리합니다 (SOLAPI)",
     "go_integrations": "연동 설정",
     "card_status": "상태",

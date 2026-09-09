@@ -6395,6 +6395,12 @@
     "invalid": "请检查此号码：{{phone}}"
   },
   "sms_center": {
+    "pause_auto": "暂停自动发送",
+    "resume_auto": "恢复自动发送",
+    "auto_paused": "已暂停自动发送",
+    "auto_resumed": "已恢复自动发送",
+    "auto_paused_title": "自动发送已暂停",
+    "auto_paused_desc": "派工、SLA 提醒、收款确认、结算等事件与定时任务的短信将不会发送。本页面的直接发送与文档链接发送仍照常运作。",
     "subtitle": "直接发送短信，查看发送记录并管理文件链接 (SOLAPI)",
     "go_integrations": "连接设置",
     "card_status": "状态",

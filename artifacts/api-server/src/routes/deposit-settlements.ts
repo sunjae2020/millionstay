@@ -1023,6 +1023,7 @@ adminRouter.post("/v1/deposit-settlements/:id/sign-link", async (req, res): Prom
         name,
         entity: { type: ENTITY, id },
         vars: { url, due_date: String(signing.expiresAt ?? "").slice(0, 10) },
+        manual: true,
       });
       sms = { sent: r.sent, reason: r.reason };
     }

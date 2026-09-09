@@ -48,6 +48,12 @@ export interface NotifySmsArgs {
   smsOnly?: boolean;
   /** `smsKey` 문안이 DB 에 없을 때의 대체 본문(lib/sms.ts 참조). */
   text?: string;
+  /**
+   * 사람이 화면에서 "보내기"를 눌러 나가는 발송. 자동 발송 일시중지
+   * (`SMS_AUTOMATION_ENABLED=false`)의 영향을 받지 않는다 — 중지의 뜻은
+   * "시스템이 알아서 보내지 말라" 이지 "내가 눌러도 보내지 말라" 가 아니다.
+   */
+  manual?: boolean;
 }
 
 export interface NotifySmsResult {
@@ -73,6 +79,21 @@ export async function alreadyNotified(entityType: string, entityId: number, key:
 }
 
 /**
+ * 자동 발송 일시중지 스위치.
+ *
+ * 개통 사고(발신번호 차단·문안 오류·크론 폭주) 때 배포 없이 이벤트·크론발 문자를
+ * 통째로 멈출 수 있어야 한다. 값은 `integration_settings` 로도 들어오므로
+ * 관리자 화면에서 끄고 켤 수 있다. **기본은 켜짐** — 미설정이 곧 중지가 되면
+ * 새 인스턴스가 조용히 통보를 안 하게 된다.
+ *
+ * 키를 지우는 방식(SOLAPI_API_KEY 삭제)과 다른 점: 손으로 누르는 발송과
+ * 개통 점검은 그대로 살아 있다.
+ */
+export function smsAutomationPaused(): boolean {
+  return String(process.env.SMS_AUTOMATION_ENABLED ?? "").trim().toLowerCase() === "false";
+}
+
+/**
  * SMS 한 통 + 이력. 절대 throw 하지 않는다 — 통보 실패가 본 작업(수납·배정·정산)을
  * 되돌리면 안 된다. 호출부는 `void notifySms(...)` 로 띄워 두어도 안전하다.
  */
@@ -81,6 +102,13 @@ export async function notifySms(args: NotifySmsArgs): Promise<NotifySmsResult> {
   try {
     const to = normalizeKrPhone(args.to ?? "");
     if (!to) return { sent: false, skipped: true, reason: "no_mobile" };
+
+    // 자동 발송 중지 중에는 이벤트·크론발 문자를 보내지 않는다. 이력도 남기지
+    // 않는다 — 안 보낸 것을 "실패" 로 적으면 진짜 실패가 묻힌다(미설정과 같은 규칙).
+    if (!args.manual && smsAutomationPaused()) {
+      console.log(`[notify] 자동 발송 중지 중 — ${key} 건너뜀 (→ ${to})`);
+      return { sent: false, skipped: true, reason: "automation_paused" };
+    }
 
     if (args.once && args.entity && await alreadyNotified(args.entity.type, args.entity.id, key)) {
       return { sent: false, skipped: true, reason: "already_sent" };

@@ -6341,6 +6341,12 @@
     "invalid": "Vui lòng kiểm tra số này: {{phone}}"
   },
   "sms_center": {
+    "pause_auto": "Tạm dừng gửi tự động",
+    "resume_auto": "Tiếp tục gửi tự động",
+    "auto_paused": "Đã tạm dừng gửi tự động",
+    "auto_resumed": "Đã tiếp tục gửi tự động",
+    "auto_paused_title": "Gửi tự động đang tạm dừng",
+    "auto_paused_desc": "Tin nhắn theo sự kiện và theo lịch (phân công, cảnh báo SLA, xác nhận thanh toán, quyết toán) sẽ không được gửi. Gửi trực tiếp từ trang này và liên kết tài liệu vẫn hoạt động.",
     "subtitle": "Gửi tin nhắn, xem lịch sử gửi và quản lý liên kết tài liệu (SOLAPI)",
     "go_integrations": "Cài đặt kết nối",
     "card_status": "Trạng thái",

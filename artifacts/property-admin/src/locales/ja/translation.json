@@ -6391,6 +6391,12 @@
     "invalid": "番号を確認してください: {{phone}}"
   },
   "sms_center": {
+    "pause_auto": "自動送信を一時停止",
+    "resume_auto": "自動送信を再開",
+    "auto_paused": "自動送信を停止しました",
+    "auto_resumed": "自動送信を再開しました",
+    "auto_paused_title": "自動送信が停止中です",
+    "auto_paused_desc": "割当・SLA通知・入金確認・精算などのイベントおよび定期実行のSMSは送信されません。この画面からの直接送信と書類リンクの送信は通常どおり動作します。",
     "subtitle": "SMSの送信、送信履歴、書類リンクの管理 (SOLAPI)",
     "go_integrations": "連携設定",
     "card_status": "状態",

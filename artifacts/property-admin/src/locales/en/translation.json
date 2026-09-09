@@ -6435,6 +6435,12 @@
     "invalid": "Check this number: {{phone}}"
   },
   "sms_center": {
+    "pause_auto": "Pause automatic texts",
+    "resume_auto": "Resume automatic texts",
+    "auto_paused": "Automatic texts paused",
+    "auto_resumed": "Automatic texts resumed",
+    "auto_paused_title": "Automatic texts are paused",
+    "auto_paused_desc": "Event and scheduled messages (dispatch, SLA alerts, payment receipts, settlements) are not being sent. Sending from this page and document links still work.",
     "subtitle": "Send texts, review what went out, and manage document links (SOLAPI)",
     "go_integrations": "Connection settings",
     "card_status": "Status",

@@ -187,6 +187,8 @@ adminRouter.post("/v1/documents/sms-link", upload.single("file"), async (req, re
         to: r.phone,
         name: r.name,
         vars: { name: r.name ?? "고객", doc_type: docTypeLabel, url, ref: ref ?? "" },
+        // 담당자가 화면에서 눌러 보내는 발송 — 자동 발송 중지의 대상이 아니다.
+        manual: true,
         // 같은 문서를 두 번 보내는 것은 의도일 수 있다(번호 정정·재발송) — 멱등 없음.
         entity: entityId ? { type: entityType!, id: entityId } : undefined,
         logKey: "sms.document_link",
