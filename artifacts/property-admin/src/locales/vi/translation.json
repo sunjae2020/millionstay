@@ -674,6 +674,8 @@
     "photo_refit_failed": "Không thể cắt lại ảnh theo khuôn mặt",
     "photo_face_cropped": "Đã nhận diện khuôn mặt — ảnh được cắt và căn theo khung ảnh đại diện chuẩn.",
     "photo_face_not_found": "Không nhận diện được khuôn mặt nên ảnh được cắt vuông theo tâm ảnh.",
+    "photo_face_retake": "Vui lòng tải lên ảnh thấy rõ khuôn mặt.",
+    "id_portrait_no_face": "Không tìm thấy khuôn mặt trong ảnh đã cắt — hãy kiểm tra trước khi dùng làm ảnh đại diện.",
     "photo_use_original": "Dùng ảnh gốc",
     "photo_use_face_crop": "Dùng ảnh cắt theo khuôn mặt",
     "card_front": "Mặt trước",

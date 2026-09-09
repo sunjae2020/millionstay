@@ -680,6 +680,8 @@
     "photo_refit_failed": "얼굴 기준으로 다시 자르지 못했습니다",
     "photo_face_cropped": "얼굴을 인식해 규격 크기·가운데 위치로 잘랐습니다.",
     "photo_face_not_found": "얼굴을 찾지 못해 사진 중앙을 기준으로 정사각형으로 잘랐습니다.",
+    "photo_face_retake": "얼굴이 나온 사진으로 다시 올려주세요.",
+    "id_portrait_no_face": "잘라낸 사진에서 얼굴을 찾지 못했습니다 — 프로필 사진으로 쓰기 전에 확인하세요.",
     "photo_use_original": "원본 사용",
     "photo_use_face_crop": "얼굴 맞춤 사용",
     "card_front": "앞면",

@@ -118,6 +118,8 @@ export function ContactMediaPanel({
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [photoError, setPhotoError] = useState<string | null>(null);
   const [refittingPhoto, setRefittingPhoto] = useState(false);
+  /** Set when the detector found no face — a warning, not a silent no-op. */
+  const [faceMiss, setFaceMiss] = useState(false);
   /** Last upload's two framings + whether a face was actually found. */
   const [photoCrop, setPhotoCrop] = useState<
     { cropped: string; original: string; faceDetected: boolean } | null
@@ -143,7 +145,9 @@ export function ContactMediaPanel({
   const [idError, setIdError] = useState<string | null>(null);
   const [idOpen, setIdOpen] = useState(false);
   const [idDocKind, setIdDocKind] = useState<string>("other");
-  const [idPhoto, setIdPhoto] = useState<{ url: string; public_id: string } | null>(null);
+  const [idPhoto, setIdPhoto] = useState<
+    { url: string; public_id: string; face_detected?: boolean } | null
+  >(null);
   const [idFields, setIdFields] = useState<Record<string, string>>({});
   const [idSelected, setIdSelected] = useState<Record<string, boolean>>({});
   const [idBlocked, setIdBlocked] = useState<string[]>([]);
@@ -174,6 +178,7 @@ export function ContactMediaPanel({
   async function handlePhotoPick(file: File | undefined) {
     if (!file) return;
     setPhotoError(null);
+    setFaceMiss(false);
     setUploadingPhoto(true);
     try {
       const form = new FormData();
@@ -189,6 +194,7 @@ export function ContactMediaPanel({
         original: (data.original_url as string) ?? (data.url as string),
         faceDetected: data.face_detected === true,
       });
+      setFaceMiss(data.face_detected !== true);
       onPhotoChange(data.url as string);
     } catch (err) {
       setPhotoError(err instanceof Error ? err.message : t("contact.photo_upload_failed"));
@@ -210,7 +216,11 @@ export function ContactMediaPanel({
         body: JSON.stringify({ url: photoUrl }),
       });
       const data = await res.json();
-      if (!res.ok || !data?.url) throw new Error(data?.error ?? t("contact.photo_refit_failed"));
+      if (!res.ok || data?.success !== true) throw new Error(data?.error ?? t("contact.photo_refit_failed"));
+      // The server sends no URL when it found no face: the photo stays as it is
+      // and the admin is told, rather than being handed an identical crop.
+      if (!data.url) { setFaceMiss(true); return; }
+      setFaceMiss(false);
       setPhotoCrop({ cropped: data.url as string, original: photoUrl, faceDetected: data.face_detected === true });
       onPhotoChange(data.url as string);
     } catch (err) {
@@ -300,9 +310,13 @@ export function ContactMediaPanel({
       setIdSnapshot(current);
       setIdFields(fields);
       setIdDocKind(String(data.doc_kind ?? "other"));
-      setIdPhoto((data.photo ?? null) as { url: string; public_id: string } | null);
+      const portrait = (data.photo ?? null) as
+        { url: string; public_id: string; face_detected?: boolean } | null;
+      setIdPhoto(portrait);
       setIdBlocked(Array.isArray(data.blocked) ? (data.blocked as string[]) : []);
-      setIdUsePhoto(!!data.photo);
+      // A crop with no face in it is a miss — leave it unticked so nobody
+      // accepts it by reflex. The ID is not stored, so a bad crop is final.
+      setIdUsePhoto(!!portrait && portrait.face_detected !== false);
       const preselect: Record<string, boolean> = {};
       for (const [key, value] of Object.entries(fields)) {
         preselect[key] = !!value && value !== (current[key] ?? "");
@@ -409,10 +423,16 @@ export function ContactMediaPanel({
         </div>
         {photoError && <p className="text-xs text-destructive">{photoError}</p>}
         {idError && <p className="text-xs text-destructive">{idError}</p>}
-        {photoCrop && (photoUrl === photoCrop.cropped || photoUrl === photoCrop.original) && (
+        {faceMiss && (
+          <p className="text-xs rounded-md border border-amber-300 bg-amber-50 px-2.5 py-2 text-amber-900 flex items-start gap-1.5 dark:border-amber-700/60 dark:bg-amber-950/40 dark:text-amber-200">
+            <ScanFace className="h-3.5 w-3.5 shrink-0 mt-0.5" />
+            <span>{t("contact.photo_face_not_found")} {t("contact.photo_face_retake")}</span>
+          </p>
+        )}
+        {!faceMiss && photoCrop?.faceDetected && (photoUrl === photoCrop.cropped || photoUrl === photoCrop.original) && (
           <p className="text-xs text-muted-foreground flex items-center gap-1.5 flex-wrap">
             <ScanFace className="h-3.5 w-3.5 shrink-0" />
-            {photoCrop.faceDetected ? t("contact.photo_face_cropped") : t("contact.photo_face_not_found")}
+            {t("contact.photo_face_cropped")}
             {photoCrop.cropped !== photoCrop.original && (
               <button
                 type="button"
@@ -513,6 +533,12 @@ export function ContactMediaPanel({
                   </label>
                 ) : (
                   <p className="text-sm text-muted-foreground">{t("contact.id_no_portrait")}</p>
+                )}
+                {idPhoto?.face_detected === false && (
+                  <p className="text-xs text-amber-700 dark:text-amber-300 flex items-start gap-1.5">
+                    <ScanFace className="h-3.5 w-3.5 shrink-0 mt-0.5" />
+                    <span>{t("contact.id_portrait_no_face")}</span>
+                  </p>
                 )}
                 <p className="text-xs text-muted-foreground">{t("contact.id_photo_hint")}</p>
               </div>

@@ -681,6 +681,8 @@
     "photo_refit_failed": "Could not re-frame the photo around a face",
     "photo_face_cropped": "Face detected — cropped and scaled to the standard avatar framing.",
     "photo_face_not_found": "No face was detected, so the photo was cropped to a square around its centre.",
+    "photo_face_retake": "Upload a clearer photo that shows the face.",
+    "id_portrait_no_face": "No face was found in this crop — check it before using it as the profile photo.",
     "photo_use_original": "Use the original",
     "photo_use_face_crop": "Use the face crop",
     "card_front": "Front",

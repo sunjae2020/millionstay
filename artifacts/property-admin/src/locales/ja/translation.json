@@ -670,6 +670,8 @@
     "photo_refit_failed": "顔を基準に切り抜き直せませんでした",
     "photo_face_cropped": "顔を検出し、標準サイズ・中央配置に切り抜きました。",
     "photo_face_not_found": "顔を検出できなかったため、写真の中央を基準に正方形で切り抜きました。",
+    "photo_face_retake": "顔が写っている写真をアップロードし直してください。",
+    "id_portrait_no_face": "切り抜いた写真から顔を検出できませんでした — プロフィール写真に使う前に確認してください。",
     "photo_use_original": "元の画像を使う",
     "photo_use_face_crop": "顔に合わせた切り抜きを使う",
     "card_front": "表面",

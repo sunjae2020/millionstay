@@ -197,10 +197,17 @@ router.post("/v1/contacts/photo/refit", async (req, res): Promise<void> => {
   try {
     const info = await getCloudinaryFaces(publicId);
     const crop = buildFaceCrop(parseFaces(info.faces), info.width, info.height);
+    // No face → the fallback square would silently replace the URL with a
+    // near-identical image. Say so instead and leave the photo alone; a photo
+    // that holds no detectable face needs a different photo, not a new crop.
+    if (!crop.faceDetected) {
+      res.json({ success: true, url: null, face_detected: false, face_count: 0 });
+      return;
+    }
     res.json({
       success: true,
       url: cloudinaryUrl(publicId, { transformation: crop.transformation, version: info.version }),
-      face_detected: crop.faceDetected,
+      face_detected: true,
       face_count: crop.faceCount,
     });
   } catch (err) {
@@ -257,14 +264,22 @@ router.post("/v1/contacts/id-document/scan", upload.single("image"), async (req,
     return;
   }
 
-  let photo: { url: string; public_id: string } | null = null;
+  let photo: { url: string; public_id: string; face_detected: boolean } | null = null;
   if (scan.portrait) {
     try {
       const uploaded = await uploadToCloudinary(file.buffer, {
         folder: cldFolder("avatars"),
+        faces: true,
         transformation: portraitCropTransformation(scan.portrait),
       });
-      photo = { url: uploaded.secure_url, public_id: uploaded.public_id };
+      // A crop with no detectable face means the model's box missed the printed
+      // portrait — the admin needs to see that before accepting the photo,
+      // because the ID itself is never stored and cannot be re-cropped later.
+      photo = {
+        url: uploaded.secure_url,
+        public_id: uploaded.public_id,
+        face_detected: parseFaces(uploaded.faces).length > 0,
+      };
     } catch (err) {
       console.error("[contacts] portrait crop upload failed:", err instanceof Error ? err.message : err);
     }
