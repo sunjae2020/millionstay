@@ -46,6 +46,10 @@ export const contractsTable = pgTable("contracts", {
   deleted_at: timestamp("deleted_at"),
   sent_at: timestamp("sent_at", { withTimezone: true }),
   signed_at: timestamp("signed_at", { withTimezone: true }),
+  // 계약 체결일 — 계약서에 찍히는 날짜. 담당자가 직접 입력하는 값이라
+  // 입주일(start_date)이나 e-sign 완료 시각(signed_at)과 별개다.
+  // 비어 있을 때만 signed_at → effective_date 순으로 추정해 발급한다.
+  contract_date: text("contract_date"),
   effective_date: text("effective_date"),
   expiry_date: text("expiry_date"),
   termination_reason: text("termination_reason"),

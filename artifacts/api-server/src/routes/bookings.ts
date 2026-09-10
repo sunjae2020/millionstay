@@ -742,6 +742,7 @@ router.patch("/v1/bookings/:id/confirm", async (req, res): Promise<void> => {
       interim_payment_date: existing.interim_payment_date ?? null,
       balance_amount: numOrNull(existing.balance_amount),
       balance_date: existing.balance_date ?? null,
+      contract_date: existing.contract_date ?? null,
       effective_date: existing.contract_date ?? null,
       currency: existing.currency ?? DEFAULT_CURRENCY,
       exchange_rate_to_aud: await getRateToAud(existing.currency ?? DEFAULT_CURRENCY),

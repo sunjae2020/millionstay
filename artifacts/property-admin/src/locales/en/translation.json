@@ -1267,6 +1267,8 @@
     "cat_short": "Short-term Lease",
     "cat_long": "Long-term Lease",
     "section_payment_terms": "PAYMENT TERMS",
+    "label_contract_date": "Contract Date",
+    "hint_contract_date": "Date the agreement was signed. Left blank, the contract document falls back to the signing/effective date.",
     "label_move_in": "Move-in Date",
     "label_move_out": "Move-out Date",
     "label_down_payment": "Down Payment",

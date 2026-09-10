@@ -685,6 +685,7 @@ router.post("/v1/contracts", async (req, res): Promise<void> => {
     space_id: data.space_id ?? null,
     start_date: data.start_date ?? null,
     end_date: data.end_date ?? null,
+    contract_date: data.contract_date ?? null,
     lease_mode: data.lease_mode ?? null,
     rate_period: data.rate_period ?? null,
     rate_amount: data.rate_amount ?? null,
@@ -1210,7 +1211,7 @@ export async function buildContractDocInput(
       rent_due_day: row.rent_due_day,
       start_date: row.start_date,
       end_date: row.end_date,
-      signed_on: row.signed_at ?? row.effective_date ?? row.created_at,
+      signed_on: row.contract_date ?? row.signed_at ?? row.effective_date ?? row.created_at,
       accounts: await resolveLeaseAccounts(row),
       clauses_text: termsText,
       annex_text: annexText,
@@ -1244,7 +1245,7 @@ export async function buildContractDocInput(
     handover_date: row.start_date,
     start_date: row.start_date,
     end_date: row.end_date,
-    signed_on: row.signed_at ?? row.effective_date ?? row.created_at,
+    signed_on: row.contract_date ?? row.signed_at ?? row.effective_date ?? row.created_at,
     landlord: {
       name: (c as any).landlord_name || storedCompany.company_name || null,
       address: landlordAddress || storedCompany.address1 || null,
@@ -1267,7 +1268,7 @@ export async function buildContractDocInput(
   const mltAccounts = await resolveLeaseAccounts(row);
   const mltAccount = mltAccounts.find((a) => a.label.includes("보증금")) ?? mltAccounts[0] ?? null;
   const mlt: MltStandardLeaseInput = {
-    signed_on: row.signed_at ?? row.effective_date ?? row.created_at,
+    signed_on: row.contract_date ?? row.signed_at ?? row.effective_date ?? row.created_at,
     landlord: {
       name: (c as any).landlord_name || storedCompany.company_name || null,
       address: landlordAddress || storedCompany.address1 || null,
@@ -1346,7 +1347,7 @@ export async function buildContractDocInput(
     end_date: row.end_date,
     deposit_amount: row.bond_amount,
     monthly_rent: actualMonthlyRent,
-    signed_on: row.signed_at ? String(row.signed_at) : row.effective_date ?? row.start_date,
+    signed_on: row.contract_date ?? (row.signed_at ? String(row.signed_at) : row.effective_date ?? row.start_date),
     // 첨부로 붙는 별지도 계약의 특약이 정본이고, 없을 때만 템플릿 별지를 쓴다.
     special_terms: row.special_terms?.trim() ? row.special_terms : annexText,
   };
@@ -1662,6 +1663,9 @@ router.put("/v1/contracts/:id", async (req, res): Promise<void> => {
     ? {
         document_url: data.document_url ?? existing.document_url,
         ...(data.acquisition_channel !== undefined ? acquisitionChannelFields(data) : {}),
+        // 계약 체결일은 계약 조건이 아니라 기록해 두지 않았던 사실이다 — 지금까지
+        // 입주일에서 추정해 찍혀 왔으므로, 잠긴 계약에서도 바로잡을 수 있어야 한다.
+        ...(data.contract_date !== undefined ? { contract_date: data.contract_date || null } : {}),
         notes: data.notes ?? existing.notes,
       }
     : {
@@ -1673,6 +1677,7 @@ router.put("/v1/contracts/:id", async (req, res): Promise<void> => {
         space_id: data.space_id ?? null,
         start_date: data.start_date ?? null,
         end_date: data.end_date ?? null,
+        contract_date: data.contract_date ?? null,
         lease_mode: data.lease_mode ?? null,
         rate_period: data.rate_period ?? null,
         rate_amount: data.rate_amount ?? null,
@@ -1780,7 +1785,7 @@ router.post("/v1/contracts/:id/sign", async (req, res): Promise<void> => {
  * 계약서 발행 설정만 부분 갱신 — 발행 위저드가 쓰는 전용 엔드포인트.
  *
  *   PATCH /v1/contracts/:id/issue-config
- *   { lease_form, doc_attachments[], signing_mode, signing_mode_reason }
+ *   { lease_form, doc_attachments[], contract_date, signing_mode, signing_mode_reason }
  *
  * 전체 PUT 은 보내지 않은 필드를 NULL 로 덮으므로(그리고 Signed/Active 는 잠김)
  * 위저드가 서식·첨부·서명방식만 건드릴 수 있게 따로 뚫었다. 넘기지 않은 키는
@@ -1810,6 +1815,13 @@ router.patch("/v1/contracts/:id/issue-config", async (req, res): Promise<void> =
     const effectiveForm = "lease_form" in updates ? (updates.lease_form as string | null) : existing.lease_form;
     updates.doc_attachments = normalizeAttachmentsInput(data.doc_attachments, effectiveForm);
   }
+  if ("contract_date" in data) {
+    // 계약 체결일 — 위저드 1단계에서 담당자가 직접 입력한다. 빈 값이면 지운다
+    // (그때는 발급 시 서명일·발효일에서 추정한다).
+    const d = typeof data.contract_date === "string" ? data.contract_date.trim() : "";
+    if (d && !/^\d{4}-\d{2}-\d{2}$/.test(d)) { res.status(400).json({ error: "Invalid contract_date" }); return; }
+    updates.contract_date = d || null;
+  }
   if ("signing_mode" in data) {
     const mode = typeof data.signing_mode === "string" ? data.signing_mode.trim() : "";
     if (mode && mode !== "online" && mode !== "wet") { res.status(400).json({ error: "Unknown signing_mode" }); return; }
@@ -1826,7 +1838,7 @@ router.patch("/v1/contracts/:id/issue-config", async (req, res): Promise<void> =
     entityType: "contract", entityId: id, action: "UPDATE",
     oldValue: {
       lease_form: existing.lease_form, doc_attachments: existing.doc_attachments,
-      signing_mode: existing.signing_mode,
+      signing_mode: existing.signing_mode, contract_date: existing.contract_date,
     },
     newValue: updates,
   }).catch(() => {});

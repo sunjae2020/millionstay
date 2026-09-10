@@ -1267,6 +1267,8 @@
     "cat_short": "단기임대",
     "cat_long": "장기임대",
     "section_payment_terms": "결제 조건",
+    "label_contract_date": "계약 체결일",
+    "hint_contract_date": "계약서에 찍히는 날짜입니다. 비워 두면 서명일·발효일에서 추정해 발급됩니다.",
     "label_move_in": "입주일",
     "label_move_out": "퇴거일",
     "label_down_payment": "계약금",

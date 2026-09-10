@@ -1254,6 +1254,8 @@
     "cat_short": "短期租赁",
     "cat_long": "长期租赁",
     "section_payment_terms": "付款条件",
+    "label_contract_date": "合同签订日",
+    "hint_contract_date": "打印在合同书上的日期。留空时将依据签署日或生效日推定。",
     "label_move_in": "入住日",
     "label_move_out": "退租日",
     "label_down_payment": "定金",

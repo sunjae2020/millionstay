@@ -113,6 +113,8 @@ interface FormData {
   space_id: number | null;
   start_date: string;
   end_date: string;
+  /** 계약 체결일 — 계약서에 찍히는 날짜(입주일과 별개). */
+  contract_date: string;
   lease_mode: LeaseMode;
   rate_period: string;
   rate_amount: string;
@@ -333,7 +335,7 @@ export default function ContractDetail() {
     defaultValues: {
       booking_id: null, product_id: null, tenant_account_id: null,
       landlord_account_id: null, space_id: null,
-      start_date: "", end_date: "", weekly_rate: "", total_rent: "",
+      start_date: "", end_date: "", contract_date: "", weekly_rate: "", total_rent: "",
       lease_mode: "long", rate_period: "monthly", rate_amount: "",
       bond_amount: "", advance_amount: "",
       contract_category: "", lease_form: "general", doc_attachments: [],
@@ -364,6 +366,7 @@ export default function ContractDetail() {
         landlord_account_id: contract.landlord_account_id ?? null,
         space_id: contract.space_id ?? null,
         start_date: contract.start_date ?? "",
+        contract_date: (contract as any).contract_date ?? "",
         end_date: contract.end_date ?? "",
         lease_mode: resolveLeaseMode(contract),
         rate_period: (contract as any).rate_period ?? (contract.weekly_rate != null ? "weekly" : "monthly"),
@@ -638,6 +641,7 @@ export default function ContractDetail() {
     landlord_account_id: data.landlord_account_id ?? null,
     space_id: data.space_id ?? null,
     start_date: data.start_date || null,
+    contract_date: data.contract_date || null,
     end_date: data.end_date || null,
     // 선택하지 않은 유형의 금액은 비워서 보낸다 — 유형을 바꿨을 때 예전 모델의
     // 값이 남아 있으면 월세 자동청구·계약서 발급이 엉뚱한 금액을 집는다.
@@ -1396,6 +1400,13 @@ export default function ContractDetail() {
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {/* 공통 — 기간·통화·보증금 */}
+                <div>
+                  <Label>{t('contract.label_contract_date')}</Label>
+                  <Controller name="contract_date" control={control} render={({ field }) => (
+                    <DateInput value={field.value ?? ""} onChange={field.onChange} />
+                  )} />
+                  <p className="mt-1 text-xs text-muted-foreground">{t('contract.hint_contract_date')}</p>
+                </div>
                 <div>
                   <Label>{t('contract.label_move_in')}</Label>
                   <Controller name="start_date" control={control} render={({ field }) => (
@@ -2233,6 +2244,7 @@ export default function ContractDetail() {
           contractId={Number(id)}
           contractRef={contract.contract_ref}
           leaseForm={(contract as any).lease_form ?? null}
+          contractDate={(contract as any).contract_date ?? null}
           attachments={parseAttachments((contract as any).doc_attachments)}
           signingPolicy={signingPolicy}
           onOpenPreview={openContractPreview}

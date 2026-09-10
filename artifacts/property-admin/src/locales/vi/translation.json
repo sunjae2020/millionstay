@@ -1242,6 +1242,8 @@
     "cat_short": "Thuê ngắn hạn",
     "cat_long": "Thuê dài hạn",
     "section_payment_terms": "ĐIỀU KHOẢN THANH TOÁN",
+    "label_contract_date": "Ngày ký hợp đồng",
+    "hint_contract_date": "Ngày được in trên hợp đồng. Bỏ trống thì hệ thống lấy ngày ký hoặc ngày hiệu lực.",
     "label_move_in": "Ngày chuyển vào",
     "label_move_out": "Ngày chuyển ra",
     "label_down_payment": "Tiền đặt cọc ban đầu",

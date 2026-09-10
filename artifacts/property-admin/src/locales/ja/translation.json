@@ -1252,6 +1252,8 @@
     "cat_short": "短期賃貸",
     "cat_long": "長期賃貸",
     "section_payment_terms": "支払条件",
+    "label_contract_date": "契約締結日",
+    "hint_contract_date": "契約書に印字される日付です。空欄の場合は署名日・発効日から推定して発行します。",
     "label_move_in": "入居日",
     "label_move_out": "退去日",
     "label_down_payment": "契約金",

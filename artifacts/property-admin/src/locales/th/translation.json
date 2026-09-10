@@ -1252,6 +1252,8 @@
     "cat_short": "เช่าระยะสั้น",
     "cat_long": "เช่าระยะยาว",
     "section_payment_terms": "เงื่อนไขการชำระเงิน",
+    "label_contract_date": "วันที่ทำสัญญา",
+    "hint_contract_date": "วันที่ที่พิมพ์ในเอกสารสัญญา หากเว้นว่างจะอ้างอิงวันที่ลงนามหรือวันที่มีผลแทน",
     "label_move_in": "วันเข้าพัก",
     "label_move_out": "วันย้ายออก",
     "label_down_payment": "เงินมัดจำสัญญา",

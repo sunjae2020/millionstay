@@ -16,6 +16,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
+import { DateInput } from "@/components/ui/date-input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { apiFetch } from "@/lib/apiFetch";
@@ -55,6 +56,8 @@ interface Props {
   contractId: number;
   contractRef: string;
   leaseForm: string | null;
+  /** 계약 체결일(contracts.contract_date) — 비어 있으면 발급 시 서명일에서 추정된다. */
+  contractDate: string | null;
   attachments: string[];
   signingPolicy: SigningPolicy | null;
   /** 부모의 미리보기 모달을 그대로 쓴다(공용 DocumentPreviewDialog). */
@@ -72,7 +75,7 @@ const STEP_KEYS = [
 
 export function ContractIssueWizard({
   open, onClose, contractId, contractRef,
-  leaseForm, attachments, signingPolicy, onOpenPreview, onIssued,
+  leaseForm, contractDate, attachments, signingPolicy, onOpenPreview, onIssued,
 }: Props) {
   const { t } = useTranslation();
   const { toast } = useToast();
@@ -80,6 +83,7 @@ export function ContractIssueWizard({
 
   const [step, setStep] = useState(0);
   const [form, setForm] = useState<string>(leaseForm ?? "");
+  const [signedOn, setSignedOn] = useState<string>(contractDate ?? "");
   const [picked, setPicked] = useState<string[]>(attachments);
   // 이미 저장된 재지정이 있으면 그대로 물고 시작한다 — 빈 값으로 두면
   // 검토 단계를 지나는 것만으로 재지정이 지워진다.
@@ -99,6 +103,7 @@ export function ContractIssueWizard({
     if (!open) return;
     setStep(0);
     setForm(leaseForm ?? "");
+    setSignedOn(contractDate ?? "");
     setPicked(attachments);
     setPolicy(signingPolicy);
     setModeOverride(signingPolicy?.overridden ? signingPolicy.mode : "");
@@ -154,6 +159,11 @@ export function ContractIssueWizard({
     // 저장이 실패하면 그 자리에 머문다 — `saveConfig.isError` 는 이 렌더에서
     // 갱신되지 않으므로 반드시 예외로 판정해야 한다(토스트는 onError 가 띄운다).
     try {
+      // 계약 체결일은 입력한 단계를 벗어날 때 바로 저장한다 — 미리보기가 그
+      // 날짜로 찍혀 나와야 검토 단계에서 확인할 수 있다.
+      if (step === 0 && (signedOn || contractDate)) {
+        await saveConfig.mutateAsync({ contract_date: signedOn });
+      }
       // 서식·첨부는 검토 단계로 넘어갈 때 한 번에 저장한다.
       if (step === 1) {
         await saveConfig.mutateAsync({
@@ -222,6 +232,11 @@ export function ContractIssueWizard({
               );
             })}
             {!canLeaveFormStep && <p className="text-xs text-red-600">{t("contract.wiz_form_required")}</p>}
+            <div className="pt-2">
+              <Label>{t("contract.label_contract_date")}</Label>
+              <DateInput value={signedOn} onChange={setSignedOn} />
+              <p className="mt-1 text-xs text-muted-foreground">{t("contract.hint_contract_date")}</p>
+            </div>
           </div>
         )}
 
@@ -251,6 +266,10 @@ export function ContractIssueWizard({
               <div className="flex justify-between gap-4 p-2.5">
                 <dt className="text-muted-foreground">{t("contract.label_lease_form")}</dt>
                 <dd className="font-medium text-right">{formLabel ? t(formLabel) : "—"}</dd>
+              </div>
+              <div className="flex justify-between gap-4 p-2.5">
+                <dt className="text-muted-foreground">{t("contract.label_contract_date")}</dt>
+                <dd className="font-medium text-right">{signedOn || "—"}</dd>
               </div>
               <div className="flex justify-between gap-4 p-2.5">
                 <dt className="text-muted-foreground">{t("contract.label_doc_attachments")}</dt>
