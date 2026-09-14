@@ -11,7 +11,7 @@
  */
 import { Router, type IRouter } from "express";
 import multer from "multer";
-import { eq, and, desc, ilike, or, sql } from "drizzle-orm";
+import { eq, and, ilike, or, sql, inArray } from "drizzle-orm";
 import {
   db,
   solutionSupportTicketsTable,
@@ -23,7 +23,8 @@ import { requireAuth } from "../middlewares/requireAuth";
 import { isCloudinaryConfigured, uploadToCloudinary, cldFolder } from "../utils/cloudinary";
 import { getAiClient, isTaskConfigured } from "../lib/ai/client.js";
 import { logAction } from "../utils/auditLog";
-import { deletedFilter } from "../lib/softDelete";
+import { deletedFilter, makeBulkDelete, makeBulkRestore } from "../lib/softDelete";
+import { parseListPage, parseSortParams, buildOrderBy, sendList, type SortMap } from "../utils/pagination";
 import {
   pushToSolutionDesk,
   isSolutionDeskConfigured,
@@ -93,13 +94,43 @@ router.get("/v1/solution-support/config", requireAuth, async (_req, res): Promis
 });
 
 // ── List ───────────────────────────────────────────────────────────────────
+// 서버 정렬 + 서버 페이징(docs/LIST_PAGINATION_SORTING.md). 프런트
+// SolutionSupport.tsx 의 SORTABLE_KEYS 와 1:1로 맞춰 둘 것.
+const SUPPORT_SORT: SortMap = {
+  ticket_ref: solutionSupportTicketsTable.ticket_ref,
+  subject: solutionSupportTicketsTable.subject,
+  category: solutionSupportTicketsTable.category,
+  status: solutionSupportTicketsTable.status,
+  priority: solutionSupportTicketsTable.priority,
+  push_status: solutionSupportTicketsTable.push_status,
+  created_at: solutionSupportTicketsTable.created_at,
+  updated_at: solutionSupportTicketsTable.updated_at,
+  // 마지막 메시지 시각 — 스레드가 움직인 시점. 파생값이지만 SQL 로 내려야
+  // 페이지 안에서만 정렬되는 사고가 안 난다.
+  last_message_at: sql`(select max(m.created_at) from solution_support_messages m
+                         where m.ticket_id = ${solutionSupportTicketsTable.id})`,
+  // 기본 정렬 키. "최근에 쓴 글과 최근에 고친 글이 위" 라는 요구를 한 컬럼으로
+  // 표현한 것 — 새 글은 created_at 이, 답글이 붙거나 상태를 바꾼 글은 updated_at
+  // 이 올라오므로 둘 중 큰 값이 곧 '마지막 활동'이다.
+  last_activity: sql`greatest(${solutionSupportTicketsTable.updated_at}, ${solutionSupportTicketsTable.created_at})`,
+};
+
 router.get("/v1/solution-support", requireAuth, async (req, res): Promise<void> => {
   try {
     const status = String(req.query["status"] ?? "").trim();
+    const category = String(req.query["category"] ?? "").trim();
+    const push = String(req.query["push_status"] ?? "").trim();
     const q = String(req.query["q"] ?? "").trim();
+
     const where = [deletedFilter(solutionSupportTicketsTable.deleted_at, req)];
     if (STATUSES.includes(status as (typeof STATUSES)[number])) {
       where.push(eq(solutionSupportTicketsTable.status, status));
+    }
+    if (SUPPORT_CATEGORIES.includes(category as (typeof SUPPORT_CATEGORIES)[number])) {
+      where.push(eq(solutionSupportTicketsTable.category, category));
+    }
+    if (["queued", "sent", "failed"].includes(push)) {
+      where.push(eq(solutionSupportTicketsTable.push_status, push));
     }
     if (q) {
       where.push(
@@ -107,43 +138,63 @@ router.get("/v1/solution-support", requireAuth, async (req, res): Promise<void> 
           ilike(solutionSupportTicketsTable.subject, `%${q}%`),
           ilike(solutionSupportTicketsTable.ticket_ref, `%${q}%`),
           ilike(solutionSupportTicketsTable.description, `%${q}%`),
+          ilike(solutionSupportTicketsTable.requester_name, `%${q}%`),
         )!,
       );
     }
+    const filter = and(...where);
 
-    const rows = await db
-      .select()
-      .from(solutionSupportTicketsTable)
-      .where(and(...where))
-      .orderBy(desc(solutionSupportTicketsTable.created_at));
+    const { limit, offset, page } = parseListPage(req.query);
+    const sort = parseSortParams(req.query, SUPPORT_SORT, { defaultKey: "last_activity", defaultDir: "desc" });
 
-    // Message counts in ONE grouped query — this list is small but the N+1
-    // shape is exactly what has bitten the other list endpoints.
-    const counts = rows.length
+    const [rows, [counted]] = await Promise.all([
+      db.select().from(solutionSupportTicketsTable).where(filter)
+        .orderBy(...buildOrderBy(SUPPORT_SORT, sort, solutionSupportTicketsTable.id))
+        .limit(limit).offset(offset),
+      db.select({ count: sql<number>`count(*)::int` }).from(solutionSupportTicketsTable).where(filter),
+    ]);
+
+    // 메시지 집계는 현재 페이지의 티켓으로 좁힌 한 번의 그룹 쿼리로 — 행마다
+    // 세는 N+1 이 리스트를 멈춰 세운 전례가 있다.
+    const ids = rows.map((r) => r.id);
+    const counts = ids.length
       ? await db
           .select({
             ticket_id: solutionSupportMessagesTable.ticket_id,
-            n: sql<number>`count(*)`,
+            n: sql<number>`count(*)::int`,
             last_at: sql<string>`max(${solutionSupportMessagesTable.created_at})`,
           })
           .from(solutionSupportMessagesTable)
+          .where(inArray(solutionSupportMessagesTable.ticket_id, ids))
           .groupBy(solutionSupportMessagesTable.ticket_id)
       : [];
     const byTicket = new Map(counts.map((c) => [c.ticket_id, c]));
 
-    ok(
+    sendList(
       res,
       rows.map((t) => ({
         ...t,
         message_count: Number(byTicket.get(t.id)?.n ?? 0),
         last_message_at: byTicket.get(t.id)?.last_at ?? null,
       })),
+      counted?.count ?? 0,
+      { limit, offset, page },
     );
   } catch (err) {
     console.error("[solution-support] list failed:", err);
     fail(res, 500, "INTERNAL", "Failed to load support requests");
   }
 });
+
+// 보관함 + 일괄 보관/복구 — 다른 44개 리스트와 같은 수명주기.
+const softDeleteCfg = { table: solutionSupportTicketsTable, idColumn: solutionSupportTicketsTable.id };
+router.post("/v1/solution-support/bulk-delete", requireAuth, makeBulkDelete({
+  ...softDeleteCfg,
+  onPurge: async (ids) => {
+    await db.delete(solutionSupportMessagesTable).where(inArray(solutionSupportMessagesTable.ticket_id, ids));
+  },
+}));
+router.post("/v1/solution-support/bulk-restore", requireAuth, makeBulkRestore(softDeleteCfg));
 
 // ── Detail (ticket + thread) ───────────────────────────────────────────────
 router.get("/v1/solution-support/:id", requireAuth, async (req, res): Promise<void> => {

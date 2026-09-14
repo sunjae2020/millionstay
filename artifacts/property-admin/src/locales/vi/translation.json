@@ -8149,6 +8149,16 @@
       "in_progress": "Đang xử lý",
       "resolved": "Đã giải quyết",
       "closed": "Đã đóng"
-    }
+    },
+    "col_ref": "Mã tiếp nhận",
+    "col_subject": "Tiêu đề",
+    "col_category": "Phân loại",
+    "col_status": "Trạng thái",
+    "col_priority": "Ưu tiên",
+    "col_push": "Gửi",
+    "col_messages": "Tin nhắn",
+    "col_last_message": "Tin nhắn gần nhất",
+    "category_all": "Tất cả phân loại",
+    "push_all": "Tất cả trạng thái gửi"
   }
 }

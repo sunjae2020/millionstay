@@ -8249,6 +8249,16 @@
       "in_progress": "In progress",
       "resolved": "Resolved",
       "closed": "Closed"
-    }
+    },
+    "col_ref": "Ref",
+    "col_subject": "Subject",
+    "col_category": "Type",
+    "col_status": "Status",
+    "col_priority": "Priority",
+    "col_push": "Delivery",
+    "col_messages": "Msgs",
+    "col_last_message": "Last message",
+    "category_all": "All types",
+    "push_all": "All delivery states"
   }
 }

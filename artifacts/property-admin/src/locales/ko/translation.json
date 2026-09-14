@@ -8249,6 +8249,16 @@
       "in_progress": "처리 중",
       "resolved": "해결",
       "closed": "종료"
-    }
+    },
+    "col_ref": "접수번호",
+    "col_subject": "제목",
+    "col_category": "작업 구분",
+    "col_status": "상태",
+    "col_priority": "중요도",
+    "col_push": "전송",
+    "col_messages": "메시지",
+    "col_last_message": "마지막 메시지",
+    "category_all": "전체 구분",
+    "push_all": "전체 전송상태"
   }
 }

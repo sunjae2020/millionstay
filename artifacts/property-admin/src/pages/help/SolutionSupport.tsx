@@ -7,7 +7,7 @@
  * second, so a vendor outage never loses a write-up. The push state is visible
  * on every row (전송됨 / 대기 / 실패) and a failed one can be retried.
  */
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiFetch } from "@/lib/apiFetch";
@@ -19,11 +19,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
-import { formatDateTime } from "@/lib/date";
+import { formatDate, formatDateTime } from "@/lib/date";
 import {
-  Plus, Send, X, LifeBuoy, Sparkles, Link2, Trash2, ExternalLink, Loader2,
-  RefreshCw, Search, Paperclip, AlertTriangle, CheckCircle2, Clock,
+  Plus, Send, X, Sparkles, Link2, Trash2, ExternalLink, Loader2,
+  RefreshCw, Paperclip, AlertTriangle, CheckCircle2, Clock,
 } from "lucide-react";
+import { DataTable, useServerList, ACTIONS_KEY, type ColumnDef } from "@/components/ui/data-table";
+import { ALL, SearchBox, ResetFiltersButton } from "@/components/list-filters";
 
 /* ── Types ─────────────────────────────────────────────────────────────── */
 
@@ -550,38 +552,153 @@ function TicketThread({ ticketId, onClose }: { ticketId: number; onClose: () => 
 
 /* ── Page ──────────────────────────────────────────────────────────────── */
 
+/** 서버가 정렬할 수 있는 컬럼(api-server routes/solution-support.ts 의
+ *  SUPPORT_SORT 와 1:1). `last_activity` 는 화면에 컬럼이 없는 기본 정렬 키다. */
+const SORTABLE_KEYS = [
+  "ticket_ref", "subject", "category", "status", "priority",
+  "push_status", "last_message_at", "created_at", "updated_at",
+];
+
 export default function SolutionSupportPage() {
   const { t } = useTranslation();
   const [openNew, setOpenNew] = useState(false);
   const [selected, setSelected] = useState<number | null>(null);
-  const [status, setStatus] = useState("all");
   const [q, setQ] = useState("");
+  const [status, setStatus] = useState(ALL);
+  const [category, setCategory] = useState(ALL);
+  const [push, setPush] = useState(ALL);
+  const [showDeleted, setShowDeleted] = useState(false);
 
   const { data: config } = useQuery({
     queryKey: ["solution-support", "config"],
     queryFn: () => json<DeskConfig>("/api/v1/solution-support/config"),
   });
 
-  const { data: tickets, isLoading } = useQuery({
-    queryKey: ["solution-support", { status, q }],
-    queryFn: () => {
-      const p = new URLSearchParams();
-      if (status !== "all") p.set("status", status);
-      if (q.trim()) p.set("q", q.trim());
-      return json<Ticket[]>(`/api/v1/solution-support${p.toString() ? `?${p}` : ""}`);
-    },
-  });
+  const filters = {
+    q: q || undefined,
+    status: status === ALL ? undefined : status,
+    category: category === ALL ? undefined : category,
+    push_status: push === ALL ? undefined : push,
+    ...(showDeleted ? { deleted: "only" } : {}),
+  };
+  const hasFilters = !!q || status !== ALL || category !== ALL || push !== ALL;
+  const resetFilters = () => { setQ(""); setStatus(ALL); setCategory(ALL); setPush(ALL); };
 
-  const rows = tickets ?? [];
+  const { rows, total, isLoading, server, invalidate } = useServerList<Ticket>(
+    "/api/v1/solution-support",
+    // 기본 정렬 = 마지막 활동 내림차순: 새로 쓴 글과 방금 고친 글이 위로 온다.
+    { filters, sortableKeys: SORTABLE_KEYS, defaultSort: { key: "last_activity", dir: "desc" } },
+  );
+
+  const columns: ColumnDef<Ticket>[] = useMemo(
+    () => [
+      {
+        key: "ticket_ref",
+        header: "solution_support.col_ref",
+        defaultWidth: 140,
+        cell: (tk) => (
+          <button onClick={() => setSelected(tk.id)}
+            className="font-mono text-xs font-semibold text-primary hover:underline">
+            {tk.ticket_ref}
+          </button>
+        ),
+      },
+      {
+        key: "subject",
+        header: "solution_support.col_subject",
+        hideable: false,
+        defaultWidth: 360,
+        cell: (tk) => (
+          <button onClick={() => setSelected(tk.id)} className="font-medium hover:underline text-left">
+            {tk.subject}
+          </button>
+        ),
+      },
+      {
+        key: "category",
+        header: "solution_support.col_category",
+        defaultWidth: 120,
+        cell: (tk) => (
+          <span className="text-xs px-2 py-0.5 rounded-full bg-muted text-muted-foreground">
+            {t(`solution_support.cat.${tk.category}`, tk.category)}
+          </span>
+        ),
+        csv: (tk) => tk.category,
+      },
+      {
+        key: "status",
+        header: "solution_support.col_status",
+        defaultWidth: 100,
+        cell: (tk) => (
+          <span className={`text-xs px-2 py-0.5 rounded-full ${STATUS_COLORS[tk.status] ?? ""}`}>
+            {t(`solution_support.status.${tk.status}`, tk.status)}
+          </span>
+        ),
+        csv: (tk) => tk.status,
+      },
+      {
+        key: "priority",
+        header: "solution_support.col_priority",
+        defaultWidth: 90,
+        cell: (tk) => (
+          <span className={`text-xs px-2 py-0.5 rounded-full ${PRIORITY_COLORS[tk.priority] ?? ""}`}>
+            {t(`solution_support.prio.${tk.priority}`, tk.priority)}
+          </span>
+        ),
+        csv: (tk) => tk.priority,
+      },
+      {
+        key: "push_status",
+        header: "solution_support.col_push",
+        defaultWidth: 110,
+        cell: (tk) => <PushBadge status={tk.push_status} />,
+        csv: (tk) => tk.push_status,
+      },
+      {
+        key: "message_count",
+        header: "solution_support.col_messages",
+        align: "right",
+        defaultWidth: 80,
+        sortable: false,
+        cell: (tk) => <span className="text-muted-foreground">{tk.message_count ?? 0}</span>,
+      },
+      {
+        key: "last_message_at",
+        header: "solution_support.col_last_message",
+        defaultWidth: 130,
+        cell: (tk) => (
+          <span className="text-muted-foreground">
+            {tk.last_message_at ? formatDate(tk.last_message_at) : "—"}
+          </span>
+        ),
+        csv: (tk) => tk.last_message_at ?? "",
+      },
+      {
+        key: ACTIONS_KEY,
+        header: "",
+        hideable: false,
+        sortable: false,
+        align: "right",
+        defaultWidth: 60,
+        cell: (tk) => (
+          <button onClick={() => setSelected(tk.id)}
+            className="p-1.5 rounded hover:bg-muted transition-colors" title={tk.subject}>
+            <ExternalLink className="h-3.5 w-3.5 text-muted-foreground" />
+          </button>
+        ),
+      },
+    ],
+    [t],
+  );
 
   return (
     <Layout>
-      <div className="max-w-5xl mx-auto space-y-5">
-        <div className="flex flex-wrap items-start justify-between gap-3">
+      <div className="p-6">
+        <div className="flex items-center justify-between mb-6">
           <div>
-            <h1 className="text-2xl font-bold">{t("solution_support.title", "Solution Support")}</h1>
-            <p className="text-sm text-muted-foreground mt-1">
-              {t("solution_support.subtitle", "Contact the solution team — how to use the system, billing, feature requests, collaboration, bug reports.")}
+            <h1 className="text-2xl font-bold tracking-tight">{t("solution_support.title", "Solution Support")}</h1>
+            <p className="text-sm text-muted-foreground">
+              {total} {t("common.total")} · {t("solution_support.subtitle", "Contact the solution team.")}
             </p>
           </div>
           <Button onClick={() => setOpenNew(true)}>
@@ -590,71 +707,59 @@ export default function SolutionSupportPage() {
         </div>
 
         {config && !config.configured && (
-          <div className="rounded-md border border-amber-200 bg-amber-50 px-3.5 py-2.5 text-sm text-amber-800">
+          <div className="rounded-md border border-amber-200 bg-amber-50 px-3.5 py-2.5 text-sm text-amber-800 mb-4">
             <span className="font-medium">{t("solution_support.not_connected", "Not connected to the solution desk.")}</span>{" "}
-            {t("solution_support.not_connected_desc", "Requests are saved here but are not delivered until SOLUTION_SUPPORT_TOKEN is set on the API server.")}
+            {t("solution_support.not_connected_desc", "Requests are saved here but are not delivered yet.")}
           </div>
         )}
 
-        <div className="flex flex-wrap items-center gap-2">
-          <div className="relative flex-1 min-w-[200px]">
-            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-            <Input className="pl-8" value={q} onChange={(e) => setQ(e.target.value)}
-              placeholder={t("solution_support.search_ph", "Search by reference, subject or text")} />
-          </div>
-          <Select value={status} onValueChange={setStatus}>
-            <SelectTrigger className="w-44"><SelectValue /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">{t("solution_support.status_all", "All statuses")}</SelectItem>
-              {STATUSES.map((s) => (
-                <SelectItem key={s} value={s}>{t(`solution_support.status.${s}`, s)}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-
-        <div className="rounded-xl border bg-card">
-          {isLoading ? (
-            <p className="p-10 text-center text-sm text-muted-foreground">{t("common.loading", "Loading…")}</p>
-          ) : rows.length === 0 ? (
-            <div className="p-12 text-center">
-              <LifeBuoy className="h-10 w-10 mx-auto mb-3 text-muted-foreground/40" />
-              <p className="text-sm text-muted-foreground">
-                {t("solution_support.empty", "No requests yet. Click “New request” to contact the solution team.")}
-              </p>
+        <DataTable
+          tableKey="solution-support"
+          columns={columns}
+          data={rows}
+          server={server}
+          isLoading={isLoading}
+          rowKey={(tk) => tk.id}
+          emptyText={t("solution_support.empty", "No requests yet.")}
+          exportFileName="solution-support"
+          selection={{ enable: true, resource: "solution-support", onChanged: invalidate }}
+          showDeleted={showDeleted}
+          onToggleShowDeleted={setShowDeleted}
+          toolbarExtra={
+            <div className="flex flex-wrap items-center gap-2">
+              <SearchBox value={q} onChange={setQ}
+                placeholder={t("solution_support.search_ph", "Search by reference, subject or text")} />
+              <Select value={status} onValueChange={setStatus}>
+                <SelectTrigger className="w-36"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={ALL}>{t("solution_support.status_all", "All statuses")}</SelectItem>
+                  {STATUSES.map((v) => (
+                    <SelectItem key={v} value={v}>{t(`solution_support.status.${v}`, v)}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Select value={category} onValueChange={setCategory}>
+                <SelectTrigger className="w-40"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={ALL}>{t("solution_support.category_all", "All categories")}</SelectItem>
+                  {CATEGORIES.map((v) => (
+                    <SelectItem key={v} value={v}>{t(`solution_support.cat.${v}`, v)}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Select value={push} onValueChange={setPush}>
+                <SelectTrigger className="w-36"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={ALL}>{t("solution_support.push_all", "All delivery states")}</SelectItem>
+                  <SelectItem value="sent">{t("solution_support.push_sent", "Delivered")}</SelectItem>
+                  <SelectItem value="queued">{t("solution_support.push_queued", "Pending")}</SelectItem>
+                  <SelectItem value="failed">{t("solution_support.push_failed", "Not delivered")}</SelectItem>
+                </SelectContent>
+              </Select>
+              <ResetFiltersButton show={hasFilters} onClick={resetFilters} />
             </div>
-          ) : (
-            <ul className="divide-y">
-              {rows.map((tk) => (
-                <li key={tk.id} className="p-4 flex items-start gap-3 cursor-pointer hover:bg-muted/40"
-                  onClick={() => setSelected(tk.id)}>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex flex-wrap items-center gap-2 mb-1">
-                      <span className="font-mono text-xs font-semibold text-primary">{tk.ticket_ref}</span>
-                      <span className="text-xs px-2 py-0.5 rounded-full bg-muted text-muted-foreground">
-                        {t(`solution_support.cat.${tk.category}`, tk.category)}
-                      </span>
-                      <span className={`text-xs px-2 py-0.5 rounded-full ${PRIORITY_COLORS[tk.priority] ?? ""}`}>
-                        {t(`solution_support.prio.${tk.priority}`, tk.priority)}
-                      </span>
-                      <PushBadge status={tk.push_status} />
-                    </div>
-                    <p className="text-sm font-medium truncate">{tk.subject}</p>
-                    <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 text-xs mt-1.5 text-muted-foreground">
-                      {tk.requester_name && <span>{tk.requester_name}</span>}
-                      <span>{t("solution_support.opened", "Opened")}: {formatDateTime(tk.created_at)}</span>
-                      {tk.last_message_at && <span>{t("solution_support.last_reply", "Last message")}: {formatDateTime(tk.last_message_at)}</span>}
-                      <span>{t("solution_support.messages", "{{count}} messages", { count: tk.message_count ?? 0 })}</span>
-                    </div>
-                  </div>
-                  <span className={`text-xs px-2 py-1 rounded-full font-semibold shrink-0 ${STATUS_COLORS[tk.status] ?? ""}`}>
-                    {t(`solution_support.status.${tk.status}`, tk.status)}
-                  </span>
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
+          }
+        />
       </div>
 
       <NewRequestDialog open={openNew} onClose={() => setOpenNew(false)} config={config} />

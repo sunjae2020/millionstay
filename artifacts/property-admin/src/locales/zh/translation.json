@@ -8208,6 +8208,16 @@
       "in_progress": "处理中",
       "resolved": "已解决",
       "closed": "已关闭"
-    }
+    },
+    "col_ref": "受理编号",
+    "col_subject": "标题",
+    "col_category": "分类",
+    "col_status": "状态",
+    "col_priority": "优先级",
+    "col_push": "送达",
+    "col_messages": "消息",
+    "col_last_message": "最新消息",
+    "category_all": "全部分类",
+    "push_all": "全部送达状态"
   }
 }

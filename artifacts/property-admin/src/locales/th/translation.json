@@ -8190,6 +8190,16 @@
       "in_progress": "กำลังดำเนินการ",
       "resolved": "แก้ไขแล้ว",
       "closed": "ปิดเรื่อง"
-    }
+    },
+    "col_ref": "เลขที่รับเรื่อง",
+    "col_subject": "หัวข้อ",
+    "col_category": "ประเภทงาน",
+    "col_status": "สถานะ",
+    "col_priority": "ความสำคัญ",
+    "col_push": "การส่ง",
+    "col_messages": "ข้อความ",
+    "col_last_message": "ข้อความล่าสุด",
+    "category_all": "ทุกประเภท",
+    "push_all": "ทุกสถานะการส่ง"
   }
 }
