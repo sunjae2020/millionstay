@@ -55,6 +55,22 @@ function postcodeLabel(postcode: string, country: string | null | undefined): st
 }
 
 /**
+ * Korean address entry (Daum/Kakao 우편번호 서비스, and most spreadsheet imports)
+ * writes the **whole** road-name address into `line1` — "전남광주통합특별시 여수시
+ * 좌수영로 101" — while still filling 시·도 and 시·군·구 into their own columns.
+ * Prepending those columns then prints them twice. So a region that the street
+ * line already spells out is dropped: the street line is the authoritative text,
+ * and the columns exist for filtering and sorting, not for re-printing.
+ *
+ * Records where `line1` holds only the street keep both columns, so the same
+ * formatter serves both data shapes.
+ */
+function regionPrinter(streetLines: string[]): (region: string) => string {
+  const street = streetLines.filter(Boolean).join(" ");
+  return region => (region && street.includes(region) ? "" : region);
+}
+
+/**
  * Render a single-line postal address. Ordering follows `parts.country`;
  * `lang` only decides which language the country name is written in.
  * Empty parts are dropped; an all-empty address returns "".
@@ -90,16 +106,19 @@ export function formatPostalAddress(
     // 대한민국 경기도 안양시 동안구 동안로 35, 109동 901호 (우) 14054
     // Space-separated; the street line keeps its own commas, which is exactly
     // how a Korean address is written.
-    const head = [country, state, suburb, line1, line2].filter(Boolean).join(" ");
+    const printRegion = regionPrinter([line1, line2]);
+    const head = [country, printRegion(state), printRegion(suburb), line1, line2]
+      .filter(Boolean).join(" ");
     return [head, postcodeLabel(postcode, orderCountry)].filter(Boolean).join(" ");
   }
 
   // Level 5, 120 Collins St, Melbourne VIC 3000, 호주
+  const printRegion = regionPrinter([line1, line2]);
   return [
     line1,
     line2,
-    suburb,
-    [state, postcode].filter(Boolean).join(" ").trim() || null,
+    printRegion(suburb),
+    [printRegion(state), postcode].filter(Boolean).join(" ").trim() || null,
     country,
   ]
     .filter(Boolean)
