@@ -145,7 +145,8 @@
     "fixed_assets": "자산대장",
     "activity_analytics": "활동 분석",
     "sms_center": "문자 발송",
-    "cms_seo": "SEO · GEO"
+    "cms_seo": "SEO · GEO",
+    "solution_support": "솔루션 지원"
   },
   "dashboard": {
     "title": "대시보드",
@@ -7413,7 +7414,8 @@
       "transaction_categorise": "거래 계정과목 제안",
       "transaction_receipt_ocr": "영수증 판독",
       "transaction_split_suggest": "분할 배분 제안",
-      "seo_geo_draft": "SEO·GEO 메타데이터 초안"
+      "seo_geo_draft": "SEO·GEO 메타데이터 초안",
+      "support_organize": "지원 요청 정리"
     },
     "custom_engine": "직접 추가",
     "add_engine": "엔진 추가",
@@ -8179,5 +8181,74 @@
     "robots_desc": "자동 생성되는 robots.txt 뒤에 그대로 붙습니다. 색인에서 빼고 싶은 경로가 있을 때만 쓰세요.",
     "brand_aliases": "브랜드 별칭",
     "brand_aliases_hint": "제목에 브랜드가 들어갔는지 판단할 때 함께 인정할 표기입니다. 한 줄에 하나씩. 예: 메트하임"
+  },
+  "solution_support": {
+    "title": "솔루션 지원",
+    "subtitle": "솔루션 팀에 문의합니다 — 사용 방법, 요금·정산, 기능 요청, 협업, 오류 신고.",
+    "new": "새 문의",
+    "new_title": "솔루션 팀에 새 문의",
+    "subject": "제목",
+    "subject_ph": "한 줄 요약",
+    "category": "분류",
+    "priority": "중요도",
+    "message": "내용",
+    "message_ph": "질문·문제·제안을 적어 주세요. 스크린샷을 붙여넣을 수 있습니다.",
+    "organize": "AI로 정리",
+    "organize_hint": "적어 둔 메모를 솔루션 팀이 보기 좋은 형태로 정리합니다.",
+    "organize_failed": "메모를 정리하지 못했습니다",
+    "ai_summary": "AI 정리본 (수정 가능, 원문과 함께 전송됩니다)",
+    "links": "링크",
+    "link_label": "이름",
+    "attach": "스크린샷 첨부",
+    "attach_hint": "또는 이미지 붙여넣기 (Ctrl/Cmd+V)",
+    "upload_failed": "업로드에 실패했습니다",
+    "send": "문의 보내기",
+    "send_reply": "보내기",
+    "send_failed": "보내지 못했습니다",
+    "log": "기록",
+    "sent_title": "문의를 보냈습니다",
+    "saved_not_sent_title": "저장했지만 전달되지 않았습니다",
+    "saved_not_sent_desc": "이곳에는 저장되었습니다. 문의 화면에서 다시 보낼 수 있습니다.",
+    "not_configured": "솔루션 데스크 연결이 설정되지 않아 이 문의는 저장만 되고 전달되지 않습니다. API 서버에 SOLUTION_SUPPORT_TOKEN을 설정하세요.",
+    "not_connected": "솔루션 데스크에 연결되어 있지 않습니다.",
+    "not_connected_desc": "문의는 이곳에 저장되지만, API 서버에 SOLUTION_SUPPORT_TOKEN을 설정하기 전까지는 전달되지 않습니다.",
+    "not_delivered_title": "이 문의가 솔루션 팀에 전달되지 않았습니다",
+    "retry": "다시 보내기",
+    "retry_ok": "솔루션 팀에 전달했습니다",
+    "retry_failed": "아직 전달되지 않았습니다",
+    "push_sent": "전달됨",
+    "push_queued": "대기",
+    "push_failed": "미전달",
+    "search_ph": "접수번호·제목·내용으로 검색",
+    "status_all": "전체 상태",
+    "empty": "아직 문의가 없습니다. “새 문의”로 솔루션 팀에 연락하세요.",
+    "opened": "접수",
+    "last_reply": "마지막 메시지",
+    "messages": "메시지 {{count}}건",
+    "us": "우리",
+    "vendor": "솔루션 팀",
+    "reply_ph": "솔루션 팀에 추가로 전할 내용을 적으세요…",
+    "reply_vendor_ph": "솔루션 팀에서 받은 답변을 기록하세요…",
+    "log_vendor_reply": "솔루션 팀에서 받은 답변 기록하기",
+    "cat": {
+      "usage": "사용 방법",
+      "billing": "요금·정산",
+      "feature": "기능 요청",
+      "collab": "협업",
+      "bug": "오류 신고",
+      "other": "기타"
+    },
+    "prio": {
+      "low": "낮음",
+      "normal": "보통",
+      "high": "높음",
+      "urgent": "긴급"
+    },
+    "status": {
+      "open": "접수",
+      "in_progress": "처리 중",
+      "resolved": "해결",
+      "closed": "종료"
+    }
   }
 }

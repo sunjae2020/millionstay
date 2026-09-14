@@ -102,6 +102,7 @@ import DocumentLibrary from "@/pages/documents/DocumentLibrary";
 import TenantLinkQueue from "@/pages/documents/TenantLinkQueue";
 import HelpDocs from "@/pages/help/HelpDocs";
 import ManualRegisterPage from "@/pages/help/DocsIndex";
+import SolutionSupportPage from "@/pages/help/SolutionSupport";
 import PeriodClosePage from "@/pages/finance/PeriodClose";
 import FixedAssetsPage from "@/pages/finance/FixedAssets";
 import MobileGuide from "@/pages/help/MobileGuide";
@@ -378,6 +379,7 @@ function Router() {
       <Route path="/documents/tenant-links" component={TenantLinkQueue} />
       {/* 내부 문서함 — 운영 지도·정책·세입자 링크 (직원 교육용). */}
       <Route path="/help/docs" component={HelpDocs} />
+      <Route path="/help/support" component={SolutionSupportPage} />
       {/* 사내 규정·매뉴얼 관리대장 — 내부 문서함(/help/docs)과 별개다. */}
       <Route path="/help/manuals" component={ManualRegisterPage} />
       <Route path="/help/mobile" component={MobileGuide} />

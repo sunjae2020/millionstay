@@ -78,6 +78,7 @@ import {
   Target,
   LayoutGrid,
   Cpu,
+  LifeBuoy,
 } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { MobileTabBar, CUSTOMIZE_TABS_EVENT } from "@/components/MobileTabBar";
@@ -192,6 +193,7 @@ function getNav(
         { href: "/documents/checklist", label: t("nav.document_checklist"), icon: ClipboardCheck },
         { href: "/documents/tenant-links", label: t("nav.tenant_links"), icon: Link2 },
         { href: "/help/docs", label: t("nav.help_docs"), icon: BookOpen },
+        { href: "/help/support", label: t("nav.solution_support"), icon: LifeBuoy },
         { href: "/help/manuals", label: t("nav.manual_register"), icon: BookOpen },
         { href: "/documents/quotes", label: t("nav.quotes"), icon: FileText },
         { href: "/finance/invoices", label: t("nav.invoice"), icon: Receipt },

@@ -145,7 +145,8 @@
     "fixed_assets": "Fixed assets",
     "activity_analytics": "Activity Analytics",
     "sms_center": "Text messages",
-    "cms_seo": "SEO · GEO"
+    "cms_seo": "SEO · GEO",
+    "solution_support": "Solution Support"
   },
   "dashboard": {
     "title": "Dashboard",
@@ -7414,7 +7415,8 @@
       "transaction_categorise": "Transaction categorisation",
       "transaction_receipt_ocr": "Receipt reading",
       "transaction_split_suggest": "Split suggestion",
-      "seo_geo_draft": "SEO / GEO metadata drafts"
+      "seo_geo_draft": "SEO / GEO metadata drafts",
+      "support_organize": "Support note organizing"
     },
     "custom_engine": "Custom",
     "add_engine": "Add an engine",
@@ -8179,5 +8181,74 @@
     "robots_desc": "Appended verbatim to the generated robots.txt. Use it only when a path should stay out of the index.",
     "brand_aliases": "Brand aliases",
     "brand_aliases_hint": "Other spellings accepted when checking whether a title carries the brand. One per line."
+  },
+  "solution_support": {
+    "title": "Solution Support",
+    "subtitle": "Contact the solution team — how to use the system, billing, feature requests, collaboration, bug reports.",
+    "new": "New request",
+    "new_title": "New request to the solution team",
+    "subject": "Subject",
+    "subject_ph": "Short summary",
+    "category": "Category",
+    "priority": "Priority",
+    "message": "Message",
+    "message_ph": "Describe your question, issue or suggestion. You can paste a screenshot.",
+    "organize": "Organize with AI",
+    "organize_hint": "Turns your note into a tidy summary for the solution team.",
+    "organize_failed": "Could not organize the note",
+    "ai_summary": "AI summary (editable, sent alongside your note)",
+    "links": "Links",
+    "link_label": "Label",
+    "attach": "Attach screenshot",
+    "attach_hint": "or paste an image (Ctrl/Cmd+V)",
+    "upload_failed": "Upload failed",
+    "send": "Send request",
+    "send_reply": "Send",
+    "send_failed": "Failed to send",
+    "log": "Log",
+    "sent_title": "Request sent",
+    "saved_not_sent_title": "Saved, but not delivered",
+    "saved_not_sent_desc": "Saved locally. Retry delivery from the request.",
+    "not_configured": "The solution desk connection is not configured, so this request will be saved here but not delivered. Set SOLUTION_SUPPORT_TOKEN on the API server.",
+    "not_connected": "Not connected to the solution desk.",
+    "not_connected_desc": "Requests are saved here but are not delivered until SOLUTION_SUPPORT_TOKEN is set on the API server.",
+    "not_delivered_title": "This request has not reached the solution team",
+    "retry": "Retry delivery",
+    "retry_ok": "Delivered to the solution team",
+    "retry_failed": "Still not delivered",
+    "push_sent": "Delivered",
+    "push_queued": "Pending",
+    "push_failed": "Not delivered",
+    "search_ph": "Search by reference, subject or text",
+    "status_all": "All statuses",
+    "empty": "No requests yet. Click “New request” to contact the solution team.",
+    "opened": "Opened",
+    "last_reply": "Last message",
+    "messages": "{{count}} messages",
+    "us": "Us",
+    "vendor": "Solution team",
+    "reply_ph": "Write a follow-up to the solution team…",
+    "reply_vendor_ph": "Record the solution team's reply…",
+    "log_vendor_reply": "Log a reply received from the solution team",
+    "cat": {
+      "usage": "How to use",
+      "billing": "Billing & accounting",
+      "feature": "Feature request",
+      "collab": "Collaboration",
+      "bug": "Bug report",
+      "other": "Other"
+    },
+    "prio": {
+      "low": "Low",
+      "normal": "Normal",
+      "high": "High",
+      "urgent": "Urgent"
+    },
+    "status": {
+      "open": "Open",
+      "in_progress": "In progress",
+      "resolved": "Resolved",
+      "closed": "Closed"
+    }
   }
 }

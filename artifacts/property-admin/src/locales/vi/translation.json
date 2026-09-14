@@ -143,7 +143,8 @@
     "fixed_assets": "Sổ tài sản",
     "activity_analytics": "Phân tích hoạt động",
     "sms_center": "Gửi tin nhắn",
-    "cms_seo": "SEO · GEO"
+    "cms_seo": "SEO · GEO",
+    "solution_support": "Hỗ trợ giải pháp"
   },
   "dashboard": {
     "title": "Bảng điều khiển",
@@ -7313,7 +7314,8 @@
       "transaction_categorise": "Gợi ý tài khoản giao dịch",
       "transaction_receipt_ocr": "Đọc biên nhận",
       "transaction_split_suggest": "Gợi ý phân bổ",
-      "seo_geo_draft": "Bản nháp metadata SEO / GEO"
+      "seo_geo_draft": "Bản nháp metadata SEO / GEO",
+      "support_organize": "Sắp xếp yêu cầu hỗ trợ"
     },
     "custom_engine": "Tự thêm",
     "add_engine": "Thêm engine",
@@ -8079,5 +8081,74 @@
     "robots_desc": "Được nối nguyên văn vào cuối robots.txt tự sinh. Chỉ dùng khi có đường dẫn cần loại khỏi chỉ mục.",
     "brand_aliases": "Tên gọi khác của thương hiệu",
     "brand_aliases_hint": "Các cách viết khác được chấp nhận khi kiểm tra tiêu đề có tên thương hiệu. Mỗi dòng một mục."
+  },
+  "solution_support": {
+    "title": "Hỗ trợ giải pháp",
+    "subtitle": "Liên hệ đội ngũ giải pháp — cách sử dụng, hoá đơn và kế toán, yêu cầu tính năng, hợp tác, báo lỗi.",
+    "new": "Yêu cầu mới",
+    "new_title": "Yêu cầu mới gửi đội ngũ giải pháp",
+    "subject": "Tiêu đề",
+    "subject_ph": "Tóm tắt ngắn gọn",
+    "category": "Phân loại",
+    "priority": "Mức ưu tiên",
+    "message": "Nội dung",
+    "message_ph": "Mô tả câu hỏi, sự cố hoặc đề xuất của bạn. Bạn có thể dán ảnh chụp màn hình.",
+    "organize": "Sắp xếp bằng AI",
+    "organize_hint": "Biến ghi chú của bạn thành bản tóm tắt gọn gàng cho đội ngũ giải pháp.",
+    "organize_failed": "Không sắp xếp được ghi chú này",
+    "ai_summary": "Bản tóm tắt AI (có thể sửa, gửi kèm nội dung gốc)",
+    "links": "Liên kết",
+    "link_label": "Nhãn",
+    "attach": "Đính kèm ảnh chụp màn hình",
+    "attach_hint": "hoặc dán ảnh (Ctrl/Cmd+V)",
+    "upload_failed": "Tải lên thất bại",
+    "send": "Gửi yêu cầu",
+    "send_reply": "Gửi",
+    "send_failed": "Gửi không thành công",
+    "log": "Ghi lại",
+    "sent_title": "Đã gửi yêu cầu",
+    "saved_not_sent_title": "Đã lưu nhưng chưa gửi được",
+    "saved_not_sent_desc": "Đã lưu trong hệ thống này. Bạn có thể gửi lại từ trang yêu cầu.",
+    "not_configured": "Kết nối tới bàn hỗ trợ giải pháp chưa được cấu hình, nên yêu cầu này chỉ được lưu chứ không được gửi đi. Hãy đặt SOLUTION_SUPPORT_TOKEN trên máy chủ API.",
+    "not_connected": "Chưa kết nối tới bàn hỗ trợ giải pháp.",
+    "not_connected_desc": "Yêu cầu được lưu tại đây nhưng sẽ không được gửi đi cho tới khi đặt SOLUTION_SUPPORT_TOKEN trên máy chủ API.",
+    "not_delivered_title": "Yêu cầu này chưa đến được đội ngũ giải pháp",
+    "retry": "Gửi lại",
+    "retry_ok": "Đã gửi tới đội ngũ giải pháp",
+    "retry_failed": "Vẫn chưa gửi được",
+    "push_sent": "Đã gửi",
+    "push_queued": "Đang chờ",
+    "push_failed": "Chưa gửi",
+    "search_ph": "Tìm theo mã tiếp nhận, tiêu đề hoặc nội dung",
+    "status_all": "Tất cả trạng thái",
+    "empty": "Chưa có yêu cầu nào. Bấm “Yêu cầu mới” để liên hệ đội ngũ giải pháp.",
+    "opened": "Tiếp nhận",
+    "last_reply": "Tin nhắn gần nhất",
+    "messages": "{{count}} tin nhắn",
+    "us": "Chúng tôi",
+    "vendor": "Đội ngũ giải pháp",
+    "reply_ph": "Viết thêm nội dung gửi đội ngũ giải pháp…",
+    "reply_vendor_ph": "Ghi lại phản hồi nhận được từ đội ngũ giải pháp…",
+    "log_vendor_reply": "Ghi lại phản hồi nhận được từ đội ngũ giải pháp",
+    "cat": {
+      "usage": "Cách sử dụng",
+      "billing": "Hoá đơn & kế toán",
+      "feature": "Yêu cầu tính năng",
+      "collab": "Hợp tác",
+      "bug": "Báo lỗi",
+      "other": "Khác"
+    },
+    "prio": {
+      "low": "Thấp",
+      "normal": "Bình thường",
+      "high": "Cao",
+      "urgent": "Khẩn cấp"
+    },
+    "status": {
+      "open": "Mới",
+      "in_progress": "Đang xử lý",
+      "resolved": "Đã giải quyết",
+      "closed": "Đã đóng"
+    }
   }
 }

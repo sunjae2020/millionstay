@@ -31,7 +31,8 @@ export type AiTaskId =
   | "document_intake"
   | "website_enrich"
   | "match_rationale"
-  | "seo_geo_draft";
+  | "seo_geo_draft"
+  | "support_organize";
 
 /** How safe it is to move this task off the strongest model. */
 export type Movability = "yes" | "verify" | "no";
@@ -290,6 +291,22 @@ export const AI_TASKS: Record<AiTaskId, AiTask> = {
       "Drafts a meta description, an answer summary and FAQ pairs from a page's own title and " +
       "body. Plain text in, JSON out, and nothing it writes goes live \u2014 the draft sits in the " +
       "audit row until a human approves it, so the cheapest model is the right one.",
+  },
+  support_organize: {
+    id: "support_organize",
+    label: "support_organize",
+    area: "data",
+    envKey: "SUPPORT_ORGANIZE_MODEL",
+    fallbackEnvKey: "CHAT_MODEL",
+    defaultModel: "claude-haiku-4-5",
+    needs: {},
+    volume: "low",
+    movable: "yes",
+    source: "routes/solution-support.ts",
+    rationale:
+      "Tidies a staff member's rough support note into a structured summary before it is " +
+      "pushed to the vendor desk. Low volume, plain text in / plain text out, and a human " +
+      "reads and edits the result before it is sent.",
   },
 };
 

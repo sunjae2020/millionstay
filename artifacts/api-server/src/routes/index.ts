@@ -46,6 +46,7 @@ import promotionsRouter from "./promotions";
 import beneficiariesRouter from "./beneficiaries";
 import serviceCatalogRouter from "./service-catalog";
 import csTicketsRouter from "./cs-tickets";
+import solutionSupportRouter from "./solution-support";
 import blogPostsRouter from "./blog-posts";
 import blogCategoriesRouter from "./blog-categories";
 import cmsRouter from "./cms";
@@ -124,6 +125,8 @@ router.use(promotionsRouter);
 router.use(beneficiariesRouter);
 router.use(serviceCatalogRouter);
 router.use(csTicketsRouter);
+// 솔루션 공급사(Edubee) 문의 창구 — cs-tickets 의 거울상.
+router.use(solutionSupportRouter);
 router.use(blogPostsRouter);
 router.use(blogCategoriesRouter);
 router.use(cmsRouter);

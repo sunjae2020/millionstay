@@ -144,7 +144,8 @@
     "fixed_assets": "資産台帳",
     "activity_analytics": "アクティビティ分析",
     "sms_center": "SMS送信",
-    "cms_seo": "SEO · GEO"
+    "cms_seo": "SEO · GEO",
+    "solution_support": "ソリューションサポート"
   },
   "dashboard": {
     "title": "ダッシュボード",
@@ -7368,7 +7369,8 @@
       "transaction_categorise": "取引の勘定科目提案",
       "transaction_receipt_ocr": "領収書読取",
       "transaction_split_suggest": "分割配分の提案",
-      "seo_geo_draft": "SEO・GEO メタデータの下書き"
+      "seo_geo_draft": "SEO・GEO メタデータの下書き",
+      "support_organize": "サポート依頼の整理"
     },
     "custom_engine": "追加",
     "add_engine": "エンジンを追加",
@@ -8134,5 +8136,74 @@
     "robots_desc": "自動生成された robots.txt の後ろにそのまま付きます。インデックスから外したいパスがある時だけ使ってください。",
     "brand_aliases": "ブランド表記ゆれ",
     "brand_aliases_hint": "タイトルにブランドが入っているかを判定する際に併せて認める表記です。1行に1つ。"
+  },
+  "solution_support": {
+    "title": "ソリューションサポート",
+    "subtitle": "ソリューションチームへの問い合わせ — 使い方、請求・経理、機能リクエスト、協業、不具合報告。",
+    "new": "新規依頼",
+    "new_title": "ソリューションチームへの新規依頼",
+    "subject": "件名",
+    "subject_ph": "一行で要約",
+    "category": "カテゴリ",
+    "priority": "優先度",
+    "message": "内容",
+    "message_ph": "質問・問題・ご提案をご記入ください。スクリーンショットを貼り付けできます。",
+    "organize": "AIで整理",
+    "organize_hint": "メモをソリューションチームが読みやすい形に整えます。",
+    "organize_failed": "メモを整理できませんでした",
+    "ai_summary": "AI整理版（編集可能。元の文と一緒に送信されます）",
+    "links": "リンク",
+    "link_label": "ラベル",
+    "attach": "スクリーンショットを添付",
+    "attach_hint": "または画像を貼り付け (Ctrl/Cmd+V)",
+    "upload_failed": "アップロードに失敗しました",
+    "send": "依頼を送信",
+    "send_reply": "送信",
+    "send_failed": "送信できませんでした",
+    "log": "記録",
+    "sent_title": "依頼を送信しました",
+    "saved_not_sent_title": "保存しましたが、届いていません",
+    "saved_not_sent_desc": "こちらには保存されています。依頼画面から再送できます。",
+    "not_configured": "ソリューションデスクの接続が設定されていないため、この依頼は保存のみで送信されません。APIサーバーに SOLUTION_SUPPORT_TOKEN を設定してください。",
+    "not_connected": "ソリューションデスクに接続されていません。",
+    "not_connected_desc": "依頼はこちらに保存されますが、APIサーバーに SOLUTION_SUPPORT_TOKEN を設定するまで送信されません。",
+    "not_delivered_title": "この依頼はソリューションチームに届いていません",
+    "retry": "再送する",
+    "retry_ok": "ソリューションチームに送信しました",
+    "retry_failed": "まだ届いていません",
+    "push_sent": "送信済み",
+    "push_queued": "待機中",
+    "push_failed": "未送信",
+    "search_ph": "受付番号・件名・本文で検索",
+    "status_all": "すべてのステータス",
+    "empty": "まだ依頼はありません。“新規依頼”からソリューションチームにご連絡ください。",
+    "opened": "受付",
+    "last_reply": "最終メッセージ",
+    "messages": "メッセージ {{count}} 件",
+    "us": "自社",
+    "vendor": "ソリューションチーム",
+    "reply_ph": "ソリューションチームへの追加連絡を入力…",
+    "reply_vendor_ph": "ソリューションチームからの返信を記録…",
+    "log_vendor_reply": "ソリューションチームから受け取った返信を記録する",
+    "cat": {
+      "usage": "使い方",
+      "billing": "請求・経理",
+      "feature": "機能リクエスト",
+      "collab": "協業",
+      "bug": "不具合報告",
+      "other": "その他"
+    },
+    "prio": {
+      "low": "低",
+      "normal": "通常",
+      "high": "高",
+      "urgent": "緊急"
+    },
+    "status": {
+      "open": "受付",
+      "in_progress": "対応中",
+      "resolved": "解決",
+      "closed": "完了"
+    }
   }
 }

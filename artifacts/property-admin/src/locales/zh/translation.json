@@ -145,7 +145,8 @@
     "fixed_assets": "资产台账",
     "activity_analytics": "活动分析",
     "sms_center": "短信发送",
-    "cms_seo": "SEO · GEO"
+    "cms_seo": "SEO · GEO",
+    "solution_support": "解决方案支持"
   },
   "dashboard": {
     "title": "仪表板",
@@ -7372,7 +7373,8 @@
       "transaction_categorise": "交易科目建议",
       "transaction_receipt_ocr": "收据识别",
       "transaction_split_suggest": "拆分建议",
-      "seo_geo_draft": "SEO / GEO 元数据草稿"
+      "seo_geo_draft": "SEO / GEO 元数据草稿",
+      "support_organize": "支持请求整理"
     },
     "custom_engine": "自定义",
     "add_engine": "添加引擎",
@@ -8138,5 +8140,74 @@
     "robots_desc": "原样追加到自动生成的 robots.txt 之后。仅在需要将某些路径排除出索引时使用。",
     "brand_aliases": "品牌别名",
     "brand_aliases_hint": "判断标题是否包含品牌时一并认可的写法。每行一个。"
+  },
+  "solution_support": {
+    "title": "解决方案支持",
+    "subtitle": "联系解决方案团队 — 使用方法、账单与对账、功能需求、协作、故障报告。",
+    "new": "新建请求",
+    "new_title": "向解决方案团队提交新请求",
+    "subject": "标题",
+    "subject_ph": "一句话概括",
+    "category": "分类",
+    "priority": "优先级",
+    "message": "内容",
+    "message_ph": "请描述您的问题、故障或建议。可直接粘贴截图。",
+    "organize": "用 AI 整理",
+    "organize_hint": "把您的草稿整理成解决方案团队易读的形式。",
+    "organize_failed": "无法整理这段内容",
+    "ai_summary": "AI 整理稿（可编辑，将与原文一并发送）",
+    "links": "链接",
+    "link_label": "名称",
+    "attach": "添加截图",
+    "attach_hint": "或粘贴图片 (Ctrl/Cmd+V)",
+    "upload_failed": "上传失败",
+    "send": "发送请求",
+    "send_reply": "发送",
+    "send_failed": "发送失败",
+    "log": "记录",
+    "sent_title": "请求已发送",
+    "saved_not_sent_title": "已保存，但未送达",
+    "saved_not_sent_desc": "已保存在本系统。可在请求页面重新发送。",
+    "not_configured": "尚未配置解决方案服务台连接，此请求只会保存而不会送出。请在 API 服务器上设置 SOLUTION_SUPPORT_TOKEN。",
+    "not_connected": "尚未连接解决方案服务台。",
+    "not_connected_desc": "请求会保存在本系统，但在 API 服务器设置 SOLUTION_SUPPORT_TOKEN 之前不会送出。",
+    "not_delivered_title": "此请求尚未送达解决方案团队",
+    "retry": "重新发送",
+    "retry_ok": "已送达解决方案团队",
+    "retry_failed": "仍未送达",
+    "push_sent": "已送达",
+    "push_queued": "等待中",
+    "push_failed": "未送达",
+    "search_ph": "按受理编号、标题或正文搜索",
+    "status_all": "全部状态",
+    "empty": "暂无请求。点击“新建请求”联系解决方案团队。",
+    "opened": "受理",
+    "last_reply": "最新消息",
+    "messages": "{{count}} 条消息",
+    "us": "我方",
+    "vendor": "解决方案团队",
+    "reply_ph": "补充要告知解决方案团队的内容…",
+    "reply_vendor_ph": "记录解决方案团队的回复…",
+    "log_vendor_reply": "记录收到的解决方案团队回复",
+    "cat": {
+      "usage": "使用方法",
+      "billing": "账单与对账",
+      "feature": "功能需求",
+      "collab": "协作",
+      "bug": "故障报告",
+      "other": "其他"
+    },
+    "prio": {
+      "low": "低",
+      "normal": "普通",
+      "high": "高",
+      "urgent": "紧急"
+    },
+    "status": {
+      "open": "受理",
+      "in_progress": "处理中",
+      "resolved": "已解决",
+      "closed": "已关闭"
+    }
   }
 }
