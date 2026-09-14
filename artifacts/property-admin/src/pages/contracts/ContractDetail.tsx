@@ -320,15 +320,23 @@ export default function ContractDetail() {
   useEffect(() => {
     if (ledgerYears.length && !ledgerYears.includes(ledgerYear)) setLedgerYear(ledgerYears[0]);
   }, [ledgerYears.join(",")]);
-  const ledgerByMonth = new Map<number, any>();
+  // A month can carry more than one invoice — the deposit (보증금) falls due on
+  // the same day as the first month's rent — so every invoice gets its own row.
+  const ledgerByMonth = new Map<number, any[]>();
   for (const inv of rentInvoices) {
     const due = String(inv.due_date ?? "");
     if (Number(due.slice(0, 4)) !== ledgerYear) continue;
-    ledgerByMonth.set(Number(due.slice(5, 7)), inv);
+    const m = Number(due.slice(5, 7));
+    ledgerByMonth.set(m, [...(ledgerByMonth.get(m) ?? []), inv]);
   }
-  const ledgerRows = Array.from({ length: 12 }, (_, i) => ({ month: i + 1, invoice: ledgerByMonth.get(i + 1) ?? null }));
-  const ledgerPaid = ledgerRows.filter((r) => r.invoice?.status === "Paid");
-  const ledgerOpen = ledgerRows.filter((r) => r.invoice && r.invoice.status !== "Paid");
+  for (const list of ledgerByMonth.values()) {
+    list.sort((a: any, b: any) => String(a.due_date).localeCompare(String(b.due_date)) || Number(a.id) - Number(b.id));
+  }
+  const ledgerMonths = Array.from({ length: 12 }, (_, i) => ({ month: i + 1, invoices: ledgerByMonth.get(i + 1) ?? [] }));
+  const ledgerRows = ledgerMonths.flatMap(({ month, invoices }) =>
+    invoices.map((invoice: any) => ({ month, invoice })));
+  const ledgerPaid = ledgerRows.filter((r) => r.invoice.status === "Paid");
+  const ledgerOpen = ledgerRows.filter((r) => r.invoice.status !== "Paid");
   const sumAmount = (rows: typeof ledgerRows) => rows.reduce((s, r) => s + Number(r.invoice?.amount ?? 0), 0);
 
   const { register, handleSubmit, reset, control, watch, setValue } = useForm<FormData>({
@@ -1668,19 +1676,26 @@ export default function ContractDetail() {
 
               {/* 12-month strip — the spreadsheet's 월별 입금 현황 at a glance */}
               <div className="grid grid-cols-3 sm:grid-cols-6 lg:grid-cols-12 gap-1.5">
-                {ledgerRows.map(({ month, invoice }) => {
-                  const paid = invoice?.status === "Paid";
-                  const open = Boolean(invoice) && !paid;
+                {ledgerMonths.map(({ month, invoices }) => {
+                  // 한 달에 여러 건이면 미납이 하나라도 있는 쪽을 우선 표시한다.
+                  const unpaid = invoices.filter((inv: any) => inv.status !== "Paid");
+                  const paidInvoices = invoices.filter((inv: any) => inv.status === "Paid");
+                  const open = unpaid.length > 0;
+                  const paid = !open && paidInvoices.length > 0;
+                  const lastPaid = paidInvoices[paidInvoices.length - 1];
                   return (
                     <div
                       key={month}
                       className={`rounded-md border px-2 py-1.5 text-center ${paid ? "bg-green-50 border-green-200" : open ? "bg-red-50 border-red-200" : "bg-gray-50"}`}
-                      title={invoice?.notes ?? ""}
+                      title={invoices.map((inv: any) => inv.notes).filter(Boolean).join("\n")}
                     >
-                      <div className="text-[11px] text-muted-foreground">{t('contract.month_label', { n: month })}</div>
+                      <div className="text-[11px] text-muted-foreground">
+                        {t('contract.month_label', { n: month })}
+                        {invoices.length > 1 && <span className="ml-0.5">({invoices.length})</span>}
+                      </div>
                       <div className={`text-xs font-medium ${paid ? "text-green-700" : open ? "text-red-600" : "text-muted-foreground"}`}>
                         {paid
-                          ? (invoice.paid_at ? `${new Date(invoice.paid_at).getDate()}${t('contract.day_suffix')}` : t('invoice.status_paid'))
+                          ? (lastPaid?.paid_at ? `${new Date(lastPaid.paid_at).getDate()}${t('contract.day_suffix')}` : t('invoice.status_paid'))
                           : open ? t('contract.rent_unpaid') : "—"}
                       </div>
                     </div>
@@ -1701,8 +1716,8 @@ export default function ContractDetail() {
                   <tbody>
                     {!rentInvoices.length ? (
                       <tr><td colSpan={9} className="text-center py-10 text-muted-foreground">{t('contract.no_rent_ledger')}</td></tr>
-                    ) : ledgerRows.filter((r) => r.invoice).map(({ month, invoice }) => (
-                      <tr key={month} className="border-b hover:bg-gray-50">
+                    ) : ledgerRows.map(({ month, invoice }) => (
+                      <tr key={invoice.id} className="border-b hover:bg-gray-50">
                         <td className="px-4 py-3 font-medium whitespace-nowrap">{t('contract.month_label', { n: month })}</td>
                         <td className="px-4 py-3">
                           <button type="button" className="text-primary hover:underline" onClick={() => navigate(`/finance/invoices/${invoice.id}`)}>
