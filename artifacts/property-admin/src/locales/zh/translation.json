@@ -8218,6 +8218,10 @@
     "col_messages": "消息",
     "col_last_message": "最新消息",
     "category_all": "全部分类",
-    "push_all": "全部送达状态"
+    "push_all": "全部送达状态",
+    "sync": "检查回复",
+    "sync_found": "{{count}} 条新回复",
+    "sync_none": "没有新回复",
+    "sync_failed": "无法连接解决方案服务台"
   }
 }

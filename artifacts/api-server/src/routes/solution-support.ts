@@ -30,6 +30,7 @@ import {
   isSolutionDeskConfigured,
   solutionDeskOrgLabel,
 } from "../lib/support/solutionDesk";
+import { pullSolutionDeskReplies } from "../lib/support/solutionDeskPull";
 
 const router: IRouter = Router();
 
@@ -195,6 +196,15 @@ router.post("/v1/solution-support/bulk-delete", requireAuth, makeBulkDelete({
   },
 }));
 router.post("/v1/solution-support/bulk-restore", requireAuth, makeBulkRestore(softDeleteCfg));
+
+// ── 공급사 답변 받아오기 ────────────────────────────────────────────────────
+// 크론이 5분마다 같은 함수를 돌리지만, 화면에서 "지금 확인" 을 눌러 즉시 당길 수
+// 있어야 한다 — 답변을 기다리는 사람에게 5분은 길다.
+router.post("/v1/solution-support/sync", requireAuth, async (_req, res): Promise<void> => {
+  const r = await pullSolutionDeskReplies();
+  if (!r.ok) { fail(res, 503, "SYNC_FAILED", r.error ?? "Could not reach the solution desk"); return; }
+  ok(res, r);
+});
 
 // ── Detail (ticket + thread) ───────────────────────────────────────────────
 router.get("/v1/solution-support/:id", requireAuth, async (req, res): Promise<void> => {

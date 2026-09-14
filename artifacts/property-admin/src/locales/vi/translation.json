@@ -8159,6 +8159,10 @@
     "col_messages": "Tin nhắn",
     "col_last_message": "Tin nhắn gần nhất",
     "category_all": "Tất cả phân loại",
-    "push_all": "Tất cả trạng thái gửi"
+    "push_all": "Tất cả trạng thái gửi",
+    "sync": "Kiểm tra phản hồi",
+    "sync_found": "{{count}} phản hồi mới",
+    "sync_none": "Không có phản hồi mới",
+    "sync_failed": "Không kết nối được tới bàn hỗ trợ giải pháp"
   }
 }

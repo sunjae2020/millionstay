@@ -71,6 +71,11 @@ export const solutionSupportMessagesTable = pgTable("solution_support_messages",
   sender_name: text("sender_name"),
   message: text("message").notNull(),
   attachments: jsonb("attachments").$type<SupportAttachment[]>().notNull().default([]),
+  /**
+   * 공급사 메시지의 원본 id. 회신 수신(outbox pull)의 멱등 키다 — 커서를 잃고
+   * 같은 페이지를 다시 받아도 같은 답변이 두 줄로 남지 않는다. 우리가 쓴 글은 NULL.
+   */
+  external_message_id: text("external_message_id"),
   /** Only 'admin' messages are pushed; 'solution' messages stay local ('sent'). */
   push_status: text("push_status").notNull().default("queued"),
   push_error: text("push_error"),

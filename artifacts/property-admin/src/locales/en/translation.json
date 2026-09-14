@@ -8259,6 +8259,10 @@
     "col_messages": "Msgs",
     "col_last_message": "Last message",
     "category_all": "All types",
-    "push_all": "All delivery states"
+    "push_all": "All delivery states",
+    "sync": "Check for replies",
+    "sync_found": "{{count}} new replies",
+    "sync_none": "No new replies",
+    "sync_failed": "Could not reach the solution desk"
   }
 }

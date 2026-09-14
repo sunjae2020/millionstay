@@ -584,6 +584,21 @@ export default function SolutionSupportPage() {
   const hasFilters = !!q || status !== ALL || category !== ALL || push !== ALL;
   const resetFilters = () => { setQ(""); setStatus(ALL); setCategory(ALL); setPush(ALL); };
 
+  const { toast } = useToast();
+  // 크론이 5분마다 당기지만, 답변을 기다리는 사람에게 5분은 길다.
+  const sync = useMutation({
+    mutationFn: () => json<{ inserted: number; skipped: number }>("/api/v1/solution-support/sync", { method: "POST" }),
+    onSuccess: (r) => {
+      invalidate();
+      toast({
+        title: r.inserted > 0
+          ? t("solution_support.sync_found", "{{count}} new replies", { count: r.inserted })
+          : t("solution_support.sync_none", "No new replies"),
+      });
+    },
+    onError: (e: Error) => toast({ title: t("solution_support.sync_failed", "Could not reach the solution desk"), description: e.message, variant: "destructive" }),
+  });
+
   const { rows, total, isLoading, server, invalidate } = useServerList<Ticket>(
     "/api/v1/solution-support",
     // 기본 정렬 = 마지막 활동 내림차순: 새로 쓴 글과 방금 고친 글이 위로 온다.
@@ -761,6 +776,11 @@ export default function SolutionSupportPage() {
                 </SelectContent>
               </Select>
               <ResetFiltersButton show={hasFilters} onClick={resetFilters} />
+              <Button variant="outline" size="sm" className="h-8 gap-1.5 text-xs"
+                disabled={sync.isPending} onClick={() => sync.mutate()}>
+                {sync.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <RefreshCw className="h-3.5 w-3.5" />}
+                {t("solution_support.sync", "Check for replies")}
+              </Button>
             </div>
           }
         />

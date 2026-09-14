@@ -8259,6 +8259,10 @@
     "col_messages": "메시지",
     "col_last_message": "마지막 메시지",
     "category_all": "전체 구분",
-    "push_all": "전체 전송상태"
+    "push_all": "전체 전송상태",
+    "sync": "답변 확인",
+    "sync_found": "새 답변 {{count}}건",
+    "sync_none": "새 답변이 없습니다",
+    "sync_failed": "솔루션 데스크에 연결하지 못했습니다"
   }
 }

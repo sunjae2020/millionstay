@@ -10,6 +10,7 @@ import cron from "node-cron";
 import { SEED_FILE_PATH, importSeed } from "./lib/seedSync";
 import { syncExchangeRates } from "./lib/exchangeRateSync";
 import { syncAllChannelImports } from "./lib/icalImport";
+import { pullSolutionDeskReplies } from "./lib/support/solutionDeskPull";
 import { purgeExpiredDocuments } from "./lib/retentionPurge";
 import { generateRentCharges } from "./lib/homestay/monthlyBilling";
 import { generateRecurringInvoices } from "./lib/billing/recurringInvoices";
@@ -178,6 +179,16 @@ cron.schedule(
 syncAllChannelImports()
   .then((r) => logger.info({ total: r.total, ok: r.ok, failed: r.failed }, "Boot-time iCal import sync"))
   .catch((err) => logger.error({ err }, "Boot-time iCal import sync failed"));
+
+// 솔루션 지원 — 공급사(Edubee) 답변을 5분마다 당겨와 스레드에 넣는다.
+// 미설정이거나 공급사 쪽이 아직 안 열렸으면 조용히 물러난다(로그만 남는다).
+cron.schedule("*/5 * * * *", () => {
+  pullSolutionDeskReplies()
+    .then((r) => {
+      if (r.inserted > 0) logger.info({ inserted: r.inserted, skipped: r.skipped }, "Solution desk replies pulled");
+    })
+    .catch(cronFailure("solution-desk-pull"));
+});
 
 cron.schedule("0 * * * *", () => {
   syncAllChannelImports()

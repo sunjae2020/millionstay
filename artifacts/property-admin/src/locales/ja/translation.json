@@ -8214,6 +8214,10 @@
     "col_messages": "メッセージ",
     "col_last_message": "最終メッセージ",
     "category_all": "すべての区分",
-    "push_all": "すべての送信状態"
+    "push_all": "すべての送信状態",
+    "sync": "返信を確認",
+    "sync_found": "新しい返信 {{count}} 件",
+    "sync_none": "新しい返信はありません",
+    "sync_failed": "ソリューションデスクに接続できませんでした"
   }
 }
