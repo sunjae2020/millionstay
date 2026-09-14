@@ -21,17 +21,25 @@ export const ALL = "_all";
 export const CUSTOM_PERIOD = "_custom";
 
 export function SearchBox({
-  value, onChange, placeholder, className = "w-64",
+  value, onChange, placeholder, className = "w-64", compact = false,
 }: {
   value: string;
   onChange: (v: string) => void;
   placeholder: string;
   className?: string;
+  /** 툴바 버튼(h-8)과 같은 높이로 줄인다. 필터가 많아 한 줄에 눌러 담아야 하는
+   *  화면에서만 켠다 — 기본값은 종전 그대로라 다른 리스트는 변하지 않는다. */
+  compact?: boolean;
 }) {
   return (
     <div className={`relative ${className}`}>
-      <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-      <Input className="pl-9" placeholder={placeholder} value={value} onChange={e => onChange(e.target.value)} />
+      <Search className={`absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground ${compact ? "h-3.5 w-3.5" : "h-4 w-4"}`} />
+      <Input
+        className={compact ? "pl-8 h-8 text-xs" : "pl-9"}
+        placeholder={placeholder}
+        value={value}
+        onChange={e => onChange(e.target.value)}
+      />
     </div>
   );
 }

@@ -13,6 +13,8 @@ interface Props<T> {
   isHidden: (col: ColumnDef<T>) => boolean;
   onToggle: (key: string, hide: boolean) => void;
   onReorder: (orderedKeys: string[]) => void;
+  /** 라벨을 지우고 아이콘만 남긴다(툴바를 한 줄에 눌러 담아야 할 때). */
+  compact?: boolean;
 }
 
 function labelFor<T>(col: ColumnDef<T>, t: (k: string) => string): React.ReactNode {
@@ -24,7 +26,7 @@ function labelFor<T>(col: ColumnDef<T>, t: (k: string) => string): React.ReactNo
  * drag. Only hideable columns are listed (the actions column is fixed). Rendered
  * inside a Popover (not a DropdownMenu) so native row dragging works.
  */
-export function ColumnsMenu<T>({ columns, isHidden, onToggle, onReorder }: Props<T>) {
+export function ColumnsMenu<T>({ columns, isHidden, onToggle, onReorder, compact = false }: Props<T>) {
   const { t } = useTranslation();
   const [dragKey, setDragKey] = useState<string | null>(null);
   const [overKey, setOverKey] = useState<string | null>(null);
@@ -51,9 +53,9 @@ export function ColumnsMenu<T>({ columns, isHidden, onToggle, onReorder }: Props
   return (
     <Popover>
       <PopoverTrigger asChild>
-        <Button variant="outline" size="sm" className="h-8 gap-1.5">
+        <Button variant="outline" size="sm" className={compact ? "h-8 w-8 p-0" : "h-8 gap-1.5"} title={compact ? t("common.columns") : undefined}>
           <SlidersHorizontal className="h-3.5 w-3.5" />
-          {t("common.columns")}
+          {!compact && t("common.columns")}
         </Button>
       </PopoverTrigger>
       <PopoverContent align="end" className="w-60 p-2">

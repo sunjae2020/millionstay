@@ -74,6 +74,12 @@ export interface DataTableProps<T> {
   onToggleShowDeleted?: (next: boolean) => void;
   /** Extra content rendered in the toolbar (left of Columns), e.g. page filters. */
   toolbarExtra?: React.ReactNode;
+  /**
+   * 툴바 오른쪽 버튼(보관함 · CSV · 열 · 너비 초기화)을 아이콘만으로 줄인다.
+   * 필터가 많아 라벨까지 두면 버튼이 다음 줄로 밀리는 화면에서만 켠다 —
+   * 기본값은 종전 그대로라 나머지 리스트는 변하지 않는다.
+   */
+  toolbarCompact?: boolean;
   /** Default true — shows the CSV export button in the toolbar. */
   exportable?: boolean;
   /** Base name for the downloaded file; defaults to `tableKey`. */
@@ -146,6 +152,7 @@ export function DataTable<T>({
   showDeleted = false,
   onToggleShowDeleted,
   toolbarExtra,
+  toolbarCompact = false,
   exportable = true,
   exportFileName,
   server,
@@ -393,21 +400,22 @@ export function DataTable<T>({
             <Button
               variant={showDeleted ? "default" : "outline"}
               size="sm"
-              className="h-8 gap-1.5"
+              className={toolbarCompact ? "h-8 w-8 p-0" : "h-8 gap-1.5"}
+              title={toolbarCompact ? t("common.show_deleted") : undefined}
               onClick={() => {
                 clearSelection();
                 onToggleShowDeleted(!showDeleted);
               }}
             >
               <Eye className="h-3.5 w-3.5" />
-              {t("common.show_deleted")}
+              {!toolbarCompact && t("common.show_deleted")}
             </Button>
           )}
           {exportable && (
             <Button
               variant="outline"
               size="sm"
-              className="h-8 gap-1.5"
+              className={toolbarCompact ? "h-8 w-8 p-0" : "h-8 gap-1.5"}
               onClick={() => void exportCsv()}
               disabled={isLoading || isExporting || exportRowCount === 0}
               title={t("common.export_csv_count", { count: exportRowCount })}
@@ -417,7 +425,7 @@ export function DataTable<T>({
               ) : (
                 <Download className="h-3.5 w-3.5" />
               )}
-              {t("common.export_csv")}
+              {!toolbarCompact && t("common.export_csv")}
             </Button>
           )}
           <ColumnsMenu
@@ -425,10 +433,17 @@ export function DataTable<T>({
             isHidden={prefs.isHidden}
             onToggle={prefs.setHidden}
             onReorder={prefs.setOrder}
+            compact={toolbarCompact}
           />
-          <Button variant="outline" size="sm" className="h-8 gap-1.5" onClick={prefs.resetWidths}>
+          <Button
+            variant="outline"
+            size="sm"
+            className={toolbarCompact ? "h-8 w-8 p-0" : "h-8 gap-1.5"}
+            title={toolbarCompact ? t("common.reset_widths") : undefined}
+            onClick={prefs.resetWidths}
+          >
             <RotateCcw className="h-3.5 w-3.5" />
-            {t("common.reset_widths")}
+            {!toolbarCompact && t("common.reset_widths")}
           </Button>
         </div>
       </div>

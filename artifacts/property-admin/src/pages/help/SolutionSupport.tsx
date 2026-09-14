@@ -694,20 +694,23 @@ export default function SolutionSupportPage() {
   return (
     <Layout>
       <div className="p-6">
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <h1 className="text-2xl font-bold tracking-tight">{t("solution_support.title", "Solution Support")}</h1>
-            <p className="text-sm text-muted-foreground">
-              {total} {t("common.total")} · {t("solution_support.subtitle", "Contact the solution team.")}
+        {/* 헤더 한 줄 + 툴바 한 줄. 부제는 넓은 화면에서만 남은 자리에 흘려 넣고
+            좁아지면 숨긴다 — 줄바꿈을 유발해 두 줄 구성을 깨는 유일한 요소였다. */}
+        <div className="flex items-center justify-between gap-3 mb-3">
+          <div className="flex items-baseline gap-2 min-w-0">
+            <h1 className="text-xl font-bold tracking-tight shrink-0">{t("solution_support.title", "Solution Support")}</h1>
+            <span className="text-sm text-muted-foreground shrink-0">{total} {t("common.total")}</span>
+            <p className="hidden xl:block text-sm text-muted-foreground truncate">
+              · {t("solution_support.subtitle", "Contact the solution team.")}
             </p>
           </div>
-          <Button onClick={() => setOpenNew(true)}>
-            <Plus className="h-4 w-4 mr-1" /> {t("solution_support.new", "New request")}
+          <Button size="sm" className="h-8 shrink-0" onClick={() => setOpenNew(true)}>
+            <Plus className="h-3.5 w-3.5 mr-1" /> {t("solution_support.new", "New request")}
           </Button>
         </div>
 
         {config && !config.configured && (
-          <div className="rounded-md border border-amber-200 bg-amber-50 px-3.5 py-2.5 text-sm text-amber-800 mb-4">
+          <div className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800 mb-3">
             <span className="font-medium">{t("solution_support.not_connected", "Not connected to the solution desk.")}</span>{" "}
             {t("solution_support.not_connected_desc", "Requests are saved here but are not delivered yet.")}
           </div>
@@ -725,12 +728,13 @@ export default function SolutionSupportPage() {
           selection={{ enable: true, resource: "solution-support", onChanged: invalidate }}
           showDeleted={showDeleted}
           onToggleShowDeleted={setShowDeleted}
+          toolbarCompact
           toolbarExtra={
             <div className="flex flex-wrap items-center gap-2">
-              <SearchBox value={q} onChange={setQ}
+              <SearchBox compact className="w-48" value={q} onChange={setQ}
                 placeholder={t("solution_support.search_ph", "Search by reference, subject or text")} />
               <Select value={status} onValueChange={setStatus}>
-                <SelectTrigger className="w-36"><SelectValue /></SelectTrigger>
+                <SelectTrigger className="h-8 w-28 text-xs"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value={ALL}>{t("solution_support.status_all", "All statuses")}</SelectItem>
                   {STATUSES.map((v) => (
@@ -739,7 +743,7 @@ export default function SolutionSupportPage() {
                 </SelectContent>
               </Select>
               <Select value={category} onValueChange={setCategory}>
-                <SelectTrigger className="w-40"><SelectValue /></SelectTrigger>
+                <SelectTrigger className="h-8 w-28 text-xs"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value={ALL}>{t("solution_support.category_all", "All categories")}</SelectItem>
                   {CATEGORIES.map((v) => (
@@ -748,7 +752,7 @@ export default function SolutionSupportPage() {
                 </SelectContent>
               </Select>
               <Select value={push} onValueChange={setPush}>
-                <SelectTrigger className="w-36"><SelectValue /></SelectTrigger>
+                <SelectTrigger className="h-8 w-32 text-xs"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value={ALL}>{t("solution_support.push_all", "All delivery states")}</SelectItem>
                   <SelectItem value="sent">{t("solution_support.push_sent", "Delivered")}</SelectItem>
