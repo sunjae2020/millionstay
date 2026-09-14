@@ -44,7 +44,7 @@ POST {SOLUTION_SUPPORT_URL}/platform-support/ingest
 | 변수 | 기본값 | 설명 |
 | ---- | ------ | ---- |
 | `SOLUTION_SUPPORT_TOKEN` | (없음) | 공급사와 공유하는 비밀값. **없으면 전송 자체가 꺼진다** — 저장만 되고 화면에 경고 배너가 뜬다. |
-| `SOLUTION_SUPPORT_URL` | `https://app.edubee.co/api` | 공급사 API 베이스 |
+| `SOLUTION_SUPPORT_URL` | `https://api.edubee.co/api` | 공급사 API 베이스. **`app.edubee.co`가 아니다** — Edubee가 오리진을 `X-Edge-Secret`으로 잠가 두었고 그 헤더는 Cloudflare Transform Rule이 `api.edubee.co`에만 붙는다. `app` 호스트로 쏘면 라우트에 닿기도 전에 403 Forbidden이라 토큰 문제처럼 보이지 않는다. |
 | `SOLUTION_SUPPORT_PRODUCT` | `millionstay` | 공급사 인박스에 찍히는 제품 키. `edubee`는 거부된다(공급사 자기 테넌트 키). Metheim 인스턴스는 `metheim`. |
 | `SOLUTION_SUPPORT_ORG` | 설정 → 조직의 상호 | 공급사 인박스 Tenant 칸에 보일 이름 |
 | `SUPPORT_ORGANIZE_MODEL` | `CHAT_MODEL` → Haiku | "AI로 정리" 버튼이 쓰는 모델 (`lib/ai/tasks.ts`의 `support_organize`) |

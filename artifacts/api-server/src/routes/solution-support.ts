@@ -85,7 +85,7 @@ router.get("/v1/solution-support/config", requireAuth, async (_req, res): Promis
   ok(res, {
     configured: isSolutionDeskConfigured(),
     product: (process.env["SOLUTION_SUPPORT_PRODUCT"]?.trim() || "millionstay").toLowerCase(),
-    deskUrl: (process.env["SOLUTION_SUPPORT_URL"]?.trim() || "https://app.edubee.co/api").replace(/\/+$/, ""),
+    deskUrl: (process.env["SOLUTION_SUPPORT_URL"]?.trim() || "https://api.edubee.co/api").replace(/\/+$/, ""),
     requesterOrg: await solutionDeskOrgLabel(),
     aiOrganize: isTaskConfigured("support_organize"),
     categories: SUPPORT_CATEGORIES,

@@ -14,7 +14,7 @@
  * retried from the UI. A vendor outage must never lose a staff member's write-up.
  *
  * Config (all via env, no deploy needed to point at a different desk):
- *   SOLUTION_SUPPORT_URL      vendor API base   (default https://app.edubee.co/api)
+ *   SOLUTION_SUPPORT_URL      vendor API base   (default https://api.edubee.co/api)
  *   SOLUTION_SUPPORT_TOKEN    shared secret     (unset → push disabled)
  *   SOLUTION_SUPPORT_PRODUCT  our product key   (default millionstay; must not be 'edubee')
  *   SOLUTION_SUPPORT_ORG      tenant label shown in the vendor inbox
@@ -22,7 +22,11 @@
  */
 import { resolveCompanyInfo } from "../documents/companyInfo";
 
-const DEFAULT_BASE = "https://app.edubee.co/api";
+// MUST be the api.* host. Edubee locks its origin with `X-Edge-Secret`, injected
+// by a Cloudflare Transform Rule that fires for `api.edubee.co` only — a push
+// aimed at `app.edubee.co/api` is refused with a bare 403 Forbidden before the
+// ingest route is ever reached, which looks nothing like a token problem.
+const DEFAULT_BASE = "https://api.edubee.co/api";
 
 export interface SolutionDeskConfig {
   base: string;
