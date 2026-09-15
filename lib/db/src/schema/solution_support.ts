@@ -74,6 +74,10 @@ export const solutionSupportMessagesTable = pgTable("solution_support_messages",
   /**
    * 공급사 메시지의 원본 id. 회신 수신(outbox pull)의 멱등 키다 — 커서를 잃고
    * 같은 페이지를 다시 받아도 같은 답변이 두 줄로 남지 않는다. 우리가 쓴 글은 NULL.
+   *
+   * 유니크 인덱스는 **조건 없는** 것이어야 한다(0095). 부분 인덱스로 만들면
+   * `ON CONFLICT (external_message_id)` 가 그것을 추론하지 못해 삽입이 통째로
+   * 터진다. NULL 은 유니크 인덱스에서 서로 다른 값이라 조건은 어차피 불필요하다.
    */
   external_message_id: text("external_message_id"),
   /** Only 'admin' messages are pushed; 'solution' messages stay local ('sent'). */
