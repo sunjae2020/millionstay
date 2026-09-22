@@ -1251,6 +1251,12 @@ export const ListAccountsResponseItem = zod.object({
     .describe(
       "중개사무소 등록번호 (중개업체 계정). 계약 경로가 중개일 때 표준임대차계약서의 개업공인중개사 칸에 인쇄된다.",
     ),
+  broker_agent_name: zod
+    .string()
+    .nullish()
+    .describe(
+      "소속공인중개사 성명 (중개업체 계정). 비면 대표자 성명(ceo_name)이 대신 인쇄된다.",
+    ),
   biz_verify_status: zod.string().nullish(),
   biz_verified_at: zod.string().nullish(),
   ceo_name: zod.string().nullish(),
@@ -1318,6 +1324,12 @@ export const CreateAccountBody = zod.object({
     .nullish()
     .describe(
       "중개사무소 등록번호 (중개업체 계정). 계약 경로가 중개일 때 표준임대차계약서의 개업공인중개사 칸에 인쇄된다.",
+    ),
+  broker_agent_name: zod
+    .string()
+    .nullish()
+    .describe(
+      "소속공인중개사 성명 (중개업체 계정). 비면 대표자 성명(ceo_name)이 대신 인쇄된다.",
     ),
   biz_verify_status: zod.string().nullish(),
   biz_verified_at: zod.string().nullish(),
@@ -1391,6 +1403,12 @@ export const GetAccountResponse = zod.object({
     .describe(
       "중개사무소 등록번호 (중개업체 계정). 계약 경로가 중개일 때 표준임대차계약서의 개업공인중개사 칸에 인쇄된다.",
     ),
+  broker_agent_name: zod
+    .string()
+    .nullish()
+    .describe(
+      "소속공인중개사 성명 (중개업체 계정). 비면 대표자 성명(ceo_name)이 대신 인쇄된다.",
+    ),
   biz_verify_status: zod.string().nullish(),
   biz_verified_at: zod.string().nullish(),
   ceo_name: zod.string().nullish(),
@@ -1459,6 +1477,12 @@ export const UpdateAccountBody = zod.object({
     .describe(
       "중개사무소 등록번호 (중개업체 계정). 계약 경로가 중개일 때 표준임대차계약서의 개업공인중개사 칸에 인쇄된다.",
     ),
+  broker_agent_name: zod
+    .string()
+    .nullish()
+    .describe(
+      "소속공인중개사 성명 (중개업체 계정). 비면 대표자 성명(ceo_name)이 대신 인쇄된다.",
+    ),
   biz_verify_status: zod.string().nullish(),
   biz_verified_at: zod.string().nullish(),
   ceo_name: zod.string().nullish(),
@@ -1523,6 +1547,12 @@ export const UpdateAccountResponse = zod.object({
     .nullish()
     .describe(
       "중개사무소 등록번호 (중개업체 계정). 계약 경로가 중개일 때 표준임대차계약서의 개업공인중개사 칸에 인쇄된다.",
+    ),
+  broker_agent_name: zod
+    .string()
+    .nullish()
+    .describe(
+      "소속공인중개사 성명 (중개업체 계정). 비면 대표자 성명(ceo_name)이 대신 인쇄된다.",
     ),
   biz_verify_status: zod.string().nullish(),
   biz_verified_at: zod.string().nullish(),

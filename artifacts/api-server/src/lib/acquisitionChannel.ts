@@ -143,6 +143,8 @@ export interface ContractBrokerInfo {
   /** 중개사무소 등록번호 */
   reg_no: string | null;
   phone: string | null;
+  /** 소속공인중개사 성명. 계정에 없으면 대표자 성명이 들어온다. */
+  agent_name: string | null;
 }
 
 /**
@@ -152,7 +154,8 @@ export interface ContractBrokerInfo {
  *
  * 출처는 고른 계정이다: 사무소 명칭·대표자·소재지·등록번호·전화가 모두 계정관리에서
  * 온다. 계정에 전화가 없으면 계약에 남은 스냅숏(channel_contact_phone)으로 대신한다.
- * 소속공인중개사 칸은 채우지 않는다 — 법적 서명 주체라 추측으로 적을 수 없다.
+ * 소속공인중개사 칸은 계정의 소속공인중개사 이름을 쓰고, 비어 있으면 대표자 성명으로
+ * 대신한다 — 1인 중개사무소는 대표가 곧 소속공인중개사라 따로 적을 이름이 없다.
  */
 export async function resolveContractBroker(
   contract: Pick<typeof contractsTable.$inferSelect,
@@ -165,7 +168,7 @@ export async function resolveContractBroker(
     // 업체를 계정으로 고르지 않고 이름만 적어 둔 옛 계약 — 아는 만큼만 찍는다.
     const name = pick(contract.channel_contact_name);
     if (!name) return null;
-    return { office_name: name, ceo_name: null, office_address: null, reg_no: null, phone: pick(contract.channel_contact_phone) };
+    return { office_name: name, ceo_name: null, office_address: null, reg_no: null, phone: pick(contract.channel_contact_phone), agent_name: null };
   }
   const [account] = await db.select().from(accountsTable).where(eq(accountsTable.id, contract.channel_account_id));
   if (!account) return null;
@@ -184,6 +187,7 @@ export async function resolveContractBroker(
     office_address: pick(address),
     reg_no: pick(account.broker_reg_no),
     phone: pick(account.phone1, account.phone2, contract.channel_contact_phone),
+    agent_name: pick(account.broker_agent_name, account.ceo_name),
   };
 }
 
