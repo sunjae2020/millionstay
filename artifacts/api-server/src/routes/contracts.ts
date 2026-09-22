@@ -2325,7 +2325,8 @@ router.delete("/v1/contracts/:id/related-costs/:costId", async (req, res): Promi
 /**
  * 계약 경로 미리보기 — 경로/계정을 고른 순간 화면이 채워 넣을 값을 한 번에 돌려준다.
  *   GET /v1/contracts/:id/channel-preview?channel=brokerage&account_id=12
- *   → { contact: { name, phone, email } | null, fee: { amount, currency, type_label, unit_type } }
+ *   → { contact: { name, phone, email } | null, fee: { amount, currency, type_label, unit_type },
+ *       broker: { office_name, ceo_name, office_address, reg_no, phone, agent_name } | null }
  *
  * `contact` 는 계정관리에서 읽은 현재값(대표 연락처 우선)이고, 저장은 계약에 스냅숏으로
  * 남는다. `fee` 는 세대 타입 × 경로로 임대 수수료 기준표에서 계산한 예상 수수료로,
@@ -2341,7 +2342,18 @@ router.get("/v1/contracts/:id/channel-preview", async (req, res): Promise<void> 
   const [contract] = await db.select().from(contractsTable).where(eq(contractsTable.id, id));
   const contact = account_id ? await channelContactFromAccount(Number(account_id)) : null;
   const fee = await resolveChannelFee(contract?.space_id ?? null, channel);
-  res.json({ contact, fee });
+  // 중개 경로면 계약서의 개업공인중개사 표에 **그대로 인쇄될** 값을 함께 돌려준다.
+  // 화면이 계정 필드를 다시 조립하지 않고 이것을 그리므로, 보이는 것과 찍히는 것이
+  // 어긋날 수 없다(주소 표기·소속중개사 폴백 규칙까지 같은 함수에서 나온다).
+  const broker = account_id
+    ? await resolveContractBroker({
+        acquisition_channel: channel,
+        channel_account_id: Number(account_id),
+        channel_contact_name: null,
+        channel_contact_phone: null,
+      })
+    : null;
+  res.json({ contact, fee, broker });
 });
 
 /**
