@@ -5,6 +5,7 @@ import {
   resolveChannelFee,
   syncChannelRelatedCost,
   channelContactFromAccount,
+  resolveContractBroker,
 } from "../lib/acquisitionChannel";
 import { db, contractsTable, accountsTable, contactsTable, spacesTable, propertiesTable, contractProductsTable, accommodationCatalogTable, bookingsTable, recurringSchedulesTable, bookingServicesTable, invoicesTable, invoiceLineItemsTable, contractLineItemsTable, contractRelatedCostsTable, rentalBusinessRegistrationsTable } from "@workspace/db";
 import { eq, ilike, and, or, like, desc, isNull, inArray, gte, lte, ne, sql, asc } from "drizzle-orm";
@@ -1225,6 +1226,9 @@ export async function buildContractDocInput(
   // 계약 데이터를 서식 입력 모양으로 옮기기만 한다.
   const storedCompany = await readStoredCompanyInfo();
   const housingBuildingName = premises?.building ?? property?.name ?? null;
+  // 개업공인중개사 표 — 계약 경로가 "중개"이고 업체를 골랐을 때만 채워진다.
+  // 직거래면 null 이고, 서식의 중개사 칸은 원본 그대로 비워 발급된다.
+  const broker = await resolveContractBroker(row);
   const housing: HousingStandardLeaseInput = {
     // 보증금만 있으면 전세, 차임만 있으면 월세, 둘 다면 보증금 있는 월세.
     kind: actualMonthlyRent ? (row.bond_amount ? "deposit_monthly" : "monthly") : "jeonse",
@@ -1245,6 +1249,12 @@ export async function buildContractDocInput(
     handover_date: row.start_date,
     start_date: row.start_date,
     end_date: row.end_date,
+    // 개업공인중개사 — 계약 경로가 "중개"일 때만 값이 있고, 직거래면 빈 칸으로 발급된다.
+    broker_office_name: broker?.office_name ?? null,
+    broker_ceo_name: broker?.ceo_name ?? null,
+    broker_office_address: broker?.office_address ?? null,
+    broker_reg_no: broker?.reg_no ?? null,
+    broker_phone: broker?.phone ?? null,
     signed_on: row.contract_date ?? row.signed_at ?? row.effective_date ?? row.created_at,
     landlord: {
       name: (c as any).landlord_name || storedCompany.company_name || null,
@@ -1268,6 +1278,12 @@ export async function buildContractDocInput(
   const mltAccounts = await resolveLeaseAccounts(row);
   const mltAccount = mltAccounts.find((a) => a.label.includes("보증금")) ?? mltAccounts[0] ?? null;
   const mlt: MltStandardLeaseInput = {
+    // 개업공인중개사 — 계약 경로가 "중개"일 때만 값이 있고, 직거래면 빈 칸으로 발급된다.
+    broker_office_name: broker?.office_name ?? null,
+    broker_ceo_name: broker?.ceo_name ?? null,
+    broker_office_address: broker?.office_address ?? null,
+    broker_reg_no: broker?.reg_no ?? null,
+    broker_phone: broker?.phone ?? null,
     signed_on: row.contract_date ?? row.signed_at ?? row.effective_date ?? row.created_at,
     landlord: {
       name: (c as any).landlord_name || storedCompany.company_name || null,

@@ -45,6 +45,11 @@ export const accountsTable = pgTable("accounts", {
   biz_verify_status: text("biz_verify_status"),
   biz_verified_at: timestamp("biz_verified_at", { withTimezone: true }),
   ceo_name: text("ceo_name"),
+  // 개업공인중개사 등록번호 — 중개업체(account_type=Agent) 계정에만 쓰인다.
+  // 계약 경로를 "중개"로 잡고 업체를 고르면 표준임대차계약서의 개업공인중개사 칸
+  // (사무소 명칭·대표자·소재지·등록번호·전화)이 이 계정에서 채워진다. 등록번호만
+  // 우리 계정 칸에 자리가 없어 여기 둔다 — 나머지는 기존 칸을 그대로 쓴다.
+  broker_reg_no: text("broker_reg_no"),
   // 개인 계정의 주민등록번호. 사람의 번호이므로 원본은 연락처(contacts.resident_no)에
   // 두고, 여기에는 "연락처에서 채우기" 검토를 거쳐 복사된 값이 들어간다 — 계약서는
   // 이 값을 먼저 보고, 비어 있으면 대표 연락처의 값으로 대체한다. 고유식별정보라

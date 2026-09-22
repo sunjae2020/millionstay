@@ -823,6 +823,8 @@
     "label_biz_no": "Business Registration No.",
     "label_corp_no": "Corporate Registration No.",
     "hint_corp_no": "Printed next to the business registration number in the landlord block of the lease agreement.",
+    "label_broker_reg_no": "Brokerage Registration No.",
+    "hint_broker_reg_no": "Filled into the licensed broker block of the standard lease form when this agency is the contract's brokerage channel.",
     "label_ceo": "Representative",
     "label_logo_url": "Logo URL",
     "label_department": "Department",

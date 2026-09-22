@@ -105,6 +105,13 @@ export interface HousingStandardLeaseInput {
   signed_on?: string | Date | null;
   landlord: HousingLeaseParty;
   tenant: HousingLeaseParty;
+
+  /** 3쪽 개업공인중개사 — 직거래면 전부 비워 둔다. */
+  broker_office_name?: string | null;
+  broker_ceo_name?: string | null;
+  broker_office_address?: string | null;
+  broker_reg_no?: string | null;
+  broker_phone?: string | null;
 }
 
 /** "일금 삼백만원정" 대신 서식이 요구하는 한글 금액(금 ___ 원정)의 가운데 토막. */
@@ -257,6 +264,11 @@ export function toHousingStandardLeaseValues(d: HousingStandardLeaseInput): Hous
     tenant_agent_name: d.tenant.agent_name ?? null,
     tenant_agent_address: d.tenant.agent_address ?? null,
     tenant_agent_id_no: d.tenant.agent_id_no ?? null,
+    broker_office_address: d.broker_office_address ?? null,
+    broker_office_name: d.broker_office_name ?? null,
+    broker_ceo_name: d.broker_ceo_name ?? null,
+    broker_reg_no: d.broker_reg_no ?? null,
+    broker_phone: d.broker_phone ?? null,
   };
 }
 
