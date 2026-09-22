@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { AccountLookupSelect } from "@/components/AccountLookupSelect";
+import { BrokerInfoPanel, type BrokerInfo } from "@/components/BrokerInfoPanel";
 import { ACQUISITION_CHANNELS, MANUAL_FEE_CHANNELS } from "@/lib/acquisitionChannels";
 import { apiFetch } from "@/lib/apiFetch";
 import { formatMoney } from "@/lib/currency";
@@ -23,6 +24,8 @@ export interface ChannelValue {
 interface ChannelPreview {
   contact: { name: string; phone: string; email: string } | null;
   fee: { amount: number | null; currency: string; type_label: string | null; unit_type: string | null };
+  /** 중개 경로 + 업체를 골랐을 때만 — 계약서에 인쇄될 개업공인중개사 표. */
+  broker: BrokerInfo | null;
 }
 
 interface Props {
@@ -59,6 +62,8 @@ export function ContractChannelCard({
   const { t } = useTranslation();
   const [preview, setPreview] = useState<ChannelPreview | null>(null);
   const [busy, setBusy] = useState(false);
+  // 중개사 정보를 이 화면에서 고친 뒤 미리보기를 다시 읽기 위한 방아쇠.
+  const [previewNonce, setPreviewNonce] = useState(0);
 
   // 경로가 바뀌면 기준표 예상액이 달라진다 — 화면의 안내 문구를 다시 읽어 온다.
   useEffect(() => {
@@ -66,14 +71,15 @@ export function ContractChannelCard({
     if (!value.channel) { setPreview(null); return; }
     (async () => {
       try {
-        const r = await apiFetch(`/api/v1/contracts/${contractId ?? 0}/channel-preview?channel=${value.channel}`);
+        const account = value.accountId ? `&account_id=${value.accountId}` : "";
+        const r = await apiFetch(`/api/v1/contracts/${contractId ?? 0}/channel-preview?channel=${value.channel}${account}`);
         if (!r.ok) return;
         const body = await r.json();
         if (!cancelled) setPreview(body);
       } catch { /* 안내용 값이라 실패해도 입력은 그대로 진행된다 */ }
     })();
     return () => { cancelled = true; };
-  }, [value.channel, contractId]);
+  }, [value.channel, value.accountId, contractId, previewNonce]);
 
   /** 계정을 고르면 이름/연락처/이메일을 계정에서 가져와 채운다(사람이 고칠 수 있다). */
   const handleAccountChange = async (accountId: number | null) => {
@@ -181,6 +187,15 @@ export function ContractChannelCard({
               <Input type="email" value={value.email} onChange={(e) => onChange({ email: e.target.value })} placeholder={t('contract.ph_channel_email')} />
             </div>
           </div>
+
+          {/* 중개 경로에서 업체를 골랐으면, 계약서에 찍힐 개업공인중개사 표를 그대로 보여준다. */}
+          {value.channel === "brokerage" && value.accountId && (
+            <BrokerInfoPanel
+              accountId={value.accountId}
+              broker={preview?.broker ?? null}
+              onSaved={() => setPreviewNonce((n) => n + 1)}
+            />
+          )}
 
           {/* 수수료 — 기준표 예상액과, 실제로 적재된 관련 비용 행의 현재 상태 */}
           <div className="mt-4 rounded-md border bg-muted/30 p-3 text-sm">
