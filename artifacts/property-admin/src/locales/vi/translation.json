@@ -806,6 +806,8 @@
     "label_biz_no": "Mã số đăng ký kinh doanh",
     "label_corp_no": "Mã số đăng ký pháp nhân",
     "hint_corp_no": "Được in ở ô bên cho thuê của hợp đồng thuê, cạnh mã số đăng ký kinh doanh.",
+    "label_broker_reg_no": "Mã số đăng ký văn phòng môi giới",
+    "hint_broker_reg_no": "Khi chọn công ty này làm kênh môi giới của hợp đồng, mã số sẽ được điền vào ô môi giới của hợp đồng thuê chuẩn.",
     "label_ceo": "Người đại diện",
     "label_logo_url": "URL logo",
     "label_department": "Phòng ban",

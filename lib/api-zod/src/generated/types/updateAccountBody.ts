@@ -61,6 +61,11 @@ export interface UpdateAccountBody {
   biz_registration_no?: string | null;
   /** @nullable */
   corp_registration_no?: string | null;
+  /**
+   * 중개사무소 등록번호 (중개업체 계정). 계약 경로가 중개일 때 표준임대차계약서의 개업공인중개사 칸에 인쇄된다.
+   * @nullable
+   */
+  broker_reg_no?: string | null;
   /** @nullable */
   biz_verify_status?: string | null;
   /** @nullable */

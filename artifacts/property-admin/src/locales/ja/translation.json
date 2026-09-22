@@ -813,6 +813,8 @@
     "label_biz_no": "事業者登録番号",
     "label_corp_no": "法人登録番号",
     "hint_corp_no": "賃貸借契約書の賃貸人欄に事業者登録番号と並べて印字されます。",
+    "label_broker_reg_no": "仲介事務所登録番号",
+    "hint_broker_reg_no": "この業者を契約経路（仲介）に選ぶと、標準賃貸借契約書の開業公認仲介士欄に記入されます。",
     "label_ceo": "代表者",
     "label_logo_url": "ロゴ URL",
     "label_department": "部署",

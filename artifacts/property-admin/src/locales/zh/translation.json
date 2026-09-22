@@ -814,6 +814,8 @@
     "label_biz_no": "营业执照号",
     "label_corp_no": "法人登记号",
     "hint_corp_no": "印在租赁合同出租人栏中，与营业执照号并列显示。",
+    "label_broker_reg_no": "中介事务所登记号",
+    "hint_broker_reg_no": "将该公司选为合同的中介渠道后，会填入标准租赁合同的开业公认中介人栏。",
     "label_ceo": "法定代表人",
     "label_logo_url": "Logo 网址",
     "label_department": "部门",

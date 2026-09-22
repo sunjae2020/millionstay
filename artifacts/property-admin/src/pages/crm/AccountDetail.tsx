@@ -47,6 +47,9 @@ const ACCOUNT_TYPES_WITH_FINANCE = ["SpaceOwner", "Agent", "ServiceHost", "Partn
 // 임대사업자 등록증은 임대인·소유주에게만 붙는 문서다 — 임차인·게스트 계정에는
 // 탭 자체를 내지 않는다(계약서의 임대사업자등록번호도 임대인 계정에서만 고른다).
 const ACCOUNT_TYPES_WITH_RENTAL_BUSINESS = ["SpaceOwner"];
+// 중개사무소 등록번호는 중개업체(Agent) 계정에만 물어본다 — 계약 경로를 "중개"로
+// 잡고 이 업체를 고르면 표준임대차계약서의 개업공인중개사 표가 여기서 채워진다.
+const ACCOUNT_TYPES_WITH_BROKER = ["Agent"];
 
 const CURRENCIES = SUPPORTED_CURRENCIES.map((c) => c.code);
 
@@ -109,6 +112,7 @@ interface AccountForm {
   description: string;
   logo_url: string;
   biz_registration_no: string;
+  broker_reg_no: string;
   corp_registration_no: string;
   ceo_name: string;
   resident_no: string;
@@ -299,7 +303,7 @@ export default function AccountDetail() {
       secondary_address_line1: "", secondary_address_suburb: "", secondary_address_state: "",
       secondary_address_postcode: "", secondary_address_country: "",
       payment_info_id: null, default_commission_id: null, default_currency: brandCurrency,
-      parent_account_id: null, description: "", logo_url: "", biz_registration_no: "", corp_registration_no: "", ceo_name: "",
+      parent_account_id: null, description: "", logo_url: "", biz_registration_no: "", broker_reg_no: "", corp_registration_no: "", ceo_name: "",
       resident_no: "",
       sns_type: "", sns_id: "",
       manual_input: false, status: "Active",
@@ -311,6 +315,7 @@ export default function AccountDetail() {
   const isIndividual = entityKind === "Individual";
   const showFinance = ACCOUNT_TYPES_WITH_FINANCE.includes(accountType);
   const showRentalBusiness = ACCOUNT_TYPES_WITH_RENTAL_BUSINESS.includes(accountType);
+  const showBrokerRegNo = ACCOUNT_TYPES_WITH_BROKER.includes(accountType);
   const primaryContactId = watch("primary_contact_id");
   const secondaryContactId = watch("secondary_contact_id");
   const logoUrl = watch("logo_url");
@@ -348,6 +353,7 @@ export default function AccountDetail() {
         description: account.description ?? "",
         logo_url: (account as any).logo_url ?? "",
         biz_registration_no: (account as any).biz_registration_no ?? "",
+        broker_reg_no: (account as any).broker_reg_no ?? "",
         corp_registration_no: (account as any).corp_registration_no ?? "",
         ceo_name: (account as any).ceo_name ?? "",
         resident_no: (account as any).resident_no ?? "",
@@ -415,6 +421,7 @@ export default function AccountDetail() {
       description: values.description || null,
       logo_url: values.logo_url || null,
       biz_registration_no: individual ? null : (values.biz_registration_no || null),
+      broker_reg_no: showBrokerRegNo ? (values.broker_reg_no || null) : null,
       corp_registration_no: individual ? null : (values.corp_registration_no || null),
       ceo_name: individual ? null : (values.ceo_name || null),
       resident_no: individual ? (values.resident_no || null) : null,
@@ -697,6 +704,16 @@ export default function AccountDetail() {
                 <Label>{t('account.label_corp_no')}</Label>
                 <Input {...register("corp_registration_no")} placeholder="000000-0000000" />
                 <p className="text-xs text-muted-foreground">{t('account.hint_corp_no')}</p>
+              </div>
+            </div>
+          )}
+          {/* 중개사무소 등록번호 — 개인 중개사도 받으므로 법인/개인 갈래 밖에 둔다. */}
+          {showBrokerRegNo && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="grid gap-1.5">
+                <Label>{t('account.label_broker_reg_no')}</Label>
+                <Input {...register("broker_reg_no")} placeholder="00000-0000-00000" />
+                <p className="text-xs text-muted-foreground">{t('account.hint_broker_reg_no')}</p>
               </div>
             </div>
           )}

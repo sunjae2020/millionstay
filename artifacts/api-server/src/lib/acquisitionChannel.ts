@@ -8,7 +8,9 @@ import {
   rentalFeeSchedulesTable,
   spacesTable,
 } from "@workspace/db";
+import { formatPostalAddress } from "@workspace/address";
 import { DEFAULT_CURRENCY } from "./currency";
+import { resolveIssuerCountry } from "./documents/companyInfo";
 
 /**
  * 계약 경로(acquisition channel) — 이 계약이 어떻게 성사됐는가.
@@ -127,6 +129,61 @@ export async function channelContactFromAccount(accountId: number): Promise<{
     name: account.name ?? "",
     phone: contact?.mobile_number || account.phone1 || account.phone2 || "",
     email: contact?.email || account.account_email || "",
+  };
+}
+
+/** 표준임대차계약서의 "개업공인중개사" 칸에 들어갈 값. */
+export interface ContractBrokerInfo {
+  /** 사무소 명칭 */
+  office_name: string | null;
+  /** 대표자 성명 */
+  ceo_name: string | null;
+  /** 사무소 소재지 */
+  office_address: string | null;
+  /** 중개사무소 등록번호 */
+  reg_no: string | null;
+  phone: string | null;
+}
+
+/**
+ * 계약 경로에서 개업공인중개사 정보를 읽어온다 — 경로가 "중개"이고 업체를 골랐을
+ * 때만 값이 나오고, 직거래(자체·온라인·재계약)면 null 이라 서식의 중개사 표가
+ * 빈 칸으로 발급된다(법정서식은 직거래면 비워 두는 것이 맞다).
+ *
+ * 출처는 고른 계정이다: 사무소 명칭·대표자·소재지·등록번호·전화가 모두 계정관리에서
+ * 온다. 계정에 전화가 없으면 계약에 남은 스냅숏(channel_contact_phone)으로 대신한다.
+ * 소속공인중개사 칸은 채우지 않는다 — 법적 서명 주체라 추측으로 적을 수 없다.
+ */
+export async function resolveContractBroker(
+  contract: Pick<typeof contractsTable.$inferSelect,
+    "acquisition_channel" | "channel_account_id" | "channel_contact_name" | "channel_contact_phone">,
+): Promise<ContractBrokerInfo | null> {
+  if (contract.acquisition_channel !== "brokerage") return null;
+  const pick = (...values: Array<string | null | undefined>) =>
+    values.find((v) => typeof v === "string" && v.trim())?.trim() ?? null;
+  if (!contract.channel_account_id) {
+    // 업체를 계정으로 고르지 않고 이름만 적어 둔 옛 계약 — 아는 만큼만 찍는다.
+    const name = pick(contract.channel_contact_name);
+    if (!name) return null;
+    return { office_name: name, ceo_name: null, office_address: null, reg_no: null, phone: pick(contract.channel_contact_phone) };
+  }
+  const [account] = await db.select().from(accountsTable).where(eq(accountsTable.id, contract.channel_account_id));
+  if (!account) return null;
+  // 서식은 한국어 법정서식이라 주소도 한국식(큰 단위 → 작은 단위)으로 적고,
+  // 국내 문서에 자국명은 쓰지 않는다 — 공용 포맷터의 ko + omitCountry 가 그 규칙이다.
+  const address = formatPostalAddress({
+    line1: account.address_line1,
+    suburb: account.address_suburb,
+    state: account.address_state,
+    postcode: account.address_postcode,
+    country: account.address_country,
+  }, "ko", { orderFallbackCountry: await resolveIssuerCountry(), omitCountry: true }) || null;
+  return {
+    office_name: pick(account.name, contract.channel_contact_name),
+    ceo_name: pick(account.ceo_name),
+    office_address: pick(address),
+    reg_no: pick(account.broker_reg_no),
+    phone: pick(account.phone1, account.phone2, contract.channel_contact_phone),
   };
 }
 
