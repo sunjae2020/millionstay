@@ -113,6 +113,7 @@ interface AccountForm {
   logo_url: string;
   biz_registration_no: string;
   broker_reg_no: string;
+  broker_agent_name: string;
   corp_registration_no: string;
   ceo_name: string;
   resident_no: string;
@@ -303,7 +304,7 @@ export default function AccountDetail() {
       secondary_address_line1: "", secondary_address_suburb: "", secondary_address_state: "",
       secondary_address_postcode: "", secondary_address_country: "",
       payment_info_id: null, default_commission_id: null, default_currency: brandCurrency,
-      parent_account_id: null, description: "", logo_url: "", biz_registration_no: "", broker_reg_no: "", corp_registration_no: "", ceo_name: "",
+      parent_account_id: null, description: "", logo_url: "", biz_registration_no: "", broker_reg_no: "", broker_agent_name: "", corp_registration_no: "", ceo_name: "",
       resident_no: "",
       sns_type: "", sns_id: "",
       manual_input: false, status: "Active",
@@ -315,7 +316,7 @@ export default function AccountDetail() {
   const isIndividual = entityKind === "Individual";
   const showFinance = ACCOUNT_TYPES_WITH_FINANCE.includes(accountType);
   const showRentalBusiness = ACCOUNT_TYPES_WITH_RENTAL_BUSINESS.includes(accountType);
-  const showBrokerRegNo = ACCOUNT_TYPES_WITH_BROKER.includes(accountType);
+  const showBrokerFields = ACCOUNT_TYPES_WITH_BROKER.includes(accountType);
   const primaryContactId = watch("primary_contact_id");
   const secondaryContactId = watch("secondary_contact_id");
   const logoUrl = watch("logo_url");
@@ -354,6 +355,7 @@ export default function AccountDetail() {
         logo_url: (account as any).logo_url ?? "",
         biz_registration_no: (account as any).biz_registration_no ?? "",
         broker_reg_no: (account as any).broker_reg_no ?? "",
+        broker_agent_name: (account as any).broker_agent_name ?? "",
         corp_registration_no: (account as any).corp_registration_no ?? "",
         ceo_name: (account as any).ceo_name ?? "",
         resident_no: (account as any).resident_no ?? "",
@@ -421,7 +423,8 @@ export default function AccountDetail() {
       description: values.description || null,
       logo_url: values.logo_url || null,
       biz_registration_no: individual ? null : (values.biz_registration_no || null),
-      broker_reg_no: showBrokerRegNo ? (values.broker_reg_no || null) : null,
+      broker_reg_no: showBrokerFields ? (values.broker_reg_no || null) : null,
+      broker_agent_name: showBrokerFields ? (values.broker_agent_name || null) : null,
       corp_registration_no: individual ? null : (values.corp_registration_no || null),
       ceo_name: individual ? null : (values.ceo_name || null),
       resident_no: individual ? (values.resident_no || null) : null,
@@ -707,13 +710,18 @@ export default function AccountDetail() {
               </div>
             </div>
           )}
-          {/* 중개사무소 등록번호 — 개인 중개사도 받으므로 법인/개인 갈래 밖에 둔다. */}
-          {showBrokerRegNo && (
+          {/* 중개사무소 정보 — 개인 중개사도 받으므로 법인/개인 갈래 밖에 둔다. */}
+          {showBrokerFields && (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="grid gap-1.5">
                 <Label>{t('account.label_broker_reg_no')}</Label>
                 <Input {...register("broker_reg_no")} placeholder="00000-0000-00000" />
                 <p className="text-xs text-muted-foreground">{t('account.hint_broker_reg_no')}</p>
+              </div>
+              <div className="grid gap-1.5">
+                <Label>{t('account.label_broker_agent')}</Label>
+                <Input {...register("broker_agent_name")} />
+                <p className="text-xs text-muted-foreground">{t('account.hint_broker_agent')}</p>
               </div>
             </div>
           )}

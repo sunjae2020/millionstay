@@ -1284,6 +1284,8 @@ export async function buildContractDocInput(
     broker_office_address: broker?.office_address ?? null,
     broker_reg_no: broker?.reg_no ?? null,
     broker_phone: broker?.phone ?? null,
+    // 소속공인중개사 — 계정에 이름이 없으면 대표자 성명이 들어온다(1인 사무소).
+    broker_assistant_name: broker?.agent_name ?? null,
     signed_on: row.contract_date ?? row.signed_at ?? row.effective_date ?? row.created_at,
     landlord: {
       name: (c as any).landlord_name || storedCompany.company_name || null,
