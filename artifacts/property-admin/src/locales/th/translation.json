@@ -5628,7 +5628,22 @@
     "status_rented_out": "ปล่อยเช่า",
     "status_unavailable": "ไม่พร้อมให้เช่า",
     "status_active": "ใช้งาน",
-    "status_inactive": "ปิดใช้งาน"
+    "status_inactive": "ปิดใช้งาน",
+    "by_plan": "ตามผังชั้น",
+    "plan_title": "ผังชั้น",
+    "corridor": "ทางเดิน",
+    "prev_floor": "ชั้นก่อนหน้า",
+    "next_floor": "ชั้นถัดไป",
+    "plan_note": "ผังจำลอง — เรียงตามเลขห้อง ความกว้างตามพื้นที่ใช้สอย วางเมาส์เพื่อดูรายละเอียด คลิกเพื่อเปิด",
+    "pay_title": "สถานะการชำระค่าเช่า",
+    "col_unit": "ห้อง",
+    "col_tenant": "ผู้เช่า",
+    "col_rent": "ค่าเช่า",
+    "col_status": "สถานะ",
+    "col_months": "12 เดือนล่าสุด",
+    "st_current": "ปกติ",
+    "st_overdue": "ค้างชำระ",
+    "st_vacant": "ว่าง"
   },
   "service_host_acct": {
     "revenue": "รายได้ที่สร้าง",

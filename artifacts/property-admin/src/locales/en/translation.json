@@ -5675,7 +5675,22 @@
     "status_rented_out": "Rented out",
     "status_unavailable": "Unavailable",
     "status_active": "Active",
-    "status_inactive": "Inactive"
+    "status_inactive": "Inactive",
+    "by_plan": "By floor plan",
+    "plan_title": "Floor plan",
+    "corridor": "Corridor",
+    "prev_floor": "Previous floor",
+    "next_floor": "Next floor",
+    "plan_note": "Schematic layout — units in number order, width scaled to exclusive area. Hover a unit for details, click to open it.",
+    "pay_title": "Rent payments",
+    "col_unit": "Unit",
+    "col_tenant": "Tenant",
+    "col_rent": "Rent",
+    "col_status": "Status",
+    "col_months": "Last 12 months",
+    "st_current": "Current",
+    "st_overdue": "Past due",
+    "st_vacant": "Vacant"
   },
   "service_host_acct": {
     "revenue": "Revenue generated",

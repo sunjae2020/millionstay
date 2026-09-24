@@ -5636,7 +5636,22 @@
     "status_rented_out": "出租",
     "status_unavailable": "不可租",
     "status_active": "启用",
-    "status_inactive": "停用"
+    "status_inactive": "停用",
+    "by_plan": "按平面图",
+    "plan_title": "楼层平面图",
+    "corridor": "走廊",
+    "prev_floor": "上一层",
+    "next_floor": "下一层",
+    "plan_note": "示意布局：按房号顺序排列，宽度按专有面积比例。悬停查看详情，点击打开。",
+    "pay_title": "租金缴纳情况",
+    "col_unit": "房号",
+    "col_tenant": "租户",
+    "col_rent": "月租",
+    "col_status": "状态",
+    "col_months": "近12个月",
+    "st_current": "正常",
+    "st_overdue": "逾期",
+    "st_vacant": "空置"
   },
   "service_host_acct": {
     "revenue": "产生营收",

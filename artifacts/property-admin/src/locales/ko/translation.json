@@ -5675,7 +5675,22 @@
     "status_rented_out": "대여",
     "status_unavailable": "임대불가",
     "status_active": "활성",
-    "status_inactive": "비활성"
+    "status_inactive": "비활성",
+    "by_plan": "도면별",
+    "plan_title": "도면",
+    "corridor": "복도",
+    "prev_floor": "이전 층",
+    "next_floor": "다음 층",
+    "plan_note": "배치 도식입니다. 호수 순서로 놓고 칸 폭은 전용면적에 맞췄습니다. 세대에 마우스를 올리면 정보가, 클릭하면 상세 화면이 열립니다.",
+    "pay_title": "월세 납부 현황",
+    "col_unit": "호실",
+    "col_tenant": "임차인",
+    "col_rent": "월세",
+    "col_status": "상태",
+    "col_months": "최근 12개월",
+    "st_current": "정상",
+    "st_overdue": "연체",
+    "st_vacant": "공실"
   },
   "service_host_acct": {
     "revenue": "발생 매출",

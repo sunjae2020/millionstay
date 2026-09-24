@@ -6,6 +6,7 @@ import { Building2, LayoutGrid, Users, DoorOpen, Home, Tag } from "lucide-react"
 import { KpiCard, DashCard } from "@/components/dashboard/DashboardKit";
 
 import { ExportableTable } from "@/components/ui/ExportCsvButton";
+import FloorPlanView from "./FloorPlanView";
 interface Unit {
   id: number;
   name: string;
@@ -15,6 +16,7 @@ interface Unit {
   status: string;
   owner: string | null;
   owner_id: number | null;
+  area?: number | null;
 }
 interface KeyCount { key: string; count: number; id?: number | null }
 interface PropOption { id: number; name: string; unit_count: number }
@@ -28,7 +30,7 @@ interface FloorBoard {
   summary: { total: number; by_status: KeyCount[]; by_owner: KeyCount[]; by_type: KeyCount[] };
 }
 
-type Dimension = "status" | "owner";
+type Dimension = "plan" | "status" | "owner";
 
 /** Known status → stable palette colour (data values are Korean in Metheim). */
 const STATUS_COLORS: Record<string, string> = {
@@ -87,18 +89,18 @@ export default function FloorBoardTab() {
   };
 
   // Colour map for the active dimension.
-  const legend = dim === "status" ? board?.summary.by_status ?? [] : board?.summary.by_owner ?? [];
+  const legend = dim !== "owner" ? board?.summary.by_status ?? [] : board?.summary.by_owner ?? [];
   const colorByKey = useMemo(() => {
     const map = new Map<string, string>();
     legend.forEach((row, i) => {
-      const c = dim === "status" ? STATUS_COLORS[row.key] ?? PALETTE[i % PALETTE.length] : PALETTE[i % PALETTE.length];
+      const c = dim !== "owner" ? STATUS_COLORS[row.key] ?? PALETTE[i % PALETTE.length] : PALETTE[i % PALETTE.length];
       map.set(row.key, c);
     });
     return map;
   }, [legend, dim]);
 
-  const keyOf = (u: Unit) => (dim === "status" ? u.status : u.owner ?? "—");
-  const labelOfKey = (k: string) => (dim === "status" ? statusLabel(k) : k);
+  const keyOf = (u: Unit) => (dim !== "owner" ? u.status : u.owner ?? "—");
+  const labelOfKey = (k: string) => (dim !== "owner" ? statusLabel(k) : k);
 
   // floor → type → units, for O(1) cell lookup.
   const cellIndex = useMemo(() => {
@@ -157,13 +159,15 @@ export default function FloorBoardTab() {
           )}
           {/* Colour-by toggle */}
           <div className="inline-flex rounded-lg border bg-muted p-0.5 text-xs font-medium">
-            {(["status", "owner"] as Dimension[]).map((d) => (
+            {(["plan", "status", "owner"] as Dimension[]).map((d) => (
               <button
                 key={d}
                 onClick={() => { setDim(d); setHighlight(null); }}
                 className={`px-3 py-1.5 rounded-md transition-all ${dim === d ? "bg-card shadow-sm text-primary font-semibold" : "text-muted-foreground hover:text-foreground"}`}
               >
-                {d === "status" ? t("dash_floorboard.by_status", "By status") : t("dash_floorboard.by_owner", "By owner")}
+                {d === "plan"
+                  ? t("dash_floorboard.by_plan", "By floor plan")
+                  : d === "status" ? t("dash_floorboard.by_status", "By status") : t("dash_floorboard.by_owner", "By owner")}
               </button>
             ))}
           </div>
@@ -178,6 +182,26 @@ export default function FloorBoardTab() {
         <KpiCard label={statusLabel("분양")} value={statusCount("분양") || 0} icon={Tag} accent="blue" />
       </div>
 
+      {dim === "plan" && (
+        loading ? (
+          <div className="h-64 flex items-center justify-center text-sm text-muted-foreground">{t("dash_floorboard.loading", "Loading…")}</div>
+        ) : total === 0 ? (
+          <div className="h-64 flex flex-col items-center justify-center gap-2 text-center px-6">
+            <Building2 className="h-8 w-8 text-muted-foreground/40" />
+            <p className="text-sm text-muted-foreground">{t("dash_floorboard.empty", "No floor-numbered units for this property.")}</p>
+          </div>
+        ) : (
+          <FloorPlanView
+            propertyId={board?.property_id ?? null}
+            floors={floors}
+            units={board?.units ?? []}
+            statusColor={(s) => colorByKey.get(s) ?? "#94a3b8"}
+            statusLabel={statusLabel}
+          />
+        )
+      )}
+
+      {dim !== "plan" && (<>
       {/* Legend */}
       {legend.length > 0 && (
         <div className="flex flex-wrap items-center gap-1.5">
@@ -292,6 +316,7 @@ export default function FloorBoardTab() {
       <p className="text-[11px] text-muted-foreground">
         {t("dash_floorboard.hint", "Click a unit to open its detail. Click a legend chip to highlight.")}
       </p>
+      </>)}
     </div>
   );
 }

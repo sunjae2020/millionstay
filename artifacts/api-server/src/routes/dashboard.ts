@@ -1,6 +1,7 @@
 import { Router, type IRouter } from "express";
 import { db, propertiesTable, spacesTable, contactsTable, accountsTable, bookingsTable, leadsTable, tasksTable, invoicesTable, contractsTable, workOrdersTable, systemLogsTable, homestayPlacementsTable, homestayStudentRequestsTable, homestayPlacementPaymentsTable, agentCommissionLedgerTable } from "@workspace/db";
 import { eq, count, and, gte, lte, lt, sql, desc, isNull, inArray } from "drizzle-orm";
+import { alias } from "drizzle-orm/pg-core";
 import { listEntries, trialBalance } from "../lib/billing/gl";
 import { netRevenueBetween, netRevenueTotal } from "../lib/billing/payout";
 import { countableUnitFilter } from "../lib/unitScope";
@@ -435,6 +436,8 @@ interface FloorBoardUnit {
   status: string;
   owner: string | null;
   owner_id: number | null;
+  /** 전용면적(㎡) — 호실 값, 없으면 타입(상위 공간) 값. 도면 칸 폭 비례에 쓴다. */
+  area: number | null;
 }
 
 /** Natural sort key for unit types: "A타입" → ["A",0], "A-1타입" → ["A",1]. */
@@ -442,6 +445,8 @@ function typeSortKey(t: string): [string, number] {
   const m = /^([A-Za-z]+)(?:-(\d+))?/.exec(t);
   return m ? [m[1].toUpperCase(), m[2] ? Number(m[2]) : 0] : [t.toUpperCase(), 0];
 }
+
+const parentSpace = alias(spacesTable, "parent_space");
 
 router.get("/v1/dashboard/floor-board", async (req, res) => {
   try {
@@ -497,9 +502,14 @@ router.get("/v1/dashboard/floor-board", async (req, res) => {
         status: spacesTable.status,
         owner_id: spacesTable.landlord_account_id,
         owner: accountsTable.name,
+        area: spacesTable.exclusive_area_m2,
+        area_fallback: spacesTable.floor_area_sqm,
+        parent_area: parentSpace.exclusive_area_m2,
+        parent_area_fallback: parentSpace.floor_area_sqm,
       })
       .from(spacesTable)
       .leftJoin(accountsTable, eq(spacesTable.landlord_account_id, accountsTable.id))
+      .leftJoin(parentSpace, eq(spacesTable.parent_space_id, parentSpace.id))
       .where(and(
         eq(spacesTable.property_id, pid),
         countableUnitFilter,
@@ -515,6 +525,9 @@ router.get("/v1/dashboard/floor-board", async (req, res) => {
       status: r.status ?? "—",
       owner: r.owner ?? null,
       owner_id: r.owner_id ?? null,
+      area: [r.area, r.area_fallback, r.parent_area, r.parent_area_fallback]
+        .map((v) => (v == null ? null : Number(v)))
+        .find((v): v is number => v != null && v > 0) ?? null,
     }));
 
     const floors = [...new Set(units.map((u) => u.floor))].sort((a, b) => a - b);

@@ -5591,7 +5591,22 @@
     "status_rented_out": "Đã thuê hết",
     "status_unavailable": "Không khả dụng",
     "status_active": "Đang hoạt động",
-    "status_inactive": "Không hoạt động"
+    "status_inactive": "Không hoạt động",
+    "by_plan": "Theo sơ đồ tầng",
+    "plan_title": "Sơ đồ tầng",
+    "corridor": "Hành lang",
+    "prev_floor": "Tầng trước",
+    "next_floor": "Tầng sau",
+    "plan_note": "Sơ đồ minh họa — xếp theo số phòng, độ rộng theo diện tích sử dụng riêng. Rê chuột để xem chi tiết, nhấp để mở.",
+    "pay_title": "Tình trạng thanh toán tiền thuê",
+    "col_unit": "Phòng",
+    "col_tenant": "Người thuê",
+    "col_rent": "Tiền thuê",
+    "col_status": "Trạng thái",
+    "col_months": "12 tháng gần nhất",
+    "st_current": "Đúng hạn",
+    "st_overdue": "Quá hạn",
+    "st_vacant": "Trống"
   },
   "service_host_acct": {
     "revenue": "Doanh thu tạo ra",
