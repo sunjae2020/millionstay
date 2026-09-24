@@ -132,7 +132,11 @@ export default function InvoiceDetail() {
 
   const { register, handleSubmit, reset, control, watch } = useForm<FormData>({
     defaultValues: {
-      booking_id: null, contract_id: null, account_id: null, payment_info_id: null,
+      // 입금 현황 보드의 "청구서 생성"은 ?contract_id=&account_id= 로 계약·청구 대상을 미리 채운다.
+      booking_id: null,
+      contract_id: isNew ? Number(new URLSearchParams(window.location.search).get("contract_id")) || null : null,
+      account_id: isNew ? Number(new URLSearchParams(window.location.search).get("account_id")) || null : null,
+      payment_info_id: null,
       tax_mode: "none", tax_rate: "10",
       amount: "", currency: brandCurrency, due_date: "", description: "", notes: "",
     },
@@ -320,7 +324,7 @@ export default function InvoiceDetail() {
                     value={field.value}
                     onChange={field.onChange}
                     placeholder={t('invoice.placeholder_contract')}
-                    displayValue={(invoice as any)?.contract_ref ?? null}
+                    displayValue={(invoice as any)?.contract_ref ?? (isNew ? new URLSearchParams(window.location.search).get("contract_ref") : null)}
                   />
                 )} />
               </div>
@@ -332,7 +336,7 @@ export default function InvoiceDetail() {
                     value={field.value}
                     onChange={field.onChange}
                     placeholder={t('invoice.placeholder_account')}
-                    displayValue={(invoice as any)?.account_name ?? null}
+                    displayValue={(invoice as any)?.account_name ?? (isNew ? new URLSearchParams(window.location.search).get("account_name") : null)}
                   />
                 )} />
               </div>

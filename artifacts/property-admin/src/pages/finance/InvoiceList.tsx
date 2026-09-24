@@ -6,7 +6,7 @@ import { Layout } from "@/components/Layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus } from "lucide-react";
+import { Plus, Wallet } from "lucide-react";
 import { DataTable, useServerList, type ColumnDef } from "@/components/ui/data-table";
 import { useBrand } from "@/contexts/ThemeContext";
 import { formatMoney } from "@/lib/currency";
@@ -133,10 +133,17 @@ export default function InvoiceList() {
             <h1 className="text-2xl font-bold tracking-tight">{t("nav.invoice")}</h1>
             <p className="text-sm text-muted-foreground">{invoicesRaw.length} {t("common.total")}</p>
           </div>
-          <Button onClick={() => navigate("/finance/invoices/new")}>
-            <Plus className="h-4 w-4 mr-1" />
-            {t("invoice.new")}
-          </Button>
+          <div className="flex items-center gap-2">
+            {/* 호실 × 월 입금 현황 — 대시보드 탭으로 간다 */}
+            <Button variant="outline" onClick={() => navigate("/dashboard?tab=payment_board")}>
+              <Wallet className="h-4 w-4 mr-1" />
+              {t("invoice.payment_board", "Rent board")}
+            </Button>
+            <Button onClick={() => navigate("/finance/invoices/new")}>
+              <Plus className="h-4 w-4 mr-1" />
+              {t("invoice.new")}
+            </Button>
+          </div>
         </div>
 
         <DataTable

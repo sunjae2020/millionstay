@@ -1,6 +1,7 @@
 import { Router, type IRouter } from "express";
 import healthRouter from "./health";
 import dashboardRouter from "./dashboard";
+import paymentBoardRouter from "./payment-board";
 import productCatalogRouter from "./product-catalog";
 import contractTypesRouter from "./contract-types";
 import productGroupsRouter from "./product-groups";
@@ -79,6 +80,7 @@ const router: IRouter = Router();
 
 router.use(healthRouter);
 router.use(dashboardRouter);
+router.use(paymentBoardRouter);
 router.use(productCatalogRouter);
 router.use(contractTypesRouter);
 router.use(productGroupsRouter);
