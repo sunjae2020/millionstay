@@ -230,10 +230,9 @@
     },
     "live_data": "リアルタイムデータ",
     "reorder_tabs": "タブの並べ替え",
-    "reorder_hint": "タブをドラッグするか、ここの矢印で並べ替えます。",
-    "move_up": "上へ",
-    "move_down": "下へ",
-    "reset_order": "既定の順序に戻す"
+    "reorder_hint": "左の ⠿ をドラッグして並べ替えます。",
+    "reset_order": "既定の順序に戻す",
+    "drag_tab": "ドラッグで並べ替え"
   },
   "login": {
     "title": "管理者ログイン",

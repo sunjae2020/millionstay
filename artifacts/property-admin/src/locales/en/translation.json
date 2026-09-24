@@ -233,10 +233,9 @@
     },
     "live_data": "Live data",
     "reorder_tabs": "Reorder tabs",
-    "reorder_hint": "Drag a tab, or use the arrows here.",
-    "move_up": "Move up",
-    "move_down": "Move down",
-    "reset_order": "Reset order"
+    "reorder_hint": "Drag the ⠿ handle to reorder tabs.",
+    "reset_order": "Reset order",
+    "drag_tab": "Drag to reorder"
   },
   "login": {
     "title": "Admin Login",

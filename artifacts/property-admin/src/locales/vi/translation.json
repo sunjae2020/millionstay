@@ -229,10 +229,9 @@
     },
     "live_data": "Dữ liệu thời gian thực",
     "reorder_tabs": "Sắp xếp tab",
-    "reorder_hint": "Kéo tab hoặc dùng mũi tên ở đây.",
-    "move_up": "Lên",
-    "move_down": "Xuống",
-    "reset_order": "Đặt lại thứ tự"
+    "reorder_hint": "Kéo tay nắm ⠿ bên trái để sắp xếp.",
+    "reset_order": "Đặt lại thứ tự",
+    "drag_tab": "Kéo để sắp xếp"
   },
   "login": {
     "title": "Đăng nhập Quản trị",

@@ -233,10 +233,9 @@
     "live_data": "실시간 데이터",
     "crm_section": "CRM",
     "reorder_tabs": "탭 순서 변경",
-    "reorder_hint": "탭을 끌어서 옮기거나 여기 화살표로 바꾸세요.",
-    "move_up": "위로",
-    "move_down": "아래로",
-    "reset_order": "기본 순서로"
+    "reorder_hint": "왼쪽 ⠿ 손잡이를 끌어 순서를 바꾸세요.",
+    "reset_order": "기본 순서로",
+    "drag_tab": "끌어서 순서 변경"
   },
   "login": {
     "title": "관리자 로그인",

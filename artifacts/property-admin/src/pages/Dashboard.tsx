@@ -1,14 +1,15 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useSearch, useLocation } from "wouter";
 import { useTranslation } from "react-i18next";
 import { Layout } from "@/components/Layout";
 import {
   LayoutDashboard, CalendarDays, DollarSign, Wrench, Users, Radio, Handshake, Building2, Wallet,
-  ArrowUpDown, ChevronUp, ChevronDown, RotateCcw,
+  ArrowUpDown, GripVertical, RotateCcw,
 } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { DashTabs, type TabDef } from "@/components/dashboard/DashboardKit";
 import { apiFetch } from "@/lib/apiFetch";
+import { cn } from "@/lib/utils";
 import OverviewTab from "@/pages/dashboard/OverviewTab";
 import ReservationsTab from "@/pages/dashboard/ReservationsTab";
 import FinanceTab from "@/pages/dashboard/FinanceTab";
@@ -61,13 +62,34 @@ export default function Dashboard() {
     }).catch(() => {});
   };
 
-  const move = (id: string, delta: number) => {
-    const i = order.indexOf(id);
-    const j = i + delta;
-    if (i < 0 || j < 0 || j >= order.length) return;
-    const next = [...order];
-    [next[i], next[j]] = [next[j], next[i]];
-    saveOrder(next);
+  // 순서 편집 목록: 왼쪽 점 6개(⠿) 손잡이를 끌어 옮긴다. 포인터 이벤트라 마우스·터치 모두 된다.
+  // 끄는 동안은 draft 로 화면만 바꾸고, 손을 놓을 때 한 번 저장한다.
+  const [draft, setDraft] = useState<string[] | null>(null);
+  const [dragging, setDragging] = useState<string | null>(null);
+  const itemRefs = useRef(new Map<string, HTMLLIElement>());
+
+  const startDrag = (id: string, e: React.PointerEvent<HTMLButtonElement>) => {
+    e.preventDefault();
+    e.currentTarget.setPointerCapture(e.pointerId);
+    setDraft([...order]);
+    setDragging(id);
+  };
+  const onDragMove = (e: React.PointerEvent<HTMLButtonElement>) => {
+    if (!dragging || !draft) return;
+    // 포인터가 어느 항목의 가운데를 넘었는지로 끼워 넣을 자리를 정한다.
+    const others = draft.filter((id) => id !== dragging);
+    let at = others.length;
+    for (let i = 0; i < others.length; i++) {
+      const r = itemRefs.current.get(others[i])?.getBoundingClientRect();
+      if (r && e.clientY < r.top + r.height / 2) { at = i; break; }
+    }
+    const next = [...others.slice(0, at), dragging, ...others.slice(at)];
+    if (next.join() !== draft.join()) setDraft(next);
+  };
+  const endDrag = () => {
+    if (draft && draft.join() !== order.join()) saveOrder(draft);
+    setDraft(null);
+    setDragging(null);
   };
 
   const ALL_TABS: Record<string, TabDef> = {
@@ -111,7 +133,7 @@ export default function Dashboard() {
         </div>
         <div className="mt-3 pb-3 flex items-center gap-2 min-w-0">
           <div className="min-w-0">
-            <DashTabs tabs={TABS} active={active} onChange={setTab} onReorder={saveOrder} />
+            <DashTabs tabs={TABS} active={active} onChange={setTab} />
           </div>
           {/* 끌어서 옮기기가 어려운 터치 화면·키보드용 순서 편집 */}
           <Popover>
@@ -127,23 +149,35 @@ export default function Dashboard() {
             </PopoverTrigger>
             <PopoverContent align="end" className="w-64 p-2">
               <p className="px-1 pb-2 text-xs text-muted-foreground">
-                {t("dashboard.reorder_hint", "Drag a tab, or use the arrows here.")}
+                {t("dashboard.reorder_hint", "Drag the ⠿ handle to reorder tabs.")}
               </p>
               <ul className="space-y-0.5">
-                {TABS.map((tb, i) => (
-                  <li key={tb.id} className="flex items-center gap-2 rounded-md px-1.5 py-1 hover:bg-muted/60">
+                {(draft ?? order).map((id) => ALL_TABS[id]).filter(Boolean).map((tb) => (
+                  <li
+                    key={tb.id}
+                    ref={(el) => { if (el) itemRefs.current.set(tb.id, el); else itemRefs.current.delete(tb.id); }}
+                    className={cn(
+                      "flex items-center gap-2 rounded-md px-1 py-1 select-none",
+                      dragging === tb.id ? "bg-primary/10 ring-1 ring-primary/40 shadow-sm" : "hover:bg-muted/60",
+                    )}
+                  >
+                    <button
+                      type="button"
+                      onPointerDown={(e) => startDrag(tb.id, e)}
+                      onPointerMove={onDragMove}
+                      onPointerUp={endDrag}
+                      onPointerCancel={endDrag}
+                      className={cn(
+                        "h-7 w-6 inline-flex items-center justify-center rounded text-muted-foreground hover:text-foreground hover:bg-muted touch-none",
+                        dragging === tb.id ? "cursor-grabbing" : "cursor-grab",
+                      )}
+                      aria-label={t("dashboard.drag_tab", "Drag to reorder")}
+                      title={t("dashboard.drag_tab", "Drag to reorder")}
+                    >
+                      <GripVertical className="h-4 w-4" />
+                    </button>
                     <tb.icon className="h-3.5 w-3.5 text-muted-foreground" />
                     <span className="flex-1 truncate text-sm">{tb.label}</span>
-                    <button type="button" disabled={i === 0} onClick={() => move(tb.id, -1)}
-                      className="h-6 w-6 inline-flex items-center justify-center rounded hover:bg-muted disabled:opacity-30"
-                      aria-label={t("dashboard.move_up", "Move up")}>
-                      <ChevronUp className="h-3.5 w-3.5" />
-                    </button>
-                    <button type="button" disabled={i === TABS.length - 1} onClick={() => move(tb.id, 1)}
-                      className="h-6 w-6 inline-flex items-center justify-center rounded hover:bg-muted disabled:opacity-30"
-                      aria-label={t("dashboard.move_down", "Move down")}>
-                      <ChevronDown className="h-3.5 w-3.5" />
-                    </button>
                   </li>
                 ))}
               </ul>

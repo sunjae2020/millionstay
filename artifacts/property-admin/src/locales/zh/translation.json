@@ -231,10 +231,9 @@
     },
     "live_data": "实时数据",
     "reorder_tabs": "调整标签顺序",
-    "reorder_hint": "拖动标签,或使用此处的箭头调整。",
-    "move_up": "上移",
-    "move_down": "下移",
-    "reset_order": "恢复默认顺序"
+    "reorder_hint": "拖动左侧 ⠿ 手柄调整顺序。",
+    "reset_order": "恢复默认顺序",
+    "drag_tab": "拖动调整顺序"
   },
   "login": {
     "title": "管理员登录",

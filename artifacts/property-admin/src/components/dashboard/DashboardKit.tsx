@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { cn } from "@/lib/utils";
 
 /**
@@ -121,25 +120,7 @@ export interface TabDef {
   icon: React.ComponentType<{ className?: string }>;
 }
 
-export function DashTabs({
-  tabs, active, onChange, onReorder,
-}: {
-  tabs: TabDef[];
-  active: string;
-  onChange: (id: string) => void;
-  /** 주면 탭을 끌어서 순서를 바꿀 수 있다(바뀐 전체 id 순서를 넘긴다). */
-  onReorder?: (ids: string[]) => void;
-}) {
-  const [dragId, setDragId] = useState<string | null>(null);
-  const [overId, setOverId] = useState<string | null>(null);
-
-  const drop = (targetId: string) => {
-    if (!onReorder || !dragId || dragId === targetId) return;
-    const ids = tabs.map((tb) => tb.id).filter((id) => id !== dragId);
-    ids.splice(ids.indexOf(targetId), 0, dragId);
-    onReorder(ids);
-  };
-
+export function DashTabs({ tabs, active, onChange }: { tabs: TabDef[]; active: string; onChange: (id: string) => void }) {
   return (
     <div className="inline-flex gap-0.5 bg-muted border rounded-xl p-1 overflow-x-auto max-w-full">
       {tabs.map((tb) => {
@@ -148,17 +129,9 @@ export function DashTabs({
           <button
             key={tb.id}
             onClick={() => onChange(tb.id)}
-            draggable={!!onReorder}
-            onDragStart={(e) => { setDragId(tb.id); e.dataTransfer.effectAllowed = "move"; }}
-            onDragOver={(e) => { if (dragId) { e.preventDefault(); setOverId(tb.id); } }}
-            onDragLeave={() => setOverId((cur) => (cur === tb.id ? null : cur))}
-            onDrop={(e) => { e.preventDefault(); drop(tb.id); setDragId(null); setOverId(null); }}
-            onDragEnd={() => { setDragId(null); setOverId(null); }}
             className={cn(
               "inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-[13px] whitespace-nowrap transition-all",
               on ? "bg-card font-semibold shadow-sm" : "text-muted-foreground hover:text-foreground font-medium",
-              dragId === tb.id && "opacity-40",
-              overId === tb.id && dragId !== tb.id && "ring-2 ring-primary/40",
             )}
             style={on ? { color: BRAND } : undefined}
           >
