@@ -8299,9 +8299,6 @@
     "filter_overdue": "연체",
     "filter_vacant": "공실",
     "search": "호실·세입자 검색",
-    "toggle_info": "계약 정보 열 보이기/숨기기",
-    "show_info": "계약 정보 열",
-    "hide_info": "열 줄이기",
     "this_month": "이번 달",
     "new_contract": "새 계약",
     "kpi_collected": "이번 달 수납액",
@@ -8353,6 +8350,10 @@
     "select_hint": "행이나 월 칸을 누르면 청구서와 처리 버튼이 여기에 나옵니다.",
     "paid_toast": "입금을 기록했습니다",
     "pay_failed": "입금을 기록하지 못했습니다",
-    "paid_date": "입금일"
+    "paid_date": "입금일",
+    "columns": "열 선택",
+    "columns_hint": "보여 줄 열을 고르세요",
+    "columns_all": "모두 보기",
+    "columns_min": "호실만"
   }
 }

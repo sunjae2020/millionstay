@@ -8254,9 +8254,6 @@
     "filter_overdue": "延滞",
     "filter_vacant": "空室",
     "search": "部屋・入居者を検索",
-    "toggle_info": "契約情報列の表示/非表示",
-    "show_info": "契約情報列",
-    "hide_info": "列を減らす",
     "this_month": "今月",
     "new_contract": "新規契約",
     "kpi_collected": "今月の入金額",
@@ -8308,6 +8305,10 @@
     "select_hint": "行または月のセルを選ぶと、請求書と操作ボタンがここに表示されます。",
     "paid_toast": "入金を記録しました",
     "pay_failed": "入金を記録できませんでした",
-    "paid_date": "入金日"
+    "paid_date": "入金日",
+    "columns": "列の選択",
+    "columns_hint": "表示する列を選んでください",
+    "columns_all": "すべて表示",
+    "columns_min": "部屋のみ"
   }
 }

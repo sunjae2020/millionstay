@@ -8258,9 +8258,6 @@
     "filter_overdue": "逾期",
     "filter_vacant": "空置",
     "search": "搜索房间或租客",
-    "toggle_info": "显示/隐藏合同信息列",
-    "show_info": "合同信息列",
-    "hide_info": "精简列",
     "this_month": "本月",
     "new_contract": "新建合同",
     "kpi_collected": "本月已收",
@@ -8312,6 +8309,10 @@
     "select_hint": "点击一行或某月单元格,即可在此查看账单与操作。",
     "paid_toast": "已记录收款",
     "pay_failed": "无法记录收款",
-    "paid_date": "收款日期"
+    "paid_date": "收款日期",
+    "columns": "选择列",
+    "columns_hint": "选择要显示的列",
+    "columns_all": "全部显示",
+    "columns_min": "仅房间"
   }
 }

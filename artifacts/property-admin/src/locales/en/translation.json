@@ -8299,9 +8299,6 @@
     "filter_overdue": "Overdue",
     "filter_vacant": "Vacant",
     "search": "Search unit or tenant",
-    "toggle_info": "Show / hide contract columns",
-    "show_info": "Contract columns",
-    "hide_info": "Fewer columns",
     "this_month": "This month",
     "new_contract": "New contract",
     "kpi_collected": "Collected this month",
@@ -8353,6 +8350,10 @@
     "select_hint": "Pick a row or a month cell to see its invoices and actions.",
     "paid_toast": "Payment recorded",
     "pay_failed": "Could not record payment",
-    "paid_date": "Payment date"
+    "paid_date": "Payment date",
+    "columns": "Columns",
+    "columns_hint": "Choose columns to show",
+    "columns_all": "Show all",
+    "columns_min": "Unit only"
   }
 }

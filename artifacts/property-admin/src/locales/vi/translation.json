@@ -8199,9 +8199,6 @@
     "filter_overdue": "Quá hạn",
     "filter_vacant": "Trống",
     "search": "Tìm phòng hoặc người thuê",
-    "toggle_info": "Hiện/ẩn cột hợp đồng",
-    "show_info": "Cột hợp đồng",
-    "hide_info": "Ít cột hơn",
     "this_month": "Tháng này",
     "new_contract": "Hợp đồng mới",
     "kpi_collected": "Đã thu tháng này",
@@ -8253,6 +8250,10 @@
     "select_hint": "Chọn một hàng hoặc ô tháng để xem hóa đơn và thao tác.",
     "paid_toast": "Đã ghi nhận thanh toán",
     "pay_failed": "Không thể ghi nhận thanh toán",
-    "paid_date": "Ngày thanh toán"
+    "paid_date": "Ngày thanh toán",
+    "columns": "Chọn cột",
+    "columns_hint": "Chọn cột để hiển thị",
+    "columns_all": "Hiện tất cả",
+    "columns_min": "Chỉ phòng"
   }
 }

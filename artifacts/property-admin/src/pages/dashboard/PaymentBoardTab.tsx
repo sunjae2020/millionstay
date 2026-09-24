@@ -15,6 +15,8 @@ import { useToast } from "@/hooks/use-toast";
 import { KpiCard, DashCard } from "@/components/dashboard/DashboardKit";
 import { DocumentPreviewDialog, useDocumentPreview } from "@/components/DocumentPreviewDialog";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Label } from "@/components/ui/label";
 import { DateInput } from "@/components/ui/date-input";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -111,14 +113,14 @@ const INVOICE_STATUS_STYLE: Record<string, string> = {
   Unpaid: "bg-red-100 text-red-700",
 };
 
-const INFO_KEY = "payboard.showInfo";
+/** 정보 열 보기/숨기기는 사용자별로 저장한다(리스트 컬럼 설정과 같은 table-prefs 저장소). */
+const PREFS_KEY = "payment-board";
 
 /** 정보 열 폭(px) — 가로 스크롤 때 고정(sticky) 위치를 계산하는 데 쓴다. */
 const COL_W = { unit: 72, tenant: 116, contract_date: 88, period: 100, rent: 92, term: 56, deposit: 100 };
 
-function readShowInfo(): boolean {
-  try { return localStorage.getItem(INFO_KEY) !== "0"; } catch { return true; }
-}
+type InfoKey = keyof typeof COL_W;
+const INFO_KEYS = Object.keys(COL_W) as InfoKey[];
 
 export default function PaymentBoardTab() {
   const { t, i18n } = useTranslation();
@@ -131,7 +133,7 @@ export default function PaymentBoardTab() {
   const [loading, setLoading] = useState(true);
   const [q, setQ] = useState("");
   const [filter, setFilter] = useState<Filter>("all");
-  const [showInfo, setShowInfo] = useState(readShowInfo);
+  const [hidden, setHidden] = useState<Set<InfoKey>>(new Set());
   const [selected, setSelected] = useState<{ unitId: number; month: string } | null>(null);
   const [payTarget, setPayTarget] = useState<BoardInvoice | null>(null);
   const [payMethod, setPayMethod] = useState("BankTransfer");
@@ -157,11 +159,32 @@ export default function PaymentBoardTab() {
 
   useEffect(() => { void load(); }, [load]);
 
-  const toggleInfo = () => {
-    setShowInfo((v) => {
-      try { localStorage.setItem(INFO_KEY, v ? "0" : "1"); } catch { /* 저장 못 해도 화면은 동작 */ }
-      return !v;
-    });
+  useEffect(() => {
+    let cancelled = false;
+    apiFetch(`/api/v1/table-prefs/${PREFS_KEY}`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((body) => {
+        const saved = body?.data?.hidden;
+        if (!cancelled && Array.isArray(saved)) {
+          setHidden(new Set(saved.filter((k: string): k is InfoKey => (INFO_KEYS as string[]).includes(k))));
+        }
+      })
+      .catch(() => {});
+    return () => { cancelled = true; };
+  }, []);
+
+  const saveHidden = (next: Set<InfoKey>) => {
+    setHidden(next);
+    void apiFetch(`/api/v1/table-prefs/${PREFS_KEY}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ order: [], hidden: [...next], widths: {} }),
+    }).catch(() => {});
+  };
+  const toggleCol = (k: InfoKey, show: boolean) => {
+    const next = new Set(hidden);
+    if (show) next.delete(k); else next.add(k);
+    saveHidden(next);
   };
 
   const money = (n: number | null | undefined, cur?: string | null) =>
@@ -174,28 +197,24 @@ export default function PaymentBoardTab() {
   };
   const statusLabel = (s: CellStatus) => t(`dash_payboard.status_${s}`, s);
 
-  // 정보 열 구성 — 호실은 항상, 나머지는 "계약 정보" 토글로 접는다.
+  // 정보 열 — 체크박스로 고른 열만 보인다. 보이는 열은 가로 스크롤 때 왼쪽에 고정된다.
+  const colLabels: Record<InfoKey, string> = {
+    unit: t("dash_payboard.col_unit", "Unit"),
+    tenant: t("dash_payboard.col_tenant", "Tenant"),
+    contract_date: t("dash_payboard.col_contract_date", "Signed"),
+    period: t("dash_payboard.col_period", "Start / End"),
+    rent: t("dash_payboard.col_rent", "Rent"),
+    term: t("dash_payboard.col_term", "Term"),
+    deposit: t("dash_payboard.col_deposit", "Deposit"),
+  };
   const infoCols = useMemo(() => {
-    const cols: { key: keyof typeof COL_W; label: string }[] = [
-      { key: "unit", label: t("dash_payboard.col_unit", "Unit") },
-      { key: "tenant", label: t("dash_payboard.col_tenant", "Tenant") },
-    ];
-    if (showInfo) {
-      cols.push(
-        { key: "contract_date", label: t("dash_payboard.col_contract_date", "Signed") },
-        { key: "period", label: t("dash_payboard.col_period", "Start / End") },
-        { key: "rent", label: t("dash_payboard.col_rent", "Rent") },
-        { key: "term", label: t("dash_payboard.col_term", "Term") },
-        { key: "deposit", label: t("dash_payboard.col_deposit", "Deposit") },
-      );
-    }
     let left = 0;
-    return cols.map((c) => {
-      const out = { ...c, left, width: COL_W[c.key] };
-      left += COL_W[c.key];
+    return INFO_KEYS.filter((k) => !hidden.has(k)).map((key, i) => {
+      const out = { key, label: colLabels[key], left, width: COL_W[key], first: i === 0 };
+      left += COL_W[key];
       return out;
     });
-  }, [showInfo, t]);
+  }, [hidden, t]); // eslint-disable-line react-hooks/exhaustive-deps
   const stickyWidth = infoCols.reduce((a, c) => a + c.width, 0);
 
   const units = useMemo(() => {
@@ -224,11 +243,11 @@ export default function PaymentBoardTab() {
 
   useLayoutEffect(() => {
     if (!board || loading) return;
-    const key = `${board.property_id}|${showInfo}`;
+    const key = `${board.property_id}|${[...hidden].sort().join()}`;
     if (scrolledFor.current === key) return;
     scrolledFor.current = key;
     scrollToCurrent();
-  }, [board, loading, showInfo, scrollToCurrent]);
+  }, [board, loading, hidden, scrollToCurrent]);
 
   const selUnit = selected ? board?.units.find((u) => u.id === selected.unitId) ?? null : null;
   const selCell = selUnit && selected ? selUnit.cells[selected.month] ?? null : null;
@@ -337,7 +356,7 @@ export default function PaymentBoardTab() {
   }, [board]);
 
   const stickyCell = (c: (typeof infoCols)[number]) => ({
-    className: cn(c.key === "unit" ? "sticky" : "md:sticky"),
+    className: cn(c.first ? "sticky" : "md:sticky"),
     style: { left: c.left, minWidth: c.width, maxWidth: c.width, width: c.width },
   });
 
@@ -388,10 +407,6 @@ export default function PaymentBoardTab() {
               className="h-8 w-44 rounded-lg border bg-card pl-7 pr-2 text-xs"
             />
           </div>
-          <Button size="sm" variant="outline" className="h-8 text-xs" onClick={toggleInfo} title={t("dash_payboard.toggle_info", "Show / hide contract columns")}>
-            <Columns3 className="h-3.5 w-3.5 mr-1" />
-            {showInfo ? t("dash_payboard.hide_info", "Fewer columns") : t("dash_payboard.show_info", "Contract columns")}
-          </Button>
           <Button size="sm" variant="outline" className="h-8 text-xs" onClick={scrollToCurrent}>
             <Crosshair className="h-3.5 w-3.5 mr-1" />
             {t("dash_payboard.this_month", "This month")}
@@ -443,7 +458,46 @@ export default function PaymentBoardTab() {
                 {statusLabel(st)}
               </span>
             ))}
-            <span className="ml-auto">{t("dash_payboard.unit_count", "{{n}} units", { n: units.length })}</span>
+            <span className="ml-auto inline-flex items-center gap-2">
+              <Popover>
+                <PopoverTrigger asChild>
+                  <button
+                    type="button"
+                    className="inline-flex items-center gap-1 rounded-md border bg-card px-2 py-1 text-[11px] font-medium text-foreground hover:bg-muted"
+                  >
+                    <Columns3 className="h-3.5 w-3.5" />
+                    {t("dash_payboard.columns", "Columns")}
+                    {hidden.size > 0 && (
+                      <span className="text-muted-foreground">{INFO_KEYS.length - hidden.size}/{INFO_KEYS.length}</span>
+                    )}
+                  </button>
+                </PopoverTrigger>
+                <PopoverContent align="end" className="w-52 p-2">
+                  <p className="px-1 pb-1.5 text-xs text-muted-foreground">{t("dash_payboard.columns_hint", "Choose columns to show")}</p>
+                  <ul className="space-y-0.5">
+                    {INFO_KEYS.map((k) => (
+                      <li key={k}>
+                        <label className="flex items-center gap-2 rounded-md px-1.5 py-1.5 text-sm cursor-pointer hover:bg-muted/60">
+                          <Checkbox checked={!hidden.has(k)} onCheckedChange={(v) => toggleCol(k, v === true)} />
+                          {colLabels[k]}
+                        </label>
+                      </li>
+                    ))}
+                  </ul>
+                  <div className="mt-1.5 grid grid-cols-2 gap-1">
+                    <button type="button" onClick={() => saveHidden(new Set())}
+                      className="rounded-md border px-2 py-1 text-xs text-muted-foreground hover:text-foreground">
+                      {t("dash_payboard.columns_all", "Show all")}
+                    </button>
+                    <button type="button" onClick={() => saveHidden(new Set(INFO_KEYS.filter((k) => k !== "unit")))}
+                      className="rounded-md border px-2 py-1 text-xs text-muted-foreground hover:text-foreground">
+                      {t("dash_payboard.columns_min", "Unit only")}
+                    </button>
+                  </div>
+                </PopoverContent>
+              </Popover>
+              {t("dash_payboard.unit_count", "{{n}} units", { n: units.length })}
+            </span>
           </div>
           {loading && !board ? (
             <div className="h-64 flex items-center justify-center text-sm text-muted-foreground">{t("dash_payboard.loading", "Loading…")}</div>
@@ -460,7 +514,7 @@ export default function PaymentBoardTab() {
                     {infoCols.map((c) => {
                       const sc = stickyCell(c);
                       return (
-                        <th key={c.key} className={cn(sc.className, "top-0 z-30 bg-card border-b border-r px-2 py-2 text-left font-semibold whitespace-nowrap", c.key !== "unit" && "z-20 md:z-30")} style={sc.style}>
+                        <th key={c.key} className={cn(sc.className, "top-0 z-30 bg-card border-b border-r px-2 py-2 text-left font-semibold whitespace-nowrap", !c.first && "z-20 md:z-30")} style={sc.style}>
                           {c.label}
                         </th>
                       );
@@ -526,7 +580,7 @@ export default function PaymentBoardTab() {
                               break;
                           }
                           return (
-                            <td key={col.key} className={cn(sc.className, "z-10 border-b border-r px-2 py-1.5 whitespace-nowrap overflow-hidden", rowBg, col.key !== "unit" && "z-0 md:z-10")} style={{ ...sc.style, ...(on && col.key === "unit" ? { boxShadow: "inset 3px 0 0 hsl(var(--primary))" } : {}) }}>
+                            <td key={col.key} className={cn(sc.className, "z-10 border-b border-r px-2 py-1.5 whitespace-nowrap overflow-hidden", rowBg, !col.first && "z-0 md:z-10")} style={{ ...sc.style, ...(on && col.first ? { boxShadow: "inset 3px 0 0 hsl(var(--primary))" } : {}) }}>
                               {content}
                             </td>
                           );
