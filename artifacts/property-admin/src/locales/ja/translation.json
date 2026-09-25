@@ -4135,7 +4135,11 @@
     "kpi_pending_approval": "{{count}}件承認待ち",
     "time_days_ago": "{{count}}日前",
     "time_hours_ago": "{{count}}時間前",
-    "time_minutes_ago": "{{count}}分前"
+    "time_minutes_ago": "{{count}}分前",
+    "kpi_new_contracts": "契約件数",
+    "kpi_new_contracts_sub": "今月の新規契約",
+    "kpi_ended_contracts": "退去件数",
+    "kpi_ended_contracts_sub": "今月の契約終了"
   },
   "settings_company": {
     "save_success_title": "保存しました",

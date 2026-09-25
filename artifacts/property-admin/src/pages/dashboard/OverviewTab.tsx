@@ -146,6 +146,14 @@ export default function OverviewTab() {
   const { data: invoices } = useListInvoices({});
   const { data: workOrders } = useListWorkOrders({});
 
+  const [contractCounts, setContractCounts] = useState<{ new_contracts: number; ended_contracts: number } | null>(null);
+  useEffect(() => {
+    apiFetch("/api/v1/dashboard/overview/contract-counts")
+      .then(r => r.json())
+      .then(d => setContractCounts(typeof d?.new_contracts === "number" ? d : null))
+      .catch(() => {});
+  }, []);
+
   const [activity, setActivity] = useState<ActivityLog[]>([]);
   useEffect(() => {
     apiFetch("/api/v1/operations/activity-log?limit=8")
@@ -164,8 +172,6 @@ export default function OverviewTab() {
   const activeBookings = bookings?.filter(b => b.booking_status === "Active").length ?? 0;
   const occupancyPct = activeSpaces > 0 ? Math.min(100, Math.round((activeBookings / activeSpaces) * 100)) : 0;
 
-  const todayCheckIns = bookings?.filter(b => b.check_in_date === today && (b.booking_status === "Confirmed" || b.booking_status === "PendingPayment")).length ?? 0;
-  const todayCheckOuts = bookings?.filter(b => b.check_out_date === today && b.booking_status === "Active").length ?? 0;
   const pendingApprovals = bookings?.filter(b => b.booking_status === "PendingApproval").length ?? 0;
 
   const monthlyRevenue = (invoices ?? [])
@@ -212,12 +218,12 @@ export default function OverviewTab() {
           progress={occupancyPct}
         />
         <KpiCard
-          icon={LogIn} accent="green" label={t("dash_overview.kpi_today_checkins")}
-          value={todayCheckIns} sublabel={pendingApprovals > 0 ? t("dash_overview.kpi_pending_approval", { count: pendingApprovals }) : t("dash_overview.kpi_all_confirmed")}
+          icon={LogIn} accent="green" label={t("dash_overview.kpi_new_contracts")}
+          value={contractCounts?.new_contracts ?? "—"} sublabel={t("dash_overview.kpi_new_contracts_sub")}
         />
         <KpiCard
-          icon={LogOut} accent="blue" label={t("dash_overview.kpi_today_checkouts")}
-          value={todayCheckOuts} sublabel={t("dash_overview.kpi_departures_scheduled", { count: todayCheckOuts })}
+          icon={LogOut} accent="blue" label={t("dash_overview.kpi_ended_contracts")}
+          value={contractCounts?.ended_contracts ?? "—"} sublabel={t("dash_overview.kpi_ended_contracts_sub")}
         />
         <KpiCard
           icon={DollarSign} accent="purple" label={t("dash_overview.kpi_revenue_this_month")}

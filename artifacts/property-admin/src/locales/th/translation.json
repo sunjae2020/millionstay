@@ -4130,7 +4130,11 @@
     "kpi_pending_approval": "รอการอนุมัติ {{count}} รายการ",
     "time_days_ago": "{{count}} วันที่แล้ว",
     "time_hours_ago": "{{count}} ชั่วโมงที่แล้ว",
-    "time_minutes_ago": "{{count}} นาทีที่แล้ว"
+    "time_minutes_ago": "{{count}} นาทีที่แล้ว",
+    "kpi_new_contracts": "จำนวนสัญญา",
+    "kpi_new_contracts_sub": "สัญญาใหม่เดือนนี้",
+    "kpi_ended_contracts": "จำนวนการย้ายออก",
+    "kpi_ended_contracts_sub": "สัญญาที่สิ้นสุดเดือนนี้"
   },
   "settings_company": {
     "save_success_title": "บันทึกแล้ว",

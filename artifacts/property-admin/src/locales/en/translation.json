@@ -4163,7 +4163,11 @@
     "kpi_pending_approval": "{{count}} pending approval",
     "time_days_ago": "{{count}}d ago",
     "time_hours_ago": "{{count}}h ago",
-    "time_minutes_ago": "{{count}}m ago"
+    "time_minutes_ago": "{{count}}m ago",
+    "kpi_new_contracts": "New Contracts",
+    "kpi_new_contracts_sub": "Contract date this month",
+    "kpi_ended_contracts": "Move-outs",
+    "kpi_ended_contracts_sub": "Contracts ending this month"
   },
   "settings_company": {
     "save_success_title": "Saved",

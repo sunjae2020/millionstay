@@ -5,6 +5,7 @@ import { alias } from "drizzle-orm/pg-core";
 import { listEntries, trialBalance } from "../lib/billing/gl";
 import { netRevenueBetween, netRevenueTotal } from "../lib/billing/payout";
 import { countableUnitFilter } from "../lib/unitScope";
+import { billingTodayIso } from "../lib/billing/billingDate";
 // 통합 청구서(부모)는 금액 집계에서 제외한다 — 공간별 자식 인보이스가 매출의 정본이라
 // 둘 다 더하면 두 번 잡힌다.
 import { excludeConsolidated } from "../lib/billing/consolidatedInvoices";
@@ -98,6 +99,29 @@ router.get("/v1/dashboard/overview/kpis", async (_req, res) => {
     });
   } catch (err) {
     res.status(500).json({ error: "Failed to fetch KPIs" });
+  }
+});
+
+// 개요 탭 계약건수·퇴거건수 카드. "이번 달"은 테넌트 영업 시간대 기준.
+// 체결되지 않은 계약(Draft·Sent)과 취소·보관 건은 세지 않는다.
+//  - 계약건수: 계약일(contract_date, 없으면 입주일 start_date)이 이번 달인 계약
+//  - 퇴거건수: 계약 종료일(end_date)이 이번 달인 계약
+router.get("/v1/dashboard/overview/contract-counts", async (_req, res) => {
+  try {
+    const month = billingTodayIso().slice(0, 7);
+    const concluded = and(
+      isNull(contractsTable.deleted_at),
+      sql`${contractsTable.status} not in ('Draft', 'Sent', 'Cancelled', 'Archived')`,
+    );
+    const [[started], [ended]] = await Promise.all([
+      db.select({ count: count() }).from(contractsTable).where(and(concluded,
+        sql`left(coalesce(nullif(${contractsTable.contract_date}, ''), ${contractsTable.start_date}), 7) = ${month}`)),
+      db.select({ count: count() }).from(contractsTable).where(and(concluded,
+        sql`left(${contractsTable.end_date}, 7) = ${month}`)),
+    ]);
+    res.json({ month, new_contracts: Number(started.count), ended_contracts: Number(ended.count) });
+  } catch (err) {
+    res.status(500).json({ error: "Failed to fetch contract counts" });
   }
 });
 

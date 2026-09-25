@@ -4163,7 +4163,11 @@
     "kpi_pending_approval": "{{count}}건 승인 대기",
     "time_days_ago": "{{count}}일 전",
     "time_hours_ago": "{{count}}시간 전",
-    "time_minutes_ago": "{{count}}분 전"
+    "time_minutes_ago": "{{count}}분 전",
+    "kpi_new_contracts": "계약건수",
+    "kpi_new_contracts_sub": "이번 달 신규 계약",
+    "kpi_ended_contracts": "퇴거건수",
+    "kpi_ended_contracts_sub": "이번 달 계약 종료"
   },
   "settings_company": {
     "save_success_title": "저장됨",

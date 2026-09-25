@@ -4137,7 +4137,11 @@
     "kpi_pending_approval": "{{count}} 个待审批",
     "time_days_ago": "{{count}} 天前",
     "time_hours_ago": "{{count}} 小时前",
-    "time_minutes_ago": "{{count}} 分钟前"
+    "time_minutes_ago": "{{count}} 分钟前",
+    "kpi_new_contracts": "签约数",
+    "kpi_new_contracts_sub": "本月新签合同",
+    "kpi_ended_contracts": "退租数",
+    "kpi_ended_contracts_sub": "本月到期合同"
   },
   "settings_company": {
     "save_success_title": "已保存",

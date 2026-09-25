@@ -4103,7 +4103,11 @@
     "kpi_pending_approval": "{{count}} chờ phê duyệt",
     "time_days_ago": "{{count}} ngày trước",
     "time_hours_ago": "{{count}} giờ trước",
-    "time_minutes_ago": "{{count}} phút trước"
+    "time_minutes_ago": "{{count}} phút trước",
+    "kpi_new_contracts": "Số hợp đồng",
+    "kpi_new_contracts_sub": "Hợp đồng mới trong tháng",
+    "kpi_ended_contracts": "Số trả phòng",
+    "kpi_ended_contracts_sub": "Hợp đồng kết thúc trong tháng"
   },
   "settings_company": {
     "save_success_title": "Đã lưu",
