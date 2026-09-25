@@ -148,6 +148,117 @@ router.get("/v1/dashboard/overview/contract-counts", async (_req, res) => {
   }
 });
 
+// 계약/퇴거 현황 탭 — KPI 4장 + 7일 캘린더. 날짜 기준은 테넌트 영업 시간대.
+// 계약 한 건은 오늘을 기준으로 셋 중 하나다:
+//  - 종료(moved_out): Completed·Expired·Terminated 이거나 종료일(end_date)이 지났다
+//  - 퇴거 예정(moving_out): 진행 중이면서 종료일이 오늘부터 30일 이내
+//  - 진행 중(ongoing): Signed·Active 이고 아직 끝나지 않았다
+// KPI: 진행중 계약건 · 완료된 계약건(누적) · 퇴거예정 세대(30일 이내) · 퇴거완료 세대(이번 달).
+// 세대 수는 타입 행을 빼고(countableUnitFilter) 공간 기준으로 중복 없이 센다.
+const MOVE_OUT_WINDOW_DAYS = 30;
+
+router.get("/v1/dashboard/lease-status", async (req, res) => {
+  try {
+    const today = billingTodayIso();
+    const month = today.slice(0, 7);
+    const soon = (() => {
+      const d = new Date(today + "T00:00:00Z");
+      d.setUTCDate(d.getUTCDate() + MOVE_OUT_WINDOW_DAYS);
+      return d.toISOString().slice(0, 10);
+    })();
+    const { start, end } = req.query as Record<string, string | undefined>;
+    const weekStart = start && /^\d{4}-\d{2}-\d{2}$/.test(start) ? start : today;
+    const weekEnd = end && /^\d{4}-\d{2}-\d{2}$/.test(end) ? end : (() => {
+      const d = new Date(weekStart + "T00:00:00Z");
+      d.setUTCDate(d.getUTCDate() + 7);
+      return d.toISOString().slice(0, 10);
+    })();
+
+    const rows = await db
+      .select({
+        id: contractsTable.id,
+        contract_ref: contractsTable.contract_ref,
+        status: contractsTable.status,
+        start_date: contractsTable.start_date,
+        end_date: contractsTable.end_date,
+        space_id: contractsTable.space_id,
+        space_name: spacesTable.name,
+        property_name: propertiesTable.name,
+        tenant_name: accountsTable.name,
+      })
+      .from(contractsTable)
+      .leftJoin(spacesTable, eq(spacesTable.id, contractsTable.space_id))
+      .leftJoin(propertiesTable, eq(propertiesTable.id, spacesTable.property_id))
+      .leftJoin(accountsTable, eq(accountsTable.id, contractsTable.tenant_account_id))
+      .where(and(
+        isNull(contractsTable.deleted_at),
+        inArray(contractsTable.status, ["Signed", "Active", "Completed", "Expired", "Terminated"]),
+      ));
+
+    // 타입 행(세대 마스터)에 걸린 계약은 세대 수에서 뺀다.
+    const countable = new Set(
+      (await db.select({ id: spacesTable.id }).from(spacesTable).where(countableUnitFilter)).map(s => s.id),
+    );
+
+    type Phase = "ongoing" | "moving_out" | "moved_out";
+    const phaseOf = (r: typeof rows[number]): Phase => {
+      const endDate = r.end_date || null;
+      if (["Completed", "Expired", "Terminated"].includes(r.status) || (endDate && endDate < today)) return "moved_out";
+      if (endDate && endDate <= soon) return "moving_out";
+      return "ongoing";
+    };
+
+    let ongoing = 0;
+    let completed = 0;
+    const movingOutUnits = new Set<number>();
+    const movedOutUnits = new Set<number>();
+    for (const r of rows) {
+      const phase = phaseOf(r);
+      if (phase === "moved_out") {
+        completed++;
+        if (r.space_id && countable.has(r.space_id) && r.end_date?.slice(0, 7) === month && r.end_date <= today) {
+          movedOutUnits.add(r.space_id);
+        }
+      } else {
+        ongoing++;
+        if (phase === "moving_out" && r.space_id && countable.has(r.space_id)) movingOutUnits.add(r.space_id);
+      }
+    }
+
+    // 캘린더: 이번 주 [weekStart, weekEnd) 에 계약 기간이 걸친 공간만.
+    const bySpace = new Map<number, {
+      id: number; name: string; property_name: string | null;
+      contracts: { id: number; contract_ref: string; status: string; phase: Phase; start_date: string; end_date: string | null; tenant_name: string | null }[];
+    }>();
+    for (const r of rows) {
+      if (!r.space_id || !r.start_date) continue;
+      if (r.start_date >= weekEnd) continue;
+      if (r.end_date && r.end_date < weekStart) continue;
+      const entry = bySpace.get(r.space_id) ?? { id: r.space_id, name: r.space_name ?? `#${r.space_id}`, property_name: r.property_name ?? null, contracts: [] };
+      entry.contracts.push({
+        id: r.id, contract_ref: r.contract_ref, status: r.status, phase: phaseOf(r),
+        start_date: r.start_date, end_date: r.end_date || null, tenant_name: r.tenant_name ?? null,
+      });
+      bySpace.set(r.space_id, entry);
+    }
+    const spaces = [...bySpace.values()].sort((a, b) =>
+      (a.property_name ?? "").localeCompare(b.property_name ?? "", "ko") || a.name.localeCompare(b.name, "ko", { numeric: true }));
+
+    res.json({
+      today,
+      month,
+      move_out_window_days: MOVE_OUT_WINDOW_DAYS,
+      ongoing_contracts: ongoing,
+      completed_contracts: completed,
+      move_out_scheduled_units: movingOutUnits.size,
+      moved_out_units: movedOutUnits.size,
+      calendar: { start: weekStart, end: weekEnd, spaces },
+    });
+  } catch (err) {
+    res.status(500).json({ error: "Failed to fetch lease status" });
+  }
+});
+
 router.get("/v1/finance/summary", async (req, res) => {
   try {
     const { month } = req.query as Record<string, string>;

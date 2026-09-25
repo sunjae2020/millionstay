@@ -219,7 +219,7 @@
     "space_col": "Không gian",
     "tabs": {
       "overview": "Tổng quan",
-      "reservations": "Đặt phòng (Hợp đồng)",
+      "reservations": "Hợp đồng / Trả phòng",
       "channels": "Kênh phân phối",
       "finance": "Tài chính",
       "operations": "Vận hành",
@@ -3074,7 +3074,21 @@
     "all_statuses": "Tất cả trạng thái",
     "th_ref": "Mã tham chiếu #",
     "no_bookings_found": "Không tìm thấy đặt phòng nào",
-    "pagination_showing": "Hiển thị {{from}}–{{to}} trong {{total}}"
+    "pagination_showing": "Hiển thị {{from}}–{{to}} trong {{total}}",
+    "lease_calendar": "Lịch hợp đồng & trả phòng 7 ngày",
+    "kpi_ongoing_contracts": "Hợp đồng đang hiệu lực",
+    "kpi_ongoing_contracts_sub": "Đã ký và chưa kết thúc",
+    "kpi_completed_contracts": "Hợp đồng đã kết thúc",
+    "kpi_completed_contracts_sub": "Đã kết thúc, hết hạn hoặc chấm dứt (lũy kế)",
+    "kpi_move_out_scheduled": "Căn sắp trả phòng",
+    "kpi_move_out_scheduled_sub": "Hợp đồng kết thúc trong {{days}} ngày",
+    "kpi_moved_out": "Căn đã trả phòng",
+    "kpi_moved_out_sub": "Đã trả phòng trong tháng này",
+    "phase_ongoing": "Đang hiệu lực",
+    "phase_moving_out": "Sắp trả phòng",
+    "phase_moved_out": "Đã trả phòng / kết thúc",
+    "move_out_on": "trả phòng {{date}}",
+    "no_contracts_period": "Không có hợp đồng nào trong khoảng thời gian này."
   },
   "dash_finance": {
     "title": "Bảng Điều Khiển Tài Chính",

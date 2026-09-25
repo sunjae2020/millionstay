@@ -221,7 +221,7 @@
     "space_col": "空间",
     "tabs": {
       "overview": "概览",
-      "reservations": "预订（合同）",
+      "reservations": "合同/退租情况",
       "channels": "渠道",
       "finance": "财务",
       "operations": "运营",
@@ -3098,7 +3098,21 @@
     "all_statuses": "所有状态",
     "th_ref": "预订号",
     "no_bookings_found": "未找到预订",
-    "pagination_showing": "显示第 {{from}}–{{to}} 条，共 {{total}} 条"
+    "pagination_showing": "显示第 {{from}}–{{to}} 条，共 {{total}} 条",
+    "lease_calendar": "7天合同/退租日历",
+    "kpi_ongoing_contracts": "进行中的合同",
+    "kpi_ongoing_contracts_sub": "已签约且尚未到期",
+    "kpi_completed_contracts": "已完成的合同",
+    "kpi_completed_contracts_sub": "已结束、到期或解约（累计）",
+    "kpi_move_out_scheduled": "即将退租的房源",
+    "kpi_move_out_scheduled_sub": "{{days}}天内合同到期",
+    "kpi_moved_out": "已退租的房源",
+    "kpi_moved_out_sub": "本月已退租",
+    "phase_ongoing": "进行中",
+    "phase_moving_out": "即将退租",
+    "phase_moved_out": "已退租/已完成",
+    "move_out_on": "{{date}} 退租",
+    "no_contracts_period": "该期间没有合同。"
   },
   "dash_finance": {
     "title": "财务仪表板",

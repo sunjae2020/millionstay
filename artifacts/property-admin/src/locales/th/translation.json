@@ -220,7 +220,7 @@
     "space_col": "พื้นที่",
     "tabs": {
       "overview": "ภาพรวม",
-      "reservations": "การจอง (สัญญา)",
+      "reservations": "สัญญา / การย้ายออก",
       "channels": "ช่องทาง",
       "finance": "การเงิน",
       "operations": "การดำเนินงาน",
@@ -3091,7 +3091,21 @@
     "all_statuses": "สถานะทั้งหมด",
     "th_ref": "หมายเลขอ้างอิง",
     "no_bookings_found": "ไม่พบการจอง",
-    "pagination_showing": "แสดง {{from}}–{{to}} จาก {{total}}"
+    "pagination_showing": "แสดง {{from}}–{{to}} จาก {{total}}",
+    "lease_calendar": "ปฏิทินสัญญาและการย้ายออก 7 วัน",
+    "kpi_ongoing_contracts": "สัญญาที่ดำเนินอยู่",
+    "kpi_ongoing_contracts_sub": "ลงนามแล้วและยังไม่สิ้นสุด",
+    "kpi_completed_contracts": "สัญญาที่สิ้นสุดแล้ว",
+    "kpi_completed_contracts_sub": "สิ้นสุด หมดอายุ หรือยกเลิก (สะสม)",
+    "kpi_move_out_scheduled": "ห้องที่จะย้ายออก",
+    "kpi_move_out_scheduled_sub": "สัญญาสิ้นสุดภายใน {{days}} วัน",
+    "kpi_moved_out": "ห้องที่ย้ายออกแล้ว",
+    "kpi_moved_out_sub": "ย้ายออกแล้วในเดือนนี้",
+    "phase_ongoing": "ดำเนินอยู่",
+    "phase_moving_out": "ใกล้ย้ายออก",
+    "phase_moved_out": "ย้ายออกแล้ว / สิ้นสุด",
+    "move_out_on": "ย้ายออก {{date}}",
+    "no_contracts_period": "ไม่มีสัญญาในช่วงเวลานี้"
   },
   "dash_finance": {
     "title": "แดชบอร์ดการเงิน",

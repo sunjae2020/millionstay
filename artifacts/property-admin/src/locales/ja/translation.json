@@ -220,7 +220,7 @@
     "space_col": "スペース",
     "tabs": {
       "overview": "概要",
-      "reservations": "予約（契約件）",
+      "reservations": "契約・退去状況",
       "channels": "チャネル",
       "finance": "財務",
       "operations": "運用",
@@ -3095,7 +3095,21 @@
     "all_statuses": "すべてのステータス",
     "th_ref": "予約番号",
     "no_bookings_found": "予約が見つかりません",
-    "pagination_showing": "{{total}}件中 {{from}}～{{to}}件を表示"
+    "pagination_showing": "{{total}}件中 {{from}}～{{to}}件を表示",
+    "lease_calendar": "7日間の契約・退去カレンダー",
+    "kpi_ongoing_contracts": "進行中の契約",
+    "kpi_ongoing_contracts_sub": "締結済み・契約期間中",
+    "kpi_completed_contracts": "完了した契約",
+    "kpi_completed_contracts_sub": "終了・満了・解約の累計",
+    "kpi_move_out_scheduled": "退去予定の住戸",
+    "kpi_move_out_scheduled_sub": "{{days}}日以内に契約終了",
+    "kpi_moved_out": "退去完了の住戸",
+    "kpi_moved_out_sub": "今月退去済み",
+    "phase_ongoing": "進行中",
+    "phase_moving_out": "退去予定",
+    "phase_moved_out": "退去済み・契約完了",
+    "move_out_on": "{{date}} 退去",
+    "no_contracts_period": "この期間の契約はありません。"
   },
   "dash_finance": {
     "title": "財務ダッシュボード",

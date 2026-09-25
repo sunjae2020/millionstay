@@ -29,14 +29,12 @@ import { formatDate } from "@/lib/date";
 import { matchesQuery } from "@/lib/search";
 
 import { ExportableTable } from "@/components/ui/ExportCsvButton";
-const STATUS_COLORS: Record<string, { bg: string; text: string; border: string }> = {
-  Draft:           { bg: "#f8fafc", text: "#64748b", border: "#cbd5e1" },
-  PendingPayment:  { bg: "#fef9c3", text: "#854d0e", border: "#fde68a" },
-  PendingApproval: { bg: "#fff7ed", text: "#9a3412", border: "#fed7aa" },
-  Confirmed:       { bg: "#dbeafe", text: "#1e40af", border: "#bfdbfe" },
-  Active:          { bg: "#dcfce7", text: "#166534", border: "#bbf7d0" },
-  CheckedOut:      { bg: "#fee2e2", text: "#991b1b", border: "#fecaca" },
-  Cancelled:       { bg: "#f1f5f9", text: "#94a3b8", border: "#e2e8f0" },
+// 계약/퇴거 현황 — 계약 한 건을 오늘 기준 세 단계로 칠한다(서버 /dashboard/lease-status 가 판정).
+type LeasePhase = "ongoing" | "moving_out" | "moved_out";
+const PHASE_COLORS: Record<LeasePhase, { bg: string; text: string; border: string }> = {
+  ongoing:    { bg: "#dcfce7", text: "#166534", border: "#bbf7d0" },
+  moving_out: { bg: "#fef3c7", text: "#92400e", border: "#fde68a" },
+  moved_out:  { bg: "#fee2e2", text: "#991b1b", border: "#fecaca" },
 };
 
 const STATUS_BADGE: Record<string, string> = {
@@ -49,15 +47,24 @@ const STATUS_BADGE: Record<string, string> = {
   Cancelled:       "bg-gray-100 text-gray-500",
 };
 
-interface CalendarData {
-  start: string; end: string;
-  spaces: {
-    id: number; name: string; property_name: string | null;
-    bookings: {
-      id: number; booking_ref: string; booking_status: string;
-      check_in_date: string; check_out_date: string; guest_name: string | null;
+interface LeaseStatus {
+  today: string;
+  month: string;
+  move_out_window_days: number;
+  ongoing_contracts: number;
+  completed_contracts: number;
+  move_out_scheduled_units: number;
+  moved_out_units: number;
+  calendar: {
+    start: string; end: string;
+    spaces: {
+      id: number; name: string; property_name: string | null;
+      contracts: {
+        id: number; contract_ref: string; status: string; phase: LeasePhase;
+        start_date: string; end_date: string | null; tenant_name: string | null;
+      }[];
     }[];
-  }[];
+  };
 }
 
 interface ArrivalDeparture {
@@ -77,31 +84,31 @@ function diffDays(a: string, b: string): number {
   return Math.round((new Date(b).getTime() - new Date(a).getTime()) / 86400000);
 }
 
-function GanttCalendar({
+function LeaseCalendar({
   weekStart,
-  onBookingClick,
+  data,
+  loading,
+  onContractClick,
 }: {
   weekStart: string;
-  onBookingClick: (id: number, status: string) => void;
+  data: LeaseStatus | null;
+  loading: boolean;
+  onContractClick: (id: number) => void;
 }) {
   const { t } = useTranslation();
-  const [data, setData] = useState<CalendarData | null>(null);
-  const [loading, setLoading] = useState(true);
   const weekEnd = addDays(weekStart, 7);
   const days: string[] = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
-  const today = new Date().toISOString().slice(0, 10);
+  const today = data?.today ?? new Date().toISOString().slice(0, 10);
+  const phaseLabel: Record<LeasePhase, string> = {
+    ongoing: t("dash_reservations.phase_ongoing"),
+    moving_out: t("dash_reservations.phase_moving_out"),
+    moved_out: t("dash_reservations.phase_moved_out"),
+  };
 
-  useEffect(() => {
-    setLoading(true);
-    apiFetch(`/api/v1/bookings/calendar?start=${weekStart}&end=${weekEnd}`)
-      .then(r => r.json())
-      .then(d => { setData(d); setLoading(false); })
-      .catch(() => setLoading(false));
-  }, [weekStart]);
-
-  if (loading) return <div className="py-8 text-center text-sm text-muted-foreground">{t("dash_reservations.loading_calendar")}</div>;
-  if (!data || data.spaces.length === 0) {
-    return <div className="py-8 text-center text-sm text-muted-foreground">{t("dash_reservations.no_bookings_period")}</div>;
+  if (loading && !data) return <div className="py-8 text-center text-sm text-muted-foreground">{t("dash_reservations.loading_calendar")}</div>;
+  const spaces = data?.calendar.start === weekStart ? data.calendar.spaces : [];
+  if (spaces.length === 0) {
+    return <div className="py-8 text-center text-sm text-muted-foreground">{t("dash_reservations.no_contracts_period")}</div>;
   }
 
   return (
@@ -116,7 +123,7 @@ function GanttCalendar({
             </div>
           ))}
         </div>
-        {data.spaces.map(space => (
+        {spaces.map(space => (
           <div key={space.id} className="flex border-b hover:bg-gray-50 dark:hover:bg-muted/40 min-h-[44px]">
             <div className="w-44 shrink-0 px-3 py-2 border-r">
               <div className="text-xs font-medium truncate">{space.name}</div>
@@ -126,17 +133,19 @@ function GanttCalendar({
               {days.map(d => (
                 <div key={d} className={`w-24 shrink-0 border-r h-full ${d === today ? "bg-primary/5" : ""}`} />
               ))}
-              {space.bookings.map(bk => {
-                const clampedStart = bk.check_in_date < weekStart ? weekStart : bk.check_in_date;
-                const clampedEnd = bk.check_out_date > weekEnd ? weekEnd : bk.check_out_date;
+              {space.contracts.map(c => {
+                // 종료일 당일까지 칸을 채운다(퇴거일 포함). 종료일이 없으면 주 끝까지.
+                const endExclusive = c.end_date ? addDays(c.end_date, 1) : weekEnd;
+                const clampedStart = c.start_date < weekStart ? weekStart : c.start_date;
+                const clampedEnd = endExclusive > weekEnd ? weekEnd : endExclusive;
                 const startOffset = diffDays(weekStart, clampedStart);
                 const span = diffDays(clampedStart, clampedEnd);
                 if (span <= 0) return null;
-                const colors = STATUS_COLORS[bk.booking_status] ?? STATUS_COLORS.Draft!;
+                const colors = PHASE_COLORS[c.phase];
                 return (
                   <button
-                    key={bk.id}
-                    onClick={() => onBookingClick(bk.id, bk.booking_status)}
+                    key={c.id}
+                    onClick={() => onContractClick(c.id)}
                     className="absolute top-1.5 rounded text-[10px] px-1.5 py-0.5 truncate font-medium hover:opacity-90 transition-opacity border cursor-pointer"
                     style={{
                       left: startOffset * 96 + 2,
@@ -145,9 +154,10 @@ function GanttCalendar({
                       color: colors.text,
                       borderColor: colors.border,
                     }}
-                    title={`${bk.booking_ref} — ${bk.guest_name ?? t("dash_reservations.guest_fallback")} · ${bk.booking_status}`}
+                    title={`${c.contract_ref} — ${c.tenant_name ?? "—"} · ${phaseLabel[c.phase]} · ${formatDate(c.start_date)} ~ ${c.end_date ? formatDate(c.end_date) : ""}`}
                   >
-                    {bk.booking_ref} {bk.guest_name ? `· ${bk.guest_name}` : ""}
+                    {c.contract_ref} {c.tenant_name ? `· ${c.tenant_name}` : ""}
+                    {c.phase === "moving_out" && c.end_date ? ` · ${t("dash_reservations.move_out_on", { date: formatDate(c.end_date) })}` : ""}
                   </button>
                 );
               })}
@@ -156,10 +166,10 @@ function GanttCalendar({
         ))}
       </div>
       <div className="flex flex-wrap gap-3 p-3 border-t bg-muted/20">
-        {Object.entries(STATUS_COLORS).map(([status, colors]) => (
-          <div key={status} className="flex items-center gap-1.5">
-            <div className="w-3 h-3 rounded-sm border" style={{ backgroundColor: colors.bg, borderColor: colors.border }} />
-            <span className="text-[10px] text-muted-foreground">{status}</span>
+        {(Object.keys(PHASE_COLORS) as LeasePhase[]).map(phase => (
+          <div key={phase} className="flex items-center gap-1.5">
+            <div className="w-3 h-3 rounded-sm border" style={{ backgroundColor: PHASE_COLORS[phase].bg, borderColor: PHASE_COLORS[phase].border }} />
+            <span className="text-[10px] text-muted-foreground">{phaseLabel[phase]}</span>
           </div>
         ))}
       </div>
@@ -556,14 +566,19 @@ export default function ReservationsTab() {
 
   const { data: bookings, refetch: refetchBookings } = useListBookings({});
 
-  const todayStr = new Date().toISOString().slice(0, 10);
-  const weekAgoStr = addDays(todayStr, -7);
-  const monthStr = todayStr.slice(0, 7);
-
-  const activeCount = bookings?.filter(b => b.booking_status === "Active").length ?? 0;
-  const pendingCount = bookings?.filter(b => b.booking_status === "PendingApproval").length ?? 0;
-  const newThisWeek = bookings?.filter(b => (b.created_at?.slice(0, 10) ?? "") >= weekAgoStr).length ?? 0;
-  const monthlyTotal = bookings?.filter(b => b.created_at?.slice(0, 10)?.startsWith(monthStr)).length ?? 0;
+  // 계약/퇴거 KPI + 7일 캘린더 — 한 번의 호출로 받는다.
+  const [lease, setLease] = useState<LeaseStatus | null>(null);
+  const [leaseLoading, setLeaseLoading] = useState(true);
+  useEffect(() => {
+    let cancelled = false;
+    setLeaseLoading(true);
+    apiFetch(`/api/v1/dashboard/lease-status?start=${weekStart}&end=${addDays(weekStart, 7)}`)
+      .then(r => r.json())
+      .then(d => { if (!cancelled) setLease(d); })
+      .catch(() => {})
+      .finally(() => { if (!cancelled) setLeaseLoading(false); });
+    return () => { cancelled = true; };
+  }, [weekStart, calendarKey]);
 
   const [statusFilter, setStatusFilter] = useState("All");
   const [search, setSearch] = useState("");
@@ -607,14 +622,14 @@ export default function ReservationsTab() {
       </div>
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-        <KpiCard label={t("dash_reservations.active_bookings")} value={activeCount} icon={CheckCircle} accent="green" sublabel={t("dash_reservations.kpi_currently_checked_in")} />
-        <KpiCard label={t("dash_reservations.kpi_pending_approval")} value={pendingCount} icon={Clock} accent={pendingCount > 0 ? "amber" : "slate"} sublabel={t("dash_reservations.kpi_awaiting_signoff")} trend={pendingCount > 0 ? t("dash_reservations.kpi_action") : undefined} trendType="warning" />
-        <KpiCard label={t("dash_reservations.kpi_new_this_week")} value={newThisWeek} icon={CalendarDays} accent="blue" sublabel={t("dash_reservations.kpi_created_last_7_days")} />
-        <KpiCard label={t("dash_reservations.kpi_monthly_total")} value={monthlyTotal} icon={Users} accent="indigo" sublabel={t("dash_reservations.kpi_all_bookings_month")} />
+        <KpiCard label={t("dash_reservations.kpi_ongoing_contracts")} value={lease?.ongoing_contracts ?? "—"} icon={CheckCircle} accent="green" sublabel={t("dash_reservations.kpi_ongoing_contracts_sub")} onClick={() => navigate("/booking/contracts")} />
+        <KpiCard label={t("dash_reservations.kpi_completed_contracts")} value={lease?.completed_contracts ?? "—"} icon={Clock} accent="slate" sublabel={t("dash_reservations.kpi_completed_contracts_sub")} onClick={() => navigate("/booking/contracts")} />
+        <KpiCard label={t("dash_reservations.kpi_move_out_scheduled")} value={lease?.move_out_scheduled_units ?? "—"} icon={LogOut} accent={(lease?.move_out_scheduled_units ?? 0) > 0 ? "amber" : "blue"} sublabel={t("dash_reservations.kpi_move_out_scheduled_sub", { days: lease?.move_out_window_days ?? 30 })} />
+        <KpiCard label={t("dash_reservations.kpi_moved_out")} value={lease?.moved_out_units ?? "—"} icon={Users} accent="indigo" sublabel={t("dash_reservations.kpi_moved_out_sub")} />
       </div>
 
       <DashCard
-        title={t("dash_reservations.availability_calendar")}
+        title={t("dash_reservations.lease_calendar")}
         icon={CalendarDays}
         bodyClass="p-0"
         action={
@@ -626,10 +641,11 @@ export default function ReservationsTab() {
           </div>
         }
       >
-        <GanttCalendar
-          key={calendarKey}
+        <LeaseCalendar
           weekStart={weekStart}
-          onBookingClick={(id) => navigate(`/booking/bookings/${id}`)}
+          data={lease}
+          loading={leaseLoading}
+          onContractClick={(id) => navigate(`/booking/contracts/${id}`)}
         />
       </DashCard>
 

@@ -222,7 +222,7 @@
     "space_col": "Space",
     "tabs": {
       "overview": "Overview",
-      "reservations": "Reservations (Contracts)",
+      "reservations": "Contracts / Move-outs",
       "channels": "Channels",
       "crm": "CRM",
       "finance": "Finance",
@@ -3116,7 +3116,21 @@
     "all_statuses": "All Statuses",
     "th_ref": "Ref #",
     "no_bookings_found": "No bookings found",
-    "pagination_showing": "Showing {{from}}–{{to}} of {{total}}"
+    "pagination_showing": "Showing {{from}}–{{to}} of {{total}}",
+    "lease_calendar": "7-Day Contract & Move-out Calendar",
+    "kpi_ongoing_contracts": "Ongoing contracts",
+    "kpi_ongoing_contracts_sub": "Signed and not yet ended",
+    "kpi_completed_contracts": "Completed contracts",
+    "kpi_completed_contracts_sub": "Ended, expired or terminated (all time)",
+    "kpi_move_out_scheduled": "Units moving out",
+    "kpi_move_out_scheduled_sub": "Lease ends within {{days}} days",
+    "kpi_moved_out": "Units moved out",
+    "kpi_moved_out_sub": "Moved out this month",
+    "phase_ongoing": "Ongoing",
+    "phase_moving_out": "Moving out soon",
+    "phase_moved_out": "Moved out / completed",
+    "move_out_on": "move-out {{date}}",
+    "no_contracts_period": "No contracts in this period."
   },
   "dash_finance": {
     "title": "Finance Dashboard",

@@ -221,7 +221,7 @@
     "space_col": "공간",
     "tabs": {
       "overview": "개요",
-      "reservations": "예약(계약건)",
+      "reservations": "계약/퇴거 현황",
       "channels": "채널",
       "finance": "재무",
       "operations": "운영",
@@ -3116,7 +3116,21 @@
     "all_statuses": "전체 상태",
     "th_ref": "예약 번호",
     "no_bookings_found": "예약을 찾을 수 없습니다",
-    "pagination_showing": "{{total}}건 중 {{from}}–{{to}}건 표시"
+    "pagination_showing": "{{total}}건 중 {{from}}–{{to}}건 표시",
+    "lease_calendar": "7일 계약/퇴거 현황 캘린더",
+    "kpi_ongoing_contracts": "진행중 계약건",
+    "kpi_ongoing_contracts_sub": "체결 후 계약기간 진행 중",
+    "kpi_completed_contracts": "완료된 계약건",
+    "kpi_completed_contracts_sub": "종료·만료·해지된 계약 누적",
+    "kpi_move_out_scheduled": "퇴거예정 세대",
+    "kpi_move_out_scheduled_sub": "{{days}}일 이내 계약 종료",
+    "kpi_moved_out": "퇴거완료 세대",
+    "kpi_moved_out_sub": "이번 달 퇴거 완료",
+    "phase_ongoing": "진행중",
+    "phase_moving_out": "퇴거예정",
+    "phase_moved_out": "퇴거완료·계약완료",
+    "move_out_on": "{{date}} 퇴거",
+    "no_contracts_period": "이 기간에 해당하는 계약이 없습니다."
   },
   "dash_finance": {
     "title": "재무 대시보드",
