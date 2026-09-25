@@ -4105,7 +4105,7 @@
     "status_noshow": "No Show",
     "status_paid": "Paid",
     "kpi_occupancy": "Lease Rate",
-    "kpi_occupancy_sub": "{{active}} active · {{total}} spaces",
+    "kpi_occupancy_sub": "{{active}} leased · {{total}} units",
     "kpi_today_checkins": "Contract Rate",
     "kpi_today_checkouts": "Move-out Rate",
     "kpi_revenue_this_month": "Revenue This Month",

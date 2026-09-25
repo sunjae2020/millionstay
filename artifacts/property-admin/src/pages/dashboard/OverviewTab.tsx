@@ -146,7 +146,7 @@ export default function OverviewTab() {
   const { data: invoices } = useListInvoices({});
   const { data: workOrders } = useListWorkOrders({});
 
-  const [contractCounts, setContractCounts] = useState<{ new_contracts: number; ended_contracts: number } | null>(null);
+  const [contractCounts, setContractCounts] = useState<{ new_contracts: number; ended_contracts: number; rented_units: number; total_units: number; lease_rate_pct: number } | null>(null);
   useEffect(() => {
     apiFetch("/api/v1/dashboard/overview/contract-counts")
       .then(r => r.json())
@@ -169,8 +169,6 @@ export default function OverviewTab() {
   const units = unitSpaces(spaces);
   const activeSpaces = units.filter(s => s.status === "Active" || s.status === "Occupied").length;
   const totalSpaces = units.length;
-  const activeBookings = bookings?.filter(b => b.booking_status === "Active").length ?? 0;
-  const occupancyPct = activeSpaces > 0 ? Math.min(100, Math.round((activeBookings / activeSpaces) * 100)) : 0;
 
   const pendingApprovals = bookings?.filter(b => b.booking_status === "PendingApproval").length ?? 0;
 
@@ -214,8 +212,9 @@ export default function OverviewTab() {
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         <KpiCard
           icon={BedDouble} accent="brand" label={t("dash_overview.kpi_occupancy")}
-          value={`${occupancyPct}%`} sublabel={t("dash_overview.kpi_occupancy_sub", { active: activeBookings, total: totalSpaces })}
-          progress={occupancyPct}
+          value={contractCounts ? `${contractCounts.lease_rate_pct}%` : "—"}
+          sublabel={t("dash_overview.kpi_occupancy_sub", { active: contractCounts?.rented_units ?? 0, total: contractCounts?.total_units ?? totalSpaces })}
+          progress={contractCounts?.lease_rate_pct ?? 0}
         />
         <KpiCard
           icon={LogIn} accent="green" label={t("dash_overview.kpi_new_contracts")}

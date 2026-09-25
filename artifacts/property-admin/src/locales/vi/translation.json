@@ -4045,7 +4045,7 @@
     "status_noshow": "Không đến",
     "status_paid": "Đã thanh toán",
     "kpi_occupancy": "Tỷ lệ cho thuê",
-    "kpi_occupancy_sub": "{{active}} đang hoạt động · {{total}} không gian",
+    "kpi_occupancy_sub": "{{active}} căn đang cho thuê · tổng {{total}} căn",
     "kpi_today_checkins": "Tỷ lệ ký hợp đồng",
     "kpi_today_checkouts": "Tỷ lệ trả phòng",
     "kpi_revenue_this_month": "Doanh thu tháng này",

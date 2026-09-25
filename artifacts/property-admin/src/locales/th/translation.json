@@ -4072,7 +4072,7 @@
     "status_noshow": "ไม่มาเข้าพัก",
     "status_paid": "ชำระเงินแล้ว",
     "kpi_occupancy": "อัตราการเช่า",
-    "kpi_occupancy_sub": "ใช้งาน {{active}} · {{total}} พื้นที่",
+    "kpi_occupancy_sub": "เช่าอยู่ {{active}} ยูนิต · ทั้งหมด {{total}} ยูนิต",
     "kpi_today_checkins": "อัตราการทำสัญญา",
     "kpi_today_checkouts": "อัตราการย้ายออก",
     "kpi_revenue_this_month": "รายได้เดือนนี้",

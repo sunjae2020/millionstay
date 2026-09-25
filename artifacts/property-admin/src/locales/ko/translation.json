@@ -4105,7 +4105,7 @@
     "status_noshow": "노쇼",
     "status_paid": "결제 완료",
     "kpi_occupancy": "임대율",
-    "kpi_occupancy_sub": "{{active}}건 이용 중 · {{total}}개 공간",
+    "kpi_occupancy_sub": "{{active}}세대 임대 중 · 전체 {{total}}세대",
     "kpi_today_checkins": "계약율",
     "kpi_today_checkouts": "퇴거율",
     "kpi_revenue_this_month": "이번 달 매출",

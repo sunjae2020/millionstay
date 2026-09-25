@@ -4077,7 +4077,7 @@
     "status_noshow": "ノーショー",
     "status_paid": "支払い済み",
     "kpi_occupancy": "賃貸率",
-    "kpi_occupancy_sub": "{{active}}件利用中 · {{total}}スペース",
+    "kpi_occupancy_sub": "{{active}}戸賃貸中 · 全{{total}}戸",
     "kpi_today_checkins": "契約率",
     "kpi_today_checkouts": "退去率",
     "kpi_revenue_this_month": "今月の売上",

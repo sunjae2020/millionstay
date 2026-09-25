@@ -4079,7 +4079,7 @@
     "status_noshow": "未到店",
     "status_paid": "已付款",
     "kpi_occupancy": "出租率",
-    "kpi_occupancy_sub": "{{active}} 个使用中 · {{total}} 个空间",
+    "kpi_occupancy_sub": "{{active}} 户出租中 · 共 {{total}} 户",
     "kpi_today_checkins": "签约率",
     "kpi_today_checkouts": "退租率",
     "kpi_revenue_this_month": "本月营收",

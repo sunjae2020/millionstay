@@ -106,20 +106,43 @@ router.get("/v1/dashboard/overview/kpis", async (_req, res) => {
 // 체결되지 않은 계약(Draft·Sent)과 취소·보관 건은 세지 않는다.
 //  - 계약건수: 계약일(contract_date, 없으면 입주일 start_date)이 이번 달인 계약
 //  - 퇴거건수: 계약 종료일(end_date)이 이번 달인 계약
+//  - 임대율: 오늘 계약 기간에 걸친 세대 수 ÷ 전체 세대 수(타입 행 제외, countableUnitFilter)
+//    해지(Terminated)된 계약은 종료일이 남아 있어도 임대 중으로 보지 않는다.
 router.get("/v1/dashboard/overview/contract-counts", async (_req, res) => {
   try {
-    const month = billingTodayIso().slice(0, 7);
+    const today = billingTodayIso();
+    const month = today.slice(0, 7);
     const concluded = and(
       isNull(contractsTable.deleted_at),
       sql`${contractsTable.status} not in ('Draft', 'Sent', 'Cancelled', 'Archived')`,
     );
-    const [[started], [ended]] = await Promise.all([
+    const [[started], [ended], [rented], [units]] = await Promise.all([
       db.select({ count: count() }).from(contractsTable).where(and(concluded,
         sql`left(coalesce(nullif(${contractsTable.contract_date}, ''), ${contractsTable.start_date}), 7) = ${month}`)),
       db.select({ count: count() }).from(contractsTable).where(and(concluded,
         sql`left(${contractsTable.end_date}, 7) = ${month}`)),
+      db.select({ count: sql<number>`count(distinct ${contractsTable.space_id})::int` })
+        .from(contractsTable)
+        .innerJoin(spacesTable, eq(spacesTable.id, contractsTable.space_id))
+        .where(and(
+          isNull(contractsTable.deleted_at),
+          inArray(contractsTable.status, ["Signed", "Active", "Completed", "Expired"]),
+          sql`coalesce(nullif(${contractsTable.start_date}, ''), '0000-01-01') <= ${today}`,
+          sql`coalesce(nullif(${contractsTable.end_date}, ''), '9999-12-31') >= ${today}`,
+          countableUnitFilter,
+        )),
+      db.select({ count: count() }).from(spacesTable).where(countableUnitFilter),
     ]);
-    res.json({ month, new_contracts: Number(started.count), ended_contracts: Number(ended.count) });
+    const rentedUnits = Number(rented.count);
+    const totalUnits = Number(units.count);
+    res.json({
+      month,
+      new_contracts: Number(started.count),
+      ended_contracts: Number(ended.count),
+      rented_units: rentedUnits,
+      total_units: totalUnits,
+      lease_rate_pct: totalUnits > 0 ? Math.min(100, Math.round((rentedUnits / totalUnits) * 1000) / 10) : 0,
+    });
   } catch (err) {
     res.status(500).json({ error: "Failed to fetch contract counts" });
   }
