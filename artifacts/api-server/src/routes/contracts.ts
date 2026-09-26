@@ -101,6 +101,9 @@ async function generateContractInvoicesAndSchedules(
   const end = contract.end_date;
   const currency = contract.currency ?? DEFAULT_CURRENCY;
   const weeklyRate = contract.weekly_rate ?? 0;
+  // 한국형 장기임대(lease_mode='long')는 주세가 아니라 월세 칸에 금액이 들어간다.
+  // numeric 컬럼이라 Drizzle 은 문자열을 돌려주므로 Number() 로 감싼다.
+  const monthlyRent = Number(contract.monthly_rent ?? 0);
 
   // ── Build location label ────────────────────────────────────────────────────
   let locationLabel = "";
@@ -130,28 +133,45 @@ async function generateContractInvoicesAndSchedules(
       const [cp] = await db.select().from(contractProductsTable).where(eq(contractProductsTable.id, contract.contract_product_id));
       if (cp?.billing_frequency) billingFreq = cp.billing_frequency;
     }
-    const rentAmount = billingFreq === "Weekly" ? weeklyRate
-      : billingFreq === "Biweekly" ? weeklyRate * 2
+    // 주세가 비어 있고 월세만 있는 계약(한국형 장기임대)은 주기를 월로 고정한다.
+    // 그러지 않으면 상품의 billing_frequency 가 Weekly 로 남아 월세를 주 단위로
+    // 쪼갠 엉뚱한 금액이 나온다.
+    if (weeklyRate <= 0 && monthlyRent > 0) billingFreq = "Monthly";
+
+    // 금액은 그 주기에 맞는 원본 칸을 먼저 본다. 월 청구인데 월세 칸이 비어 있을
+    // 때만 주세에서 환산하고(구 데이터 호환), 반대로 주/격주 청구인데 주세가 없으면
+    // 월세에서 환산한다.
+    const weeklyFromMonthly = monthlyRent > 0 ? monthlyRent * (12 / 52) : 0;
+    const effectiveWeekly = weeklyRate > 0 ? weeklyRate : weeklyFromMonthly;
+    const rentAmount = billingFreq === "Weekly" ? parseFloat(effectiveWeekly.toFixed(2))
+      : billingFreq === "Biweekly" ? parseFloat((effectiveWeekly * 2).toFixed(2))
+      : monthlyRent > 0 ? monthlyRent
       : parseFloat((weeklyRate * (52 / 12)).toFixed(2));
 
-    const rentName = billingFreq === "Monthly" ? "Monthly Rent"
-      : billingFreq === "Biweekly" ? "Fortnightly Rent" : "Weekly Rent";
+    // 0원 임대료로는 청구 라인을 만들지 않는다. 예전에는 이 경우에도 계약 기간
+    // 전체에 걸쳐 0원 청구서가 수십 장 생겨(여수 1505호 사례) 원장을 어지럽혔다.
+    // 금액이 빠진 계약은 임대료 청구만 건너뛰고 — 보증금 청구서는 아래에서 그대로
+    // 발행된다 — 금액을 채운 뒤 다시 활성화하면 정상 발행된다.
+    if (rentAmount > 0) {
+      const rentName = billingFreq === "Monthly" ? "Monthly Rent"
+        : billingFreq === "Biweekly" ? "Fortnightly Rent" : "Weekly Rent";
 
-    // Persist the fallback line so it shows in the UI
-    const [inserted] = await db.insert(contractLineItemsTable).values({
-      contract_id: contractId,
-      item_type: "Rent",
-      name: rentName,
-      billing_trigger: "recurring",
-      billing_frequency: billingFreq,
-      unit_price: String(rentAmount),
-      quantity: 1,
-      total_price: String(rentAmount),
-      currency,
-      gst_included: true,
-      status: "Active",
-    }).returning();
-    lineItems = [inserted];
+      // Persist the fallback line so it shows in the UI
+      const [inserted] = await db.insert(contractLineItemsTable).values({
+        contract_id: contractId,
+        item_type: "Rent",
+        name: rentName,
+        billing_trigger: "recurring",
+        billing_frequency: billingFreq,
+        unit_price: String(rentAmount),
+        quantity: 1,
+        total_price: String(rentAmount),
+        currency,
+        gst_included: true,
+        status: "Active",
+      }).returning();
+      lineItems = [inserted];
+    }
   }
 
   // ── Wipe existing non-paid schedules and non-paid invoices ─────────────────
