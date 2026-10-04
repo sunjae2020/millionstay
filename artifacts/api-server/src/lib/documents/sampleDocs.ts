@@ -275,6 +275,15 @@ export async function renderSampleDocumentHtml(key: string, bodyHtml: string, lo
         name: LEASE.party, address: LEASE.tenantAddr,
         phone: LEASE.phone, email: LEASE.email, resident_no: null,
       },
+      // 견본은 중개 계약으로 보여 준다 — 직거래 계약이면 이 표는 빠진다.
+      broker: {
+        office_name: "죽림포유부동산공인중개사사무소",
+        ceo_name: "홍길동",
+        office_address: "전라남도 여수시 소라면 죽림3길 7",
+        reg_no: "46130-2019-00053",
+        phone: "061-000-0000",
+        agent_name: "홍길동",
+      },
       currency: DEFAULT_CURRENCY,
       deposit_amount: LEASE.deposit,
       down_payment: LEASE.down,

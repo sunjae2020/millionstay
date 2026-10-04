@@ -1515,7 +1515,7 @@
     "channel_cost_pending": "Lưu hợp đồng để ghi hoa hồng vào Chi phí liên quan.",
     "hint_channel_schedule": "Số tiền phí lấy từ biểu phí hoa hồng cho thuê.",
     "broker_section": "Môi giới được cấp phép",
-    "broker_section_hint": "Đây là các dòng được in trong bảng môi giới của hợp đồng thuê chuẩn. Giá trị lấy từ tài khoản công ty môi giới đã liên kết.",
+    "broker_section_hint": "Đây là các dòng được in trong bảng môi giới ở trang đầu của hợp đồng thuê và của hợp đồng thuê chuẩn. Giá trị lấy từ tài khoản công ty môi giới đã liên kết.",
     "broker_edit": "Sửa thông tin",
     "broker_edit_title": "Sửa thông tin môi giới",
     "broker_open_account": "Chi tiết tài khoản",

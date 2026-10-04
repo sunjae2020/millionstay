@@ -53,6 +53,21 @@ export interface LeaseParty {
   seal_image?: string | null;
 }
 
+/** 개업공인중개사 — 표준임대차계약서의 중개사 표와 같은 항목. */
+export interface LeaseBroker {
+  /** 사무소 명칭 */
+  office_name?: string | null;
+  /** 대표자 성명 */
+  ceo_name?: string | null;
+  /** 사무소 소재지 */
+  office_address?: string | null;
+  /** 중개사무소 등록번호 */
+  reg_no?: string | null;
+  phone?: string | null;
+  /** 소속공인중개사 성명 — 1인 사무소면 대표자 성명이 들어온다. */
+  agent_name?: string | null;
+}
+
 export interface KoreanLeaseDocInput {
   contract_ref: string;
   /** Document title, e.g. "메트하임 여수 임대차 계약서". */
@@ -71,6 +86,11 @@ export interface KoreanLeaseDocInput {
   } | null;
   landlord: LeaseParty;
   tenant: LeaseParty;
+  /**
+   * 개업공인중개사 — 계약 경로가 "중개"이고 업체를 골랐을 때만 채워진다
+   * (resolveContractBroker). 직거래면 null 이고 중개사 표 자체를 내지 않는다.
+   */
+  broker?: LeaseBroker | null;
   currency: string;
   deposit_amount: number | null;
   down_payment: number | null;
@@ -238,51 +258,94 @@ function renderTermsTable(d: KoreanLeaseDocInput, lang: DocLang): string {
 }
 
 /**
- * ④ 당사자 — 임대인(갑) / 임차인(을) 를 각각 별도의 표로 낸다.
+ * ④ 당사자 — 임대인(갑) / 임차인(을) / 개업공인중개사 를 각각 별도의 표로 낸다.
  *
  * 한 표에 rowspan 으로 두 당사자를 묶으면 "임대인 (갑)" 이 좁은 세로칸에서
  * 줄바꿈되어 괘선 밖으로 밀려 나왔다. 이제 당사자별로 표를 나누고, 구분은 표의
  * 첫 행(머리줄) 안에 넣는다 — 표 밖에 뜨는 글자가 없다.
+ *
+ * 세 표가 모두 첫 장에 들어가야 하므로(중간에서 끊기지 않게 한 덩어리로 묶여
+ * 있어 넘치면 통째로 다음 장으로 밀린다) 위쪽 표보다 칸 여백을 줄였다. 칸 폭은
+ * colgroup 으로 고정한다 — 머리줄이 colspan=4 라 td 의 width 는 무시되고 네 칸이
+ * 같은 폭으로 잘려 임대인 상호가 두 줄로 접혔었다.
  */
+const P_CELL = CELL.replace("padding:6px 10px;", "padding:4px 8px;");
+const P_HEAD = `${P_CELL}background:#F2F2F2;font-weight:700;text-align:center;white-space:nowrap;`;
+const P_TABLE = `${TABLE}margin:0 0 8px;`;
+const P_COLS = `<colgroup><col style="width:19%"/><col style="width:31%"/><col style="width:19%"/><col style="width:31%"/></colgroup>`;
+
+function partyHeader(mark: string): string {
+  return `<tr>
+        <th style="${P_HEAD}text-align:left;padding:5px 10px;font-size:12.5px;letter-spacing:0.04em;" colspan="4">${escapeHtml(mark)}</th>
+      </tr>`;
+}
+
+/** 비어 있으면 빈칸이 아니라 "-" — 적을 것이 없는 것과 빠뜨린 것을 구분한다. */
+const dash = (v: string | null | undefined) => escapeHtml(v?.trim() ? v : "-");
+
 function renderParty(mark: string, p: LeaseParty, isLandlord: boolean): string {
   const idLabel = isLandlord ? "사업자등록번호" : "주민등록번호";
   const idValue = isLandlord ? p.business_no : p.resident_no;
-  // 이메일·임대사업자등록번호는 비어 있으면 빈칸이 아니라 "-" 로 낸다 — 적을 것이
-  // 없는 것과 적기를 빠뜨린 것을 서명하는 사람이 구분할 수 있어야 한다.
-  const dash = (v: string | null | undefined) => escapeHtml(v?.trim() ? v : "-");
-  return `<table style="${TABLE}margin-bottom:10px;">
+  return `<table style="${P_TABLE}">${P_COLS}
+      ${partyHeader(mark)}
       <tr>
-        <th style="${HEAD}text-align:left;padding:7px 10px;font-size:12.5px;letter-spacing:0.04em;" colspan="4">${escapeHtml(mark)}</th>
+        <th style="${P_HEAD}">주 소</th>
+        <td style="${P_CELL}" colspan="3">${escapeHtml(p.address ?? "")}</td>
       </tr>
       <tr>
-        <th style="${HEAD}width:18%;">주 소</th>
-        <td style="${CELL}" colspan="3">${escapeHtml(p.address ?? "")}</td>
-      </tr>
-      <tr>
-        <th style="${HEAD}">성 명</th>
-        <td style="${CELL}width:32%;">${escapeHtml(p.name ?? "")} ${
+        <th style="${P_HEAD}">성 명</th>
+        <td style="${P_CELL}">${escapeHtml(p.name ?? "")} ${
           p.seal_image
-            ? `<img src="${p.seal_image}" alt="" style="height:34px;vertical-align:middle;margin-left:6px;" />`
+            ? `<img src="${p.seal_image}" alt="" style="height:30px;vertical-align:middle;margin:-4px 0 -4px 6px;" />`
             : "(인)"
         }</td>
-        <th style="${HEAD}width:16%;">연 락 처</th>
-        <td style="${CELL}width:34%;">${escapeHtml(p.phone ?? "")}</td>
+        <th style="${P_HEAD}">연 락 처</th>
+        <td style="${P_CELL}">${escapeHtml(p.phone ?? "")}</td>
       </tr>
       <tr>
-        <th style="${HEAD}">${isLandlord ? "이메일" : escapeHtml(idLabel)}</th>
-        <td style="${CELL}">${isLandlord ? dash(p.email) : escapeHtml(idValue ?? "")}</td>
-        <th style="${HEAD}">${isLandlord ? "법인등록번호" : "이메일"}</th>
-        <td style="${CELL}">${isLandlord ? escapeHtml(p.corporate_no ?? "") : dash(p.email)}</td>
+        <th style="${P_HEAD}">${isLandlord ? "이메일" : escapeHtml(idLabel)}</th>
+        <td style="${P_CELL}">${isLandlord ? dash(p.email) : escapeHtml(idValue ?? "")}</td>
+        <th style="${P_HEAD}">${isLandlord ? "법인등록번호" : "이메일"}</th>
+        <td style="${P_CELL}">${isLandlord ? escapeHtml(p.corporate_no ?? "") : dash(p.email)}</td>
       </tr>
       ${isLandlord ? `<tr>
-        <th style="${HEAD}">${escapeHtml(idLabel)}</th>
-        <td style="${CELL}">${escapeHtml(p.business_no ?? "")}</td>
-        <!-- 머리줄이 colspan=4 라 네 칸은 실제로 같은 폭(약 209px)으로 잘린다 —
-             위 행들의 width 는 참고값일 뿐이다. "임대사업자등록번호" 아홉 글자는
-             그 폭에 한 줄로 들어가지만, 여백을 줄여 여유를 둔다. -->
-        <th style="${HEAD}padding-left:4px;padding-right:4px;">임대사업자등록번호</th>
-        <td style="${CELL}">${dash(p.rental_business_no)}</td>
+        <th style="${P_HEAD}">${escapeHtml(idLabel)}</th>
+        <td style="${P_CELL}">${escapeHtml(p.business_no ?? "")}</td>
+        <th style="${P_HEAD}padding-left:4px;padding-right:4px;">임대사업자등록번호</th>
+        <td style="${P_CELL}">${dash(p.rental_business_no)}</td>
       </tr>` : ""}
+    </table>`;
+}
+
+/**
+ * 개업공인중개사 표 — 국토부·법무부 표준서식의 중개사 칸과 같은 항목을 임대인·임차인
+ * 표와 같은 모양으로 낸다. 대표자와 소속공인중개사는 각자 기명날인하는 자리라 이름
+ * 뒤에 "(인)" 을 둔다.
+ */
+function renderBroker(b: LeaseBroker): string {
+  const signed = (v: string | null | undefined) => (v?.trim() ? `${escapeHtml(v)} (인)` : "");
+  return `<table style="${P_TABLE}">${P_COLS}
+      ${partyHeader("개업공인중개사")}
+      <tr>
+        <th style="${P_HEAD}">사무소 소재지</th>
+        <td style="${P_CELL}" colspan="3">${escapeHtml(b.office_address ?? "")}</td>
+      </tr>
+      <tr>
+        <th style="${P_HEAD}">사무소 명칭</th>
+        <td style="${P_CELL}">${escapeHtml(b.office_name ?? "")}</td>
+        <th style="${P_HEAD}">전화번호</th>
+        <td style="${P_CELL}">${dash(b.phone)}</td>
+      </tr>
+      <tr>
+        <th style="${P_HEAD}">대표자 성명</th>
+        <td style="${P_CELL}">${signed(b.ceo_name)}</td>
+        <th style="${P_HEAD}">등록번호</th>
+        <td style="${P_CELL}">${dash(b.reg_no)}</td>
+      </tr>
+      <tr>
+        <th style="${P_HEAD}">소속공인중개사</th>
+        <td style="${P_CELL}" colspan="3">${signed(b.agent_name)}</td>
+      </tr>
     </table>`;
 }
 
@@ -290,6 +353,7 @@ function renderParties(d: KoreanLeaseDocInput): string {
   return `<div style="page-break-inside:avoid;">
       ${renderParty("임대인 (갑)", d.landlord, true)}
       ${renderParty("임차인 (을)", d.tenant, false)}
+      ${d.broker ? renderBroker(d.broker) : ""}
     </div>`;
 }
 
@@ -372,7 +436,7 @@ export function buildKoreanLeaseBody(d: KoreanLeaseDocInput, lang: DocLang = "ko
     ${renderPremisesTable(d)}
     ${renderTermsTable(d, lang)}
     ${heading(`계약 체결일 : ${leaseDate(d.signed_on, lang)}`)}
-    <p style="font-size:12px;line-height:1.8;color:#111;margin:12px 0 18px;">
+    <p style="font-size:12px;line-height:1.7;color:#111;margin:8px 0 12px;">
       위 표시재산을 임대차 함에 있어 임대인을 “갑”, 임차인을 “을”이라 하며, “을”은 이 계약서 및 계약일반조항의
       내용을 “갑”으로부터 충분히 설명 받아 숙지하였으며, 자유로운 의사로서 임대차계약을 체결하고, 계약이
       체결되었음을 증명하기 위하여 “갑”, “을” 당사자는 기명날인 후 각 1통씩 보관한다.

@@ -1533,7 +1533,7 @@
     "channel_cost_pending": "保存合同后，佣金会登记到相关费用中。",
     "hint_channel_schedule": "佣金金额来自租赁佣金标准表。",
     "broker_section": "开业公认中介人",
-    "broker_section_hint": "这些内容会原样印在标准租赁合同的中介人栏中，取自已关联的中介公司账户。",
+    "broker_section_hint": "这些内容会原样印在租赁合同首页及标准租赁合同的中介人栏中，取自已关联的中介公司账户。",
     "broker_edit": "修改信息",
     "broker_edit_title": "修改中介人信息",
     "broker_open_account": "账户详情",

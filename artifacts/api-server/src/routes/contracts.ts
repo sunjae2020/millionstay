@@ -1179,6 +1179,9 @@ export async function buildContractDocInput(
   // Korean standard lease payload — only when the 임대차 계약서 template drives
   // the body. Everything type-specific comes from `premises` (the space), so one
   // template covers every unit type.
+  // 개업공인중개사 — 계약 경로가 "중개"이고 업체를 골랐을 때만 채워진다.
+  // 직거래면 null 이고, 한국형 계약서는 중개사 표를 빼고 법정서식은 칸을 비워 발급한다.
+  const broker = await resolveContractBroker(row);
   let lease: KoreanLeaseDocInput | null = null;
   if (isKoreanLease) {
     const stored = await readStoredCompanyInfo();
@@ -1221,6 +1224,7 @@ export async function buildContractDocInput(
         email: tenantEmail,
         resident_no: tenantParty?.resident_no ?? null,
       },
+      broker,
       currency: c.currency ?? DEFAULT_CURRENCY,
       deposit_amount: row.bond_amount,
       down_payment: row.down_payment,
@@ -1246,9 +1250,6 @@ export async function buildContractDocInput(
   // 계약 데이터를 서식 입력 모양으로 옮기기만 한다.
   const storedCompany = await readStoredCompanyInfo();
   const housingBuildingName = premises?.building ?? property?.name ?? null;
-  // 개업공인중개사 표 — 계약 경로가 "중개"이고 업체를 골랐을 때만 채워진다.
-  // 직거래면 null 이고, 서식의 중개사 칸은 원본 그대로 비워 발급된다.
-  const broker = await resolveContractBroker(row);
   const housing: HousingStandardLeaseInput = {
     // 보증금만 있으면 전세, 차임만 있으면 월세, 둘 다면 보증금 있는 월세.
     kind: actualMonthlyRent ? (row.bond_amount ? "deposit_monthly" : "monthly") : "jeonse",

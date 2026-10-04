@@ -1531,7 +1531,7 @@
     "channel_cost_pending": "契約を保存すると手数料が関連費用に登録されます。",
     "hint_channel_schedule": "手数料の金額は賃貸手数料基準表から取得します。",
     "broker_section": "開業公認仲介士",
-    "broker_section_hint": "標準賃貸借契約書の仲介士欄にそのまま印字される項目です。値は連携した仲介業者アカウントから来ます。",
+    "broker_section_hint": "賃貸借契約書の1ページ目と標準賃貸借契約書の仲介士欄にそのまま印字される項目です。値は連携した仲介業者アカウントから来ます。",
     "broker_edit": "情報を修正",
     "broker_edit_title": "開業公認仲介士の情報を修正",
     "broker_open_account": "アカウント詳細",
