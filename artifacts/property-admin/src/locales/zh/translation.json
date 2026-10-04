@@ -1637,7 +1637,9 @@
     "label_tax_mode": "计税方式",
     "tax_mode_none": "免税（不含增值税）",
     "tax_mode_exclusive": "应税（另加增值税）",
+    "tax_mode_withholding": "代扣税（扣除3.3%）",
     "label_tax_rate": "增值税率 (%)",
+    "label_withholding_rate": "代扣税率 (%)",
     "label_total_amount": "应付总额",
     "hint_total_amount": "金额栏为不含税供货金额。租客实付金额显示在此处。",
     "tax_breakdown": "= {{supply}} + 增值税 {{tax}}",
@@ -1708,7 +1710,8 @@
     "col_line_label": "项目",
     "col_line_period": "期间",
     "consolidated_children": "各房源发票",
-    "payment_board": "收款看板"
+    "payment_board": "收款看板",
+    "withholding_breakdown": "= {{supply}} − 代扣税 {{tax}}"
   },
   "workorder": {
     "new": "新建工单",

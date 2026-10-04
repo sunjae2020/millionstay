@@ -39,6 +39,9 @@ export const ACCOUNTS = {
   DEPOSIT_HELD: { code: "2100", name: "Deposits Held" },
   // 부가세예수금 — 과세 청구서에서 받은 세액은 매출이 아니라 국가에 낼 부채다.
   VAT_PAYABLE: { code: "2300", name: "VAT Payable" },
+  // 선납세금 — 원천징수 청구서에서 상대가 떼고 준 3.3%. 매출은 공급가액 전부이고,
+  // 떼인 몫은 종합소득세에서 공제받을 자산이다(청구서 tax_amount < 0).
+  PREPAID_TAX: { code: "1210", name: "Prepaid Income Tax (Withheld)" },
   // Service-host / contractor payouts (외주비): expense on accrual, payable until paid.
   CONTRACTOR_EXPENSE: { code: "5100", name: "Contractor Expense" },
   CONTRACTOR_PAYABLE: { code: "2200", name: "Contractor Payable" },
@@ -221,6 +224,10 @@ export async function postInvoiceIssued(args: {
   if (tax > 0) {
     creditLines.push({ account_code: ACCOUNTS.VAT_PAYABLE.code, account_name: ACCOUNTS.VAT_PAYABLE.name, debit: 0, credit: tax });
   }
+  // 원천징수(음수 세액): AR 은 실수령액만, 떼인 몫은 선납세금으로 차변.
+  const withheldLines: PostingLine[] = tax < 0
+    ? [{ account_code: ACCOUNTS.PREPAID_TAX.code, account_name: ACCOUNTS.PREPAID_TAX.name, debit: -tax, credit: 0 }]
+    : [];
   if (deposit > 0) {
     creditLines.push({ account_code: ACCOUNTS.DEPOSIT_HELD.code, account_name: ACCOUNTS.DEPOSIT_HELD.name, debit: 0, credit: deposit });
   }
@@ -237,6 +244,7 @@ export async function postInvoiceIssued(args: {
     currency: args.currency || "AUD",
     lines: [
       { account_code: ACCOUNTS.ACCOUNTS_RECEIVABLE.code, account_name: ACCOUNTS.ACCOUNTS_RECEIVABLE.name, debit: round2(amount + tax), credit: 0 },
+      ...withheldLines,
       ...creditLines,
     ],
   });
@@ -264,6 +272,7 @@ export async function postInvoicePaid(args: {
   const entryDate = args.paidAt ? args.paidAt.slice(0, 10) : sydneyToday();
 
   const creditLines: PostingLine[] = [];
+  const withheldLines: PostingLine[] = [];
   if (await hasIssuedEntry(args.id)) {
     // Receivable already recognised at issue — payment just clears it.
     creditLines.push({
@@ -275,6 +284,9 @@ export async function postInvoicePaid(args: {
   } else {
     if (tax > 0) {
       creditLines.push({ account_code: ACCOUNTS.VAT_PAYABLE.code, account_name: ACCOUNTS.VAT_PAYABLE.name, debit: 0, credit: tax });
+    } else if (tax < 0) {
+      // 원천징수: 현금은 실수령액만 들어오고 떼인 몫은 선납세금.
+      withheldLines.push({ account_code: ACCOUNTS.PREPAID_TAX.code, account_name: ACCOUNTS.PREPAID_TAX.name, debit: -tax, credit: 0 });
     }
     const { deposit, revenue } = await splitDepositPortion(args.id, amount);
     if (deposit > 0) {
@@ -294,6 +306,7 @@ export async function postInvoicePaid(args: {
     currency: args.currency || "AUD",
     lines: [
       { account_code: ACCOUNTS.CASH.code, account_name: ACCOUNTS.CASH.name, debit: round2(amount + tax), credit: 0 },
+      ...withheldLines,
       ...creditLines,
     ],
   });
@@ -648,7 +661,8 @@ export async function postTransaction(args: {
 }): Promise<typeof journalEntriesTable.$inferSelect | null> {
   const gross = round2(args.amount || 0);
   if (gross <= 0) return null;
-  const tax = Math.min(round2(args.taxAmount || 0), gross);
+  // 음수 세액(원천징수 청구서에서 넘어온 거래)은 여기서 분리하지 않는다 — 청구서 분개가 처리한다.
+  const tax = Math.max(0, Math.min(round2(args.taxAmount || 0), gross));
   const entryDate = (args.txnDate || sydneyToday()).slice(0, 10);
   const description = args.description?.trim() || `Transaction #${args.id}`;
 

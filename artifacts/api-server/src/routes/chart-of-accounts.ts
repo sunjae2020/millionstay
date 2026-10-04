@@ -20,6 +20,7 @@ const DEFAULT_COA: Array<{ code: string; name: string; account_type: string; par
   { code: "1110", name: "임대료 미수금", account_type: "asset", parent_code: "1100" },
   { code: "1120", name: "관리비 미수금", account_type: "asset", parent_code: "1100" },
   { code: "1200", name: "선급금", account_type: "asset" },
+  { code: "1210", name: "선납세금", account_type: "asset", parent_code: "1200" },
   { code: "1500", name: "유형자산", account_type: "asset" },
   { code: "1510", name: "건물", account_type: "asset", parent_code: "1500" },
   { code: "1520", name: "토지", account_type: "asset", parent_code: "1500" },

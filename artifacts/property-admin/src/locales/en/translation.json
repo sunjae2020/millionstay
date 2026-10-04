@@ -1651,7 +1651,9 @@
     "label_tax_mode": "Tax",
     "tax_mode_none": "Tax-exempt (no VAT)",
     "tax_mode_exclusive": "Taxable (VAT added)",
+    "tax_mode_withholding": "Withholding (3.3% deducted)",
     "label_tax_rate": "VAT rate (%)",
+    "label_withholding_rate": "Withholding rate (%)",
     "label_total_amount": "Total payable",
     "hint_total_amount": "The amount field is the pre-tax subtotal. This is what the tenant pays.",
     "tax_breakdown": "= {{supply}} + VAT {{tax}}",
@@ -1724,7 +1726,8 @@
     "col_line_label": "Item",
     "col_line_period": "Period",
     "consolidated_children": "Per-space invoices",
-    "payment_board": "Rent board"
+    "payment_board": "Rent board",
+    "withholding_breakdown": "= {{supply}} − withholding {{tax}}"
   },
   "workorder": {
     "new": "New Work Order",

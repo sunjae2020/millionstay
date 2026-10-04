@@ -1635,7 +1635,9 @@
     "label_tax_mode": "課税区分",
     "tax_mode_none": "免税（消費税なし）",
     "tax_mode_exclusive": "課税（消費税別）",
+    "tax_mode_withholding": "源泉徴収（3.3%控除）",
     "label_tax_rate": "消費税率 (%)",
+    "label_withholding_rate": "源泉徴収率 (%)",
     "label_total_amount": "請求総額",
     "hint_total_amount": "金額欄は税抜の供給価額です。入居者が実際に支払う額はこちらです。",
     "tax_breakdown": "= {{supply}} + 消費税 {{tax}}",
@@ -1706,7 +1708,8 @@
     "col_line_label": "項目",
     "col_line_period": "期間",
     "consolidated_children": "住戸別請求書",
-    "payment_board": "入金状況"
+    "payment_board": "入金状況",
+    "withholding_breakdown": "= {{supply}} − 源泉徴収 {{tax}}"
   },
   "workorder": {
     "new": "新規作業指示",

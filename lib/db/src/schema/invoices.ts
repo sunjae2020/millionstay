@@ -30,6 +30,8 @@ export const invoicesTable = pgTable("invoices", {
   // ── 부가세 ────────────────────────────────────────────────────────────────
   // "none"      면세 — 주택 임대가 기본. 계산서(세금계산서 아님)로 발행한다.
   // "exclusive" 과세 — 공급가액에 세액을 더해 청구한다(세금계산서).
+  // "withholding" 원천징수 — 상대가 3.3%를 떼고 준다. tax_amount 가 **음수**로 저장돼
+  //               amount + tax_amount 가 그대로 실수령액이 된다(GL: 1210 선납세금).
   // 한국 주택 임대는 면세라 기본값이 none 이고, 상가·사무실·과세 서비스만 켠다.
   tax_mode: text("tax_mode").notNull().default("none"),
   tax_rate: numeric("tax_rate", { precision: 5, scale: 2 }).notNull().default("0"),

@@ -2707,6 +2707,7 @@
     "already_paid": "此账单已完成付款，谢谢。",
     "breakdown": "费用明细",
     "vat": "增值税",
+    "withholding": "代扣税",
     "bank_title": "收款账户",
     "bank_name": "银行",
     "account_name": "户名",

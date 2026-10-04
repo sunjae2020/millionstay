@@ -83,9 +83,28 @@ function formatDate(value: string | Date | null, lang: DocLang): string {
   return formatDocDate(value, lang);
 }
 
-/** 과세 청구서인가 — 세액이 실제로 붙는 경우에만 세액 줄을 그린다. */
+/** 원천징수 청구서인가 — 세액이 음수로 저장된다(영수증처럼 tax_mode 가 없는 입력도 부호로 안다). */
+function withheld(inv: InvoiceDocInput): boolean {
+  return Number(inv.tax_amount ?? 0) < 0;
+}
+
+/** 세액 줄을 그릴 청구서인가 — 부가세가 실제로 붙거나 원천징수가 빠지는 경우. */
 function taxed(inv: InvoiceDocInput): boolean {
-  return inv.tax_mode === "exclusive" && Number(inv.tax_amount ?? 0) > 0;
+  return (inv.tax_mode === "exclusive" && Number(inv.tax_amount ?? 0) > 0) || withheld(inv);
+}
+
+/** 세액 칸 — 원천징수는 "−₩6,600" 처럼 부호를 통화 기호 앞에 둔다. */
+function taxCell(inv: InvoiceDocInput): string {
+  const tax = Number(inv.tax_amount ?? 0);
+  return tax < 0 ? `−${formatMoney(-tax, inv.currency)}` : formatMoney(tax, inv.currency);
+}
+
+/** 세액 줄 이름 — 부가세 (10%) / 원천징수 (3.3%). 세율을 모르면 % 를 뺀다. */
+function taxLabel(inv: InvoiceDocInput, lang: DocLang): string {
+  if (!withheld(inv)) return t(lang, "taxAmount", { pct: taxPct(inv) });
+  return Number(inv.tax_rate ?? 0) > 0
+    ? t(lang, "withholdingAmount", { pct: taxPct(inv) })
+    : t(lang, "wo.withholding");
 }
 
 /** 세율 표기(10 → "10"). */
@@ -131,8 +150,8 @@ function renderDetailsTable(inv: InvoiceDocInput, lang: DocLang): string {
             <td class="num">${formatMoney(inv.amount, inv.currency)}</td>
           </tr>
           <tr>
-            <td colspan="3" class="num">${t(lang, "taxAmount", { pct: taxPct(inv) })}</td>
-            <td class="num">${formatMoney(inv.tax_amount ?? 0, inv.currency)}</td>
+            <td colspan="3" class="num">${taxLabel(inv, lang)}</td>
+            <td class="num">${taxCell(inv)}</td>
           </tr>` : ""}
           <tr>
             <td colspan="3" class="num"><strong>${t(lang, "total")}</strong></td>
@@ -154,8 +173,8 @@ function renderDetailsTable(inv: InvoiceDocInput, lang: DocLang): string {
           </tr>
           ${taxed(inv) ? `
           <tr>
-            <td class="num">${t(lang, "taxAmount", { pct: taxPct(inv) })}</td>
-            <td class="num">${formatMoney(inv.tax_amount ?? 0, inv.currency)}</td>
+            <td class="num">${taxLabel(inv, lang)}</td>
+            <td class="num">${taxCell(inv)}</td>
           </tr>
           <tr>
             <td class="num"><strong>${t(lang, "total")}</strong></td>

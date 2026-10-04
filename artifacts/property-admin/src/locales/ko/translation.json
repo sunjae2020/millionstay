@@ -1651,7 +1651,9 @@
     "label_tax_mode": "과세 구분",
     "tax_mode_none": "면세 (계산서)",
     "tax_mode_exclusive": "과세 (부가세 별도)",
+    "tax_mode_withholding": "원천징수 (3.3% 공제)",
     "label_tax_rate": "부가세율 (%)",
+    "label_withholding_rate": "원천징수율 (%)",
     "label_total_amount": "총 청구금액",
     "hint_total_amount": "금액 칸은 공급가액입니다. 세입자가 실제로 내는 금액은 여기 표시됩니다.",
     "tax_breakdown": "= {{supply}} + 부가세 {{tax}}",
@@ -1724,7 +1726,8 @@
     "consolidated_children": "공간별 인보이스",
     "btn_pdf": "PDF",
     "method_stripe": "Stripe",
-    "payment_board": "입금 현황"
+    "payment_board": "입금 현황",
+    "withholding_breakdown": "= {{supply}} − 원천징수 {{tax}}"
   },
   "workorder": {
     "new": "새 작업 지시서",

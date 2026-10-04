@@ -1634,7 +1634,9 @@
     "label_tax_mode": "ประเภทภาษี",
     "tax_mode_none": "ยกเว้นภาษี (ไม่มี VAT)",
     "tax_mode_exclusive": "เสียภาษี (บวก VAT)",
+    "tax_mode_withholding": "หัก ณ ที่จ่าย (หัก 3.3%)",
     "label_tax_rate": "อัตรา VAT (%)",
+    "label_withholding_rate": "อัตราภาษีหัก ณ ที่จ่าย (%)",
     "label_total_amount": "ยอดที่ต้องชำระ",
     "hint_total_amount": "ช่องจำนวนเงินคือมูลค่าก่อนภาษี ยอดที่ผู้เช่าชำระจริงแสดงตรงนี้",
     "label_payment_info": "บัญชีธนาคาร",
@@ -1704,7 +1706,8 @@
     "col_line_label": "รายการ",
     "col_line_period": "ช่วงเวลา",
     "consolidated_children": "ใบแจ้งหนี้รายห้อง",
-    "payment_board": "สถานะการชำระ"
+    "payment_board": "สถานะการชำระ",
+    "withholding_breakdown": "= {{supply}} − ภาษีหัก ณ ที่จ่าย {{tax}}"
   },
   "workorder": {
     "new": "ใบสั่งงานใหม่",

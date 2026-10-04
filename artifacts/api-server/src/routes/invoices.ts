@@ -68,7 +68,7 @@ const round2 = (n: number): number => Math.round(n * 100) / 100;
  * 매출·정산·커미션이 모두 공급가액 기준이라 세액을 섞으면 전부 부풀려진다.
  */
 const TaxBody = z.object({
-  tax_mode: z.enum(["none", "exclusive"]).optional(),
+  tax_mode: z.enum(["none", "exclusive", "withholding"]).optional(),
   tax_rate: z.number().min(0).max(100).optional(),
 });
 
@@ -77,9 +77,27 @@ function roundTax(amount: number, currency: string): number {
   return currency === "KRW" || currency === "JPY" ? Math.round(amount) : round2(amount);
 }
 
-/** 공급가액과 과세 설정으로 세액을 계산한다. 면세면 0. */
+/** 과세 구분별 기본 세율 — 부가세 10%, 사업소득 원천징수 3.3%(소득세 3% + 지방소득세 0.3%). */
+export function defaultTaxRate(mode: string): number {
+  return mode === "exclusive" ? 10 : mode === "withholding" ? 3.3 : 0;
+}
+
+/**
+ * 공급가액과 과세 설정으로 세액을 계산한다. 면세면 0.
+ *
+ * 원천징수("withholding")는 **음수**로 돌려준다 — 받는 쪽이 떼고 주므로 세입자가
+ * 실제로 내는 금액은 공급가액 − 원천징수액이다. 음수로 저장해 두면 곳곳의
+ * `amount + tax_amount`(총 청구금액·입금 보드·결제)가 그대로 실수령액이 된다.
+ * 원화는 10원 미만을 절사한다(원천징수 소액 절사 관행).
+ */
 export function computeTax(supply: number, mode: string, rate: number, currency: string): number {
-  if (mode !== "exclusive" || !(rate > 0)) return 0;
+  if (!(rate > 0)) return 0;
+  if (mode === "withholding") {
+    const w = supply * rate / 100;
+    const cut = currency === "KRW" ? Math.floor(w / 10) * 10 : currency === "JPY" ? Math.floor(w) : round2(w);
+    return cut > 0 ? -cut : 0;
+  }
+  if (mode !== "exclusive") return 0;
   return roundTax(supply * rate / 100, currency);
 }
 
@@ -276,7 +294,7 @@ router.post("/v1/invoices", async (req, res): Promise<void> => {
   const ccy = parsed.data.currency ?? DEFAULT_CURRENCY;
   const amount = hasLineItems ? sumLineItems(lineItems) : String(parsed.data.amount ?? 0);
   const taxMode = taxParsed.data.tax_mode ?? "none";
-  const taxRate = taxParsed.data.tax_rate ?? (taxMode === "exclusive" ? 10 : 0);
+  const taxRate = taxParsed.data.tax_rate ?? defaultTaxRate(taxMode);
   const row = await insertInvoiceWithRef({
     booking_id: parsed.data.booking_id ?? null,
     contract_id: parsed.data.contract_id ?? null,
@@ -365,7 +383,7 @@ router.put("/v1/invoices/:id", async (req, res): Promise<void> => {
   const supply = Number(updates.amount ?? current.amount ?? 0);
   const ccy = String(updates.currency ?? current.currency ?? DEFAULT_CURRENCY);
   updates.tax_mode = taxMode;
-  updates.tax_rate = String(taxMode === "exclusive" && !(taxRate > 0) ? 10 : taxRate);
+  updates.tax_rate = String(taxRate > 0 ? taxRate : defaultTaxRate(taxMode));
   updates.tax_amount = String(computeTax(supply, taxMode, Number(updates.tax_rate), ccy));
 
   const [row] = await db.update(invoicesTable).set(updates).where(eq(invoicesTable.id, id)).returning();

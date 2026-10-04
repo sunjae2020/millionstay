@@ -1620,7 +1620,9 @@
     "label_tax_mode": "Loại thuế",
     "tax_mode_none": "Miễn thuế (không VAT)",
     "tax_mode_exclusive": "Chịu thuế (cộng VAT)",
+    "tax_mode_withholding": "Khấu trừ tại nguồn (trừ 3,3%)",
     "label_tax_rate": "Thuế suất VAT (%)",
+    "label_withholding_rate": "Thuế suất khấu trừ (%)",
     "label_total_amount": "Tổng phải trả",
     "hint_total_amount": "Ô số tiền là giá trị trước thuế. Số tiền người thuê thực trả hiển thị ở đây.",
     "label_payment_info": "Tài khoản ngân hàng",
@@ -1689,7 +1691,8 @@
     "col_line_label": "Hạng mục",
     "col_line_period": "Kỳ",
     "consolidated_children": "Hóa đơn từng phòng",
-    "payment_board": "Bảng thu tiền"
+    "payment_board": "Bảng thu tiền",
+    "withholding_breakdown": "= {{supply}} − thuế khấu trừ {{tax}}"
   },
   "workorder": {
     "new": "Tạo phiếu công việc mới",

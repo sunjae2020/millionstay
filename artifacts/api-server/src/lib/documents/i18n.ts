@@ -222,6 +222,14 @@ const LABELS: Dict = {
 
   // ── 부가세 (과세 청구서) ──────────────────────────────────────────────────
   "supplyAmount":     { en: "Subtotal (ex. tax)", ko: "공급가액", zh: "供货金额", ja: "供給価額", th: "มูลค่าก่อนภาษี", vi: "Giá trị trước thuế" },
+  "withholdingAmount": {
+    en: "Withholding tax ({pct}%)",
+    ko: "원천징수 ({pct}%)",
+    zh: "代扣税（{pct}%）",
+    ja: "源泉徴収（{pct}%）",
+    th: "ภาษีหัก ณ ที่จ่าย ({pct}%)",
+    vi: "Thuế khấu trừ tại nguồn ({pct}%)",
+  },
   "taxAmount":        {
     en: "VAT ({pct}%)",
     ko: "부가세 ({pct}%)",

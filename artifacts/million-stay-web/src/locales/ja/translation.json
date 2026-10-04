@@ -2854,6 +2854,7 @@
     "already_paid": "お支払いが確認済みの請求書です。ありがとうございます。",
     "breakdown": "ご請求内訳",
     "vat": "消費税",
+    "withholding": "源泉徴収",
     "bank_title": "お振込先",
     "bank_name": "銀行",
     "account_name": "口座名義",

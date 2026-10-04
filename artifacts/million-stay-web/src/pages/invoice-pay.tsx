@@ -172,6 +172,13 @@ export default function InvoicePay() {
                 <span className="tabular-nums">{money(inv.tax_amount, inv.currency, locale)}</span>
               </li>
             )}
+            {/* 원천징수 청구서 — 세액이 음수로 내려온다(총액은 이미 차감된 금액). */}
+            {Number(inv.tax_amount ?? 0) < 0 && (
+              <li className="flex items-baseline justify-between gap-4 px-4 py-2.5 text-sm">
+                <span>{t("invoicePay.withholding")}</span>
+                <span className="tabular-nums">−{money(-Number(inv.tax_amount), inv.currency, locale)}</span>
+              </li>
+            )}
           </ul>
         </div>
       )}

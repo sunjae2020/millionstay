@@ -130,7 +130,7 @@ export default function InvoiceDetail() {
   const lineItems: InvoiceLineItem[] = ((invoice as any)?.line_items ?? []) as InvoiceLineItem[];
   const children: ConsolidatedChild[] = ((invoice as any)?.children ?? []) as ConsolidatedChild[];
 
-  const { register, handleSubmit, reset, control, watch } = useForm<FormData>({
+  const { register, handleSubmit, reset, control, watch, setValue } = useForm<FormData>({
     defaultValues: {
       // 입금 현황 보드의 "청구서 생성"은 ?contract_id=&account_id= 로 계약·청구 대상을 미리 채운다.
       booking_id: null,
@@ -166,9 +166,16 @@ export default function InvoiceDetail() {
   const supplyAmount = Number(watch("amount") || 0);
   const invoiceCurrency = watch("currency") || brandCurrency;
   const taxRate = Number(watch("tax_rate") || 0);
+  // 원천징수는 음수 세액이다(원화 10원 미만 절사) — 총 청구금액 = 공급가액 − 원천징수액.
   const taxAmount = taxMode === "exclusive" && taxRate > 0
     ? (invoiceCurrency === "KRW" || invoiceCurrency === "JPY"
         ? Math.round(supplyAmount * taxRate / 100)
+        : Math.round(supplyAmount * taxRate) / 100)
+    : taxMode === "withholding" && taxRate > 0
+    ? -(invoiceCurrency === "KRW"
+        ? Math.floor(supplyAmount * taxRate / 1000) * 10
+        : invoiceCurrency === "JPY"
+        ? Math.floor(supplyAmount * taxRate / 100)
         : Math.round(supplyAmount * taxRate) / 100)
     : 0;
   const payable = supplyAmount + taxAmount;
@@ -377,18 +384,23 @@ export default function InvoiceDetail() {
               <div>
                 <Label>{t('invoice.label_tax_mode')}</Label>
                 <Controller name="tax_mode" control={control} render={({ field }) => (
-                  <Select value={field.value} onValueChange={field.onChange}>
+                  <Select value={field.value} onValueChange={(v) => {
+                    // 구분을 바꾸면 세율도 그 구분의 기본값으로 — 부가세 10%, 원천징수 3.3%.
+                    if (v !== field.value) setValue("tax_rate", v === "withholding" ? "3.3" : "10");
+                    field.onChange(v);
+                  }}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
                       <SelectItem value="none">{t('invoice.tax_mode_none')}</SelectItem>
                       <SelectItem value="exclusive">{t('invoice.tax_mode_exclusive')}</SelectItem>
+                      <SelectItem value="withholding">{t('invoice.tax_mode_withholding')}</SelectItem>
                     </SelectContent>
                   </Select>
                 )} />
               </div>
-              {taxMode === "exclusive" && (
+              {(taxMode === "exclusive" || taxMode === "withholding") && (
                 <div>
-                  <Label>{t('invoice.label_tax_rate')}</Label>
+                  <Label>{t(taxMode === "withholding" ? 'invoice.label_withholding_rate' : 'invoice.label_tax_rate')}</Label>
                   <Input type="number" step="0.01" {...register("tax_rate")} />
                 </div>
               )}
@@ -396,11 +408,11 @@ export default function InvoiceDetail() {
                 <Label>{t('invoice.label_total_amount')}</Label>
                 <div className="h-9 flex items-center text-sm font-medium tabular-nums">
                   {formatMoney(payable, invoice?.currency ?? brandCurrency)}
-                  {taxMode === "exclusive" && (
+                  {(taxMode === "exclusive" || taxMode === "withholding") && (
                     <span className="ml-2 text-xs font-normal text-muted-foreground">
-                      {t('invoice.tax_breakdown', {
+                      {t(taxMode === "withholding" ? 'invoice.withholding_breakdown' : 'invoice.tax_breakdown', {
                         supply: formatMoney(supplyAmount, invoice?.currency ?? brandCurrency),
-                        tax: formatMoney(taxAmount, invoice?.currency ?? brandCurrency),
+                        tax: formatMoney(Math.abs(taxAmount), invoice?.currency ?? brandCurrency),
                       })}
                     </span>
                   )}

@@ -3222,6 +3222,7 @@
     "already_paid": "This invoice has been paid. Thank you.",
     "breakdown": "What you are being charged for",
     "vat": "VAT",
+    "withholding": "Withholding tax",
     "bank_title": "Bank transfer details",
     "bank_name": "Bank",
     "account_name": "Account name",

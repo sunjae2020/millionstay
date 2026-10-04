@@ -3152,6 +3152,7 @@
     "already_paid": "Hóa đơn này đã được thanh toán. Cảm ơn bạn.",
     "breakdown": "Chi tiết các khoản",
     "vat": "Thuế GTGT",
+    "withholding": "Thuế khấu trừ tại nguồn",
     "bank_title": "Thông tin chuyển khoản",
     "bank_name": "Ngân hàng",
     "account_name": "Chủ tài khoản",
