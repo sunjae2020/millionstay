@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { Link, useLocation } from "wouter";
 import { apiFetch } from "@/lib/apiFetch";
@@ -29,6 +29,7 @@ import { formatDate } from "@/lib/date";
 import { matchesQuery } from "@/lib/search";
 
 import { ExportableTable } from "@/components/ui/ExportCsvButton";
+import { MoveOutBoard, type MoveOutRow, type MoveOutView } from "./MoveOutBoard";
 // 계약/퇴거 현황 — 계약 한 건을 오늘 기준 세 단계로 칠한다(서버 /dashboard/lease-status 가 판정).
 type LeasePhase = "ongoing" | "moving_out" | "moved_out";
 const PHASE_COLORS: Record<LeasePhase, { bg: string; text: string; border: string }> = {
@@ -55,6 +56,8 @@ interface LeaseStatus {
   completed_contracts: number;
   move_out_scheduled_units: number;
   moved_out_units: number;
+  moved_out_lookback_days: number;
+  move_outs: MoveOutRow[];
   calendar: {
     start: string; end: string;
     spaces: {
@@ -580,6 +583,14 @@ export default function ReservationsTab() {
     return () => { cancelled = true; };
   }, [weekStart, calendarKey]);
 
+  // 퇴거 세대 보드 — KPI 카드를 누르면 해당 보기로 바꾸고 보드로 내려간다.
+  const [moveOutView, setMoveOutView] = useState<MoveOutView>("moving_out");
+  const moveOutRef = useRef<HTMLDivElement>(null);
+  const openMoveOuts = (v: MoveOutView) => {
+    setMoveOutView(v);
+    moveOutRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
+
   const [statusFilter, setStatusFilter] = useState("All");
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
@@ -624,8 +635,8 @@ export default function ReservationsTab() {
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         <KpiCard label={t("dash_reservations.kpi_ongoing_contracts")} value={lease?.ongoing_contracts ?? "—"} icon={CheckCircle} accent="green" sublabel={t("dash_reservations.kpi_ongoing_contracts_sub")} onClick={() => navigate("/booking/contracts")} />
         <KpiCard label={t("dash_reservations.kpi_completed_contracts")} value={lease?.completed_contracts ?? "—"} icon={Clock} accent="slate" sublabel={t("dash_reservations.kpi_completed_contracts_sub")} onClick={() => navigate("/booking/contracts")} />
-        <KpiCard label={t("dash_reservations.kpi_move_out_scheduled")} value={lease?.move_out_scheduled_units ?? "—"} icon={LogOut} accent={(lease?.move_out_scheduled_units ?? 0) > 0 ? "amber" : "blue"} sublabel={t("dash_reservations.kpi_move_out_scheduled_sub", { days: lease?.move_out_window_days ?? 30 })} />
-        <KpiCard label={t("dash_reservations.kpi_moved_out")} value={lease?.moved_out_units ?? "—"} icon={Users} accent="indigo" sublabel={t("dash_reservations.kpi_moved_out_sub")} />
+        <KpiCard label={t("dash_reservations.kpi_move_out_scheduled")} value={lease?.move_out_scheduled_units ?? "—"} icon={LogOut} accent={(lease?.move_out_scheduled_units ?? 0) > 0 ? "amber" : "blue"} sublabel={t("dash_reservations.kpi_move_out_scheduled_sub", { days: lease?.move_out_window_days ?? 30 })} onClick={() => openMoveOuts("moving_out")} />
+        <KpiCard label={t("dash_reservations.kpi_moved_out")} value={lease?.moved_out_units ?? "—"} icon={Users} accent="indigo" sublabel={t("dash_reservations.kpi_moved_out_sub")} onClick={() => openMoveOuts("moved_out")} />
       </div>
 
       <DashCard
@@ -648,6 +659,15 @@ export default function ReservationsTab() {
           onContractClick={(id) => navigate(`/booking/contracts/${id}`)}
         />
       </DashCard>
+
+      <MoveOutBoard
+        ref={moveOutRef}
+        rows={lease?.move_outs}
+        today={lease?.today}
+        loading={leaseLoading}
+        view={moveOutView}
+        onViewChange={setMoveOutView}
+      />
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <ArrivalDeparturePanel type="arrivals" onActionDone={() => { refetchBookings(); setCalendarKey(k => k + 1); }} />

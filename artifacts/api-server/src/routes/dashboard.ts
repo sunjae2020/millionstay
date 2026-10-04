@@ -1,5 +1,5 @@
 import { Router, type IRouter } from "express";
-import { db, propertiesTable, spacesTable, contactsTable, accountsTable, bookingsTable, leadsTable, tasksTable, invoicesTable, contractsTable, workOrdersTable, systemLogsTable, homestayPlacementsTable, homestayStudentRequestsTable, homestayPlacementPaymentsTable, agentCommissionLedgerTable } from "@workspace/db";
+import { db, propertiesTable, spacesTable, contactsTable, accountsTable, bookingsTable, leadsTable, tasksTable, invoicesTable, contractsTable, workOrdersTable, systemLogsTable, homestayPlacementsTable, homestayStudentRequestsTable, homestayPlacementPaymentsTable, agentCommissionLedgerTable, depositSettlementsTable, conditionReportsTable, conditionReportItemsTable, conditionReportSignaturesTable } from "@workspace/db";
 import { eq, count, and, gte, lte, lt, sql, desc, isNull, inArray } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 import { listEntries, trialBalance } from "../lib/billing/gl";
@@ -155,7 +155,19 @@ router.get("/v1/dashboard/overview/contract-counts", async (_req, res) => {
 //  - 진행 중(ongoing): Signed·Active 이고 아직 끝나지 않았다
 // KPI: 진행중 계약건 · 완료된 계약건(누적) · 퇴거예정 세대(30일 이내) · 퇴거완료 세대(이번 달).
 // 세대 수는 타입 행을 빼고(countableUnitFilter) 공간 기준으로 중복 없이 센다.
+// 같은 세대·같은 임차인의 다음 계약이 종료일 뒤 31일 안에 시작하면 연장(재계약)으로 보고
+// 퇴거 세대에서 뺀다 — 계약은 끝났어도 사람은 그대로 산다.
+// move_outs: 퇴거 예정·퇴거 완료 세대(최근 MOVED_OUT_LOOKBACK_DAYS일)와 정산서가 걸린 계약을
+// 한 줄씩 — 세대점검표 퇴거 점검과 보증금 정산 진행 단계를 함께 싣는다.
 const MOVE_OUT_WINDOW_DAYS = 30;
+const MOVED_OUT_LOOKBACK_DAYS = 365;
+const RENEWAL_GAP_DAYS = 31;
+
+function shiftIso(iso: string, days: number): string {
+  const d = new Date(iso + "T00:00:00Z");
+  d.setUTCDate(d.getUTCDate() + days);
+  return d.toISOString().slice(0, 10);
+}
 
 router.get("/v1/dashboard/lease-status", async (req, res) => {
   try {
@@ -185,6 +197,7 @@ router.get("/v1/dashboard/lease-status", async (req, res) => {
         space_name: spacesTable.name,
         property_name: propertiesTable.name,
         tenant_name: accountsTable.name,
+        tenant_account_id: contractsTable.tenant_account_id,
       })
       .from(contractsTable)
       .leftJoin(spacesTable, eq(spacesTable.id, contractsTable.space_id))
@@ -194,6 +207,25 @@ router.get("/v1/dashboard/lease-status", async (req, res) => {
         isNull(contractsTable.deleted_at),
         inArray(contractsTable.status, ["Signed", "Active", "Completed", "Expired", "Terminated"]),
       ));
+
+    // 연장 판정: 같은 세대·같은 임차인의 다음 계약이 종료일 뒤 RENEWAL_GAP_DAYS일 안에 시작한다.
+    // 아직 서명 전(Draft·Sent)인 재계약도 퇴거가 아니라는 신호라 후보에 넣는다.
+    const renewalCandidates = await db
+      .select({
+        id: contractsTable.id, contract_ref: contractsTable.contract_ref, space_id: contractsTable.space_id,
+        tenant_account_id: contractsTable.tenant_account_id, start_date: contractsTable.start_date,
+      })
+      .from(contractsTable)
+      .where(and(isNull(contractsTable.deleted_at), sql`${contractsTable.status} not in ('Cancelled', 'Archived')`));
+    const renewedBy = new Map<number, string>();
+    for (const r of rows) {
+      if (!r.space_id || !r.tenant_account_id || !r.end_date) continue;
+      const limit = shiftIso(r.end_date, RENEWAL_GAP_DAYS);
+      const next = renewalCandidates.find(n => n.id !== r.id && n.space_id === r.space_id
+        && n.tenant_account_id === r.tenant_account_id
+        && !!n.start_date && n.start_date >= r.end_date! && n.start_date <= limit);
+      if (next) renewedBy.set(r.id, next.contract_ref);
+    }
 
     // 타입 행(세대 마스터)에 걸린 계약은 세대 수에서 뺀다.
     const countable = new Set(
@@ -214,16 +246,113 @@ router.get("/v1/dashboard/lease-status", async (req, res) => {
     const movedOutUnits = new Set<number>();
     for (const r of rows) {
       const phase = phaseOf(r);
+      const renewed = renewedBy.has(r.id);
       if (phase === "moved_out") {
         completed++;
-        if (r.space_id && countable.has(r.space_id) && r.end_date?.slice(0, 7) === month && r.end_date <= today) {
+        if (!renewed && r.space_id && countable.has(r.space_id) && r.end_date?.slice(0, 7) === month && r.end_date <= today) {
           movedOutUnits.add(r.space_id);
         }
       } else {
         ongoing++;
-        if (phase === "moving_out" && r.space_id && countable.has(r.space_id)) movingOutUnits.add(r.space_id);
+        if (phase === "moving_out" && !renewed && r.space_id && countable.has(r.space_id)) movingOutUnits.add(r.space_id);
       }
     }
+
+    // ── 퇴거 세대 보드 ────────────────────────────────────────────────
+    const settlements = await db
+      .select({
+        id: depositSettlementsTable.id,
+        settlement_ref: depositSettlementsTable.settlement_ref,
+        contract_id: depositSettlementsTable.contract_id,
+        status: depositSettlementsTable.status,
+        deposit_held: depositSettlementsTable.deposit_held,
+        total_deducted: depositSettlementsTable.total_deducted,
+        refund_amount: depositSettlementsTable.refund_amount,
+        currency: depositSettlementsTable.currency,
+        as_of_date: depositSettlementsTable.as_of_date,
+        finalized_at: depositSettlementsTable.finalized_at,
+      })
+      .from(depositSettlementsTable)
+      .where(and(
+        sql`${depositSettlementsTable.contract_id} is not null`,
+        sql`${depositSettlementsTable.status} <> 'cancelled'`,
+      ))
+      .orderBy(desc(depositSettlementsTable.id));
+    // 계약당 한 장: 확정본이 있으면 그것, 없으면 가장 최근 것.
+    const settlementOf = new Map<number, typeof settlements[number]>();
+    for (const st of settlements) {
+      const cur = settlementOf.get(st.contract_id!);
+      if (!cur || (cur.status !== "finalized" && st.status === "finalized")) settlementOf.set(st.contract_id!, st);
+    }
+
+    const sinceMovedOut = shiftIso(today, -MOVED_OUT_LOOKBACK_DAYS);
+    const boardRows = rows.filter(r => {
+      if (settlementOf.has(r.id)) return true;
+      if (renewedBy.has(r.id) || !r.space_id || !countable.has(r.space_id)) return false;
+      const phase = phaseOf(r);
+      if (phase === "moving_out") return true;
+      return phase === "moved_out" && (!r.end_date || r.end_date >= sinceMovedOut);
+    });
+
+    // 세대점검표 퇴거 점검: 퇴거 서명이 있으면 완료, 퇴거 칸이 하나라도 채워졌으면 진행 중.
+    const boardIds = boardRows.map(r => r.id);
+    const inspectionOf = new Map<number, { id: number; state: "in_progress" | "done" }>();
+    if (boardIds.length) {
+      const reports = await db
+        .select({ id: conditionReportsTable.id, contract_id: conditionReportsTable.contract_id, status: conditionReportsTable.status })
+        .from(conditionReportsTable)
+        .where(and(isNull(conditionReportsTable.deleted_at), inArray(conditionReportsTable.contract_id, boardIds)))
+        .orderBy(desc(conditionReportsTable.id));
+      const reportIds = reports.map(r => r.id);
+      const [signed, filled] = reportIds.length ? await Promise.all([
+        db.selectDistinct({ id: conditionReportSignaturesTable.condition_report_id })
+          .from(conditionReportSignaturesTable)
+          .where(and(inArray(conditionReportSignaturesTable.condition_report_id, reportIds), eq(conditionReportSignaturesTable.phase, "move_out"))),
+        db.selectDistinct({ id: conditionReportItemsTable.condition_report_id })
+          .from(conditionReportItemsTable)
+          .where(and(inArray(conditionReportItemsTable.condition_report_id, reportIds),
+            sql`(${conditionReportItemsTable.move_out_status} is not null or nullif(${conditionReportItemsTable.move_out_note}, '') is not null)`)),
+      ]) : [[], []];
+      const signedIds = new Set(signed.map(s => s.id));
+      const filledIds = new Set(filled.map(f => f.id));
+      for (const rep of reports) {
+        if (!rep.contract_id) continue;
+        const state = signedIds.has(rep.id) || rep.status === "finalized" ? "done"
+          : filledIds.has(rep.id) ? "in_progress" : null;
+        const cur = inspectionOf.get(rep.contract_id);
+        if (state && (!cur || (cur.state !== "done" && state === "done"))) inspectionOf.set(rep.contract_id, { id: rep.id, state });
+      }
+    }
+
+    const moveOuts = boardRows.map(r => {
+      const st = settlementOf.get(r.id);
+      const insp = inspectionOf.get(r.id);
+      return {
+        contract_id: r.id,
+        contract_ref: r.contract_ref,
+        contract_status: r.status,
+        phase: phaseOf(r),
+        space_id: r.space_id,
+        space_name: r.space_name ?? (r.space_id ? `#${r.space_id}` : null),
+        property_name: r.property_name ?? null,
+        tenant_name: r.tenant_name ?? null,
+        start_date: r.start_date || null,
+        end_date: r.end_date || null,
+        renewed_by: renewedBy.get(r.id) ?? null,
+        inspection: insp ? { id: insp.id, state: insp.state } : null,
+        settlement: st ? {
+          id: st.id,
+          settlement_ref: st.settlement_ref,
+          status: st.status,
+          deposit_held: Number(st.deposit_held),
+          total_deducted: Number(st.total_deducted),
+          refund_amount: Number(st.refund_amount),
+          currency: st.currency,
+          as_of_date: st.as_of_date,
+          finalized_at: st.finalized_at,
+        } : null,
+      };
+    }).sort((a, b) => (a.end_date ?? "9999").localeCompare(b.end_date ?? "9999"));
 
     // 캘린더: 이번 주 [weekStart, weekEnd) 에 계약 기간이 걸친 공간만.
     const bySpace = new Map<number, {
@@ -252,6 +381,8 @@ router.get("/v1/dashboard/lease-status", async (req, res) => {
       completed_contracts: completed,
       move_out_scheduled_units: movingOutUnits.size,
       moved_out_units: movedOutUnits.size,
+      moved_out_lookback_days: MOVED_OUT_LOOKBACK_DAYS,
+      move_outs: moveOuts,
       calendar: { start: weekStart, end: weekEnd, spaces },
     });
   } catch (err) {

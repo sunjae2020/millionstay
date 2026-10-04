@@ -180,7 +180,8 @@ export default function ContractDetail() {
   const [terminateReason, setTerminateReason] = useState("");
   const [signDocUrl, setSignDocUrl] = useState("");
   const [signOpen, setSignOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState("line-items");
+  // ?tab=move-out 처럼 탭을 지정해 열 수 있다(대시보드 퇴거 세대 보드에서 바로 정산 탭으로).
+  const [activeTab, setActiveTab] = useState(() => new URLSearchParams(window.location.search).get("tab") || "line-items");
 
   // Payment Schedule dialog state
   const [schedDialogOpen, setSchedDialogOpen] = useState(false);
