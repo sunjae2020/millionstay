@@ -4721,7 +4721,14 @@
     "field_branch": "소속 지점",
     "field_team": "소속 팀",
     "no_branch": "소속 없음",
-    "no_team": "소속 없음"
+    "no_team": "소속 없음",
+    "pw_generate": "자동 생성",
+    "pw_rule_length": "12자 이상",
+    "pw_rule_lower": "영문 소문자",
+    "pw_rule_upper": "영문 대문자",
+    "pw_rule_digit": "숫자",
+    "pw_rule_special": "특수문자",
+    "pw_policy_unmet": "비밀번호가 정책에 맞지 않습니다. 12자 이상, 영문 대·소문자·숫자·특수문자를 모두 넣거나 [자동 생성]을 누르세요."
   },
   "coming_soon": {
     "heading": "준비 중입니다",

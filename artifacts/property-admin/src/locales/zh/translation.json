@@ -4690,7 +4690,14 @@
     "field_branch": "所属分公司",
     "field_team": "所属团队",
     "no_branch": "无所属",
-    "no_team": "无所属"
+    "no_team": "无所属",
+    "pw_generate": "自动生成",
+    "pw_rule_length": "至少12个字符",
+    "pw_rule_lower": "小写字母",
+    "pw_rule_upper": "大写字母",
+    "pw_rule_digit": "数字",
+    "pw_rule_special": "特殊字符",
+    "pw_policy_unmet": "密码不符合策略。请使用至少12个字符，并包含大写字母、小写字母、数字和特殊字符，或点击[自动生成]。"
   },
   "coming_soon": {
     "heading": "敬请期待",

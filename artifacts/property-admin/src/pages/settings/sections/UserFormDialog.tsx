@@ -14,7 +14,7 @@ import {
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import { Loader2, UserPlus, Pencil, Upload, X, ImageIcon } from "lucide-react";
+import { Loader2, UserPlus, Pencil, Upload, X, ImageIcon, Check, Circle, Wand2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiFetch } from "@/lib/apiFetch";
 import { useAuth } from "@/contexts/AuthContext";
@@ -77,6 +77,32 @@ interface Props {
 }
 
 const LOCALES = ["en", "ko", "ja", "zh", "th", "vi"];
+
+/** 서버 비밀번호 정책(api-server utils/passwordPolicy.ts)의 거울. 입력 중에 규칙별로
+ *  체크해 보여 주고, 저장 전에 막아서 영어 서버 오류가 토스트로 뜨지 않게 한다. */
+const PASSWORD_RULES: Array<{ key: string; test: (pw: string) => boolean }> = [
+  { key: "pw_rule_length", test: (pw) => pw.length >= 12 },
+  { key: "pw_rule_lower", test: (pw) => /[a-z]/.test(pw) },
+  { key: "pw_rule_upper", test: (pw) => /[A-Z]/.test(pw) },
+  { key: "pw_rule_digit", test: (pw) => /[0-9]/.test(pw) },
+  { key: "pw_rule_special", test: (pw) => /[^A-Za-z0-9]/.test(pw) },
+];
+
+/** 정책을 만족하는 임시 비밀번호 14자. 헷갈리는 글자(0/O, 1/l/I)는 뺀다 —
+ *  관리자가 말로 불러 주거나 문자로 옮겨 적는 값이라서. */
+function generateTempPassword(): string {
+  const sets = ["abcdefghjkmnpqrstuvwxyz", "ABCDEFGHJKLMNPQRSTUVWXYZ", "23456789", "!@#$%*?"];
+  const all = sets.join("");
+  const rand = (n: number) => crypto.getRandomValues(new Uint32Array(1))[0] % n;
+  const pick = (cs: string) => cs[rand(cs.length)];
+  const chars = sets.map(pick);
+  while (chars.length < 14) chars.push(pick(all));
+  for (let i = chars.length - 1; i > 0; i--) {
+    const j = rand(i + 1);
+    [chars[i], chars[j]] = [chars[j], chars[i]];
+  }
+  return chars.join("");
+}
 
 export function UserFormDialog({ open, onOpenChange, userId, onSaved }: Props) {
   // 지점·팀 목록. 조직이 없으면 셀렉터는 "소속 없음"만 남고, 그건 스코프를 아직
@@ -216,6 +242,10 @@ export function UserFormDialog({ open, onOpenChange, userId, onSaved }: Props) {
   }
 
   async function save() {
+    if ((!isEdit || form.password.trim()) && PASSWORD_RULES.some(r => !r.test(form.password))) {
+      toast({ title: t("settings_users.toast_error"), description: t("settings_users.pw_policy_unmet"), variant: "destructive" });
+      return;
+    }
     setIsSaving(true);
     try {
       let res: Response;
@@ -352,10 +382,30 @@ export function UserFormDialog({ open, onOpenChange, userId, onSaved }: Props) {
                 <Label htmlFor="uf-password">
                   {isEdit ? t("settings_users.field_reset_password") : `${t("settings_users.field_temp_password")} *`}
                 </Label>
-                <Input id="uf-password" type="text" autoComplete="off" value={form.password}
-                  required={!isEdit} disabled={isEdit && !isSuperAdmin}
-                  placeholder={isEdit ? t("settings_users.field_reset_password_ph") : undefined}
-                  onChange={(e) => set("password", e.target.value)} />
+                <div className="flex gap-2">
+                  <Input id="uf-password" type="text" autoComplete="off" value={form.password}
+                    required={!isEdit} disabled={isEdit && !isSuperAdmin}
+                    placeholder={isEdit ? t("settings_users.field_reset_password_ph") : undefined}
+                    onChange={(e) => set("password", e.target.value)} />
+                  <Button type="button" variant="outline" className="shrink-0"
+                    disabled={isEdit && !isSuperAdmin}
+                    onClick={() => set("password", generateTempPassword())}>
+                    <Wand2 className="w-4 h-4 mr-1.5" />{t("settings_users.pw_generate")}
+                  </Button>
+                </div>
+                {(!isEdit || form.password) && (
+                  <ul className="flex flex-wrap gap-x-3 gap-y-1 text-xs">
+                    {PASSWORD_RULES.map(r => {
+                      const ok = r.test(form.password);
+                      return (
+                        <li key={r.key} className={`flex items-center gap-1 ${ok ? "text-emerald-600" : "text-muted-foreground"}`}>
+                          {ok ? <Check className="w-3.5 h-3.5" /> : <Circle className="w-3 h-3" />}
+                          {t(`settings_users.${r.key}`)}
+                        </li>
+                      );
+                    })}
+                  </ul>
+                )}
                 <p className="text-xs text-muted-foreground">
                   {isEdit ? t("settings_users.field_reset_password_hint") : t("settings_users.field_temp_password_hint")}
                 </p>

@@ -4688,7 +4688,14 @@
     "field_branch": "所属支店",
     "field_team": "所属チーム",
     "no_branch": "所属なし",
-    "no_team": "所属なし"
+    "no_team": "所属なし",
+    "pw_generate": "自動生成",
+    "pw_rule_length": "12文字以上",
+    "pw_rule_lower": "英小文字",
+    "pw_rule_upper": "英大文字",
+    "pw_rule_digit": "数字",
+    "pw_rule_special": "記号",
+    "pw_policy_unmet": "パスワードがポリシーを満たしていません。12文字以上で英大文字・英小文字・数字・記号をすべて含めるか、[自動生成]を押してください。"
   },
   "coming_soon": {
     "heading": "近日公開予定",

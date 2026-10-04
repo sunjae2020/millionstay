@@ -4650,7 +4650,14 @@
     "field_branch": "Chi nhánh",
     "field_team": "Nhóm",
     "no_branch": "Không thuộc chi nhánh",
-    "no_team": "Không thuộc nhóm"
+    "no_team": "Không thuộc nhóm",
+    "pw_generate": "Tạo tự động",
+    "pw_rule_length": "Từ 12 ký tự",
+    "pw_rule_lower": "Chữ thường",
+    "pw_rule_upper": "Chữ hoa",
+    "pw_rule_digit": "Chữ số",
+    "pw_rule_special": "Ký tự đặc biệt",
+    "pw_policy_unmet": "Mật khẩu chưa đáp ứng chính sách. Dùng từ 12 ký tự gồm chữ hoa, chữ thường, chữ số và ký tự đặc biệt, hoặc nhấn [Tạo tự động]."
   },
   "coming_soon": {
     "heading": "Sắp ra mắt",

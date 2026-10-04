@@ -4721,7 +4721,14 @@
     "field_branch": "Branch",
     "field_team": "Team",
     "no_branch": "No branch",
-    "no_team": "No team"
+    "no_team": "No team",
+    "pw_generate": "Generate",
+    "pw_rule_length": "12+ characters",
+    "pw_rule_lower": "Lowercase",
+    "pw_rule_upper": "Uppercase",
+    "pw_rule_digit": "Number",
+    "pw_rule_special": "Special character",
+    "pw_policy_unmet": "The password doesn't meet the policy yet. Use 12+ characters with upper and lower case letters, a number and a special character — or press Generate."
   },
   "coming_soon": {
     "heading": "Coming Soon",
