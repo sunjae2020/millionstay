@@ -1953,7 +1953,11 @@
     "btn_dispatch_confirm": "배정",
     "photos_caption_hint": "촬영일, 매물/호수와 이 설명이 사진에 워터마크로 새겨집니다.",
     "review_apply_taxes": "세액 다시 계산",
-    "photos_take": "사진 촬영"
+    "photos_take": "사진 촬영",
+    "dispatch_search_ph": "업체명·전화번호·업종으로 검색",
+    "dispatch_no_results": "검색 결과가 없습니다.",
+    "dispatch_account_only": "계정",
+    "dispatch_count": "{{total}}곳 중 {{shown}}곳"
   },
   "csticket": {
     "search_placeholder": "티켓 검색...",

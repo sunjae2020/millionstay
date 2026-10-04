@@ -25,6 +25,28 @@ export type DispatchResult =
   | { ok: true; service_host_id: number; service_host_name: string; sla_ack_due_at: string }
   | { ok: false; reason: "not_found" | "already_dispatched" | "no_category" | "no_match" | "host_not_found" };
 
+/** 배정 후보로 노출하는 계정 유형 — 작업을 받는 외부 업체들. */
+export const DISPATCH_ACCOUNT_TYPES = ["ServiceHost", "Partner"];
+
+/**
+ * 파트너 계정에 연결된 서비스 호스트 행을 돌려준다. 없으면 만든다.
+ * 업체 상당수가 계정으로만 등록돼 service_hosts 행이 없어서, 배정 팝업에서
+ * 고를 수 없었다(Metheim 여수 13곳). 배정하는 순간 행을 이어 붙인다.
+ */
+export async function ensureHostForAccount(accountId: number): Promise<typeof serviceHostsTable.$inferSelect | null> {
+  const [existing] = await db.select().from(serviceHostsTable)
+    .where(and(eq(serviceHostsTable.account_id, accountId), eq(serviceHostsTable.status, "Active")))
+    .orderBy(serviceHostsTable.id).limit(1);
+  if (existing) return existing;
+  const [account] = await db.select().from(accountsTable)
+    .where(and(eq(accountsTable.id, accountId), isNull(accountsTable.deleted_at))).limit(1);
+  if (!account || !DISPATCH_ACCOUNT_TYPES.includes(account.account_type)) return null;
+  const [created] = await db.insert(serviceHostsTable)
+    .values({ name: account.name, account_id: account.id, status: "Active", specialties: [] })
+    .returning();
+  return created ?? null;
+}
+
 /**
  * Auto-dispatch a work order to the best-matching active partner. Idempotent:
  * a work order that already has a service_host_id is not re-dispatched (call
@@ -32,11 +54,18 @@ export type DispatchResult =
  */
 export async function dispatchWorkOrder(
   workOrderId: number,
-  opts: { slaAckMinutes?: number; force?: boolean; serviceHostId?: number } = {},
+  opts: { slaAckMinutes?: number; force?: boolean; serviceHostId?: number; accountId?: number } = {},
 ): Promise<DispatchResult> {
   const [wo] = await db.select().from(workOrdersTable).where(eq(workOrdersTable.id, workOrderId)).limit(1);
   if (!wo) return { ok: false, reason: "not_found" };
-  if (wo.service_host_id && !opts.force && !opts.serviceHostId) return { ok: false, reason: "already_dispatched" };
+  if (wo.service_host_id && !opts.force && !opts.serviceHostId && !opts.accountId) return { ok: false, reason: "already_dispatched" };
+
+  // 호스트 행 없이 계정으로만 있는 파트너를 고른 경우.
+  if (!opts.serviceHostId && opts.accountId) {
+    const host = await ensureHostForAccount(opts.accountId);
+    if (!host) return { ok: false, reason: "host_not_found" };
+    return assignHost(wo, host, opts.slaAckMinutes);
+  }
 
   // 관리자가 파트너를 직접 고른 배정 — 카테고리 매칭을 건너뛴다.
   if (opts.serviceHostId) {

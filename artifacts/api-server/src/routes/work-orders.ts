@@ -6,7 +6,7 @@ import { formatPersonName } from "../lib/nameFormat";
 import { sendAppointmentConfirmationEmail } from "../lib/email";
 import { eq, ilike, and, isNull, inArray, desc, sql, asc } from "drizzle-orm";
 import { parseListPage, parseSortParams, buildOrderBy, sendList, type SortMap } from "../utils/pagination.js";
-import { dispatchWorkOrder } from "../lib/dispatch/workOrderDispatch";
+import { dispatchWorkOrder, DISPATCH_ACCOUNT_TYPES } from "../lib/dispatch/workOrderDispatch";
 import { buildPhotoWatermark, loadPhotoWatermarkContext, watermarkedPhotoUrl } from "../lib/workOrders/photoWatermark";
 import { createSigningRequest, signingBaseUrl } from "../services/contractSigning";
 import { buildAppointmentIcs, buildCalendar, addDays } from "../lib/ical";
@@ -272,6 +272,47 @@ router.get("/v1/work-orders/facets", async (req, res): Promise<void> => {
   res.json({ years, categories: sortWorkOrderCategories(canonical) });
 });
 
+/**
+ * 파트너 배정 팝업의 후보 전체 — 활성 서비스 호스트 + 호스트 행이 아직 없는
+ * 파트너 계정(ServiceHost·Partner). 계정만 있는 업체는 account_id로 배정하면
+ * 그때 호스트 행이 생긴다. "/:id" 보다 먼저 선언해야 한다.
+ */
+router.get("/v1/work-orders/dispatch-candidates", async (_req, res): Promise<void> => {
+  const hosts = await db.select().from(serviceHostsTable).where(eq(serviceHostsTable.status, "Active"));
+  const accounts = await db.select({
+    id: accountsTable.id, name: accountsTable.name, account_type: accountsTable.account_type,
+    phone1: accountsTable.phone1, email: accountsTable.account_email,
+  }).from(accountsTable)
+    .where(and(inArray(accountsTable.account_type, DISPATCH_ACCOUNT_TYPES), eq(accountsTable.status, "Active"), isNull(accountsTable.deleted_at)));
+  const accountById = new Map(accounts.map((a) => [a.id, a]));
+  // 호스트에 연결된 계정 이름도 함께 둔다 — 파트너명이 바뀌어 있어도 계정명으로 찾을 수 있게.
+  const linkedIds = hosts.map((h) => h.account_id).filter((v): v is number => v != null && !accountById.has(v));
+  const linked = linkedIds.length
+    ? await db.select({ id: accountsTable.id, name: accountsTable.name, account_type: accountsTable.account_type, phone1: accountsTable.phone1, email: accountsTable.account_email })
+        .from(accountsTable).where(inArray(accountsTable.id, linkedIds))
+    : [];
+  for (const a of linked) accountById.set(a.id, a);
+
+  const hostAccountIds = new Set(hosts.map((h) => h.account_id).filter((v) => v != null));
+  const rows = [
+    ...hosts.map((h) => {
+      const a = h.account_id != null ? accountById.get(h.account_id) : undefined;
+      return {
+        key: `host:${h.id}`, service_host_id: h.id, account_id: h.account_id ?? null,
+        name: h.name, account_name: a?.name ?? null, account_type: a?.account_type ?? null,
+        phone: a?.phone1 ?? null, email: a?.email ?? null,
+        specialties: Array.isArray(h.specialties) ? (h.specialties as unknown[]).map(String) : [],
+      };
+    }),
+    ...accounts.filter((a) => !hostAccountIds.has(a.id)).map((a) => ({
+      key: `account:${a.id}`, service_host_id: null, account_id: a.id,
+      name: a.name, account_name: a.name, account_type: a.account_type,
+      phone: a.phone1 ?? null, email: a.email ?? null, specialties: [] as string[],
+    })),
+  ].sort((x, y) => x.name.localeCompare(y.name, "ko"));
+  res.json(rows);
+});
+
 router.post("/v1/work-orders", async (req, res): Promise<void> => {
   const parsed = CreateWorkOrderBody.safeParse(req.body);
   if (!parsed.success) { res.status(400).json({ error: parsed.error.message }); return; }
@@ -307,9 +348,11 @@ router.post("/v1/work-orders", async (req, res): Promise<void> => {
 router.post("/v1/work-orders/:id/dispatch", async (req, res): Promise<void> => {
   const id = Number(req.params.id);
   const hostId = Number(req.body?.service_host_id);
+  const accountId = Number(req.body?.account_id);
   const result = await dispatchWorkOrder(id, {
     force: req.body?.force === true,
     serviceHostId: Number.isFinite(hostId) && hostId > 0 ? hostId : undefined,
+    accountId: Number.isFinite(accountId) && accountId > 0 ? accountId : undefined,
   });
   if (!result.ok) {
     const code = result.reason === "not_found" || result.reason === "host_not_found" ? 404 : 409;

@@ -1918,7 +1918,11 @@
     "btn_dispatch_confirm": "Giao việc",
     "photos_caption_hint": "Ngày chụp, bất động sản/căn hộ và ghi chú này được in chìm lên từng ảnh.",
     "review_apply_taxes": "Tính lại thuế",
-    "photos_take": "Chụp ảnh"
+    "photos_take": "Chụp ảnh",
+    "dispatch_search_ph": "Tìm theo tên, số điện thoại, ngành nghề",
+    "dispatch_no_results": "Không có đối tác phù hợp.",
+    "dispatch_account_only": "Tài khoản",
+    "dispatch_count": "{{shown}} / {{total}} đối tác"
   },
   "csticket": {
     "search_placeholder": "Tìm kiếm phiếu hỗ trợ...",

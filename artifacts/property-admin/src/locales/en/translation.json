@@ -1953,7 +1953,11 @@
     "btn_dispatch_confirm": "Dispatch",
     "photos_caption_hint": "The date, property/unit and this note are burned onto each photo as a watermark.",
     "review_apply_taxes": "Recalculate taxes",
-    "photos_take": "Take a photo"
+    "photos_take": "Take a photo",
+    "dispatch_search_ph": "Search name, phone, trade…",
+    "dispatch_no_results": "No partners match your search.",
+    "dispatch_account_only": "Account",
+    "dispatch_count": "{{shown}} of {{total}} partners"
   },
   "csticket": {
     "search_placeholder": "Search tickets...",

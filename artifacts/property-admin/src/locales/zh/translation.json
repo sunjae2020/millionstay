@@ -1937,7 +1937,11 @@
     "btn_dispatch_confirm": "指派",
     "photos_caption_hint": "拍摄日期、房源/房号以及该说明会以水印形式写入每张照片。",
     "review_apply_taxes": "重新计算税额",
-    "photos_take": "拍照"
+    "photos_take": "拍照",
+    "dispatch_search_ph": "按名称、电话、业务类型搜索",
+    "dispatch_no_results": "没有符合条件的合作方。",
+    "dispatch_account_only": "账户",
+    "dispatch_count": "共 {{total}} 家，显示 {{shown}} 家"
   },
   "csticket": {
     "search_placeholder": "搜索工单...",

@@ -1933,7 +1933,11 @@
     "btn_dispatch_confirm": "มอบหมาย",
     "photos_caption_hint": "วันที่ถ่าย ทรัพย์สิน/ห้อง และคำอธิบายนี้จะถูกฝังลงบนรูปเป็นลายน้ำ",
     "review_apply_taxes": "คำนวณภาษีใหม่",
-    "photos_take": "ถ่ายรูป"
+    "photos_take": "ถ่ายรูป",
+    "dispatch_search_ph": "ค้นหาชื่อ เบอร์โทร หรือประเภทงาน",
+    "dispatch_no_results": "ไม่พบพาร์ทเนอร์ที่ตรงกับการค้นหา",
+    "dispatch_account_only": "บัญชี",
+    "dispatch_count": "{{shown}} จาก {{total}} พาร์ทเนอร์"
   },
   "csticket": {
     "search_placeholder": "ค้นหาตั๋ว...",

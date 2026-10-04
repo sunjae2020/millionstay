@@ -28,7 +28,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { COMMON_WORK_ORDER_CATEGORIES, OTHER_WORK_ORDER_CATEGORIES, canonicalWorkOrderCategory } from "@/lib/workOrderCategories";
-import { ArrowLeft, Trash2, Save, Send, ShieldAlert, CheckCircle2, Clock, CalendarClock, Mail, FileText, FileSignature } from "lucide-react";
+import { ArrowLeft, Trash2, Save, Send, ShieldAlert, CheckCircle2, Clock, CalendarClock, Mail, FileText, FileSignature, Search, Check } from "lucide-react";
 import { DocumentPreviewDialog, useDocumentPreview } from "@/components/DocumentPreviewDialog";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useState } from "react";
@@ -80,6 +80,19 @@ function taxApplied(amount: unknown): boolean {
 /** 체크가 켜져 있을 때 작업비용에서 나오는 세액. 꺼져 있으면 빈칸이다. */
 function taxOf(base: number, ratePct: number, applied: boolean): string {
   return applied ? String(Math.round(base * ratePct / 100)) : "";
+}
+
+/** GET /work-orders/dispatch-candidates 한 행 — 호스트 행이 없으면 service_host_id가 null. */
+interface DispatchCandidate {
+  key: string;
+  service_host_id: number | null;
+  account_id: number | null;
+  name: string;
+  account_name: string | null;
+  account_type: string | null;
+  phone: string | null;
+  email: string | null;
+  specialties: string[];
 }
 
 interface FormData {
@@ -325,16 +338,28 @@ export default function WorkOrderDetail() {
   // 배정/재배정은 파트너를 직접 고르는 팝업으로 한다 — 자동 매칭만 있으면 후보가
   // 하나뿐인 카테고리에서 "재배정"이 같은 파트너를 다시 꽂아 아무 변화가 없다.
   const [pickerOpen, setPickerOpen] = useState(false);
-  const [hosts, setHosts] = useState<Array<{ id: number; name: string; specialties?: unknown }>>([]);
+  // 후보는 서버의 dispatch-candidates 전체 — 서비스 호스트 행이 없는 파트너 계정도
+  // 포함한다(계정으로만 등록된 업체가 목록에 안 보이던 문제).
+  const [hosts, setHosts] = useState<DispatchCandidate[]>([]);
   const [hostsLoading, setHostsLoading] = useState(false);
-  const [pickedHostId, setPickedHostId] = useState<string>("");
+  const [pickedKey, setPickedKey] = useState<string>("");
+  const [hostQuery, setHostQuery] = useState("");
+  const pickedHost = hosts.find((h) => h.key === pickedKey) ?? null;
+  const filteredHosts = (() => {
+    const q = hostQuery.trim().toLowerCase();
+    if (!q) return hosts;
+    return hosts.filter((h) =>
+      [h.name, h.account_name, h.phone, h.email, ...h.specialties]
+        .some((v) => v != null && String(v).toLowerCase().includes(q)));
+  })();
 
   const openPicker = async () => {
-    setPickerOpen(true); setDispatchError(null);
-    setPickedHostId(String((wo as any)?.service_host_id ?? ""));
+    setPickerOpen(true); setDispatchError(null); setHostQuery("");
+    const currentHostId = (wo as any)?.service_host_id;
+    setPickedKey(currentHostId ? `host:${currentHostId}` : "");
     setHostsLoading(true);
     try {
-      const rows = await apiJson<any>(`/api/v1/service-hosts?status=Active`);
+      const rows = await apiJson<any>(`/api/v1/work-orders/dispatch-candidates`);
       setHosts(Array.isArray(rows) ? rows : rows?.data ?? []);
     } catch {
       setHosts([]);
@@ -343,13 +368,17 @@ export default function WorkOrderDetail() {
     }
   };
 
-  /** serviceHostId를 주면 그 파트너로, 없으면 카테고리 자동 매칭으로 배정한다. */
-  const dispatch = async (serviceHostId?: number) => {
+  /** 후보를 주면 그 파트너로, 없으면 카테고리 자동 매칭으로 배정한다. */
+  const dispatch = async (target?: DispatchCandidate | null) => {
     setDispatching(true); setDispatchError(null);
     try {
       await apiJson(`/api/v1/work-orders/${id}/dispatch`, {
         method: "POST",
-        body: JSON.stringify({ force: true, ...(serviceHostId ? { service_host_id: serviceHostId } : {}) }),
+        body: JSON.stringify({
+          force: true,
+          ...(target?.service_host_id ? { service_host_id: target.service_host_id }
+            : target?.account_id ? { account_id: target.account_id } : {}),
+        }),
       });
       setPickerOpen(false);
       invalidate(); refetch();
@@ -966,22 +995,64 @@ export default function WorkOrderDetail() {
           <DialogHeader>
             <DialogTitle>{t('workorder.dispatch_picker_title', 'Dispatch to partner')}</DialogTitle>
           </DialogHeader>
-          <div className="space-y-2">
-            <Label>{t('workorder.label_partner', 'Partner')}</Label>
-            <Select value={pickedHostId} onValueChange={setPickedHostId} disabled={hostsLoading}>
-              <SelectTrigger>
-                <SelectValue placeholder={hostsLoading ? t('common.loading', 'Loading…') : t('workorder.dispatch_pick_partner', 'Select a partner')} />
-              </SelectTrigger>
-              <SelectContent>
-                {hosts.map((h) => (
-                  <SelectItem key={h.id} value={String(h.id)}>
-                    {h.name}{Array.isArray(h.specialties) && h.specialties.length ? ` (${h.specialties.join(", ")})` : ""}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            {!hostsLoading && hosts.length === 0 && (
-              <p className="text-xs text-muted-foreground">{t('workorder.dispatch_no_partners', 'No active partners. Add one under Partners.')}</p>
+          <div className="space-y-2 min-w-0">
+            <Label htmlFor="dispatch-partner-search">{t('workorder.label_partner', 'Partner')}</Label>
+            <div className="relative">
+              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                id="dispatch-partner-search"
+                autoFocus
+                className="pl-8"
+                value={hostQuery}
+                onChange={(e) => setHostQuery(e.target.value)}
+                placeholder={t('workorder.dispatch_search_ph', 'Search name, phone, trade…')}
+              />
+            </div>
+            <div className="max-h-72 overflow-y-auto rounded-md border divide-y" role="listbox" aria-label={t('workorder.label_partner', 'Partner')}>
+              {hostsLoading ? (
+                <p className="p-3 text-sm text-muted-foreground">{t('common.loading', 'Loading…')}</p>
+              ) : filteredHosts.length === 0 ? (
+                <p className="p-3 text-sm text-muted-foreground">
+                  {hosts.length === 0
+                    ? t('workorder.dispatch_no_partners', 'No active partners. Add one under Partners.')
+                    : t('workorder.dispatch_no_results', 'No partners match your search.')}
+                </p>
+              ) : filteredHosts.map((h) => {
+                const selected = h.key === pickedKey;
+                return (
+                  <button
+                    type="button"
+                    key={h.key}
+                    role="option"
+                    aria-selected={selected}
+                    onClick={() => setPickedKey(h.key)}
+                    onDoubleClick={() => { setPickedKey(h.key); void dispatch(h); }}
+                    className={`w-full text-left px-3 py-2 flex items-start gap-2 hover:bg-muted/60 focus:outline-none focus-visible:bg-muted ${selected ? "bg-primary/10" : ""}`}
+                  >
+                    <div className="min-w-0 flex-1">
+                      <div className="text-sm font-medium break-words">{h.name}</div>
+                      <div className="text-xs text-muted-foreground break-words">
+                        {[
+                          h.account_name && h.account_name !== h.name ? h.account_name : null,
+                          h.phone,
+                          h.specialties.length ? h.specialties.join(", ") : null,
+                        ].filter(Boolean).join(" · ") || "\u00a0"}
+                      </div>
+                    </div>
+                    {!h.service_host_id && (
+                      <span className="shrink-0 mt-0.5 rounded bg-muted px-1.5 py-0.5 text-[10px] text-muted-foreground">
+                        {t('workorder.dispatch_account_only', 'Account')}
+                      </span>
+                    )}
+                    {selected && <Check className="h-4 w-4 shrink-0 mt-0.5 text-primary" />}
+                  </button>
+                );
+              })}
+            </div>
+            {!hostsLoading && hosts.length > 0 && (
+              <p className="text-xs text-muted-foreground">
+                {t('workorder.dispatch_count', '{{shown}} of {{total}} partners', { shown: filteredHosts.length, total: hosts.length })}
+              </p>
             )}
             {dispatchError && <p className="text-xs text-red-600">{dispatchError}</p>}
           </div>
@@ -989,7 +1060,7 @@ export default function WorkOrderDetail() {
             <Button variant="outline" disabled={dispatching} onClick={() => dispatch()}>
               {t('workorder.dispatch_auto', 'Auto-match by category')}
             </Button>
-            <Button disabled={dispatching || !pickedHostId} onClick={() => dispatch(Number(pickedHostId))}>
+            <Button disabled={dispatching || !pickedHost} onClick={() => dispatch(pickedHost)}>
               <Send className="h-3.5 w-3.5 mr-1" />
               {t('workorder.btn_dispatch_confirm', 'Dispatch')}
             </Button>

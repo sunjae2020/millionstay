@@ -1935,7 +1935,11 @@
     "btn_dispatch_confirm": "割当",
     "photos_caption_hint": "撮影日・物件/部屋番号とこの説明が写真に透かしとして焼き込まれます。",
     "review_apply_taxes": "税額を再計算",
-    "photos_take": "写真を撮る"
+    "photos_take": "写真を撮る",
+    "dispatch_search_ph": "業者名・電話番号・業種で検索",
+    "dispatch_no_results": "該当するパートナーがありません。",
+    "dispatch_account_only": "アカウント",
+    "dispatch_count": "{{total}}社中 {{shown}}社"
   },
   "csticket": {
     "search_placeholder": "チケットを検索...",
