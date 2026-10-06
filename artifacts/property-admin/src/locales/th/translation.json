@@ -220,7 +220,7 @@
     "space_col": "พื้นที่",
     "tabs": {
       "overview": "ภาพรวม",
-      "reservations": "สัญญา / การย้ายออก",
+      "reservations": "การย้ายออก",
       "channels": "ช่องทาง",
       "finance": "การเงิน",
       "operations": "การดำเนินงาน",
@@ -3107,7 +3107,7 @@
     "kpi_move_out_scheduled": "ห้องที่จะย้ายออก",
     "kpi_move_out_scheduled_sub": "สัญญาสิ้นสุดภายใน {{days}} วัน",
     "kpi_moved_out": "ห้องที่ย้ายออกแล้ว",
-    "kpi_moved_out_sub": "ย้ายออกแล้วในเดือนนี้",
+    "kpi_moved_out_sub": "สะสม · เดือนนี้ {{month}} ห้อง",
     "phase_ongoing": "ดำเนินอยู่",
     "phase_moving_out": "ใกล้ย้ายออก",
     "phase_moved_out": "ย้ายออกแล้ว / สิ้นสุด",
@@ -3141,7 +3141,12 @@
     "mo_insp_done": "ตรวจแล้ว",
     "mo_dday_today": "วันนี้",
     "mo_days_ago": "ผ่านไป {{n}} วัน",
-    "mo_empty": "ไม่มีห้องในมุมมองนี้"
+    "mo_empty": "ไม่มีห้องในมุมมองนี้",
+    "mo_checklist_button": "แบบตรวจห้องย้ายออก",
+    "mo_pick_title": "แบบตรวจห้องย้ายออก — เลือกสัญญา",
+    "mo_pick_hint": "เมื่อเลือกสัญญา จะเปิดแท็บชำระบัญชีย้ายออกของสัญญานั้น (แบบตรวจและการคืนเงินประกัน)",
+    "mo_pick_suggested": "สัญญาที่ใกล้สิ้นสุด",
+    "mo_pick_empty": "ไม่พบสัญญา"
   },
   "dash_finance": {
     "title": "แดชบอร์ดการเงิน",

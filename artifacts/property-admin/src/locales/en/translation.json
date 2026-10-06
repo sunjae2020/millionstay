@@ -222,7 +222,7 @@
     "space_col": "Space",
     "tabs": {
       "overview": "Overview",
-      "reservations": "Contracts / Move-outs",
+      "reservations": "Move-outs",
       "channels": "Channels",
       "crm": "CRM",
       "finance": "Finance",
@@ -3132,7 +3132,7 @@
     "kpi_move_out_scheduled": "Units moving out",
     "kpi_move_out_scheduled_sub": "Lease ends within {{days}} days",
     "kpi_moved_out": "Units moved out",
-    "kpi_moved_out_sub": "Moved out this month",
+    "kpi_moved_out_sub": "All time · {{month}} this month",
     "phase_ongoing": "Ongoing",
     "phase_moving_out": "Moving out soon",
     "phase_moved_out": "Moved out / completed",
@@ -3166,7 +3166,12 @@
     "mo_insp_done": "Done",
     "mo_dday_today": "Today",
     "mo_days_ago": "{{n}}d ago",
-    "mo_empty": "No units in this view."
+    "mo_empty": "No units in this view.",
+    "mo_checklist_button": "Move-out checklist",
+    "mo_pick_title": "Move-out checklist — choose a contract",
+    "mo_pick_hint": "Opens that contract's move-out settlement tab (checklist and deposit settlement).",
+    "mo_pick_suggested": "Contracts ending soon",
+    "mo_pick_empty": "No contracts found."
   },
   "dash_finance": {
     "title": "Finance Dashboard",

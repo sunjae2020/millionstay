@@ -219,7 +219,7 @@
     "space_col": "Không gian",
     "tabs": {
       "overview": "Tổng quan",
-      "reservations": "Hợp đồng / Trả phòng",
+      "reservations": "Trả phòng",
       "channels": "Kênh phân phối",
       "finance": "Tài chính",
       "operations": "Vận hành",
@@ -3090,7 +3090,7 @@
     "kpi_move_out_scheduled": "Căn sắp trả phòng",
     "kpi_move_out_scheduled_sub": "Hợp đồng kết thúc trong {{days}} ngày",
     "kpi_moved_out": "Căn đã trả phòng",
-    "kpi_moved_out_sub": "Đã trả phòng trong tháng này",
+    "kpi_moved_out_sub": "Lũy kế · tháng này {{month}} căn",
     "phase_ongoing": "Đang hiệu lực",
     "phase_moving_out": "Sắp trả phòng",
     "phase_moved_out": "Đã trả phòng / kết thúc",
@@ -3124,7 +3124,12 @@
     "mo_insp_done": "Đã kiểm tra",
     "mo_dday_today": "Hôm nay",
     "mo_days_ago": "{{n}} ngày trước",
-    "mo_empty": "Không có căn hộ nào."
+    "mo_empty": "Không có căn hộ nào.",
+    "mo_checklist_button": "Phiếu kiểm tra trả phòng",
+    "mo_pick_title": "Phiếu kiểm tra trả phòng — chọn hợp đồng",
+    "mo_pick_hint": "Chọn hợp đồng để mở tab quyết toán trả phòng (phiếu kiểm tra và quyết toán tiền cọc).",
+    "mo_pick_suggested": "Hợp đồng sắp kết thúc",
+    "mo_pick_empty": "Không tìm thấy hợp đồng."
   },
   "dash_finance": {
     "title": "Bảng Điều Khiển Tài Chính",

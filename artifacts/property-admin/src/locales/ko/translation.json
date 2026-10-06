@@ -221,7 +221,7 @@
     "space_col": "공간",
     "tabs": {
       "overview": "개요",
-      "reservations": "계약/퇴거 현황",
+      "reservations": "퇴거 현황",
       "channels": "채널",
       "finance": "재무",
       "operations": "운영",
@@ -3132,7 +3132,7 @@
     "kpi_move_out_scheduled": "퇴거예정 세대",
     "kpi_move_out_scheduled_sub": "{{days}}일 이내 계약 종료",
     "kpi_moved_out": "퇴거완료 세대",
-    "kpi_moved_out_sub": "이번 달 퇴거 완료",
+    "kpi_moved_out_sub": "누적 · 이번 달 {{month}}세대",
     "phase_ongoing": "진행중",
     "phase_moving_out": "퇴거예정",
     "phase_moved_out": "퇴거완료·계약완료",
@@ -3166,7 +3166,12 @@
     "mo_insp_done": "점검 완료",
     "mo_dday_today": "오늘 퇴거",
     "mo_days_ago": "{{n}}일 경과",
-    "mo_empty": "해당하는 세대가 없습니다."
+    "mo_empty": "해당하는 세대가 없습니다.",
+    "mo_checklist_button": "퇴거세대 점검표",
+    "mo_pick_title": "퇴거세대 점검표 — 계약 선택",
+    "mo_pick_hint": "계약을 고르면 그 계약의 퇴거세대 정산 탭(점검표·보증금 정산)이 열립니다.",
+    "mo_pick_suggested": "퇴거예정 계약",
+    "mo_pick_empty": "검색 결과가 없습니다."
   },
   "dash_finance": {
     "title": "재무 대시보드",

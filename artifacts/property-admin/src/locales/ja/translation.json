@@ -220,7 +220,7 @@
     "space_col": "スペース",
     "tabs": {
       "overview": "概要",
-      "reservations": "契約・退去状況",
+      "reservations": "退去状況",
       "channels": "チャネル",
       "finance": "財務",
       "operations": "運用",
@@ -3111,7 +3111,7 @@
     "kpi_move_out_scheduled": "退去予定の住戸",
     "kpi_move_out_scheduled_sub": "{{days}}日以内に契約終了",
     "kpi_moved_out": "退去完了の住戸",
-    "kpi_moved_out_sub": "今月退去済み",
+    "kpi_moved_out_sub": "累計・今月 {{month}}戸",
     "phase_ongoing": "進行中",
     "phase_moving_out": "退去予定",
     "phase_moved_out": "退去済み・契約完了",
@@ -3145,7 +3145,12 @@
     "mo_insp_done": "点検完了",
     "mo_dday_today": "本日退去",
     "mo_days_ago": "{{n}}日経過",
-    "mo_empty": "該当する世帯はありません。"
+    "mo_empty": "該当する世帯はありません。",
+    "mo_checklist_button": "退去住戸点検表",
+    "mo_pick_title": "退去住戸点検表 — 契約を選択",
+    "mo_pick_hint": "契約を選ぶと、その契約の退去精算タブ(点検表・敷金精算)が開きます。",
+    "mo_pick_suggested": "退去予定の契約",
+    "mo_pick_empty": "該当する契約がありません。"
   },
   "dash_finance": {
     "title": "財務ダッシュボード",

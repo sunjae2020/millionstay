@@ -3,7 +3,7 @@ import { useSearch, useLocation } from "wouter";
 import { useTranslation } from "react-i18next";
 import { Layout } from "@/components/Layout";
 import {
-  LayoutDashboard, CalendarDays, DollarSign, Wrench, Users, Radio, Handshake, Building2, Wallet,
+  LayoutDashboard, LogOut, DollarSign, Wrench, Users, Radio, Handshake, Building2, Wallet,
   ArrowUpDown, GripVertical, RotateCcw,
 } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -11,7 +11,7 @@ import { DashTabs, type TabDef } from "@/components/dashboard/DashboardKit";
 import { apiFetch } from "@/lib/apiFetch";
 import { cn } from "@/lib/utils";
 import OverviewTab from "@/pages/dashboard/OverviewTab";
-import ReservationsTab from "@/pages/dashboard/ReservationsTab";
+import MoveOutTab from "@/pages/dashboard/MoveOutTab";
 import FinanceTab from "@/pages/dashboard/FinanceTab";
 import OperationsTab from "@/pages/dashboard/OperationsTab";
 import CrmTab from "@/pages/dashboard/CrmTab";
@@ -94,7 +94,7 @@ export default function Dashboard() {
 
   const ALL_TABS: Record<string, TabDef> = {
     overview:      { id: "overview",      label: t("dashboard.tabs.overview", "Overview"),         icon: LayoutDashboard },
-    reservations:  { id: "reservations",  label: t("dashboard.tabs.reservations", "Reservations"), icon: CalendarDays },
+    reservations:  { id: "reservations",  label: t("dashboard.tabs.reservations", "Reservations"), icon: LogOut },
     channels:      { id: "channels",      label: t("dashboard.tabs.channels", "Channels"),         icon: Radio },
     crm:           { id: "crm",           label: t("dashboard.tabs.crm", "CRM"),                   icon: Users },
     finance:       { id: "finance",       label: t("dashboard.tabs.finance", "Finance"),           icon: DollarSign },
@@ -194,7 +194,7 @@ export default function Dashboard() {
       {/* Tab content */}
       <div className="p-4 sm:p-6">
         {active === "overview" && <OverviewTab />}
-        {active === "reservations" && <ReservationsTab />}
+        {active === "reservations" && <MoveOutTab />}
         {active === "channels" && <ChannelsTab />}
         {active === "crm" && <CrmTab />}
         {active === "finance" && <FinanceTab />}

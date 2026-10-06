@@ -154,6 +154,7 @@ router.get("/v1/dashboard/overview/contract-counts", async (_req, res) => {
 //  - 퇴거 예정(moving_out): 진행 중이면서 종료일이 오늘부터 30일 이내
 //  - 진행 중(ongoing): Signed·Active 이고 아직 끝나지 않았다
 // KPI: 진행중 계약건 · 완료된 계약건(누적) · 퇴거예정 세대(30일 이내) · 퇴거완료 세대(이번 달).
+// moved_out_total: 연장 아닌 종료 계약 누적 = 대시보드 퇴거완료 카드(완료된 계약건을 이것으로 대체).
 // 세대 수는 타입 행을 빼고(countableUnitFilter) 공간 기준으로 중복 없이 센다.
 // 같은 세대·같은 임차인의 다음 계약이 종료일 뒤 31일 안에 시작하면 연장(재계약)으로 보고
 // 퇴거 세대에서 뺀다 — 계약은 끝났어도 사람은 그대로 산다.
@@ -242,6 +243,7 @@ router.get("/v1/dashboard/lease-status", async (req, res) => {
 
     let ongoing = 0;
     let completed = 0;
+    let movedOutTotal = 0;
     const movingOutUnits = new Set<number>();
     const movedOutUnits = new Set<number>();
     for (const r of rows) {
@@ -249,8 +251,9 @@ router.get("/v1/dashboard/lease-status", async (req, res) => {
       const renewed = renewedBy.has(r.id);
       if (phase === "moved_out") {
         completed++;
-        if (!renewed && r.space_id && countable.has(r.space_id) && r.end_date?.slice(0, 7) === month && r.end_date <= today) {
-          movedOutUnits.add(r.space_id);
+        if (!renewed && r.space_id && countable.has(r.space_id)) {
+          movedOutTotal++;
+          if (r.end_date?.slice(0, 7) === month && r.end_date <= today) movedOutUnits.add(r.space_id);
         }
       } else {
         ongoing++;
@@ -381,6 +384,7 @@ router.get("/v1/dashboard/lease-status", async (req, res) => {
       completed_contracts: completed,
       move_out_scheduled_units: movingOutUnits.size,
       moved_out_units: movedOutUnits.size,
+      moved_out_total: movedOutTotal,
       moved_out_lookback_days: MOVED_OUT_LOOKBACK_DAYS,
       move_outs: moveOuts,
       calendar: { start: weekStart, end: weekEnd, spaces },
