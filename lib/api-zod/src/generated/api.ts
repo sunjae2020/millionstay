@@ -1255,7 +1255,7 @@ export const ListAccountsResponseItem = zod.object({
     .string()
     .nullish()
     .describe(
-      "소속공인중개사 성명 (중개업체 계정). 비면 대표자 성명(ceo_name)이 대신 인쇄된다.",
+      "소속공인중개사 성명 (중개업체 계정). 비면 계약서에도 빈 칸으로 인쇄된다.",
     ),
   biz_verify_status: zod.string().nullish(),
   biz_verified_at: zod.string().nullish(),
@@ -1329,7 +1329,7 @@ export const CreateAccountBody = zod.object({
     .string()
     .nullish()
     .describe(
-      "소속공인중개사 성명 (중개업체 계정). 비면 대표자 성명(ceo_name)이 대신 인쇄된다.",
+      "소속공인중개사 성명 (중개업체 계정). 비면 계약서에도 빈 칸으로 인쇄된다.",
     ),
   biz_verify_status: zod.string().nullish(),
   biz_verified_at: zod.string().nullish(),
@@ -1407,7 +1407,7 @@ export const GetAccountResponse = zod.object({
     .string()
     .nullish()
     .describe(
-      "소속공인중개사 성명 (중개업체 계정). 비면 대표자 성명(ceo_name)이 대신 인쇄된다.",
+      "소속공인중개사 성명 (중개업체 계정). 비면 계약서에도 빈 칸으로 인쇄된다.",
     ),
   biz_verify_status: zod.string().nullish(),
   biz_verified_at: zod.string().nullish(),
@@ -1481,7 +1481,7 @@ export const UpdateAccountBody = zod.object({
     .string()
     .nullish()
     .describe(
-      "소속공인중개사 성명 (중개업체 계정). 비면 대표자 성명(ceo_name)이 대신 인쇄된다.",
+      "소속공인중개사 성명 (중개업체 계정). 비면 계약서에도 빈 칸으로 인쇄된다.",
     ),
   biz_verify_status: zod.string().nullish(),
   biz_verified_at: zod.string().nullish(),
@@ -1552,7 +1552,7 @@ export const UpdateAccountResponse = zod.object({
     .string()
     .nullish()
     .describe(
-      "소속공인중개사 성명 (중개업체 계정). 비면 대표자 성명(ceo_name)이 대신 인쇄된다.",
+      "소속공인중개사 성명 (중개업체 계정). 비면 계약서에도 빈 칸으로 인쇄된다.",
     ),
   biz_verify_status: zod.string().nullish(),
   biz_verified_at: zod.string().nullish(),

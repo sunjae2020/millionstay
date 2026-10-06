@@ -4179,7 +4179,7 @@ components:
           description: 중개사무소 등록번호 (중개업체 계정). 계약 경로가 중개일 때 표준임대차계약서의 개업공인중개사 칸에 인쇄된다.
           type: ["string", "null"]
         broker_agent_name:
-          description: 소속공인중개사 성명 (중개업체 계정). 비면 대표자 성명(ceo_name)이 대신 인쇄된다.
+          description: 소속공인중개사 성명 (중개업체 계정). 비면 계약서에도 빈 칸으로 인쇄된다.
           type: ["string", "null"]
         biz_verify_status:
           type: ["string", "null"]
@@ -4276,7 +4276,7 @@ components:
           description: 중개사무소 등록번호 (중개업체 계정). 계약 경로가 중개일 때 표준임대차계약서의 개업공인중개사 칸에 인쇄된다.
           type: ["string", "null"]
         broker_agent_name:
-          description: 소속공인중개사 성명 (중개업체 계정). 비면 대표자 성명(ceo_name)이 대신 인쇄된다.
+          description: 소속공인중개사 성명 (중개업체 계정). 비면 계약서에도 빈 칸으로 인쇄된다.
           type: ["string", "null"]
         biz_verify_status:
           type: ["string", "null"]
@@ -4371,7 +4371,7 @@ components:
           description: 중개사무소 등록번호 (중개업체 계정). 계약 경로가 중개일 때 표준임대차계약서의 개업공인중개사 칸에 인쇄된다.
           type: ["string", "null"]
         broker_agent_name:
-          description: 소속공인중개사 성명 (중개업체 계정). 비면 대표자 성명(ceo_name)이 대신 인쇄된다.
+          description: 소속공인중개사 성명 (중개업체 계정). 비면 계약서에도 빈 칸으로 인쇄된다.
           type: ["string", "null"]
         biz_verify_status:
           type: ["string", "null"]

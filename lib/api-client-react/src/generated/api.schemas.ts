@@ -912,7 +912,7 @@ export interface AccountResponse {
    */
   broker_reg_no?: string | null;
   /**
-   * 소속공인중개사 성명 (중개업체 계정). 비면 대표자 성명(ceo_name)이 대신 인쇄된다.
+   * 소속공인중개사 성명 (중개업체 계정). 비면 계약서에도 빈 칸으로 인쇄된다.
    * @nullable
    */
   broker_agent_name?: string | null;
@@ -1020,7 +1020,7 @@ export interface CreateAccountBody {
    */
   broker_reg_no?: string | null;
   /**
-   * 소속공인중개사 성명 (중개업체 계정). 비면 대표자 성명(ceo_name)이 대신 인쇄된다.
+   * 소속공인중개사 성명 (중개업체 계정). 비면 계약서에도 빈 칸으로 인쇄된다.
    * @nullable
    */
   broker_agent_name?: string | null;
@@ -1126,7 +1126,7 @@ export interface UpdateAccountBody {
    */
   broker_reg_no?: string | null;
   /**
-   * 소속공인중개사 성명 (중개업체 계정). 비면 대표자 성명(ceo_name)이 대신 인쇄된다.
+   * 소속공인중개사 성명 (중개업체 계정). 비면 계약서에도 빈 칸으로 인쇄된다.
    * @nullable
    */
   broker_agent_name?: string | null;

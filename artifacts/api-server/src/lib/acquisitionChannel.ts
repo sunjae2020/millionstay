@@ -143,7 +143,7 @@ export interface ContractBrokerInfo {
   /** 중개사무소 등록번호 */
   reg_no: string | null;
   phone: string | null;
-  /** 소속공인중개사 성명. 계정에 없으면 대표자 성명이 들어온다. */
+  /** 소속공인중개사 성명. 계정에 없으면 빈 칸으로 둔다. */
   agent_name: string | null;
 }
 
@@ -154,8 +154,8 @@ export interface ContractBrokerInfo {
  *
  * 출처는 고른 계정이다: 사무소 명칭·대표자·소재지·등록번호·전화가 모두 계정관리에서
  * 온다. 계정에 전화가 없으면 계약에 남은 스냅숏(channel_contact_phone)으로 대신한다.
- * 소속공인중개사 칸은 계정의 소속공인중개사 이름을 쓰고, 비어 있으면 대표자 성명으로
- * 대신한다 — 1인 중개사무소는 대표가 곧 소속공인중개사라 따로 적을 이름이 없다.
+ * 소속공인중개사 칸은 계정의 소속공인중개사 이름만 쓴다. 비어 있으면 빈 칸으로 발급한다
+ * — 대표자 성명으로 대신 채우지 않는다(소속공인중개사가 없는 사무소는 그 행이 비어야 맞다).
  */
 export async function resolveContractBroker(
   contract: Pick<typeof contractsTable.$inferSelect,
@@ -187,7 +187,7 @@ export async function resolveContractBroker(
     office_address: pick(address),
     reg_no: pick(account.broker_reg_no),
     phone: pick(account.phone1, account.phone2, contract.channel_contact_phone),
-    agent_name: pick(account.broker_agent_name, account.ceo_name),
+    agent_name: pick(account.broker_agent_name),
   };
 }
 

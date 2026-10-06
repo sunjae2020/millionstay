@@ -64,7 +64,7 @@ export interface LeaseBroker {
   /** 중개사무소 등록번호 */
   reg_no?: string | null;
   phone?: string | null;
-  /** 소속공인중개사 성명 — 1인 사무소면 대표자 성명이 들어온다. */
+  /** 소속공인중개사 성명 — 없으면 빈 칸. */
   agent_name?: string | null;
 }
 

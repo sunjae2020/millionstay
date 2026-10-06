@@ -52,7 +52,7 @@ const EMPTY_DRAFT: BrokerDraft = {
  * 표에 적히는 항목과 순서는 표준임대차계약서의 "2. 공인중개사" 표를 그대로 따른다.
  * 값은 서버의 `channel-preview.broker` 에서 오는데, 그건 계약서 PDF 가 받는 값과
  * **같은 함수**의 결과라 화면에 보이는 것이 곧 인쇄되는 것이다 — 주소 표기 규칙도,
- * 소속공인중개사가 비었을 때 대표자 성명으로 대체되는 규칙도 여기서 다시 쓰지 않는다.
+ * 소속공인중개사가 비었을 때 빈 칸으로 두는 규칙도 여기서 다시 쓰지 않는다.
  *
  * 값이 비어 있으면 계정관리로 건너가지 않고 이 자리에서 고친다(저장은 계정에 남는다 —
  * 계약마다 다른 값이 아니라 업체의 정보이기 때문). 계정의 다른 항목까지 손봐야 하면
@@ -131,20 +131,13 @@ export function BrokerInfoPanel({ accountId, broker, onSaved }: Props) {
   const set = (key: keyof BrokerDraft) => (e: { target: { value: string } }) =>
     setDraft((d) => ({ ...d, [key]: e.target.value }));
 
-  const rows: Array<{ label: string; value: string | null; hint?: string }> = [
+  const rows: Array<{ label: string; value: string | null }> = [
     { label: t("contract.broker_office_name"), value: broker?.office_name ?? null },
     { label: t("contract.broker_ceo_name"), value: broker?.ceo_name ?? null },
     { label: t("contract.broker_office_address"), value: broker?.office_address ?? null },
     { label: t("contract.broker_reg_no"), value: broker?.reg_no ?? null },
     { label: t("contract.broker_phone"), value: broker?.phone ?? null },
-    {
-      label: t("contract.broker_agent_name"),
-      value: broker?.agent_name ?? null,
-      // 소속중개사를 따로 적지 않아 대표자 성명이 대신 들어간 경우를 화면에서도 밝힌다.
-      hint: broker?.agent_name && broker.agent_name === broker.ceo_name
-        ? t("contract.broker_agent_from_ceo")
-        : undefined,
-    },
+    { label: t("contract.broker_agent_name"), value: broker?.agent_name ?? null },
   ];
 
   return (
@@ -173,7 +166,6 @@ export function BrokerInfoPanel({ accountId, broker, onSaved }: Props) {
             <dt className="text-muted-foreground">{row.label}</dt>
             <dd className={row.value ? "" : "text-muted-foreground"}>
               {row.value || t("contract.broker_empty")}
-              {row.hint && <span className="ml-1.5 text-xs text-muted-foreground">({row.hint})</span>}
             </dd>
           </div>
         ))}
