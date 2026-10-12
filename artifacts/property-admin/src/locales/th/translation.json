@@ -2996,6 +2996,7 @@
     "col_photos": "รูปภาพ",
     "select_space_placeholder": "เลือกพื้นที่...",
     "skip_this_folder": "— ข้ามโฟลเดอร์นี้ —",
+    "loose_files": "รูปที่เลือก (เลือกพื้นที่เอง)",
     "status_pending": "รอดำเนินการ",
     "status_uploading": "กำลังอัปโหลด",
     "status_uploaded_count": "อัปโหลดแล้ว {{count}} รูป",

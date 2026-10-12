@@ -36,25 +36,41 @@ interface GroupStatus {
   error?: string;
 }
 
-function fuzzyScore(a: string, b: string): number {
-  const normalize = (s: string) => s.toLowerCase().replace(/[_\-\s]/g, "");
-  const na = normalize(a);
-  const nb = normalize(b);
-  if (na === nb) return 100;
-  if (na.includes(nb) || nb.includes(na)) return 80;
-  let matches = 0;
-  for (const ch of na) if (nb.includes(ch)) matches++;
-  return Math.round((matches / Math.max(na.length, nb.length)) * 60);
-}
+/** Group key for files picked without any folder path (Android's picker). */
+const LOOSE_GROUP = "__loose__";
 
+const normalize = (s: string) => s.toLowerCase().replace(/[_\-\s.]/g, "");
+/** Stand-alone 3–4 digit runs — unit numbers, never camera timestamps. */
+const unitNumbers = (s: string) => s.match(/(?<!\d)\d{3,4}(?!\d)/g) ?? [];
+
+/**
+ * Auto-match only on unambiguous evidence: the same name, one name containing
+ * the other (`1204` ↔ `1204호`), or the same unit number. No character-overlap
+ * scoring — it matched `20250918_124623.jpg` to `1204호`, an A-type unit, for
+ * a B타입 folder. Ties stay unmatched so the user picks.
+ */
 function bestMatch(folderName: string, spaces: SpaceRow[]): number | null {
-  if (!spaces.length) return null;
-  let best: { id: number; score: number } = { id: spaces[0].id, score: -1 };
-  for (const sp of spaces) {
-    const score = fuzzyScore(folderName, sp.name);
-    if (score > best.score) best = { id: sp.id, score };
+  if (folderName === LOOSE_GROUP) return null;
+  const nf = normalize(folderName);
+  if (!nf) return null;
+  const exact = spaces.filter((sp) => normalize(sp.name) === nf);
+  if (exact.length) return exact.length === 1 ? exact[0].id : null;
+
+  const contains = spaces.filter((sp) => {
+    const ns = normalize(sp.name);
+    return ns.length >= 2 && (nf.includes(ns) || ns.includes(nf));
+  });
+  if (contains.length) {
+    const gap = (sp: SpaceRow) => Math.abs(normalize(sp.name).length - nf.length);
+    const min = Math.min(...contains.map(gap));
+    const best = contains.filter((sp) => gap(sp) === min);
+    return best.length === 1 ? best[0].id : null;
   }
-  return best.score >= 30 ? best.id : null;
+
+  const nums = unitNumbers(folderName);
+  if (!nums.length) return null;
+  const byNumber = spaces.filter((sp) => unitNumbers(sp.name).some((n) => nums.includes(n)));
+  return byNumber.length === 1 ? byNumber[0].id : null;
 }
 
 export default function BulkPhotoUpload() {
@@ -83,8 +99,11 @@ export default function BulkPhotoUpload() {
 
       const map = new Map<string, File[]>();
       for (const file of files) {
+        // root/Space/photo.jpg → "Space"; Space/photo.jpg → "Space". A bare
+        // file name means the picker sent no path (Android Chrome) — those all
+        // came from one folder, so keep them together instead of one row each.
         const parts = relativePathOf(file).split("/");
-        const key = parts.length >= 3 ? parts[1] : parts[0];
+        const key = parts.length >= 3 ? parts[1] : parts.length === 2 ? parts[0] : LOOSE_GROUP;
         const arr = map.get(key) ?? [];
         arr.push(file);
         map.set(key, arr);
@@ -300,9 +319,15 @@ export default function BulkPhotoUpload() {
                   const st = statuses[group.folderName];
                   return (
                     <tr key={group.folderName} className="hover:bg-muted/20 transition-colors">
-                      <td className="px-4 py-3 font-mono text-xs max-w-[180px] truncate" title={group.folderName}>
-                        {group.folderName}
-                      </td>
+                      {group.folderName === LOOSE_GROUP ? (
+                        <td className="px-4 py-3 text-xs text-muted-foreground max-w-[180px]">
+                          {t("bulk_photo.loose_files")}
+                        </td>
+                      ) : (
+                        <td className="px-4 py-3 font-mono text-xs max-w-[180px] truncate" title={group.folderName}>
+                          {group.folderName}
+                        </td>
+                      )}
 
                       <td className="px-4 py-3">
                         <div className="flex gap-1">

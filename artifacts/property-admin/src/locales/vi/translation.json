@@ -2980,6 +2980,7 @@
     "col_photos": "Ảnh",
     "select_space_placeholder": "Chọn không gian...",
     "skip_this_folder": "— Bỏ qua thư mục này —",
+    "loose_files": "Ảnh đã chọn (hãy chọn không gian)",
     "status_pending": "Đang chờ",
     "status_uploading": "Đang tải lên",
     "status_uploaded_count": "{{count}} đã tải lên",

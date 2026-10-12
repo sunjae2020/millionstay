@@ -3003,6 +3003,7 @@
     "col_photos": "照片",
     "select_space_placeholder": "选择空间...",
     "skip_this_folder": "— 跳过此文件夹 —",
+    "loose_files": "所选照片（请选择空间）",
     "status_pending": "待处理",
     "status_uploading": "上传中",
     "status_uploaded_count": "已上传 {{count}} 张",

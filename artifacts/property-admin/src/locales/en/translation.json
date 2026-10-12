@@ -3021,6 +3021,7 @@
     "col_photos": "Photos",
     "select_space_placeholder": "Select space...",
     "skip_this_folder": "— Skip this folder —",
+    "loose_files": "Selected photos (choose the space)",
     "status_pending": "Pending",
     "status_uploading": "Uploading",
     "status_uploaded_count": "{{count}} uploaded",

@@ -3000,6 +3000,7 @@
     "col_photos": "写真",
     "select_space_placeholder": "スペースを選択...",
     "skip_this_folder": "— このフォルダをスキップ —",
+    "loose_files": "選択した写真（スペースを選択してください）",
     "status_pending": "保留中",
     "status_uploading": "アップロード中",
     "status_uploaded_count": "{{count}}枚アップロード済み",

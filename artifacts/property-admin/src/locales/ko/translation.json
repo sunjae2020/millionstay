@@ -3021,6 +3021,7 @@
     "col_photos": "사진",
     "select_space_placeholder": "공간 선택...",
     "skip_this_folder": "— 이 폴더 건너뛰기 —",
+    "loose_files": "선택한 사진 (공간을 직접 선택하세요)",
     "status_pending": "대기 중",
     "status_uploading": "업로드 중",
     "status_uploaded_count": "{{count}}장 업로드됨",
