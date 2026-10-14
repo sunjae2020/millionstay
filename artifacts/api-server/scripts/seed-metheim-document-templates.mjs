@@ -147,12 +147,12 @@ const TERMS = {
 
 // ── Invoice / receipt / quote footer notes (HTML, six locales) ────────────────
 const INVOICE_NOTE = {
-  ko: "<p><strong>결제 안내.</strong> 본 청구서는 상기 지급 기한까지 참조번호 {{ref}}로 결제해 주시기 바랍니다. 계좌이체 또는 카드로 결제하실 수 있습니다. 청구 내역에 관한 문의는 아래 이메일로 연락 주십시오.</p>",
-  en: "<p><strong>Payment.</strong> Please settle this invoice by the due date shown above using reference {{ref}}. You may pay by bank transfer or card. For any questions about your bill, contact us at the email below.</p>",
-  ja: "<p><strong>お支払いについて。</strong> 本請求書は、上記の支払期限までに参照番号 {{ref}} にてお支払いください。銀行振込またはカードでのお支払いが可能です。ご請求内容に関するお問い合わせは、下記メールまでご連絡ください。</p>",
-  zh: "<p><strong>付款说明。</strong>请在上述到期日前使用参考号 {{ref}} 支付本账单。您可通过银行转账或银行卡付款。如对账单有疑问，请通过下方邮箱联系我们。</p>",
-  th: "<p><strong>การชำระเงิน</strong> กรุณาชำระใบแจ้งหนี้นี้ภายในวันครบกำหนดข้างต้นโดยอ้างอิงหมายเลข {{ref}} ท่านสามารถชำระผ่านการโอนเงินหรือบัตรได้ หากมีคำถามเกี่ยวกับใบแจ้งหนี้ กรุณาติดต่อเราที่อีเมลด้านล่าง</p>",
-  vi: "<p><strong>Thanh toán.</strong> Vui lòng thanh toán hóa đơn này trước ngày đến hạn nêu trên, sử dụng mã tham chiếu {{ref}}. Bạn có thể thanh toán bằng chuyển khoản ngân hàng hoặc thẻ. Mọi thắc mắc về hóa đơn, vui lòng liên hệ qua email bên dưới.</p>",
+  ko: "<p><strong>결제 안내.</strong> 본 청구서는 상기 지급 기한까지 상기 계좌로 입금해 주시기 바랍니다. 청구 내역에 관한 문의는 아래 이메일로 연락 주십시오.</p>",
+  en: "<p><strong>Payment.</strong> Please pay this invoice by the due date shown above into the bank account above. For any questions about your bill, contact us at the email below.</p>",
+  ja: "<p><strong>お支払いについて。</strong> 本請求書は、上記の支払期限までに上記口座へお振込みください。ご請求内容に関するお問い合わせは、下記メールまでご連絡ください。</p>",
+  zh: "<p><strong>付款说明。</strong>请在上述到期日前将本账单款项汇入上述账户。如对账单有疑问，请通过下方邮箱联系我们。</p>",
+  th: "<p><strong>การชำระเงิน</strong> กรุณาโอนชำระใบแจ้งหนี้นี้เข้าบัญชีข้างต้นภายในวันครบกำหนดข้างต้น หากมีคำถามเกี่ยวกับใบแจ้งหนี้ กรุณาติดต่อเราที่อีเมลด้านล่าง</p>",
+  vi: "<p><strong>Thanh toán.</strong> Vui lòng chuyển khoản thanh toán hóa đơn này vào tài khoản nêu trên trước ngày đến hạn. Mọi thắc mắc về hóa đơn, vui lòng liên hệ qua email bên dưới.</p>",
 };
 
 const RECEIPT_NOTE = {

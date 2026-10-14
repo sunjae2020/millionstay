@@ -247,12 +247,12 @@ const LABELS: Dict = {
   "accountHolder":    { en: "Account name", ko: "예금주", zh: "户名", ja: "口座名義", th: "ชื่อบัญชี", vi: "Chủ tài khoản" },
   "swift":            { en: "SWIFT", ko: "SWIFT", zh: "SWIFT", ja: "SWIFT", th: "SWIFT", vi: "SWIFT" },
   "bankAccountNote":  {
-    en: "Please quote {ref} as the transfer reference.",
-    ko: "이체 시 받는 분 통장 표시에 {ref}를 남겨 주세요.",
-    zh: "转账时请备注 {ref} 作为参考编号。",
-    ja: "お振込の際は依頼人名に {ref} をご記入ください。",
-    th: "กรุณาระบุ {ref} เป็นข้อมูลอ้างอิงในการโอน",
-    vi: "Vui lòng ghi {ref} trong nội dung chuyển khoản.",
+    en: "Please include your unit number and full name as the transfer reference.",
+    ko: "입금 시 입금자명에 호수와 성명을 기재해 주세요.",
+    zh: "转账时请在备注中填写房号和姓名。",
+    ja: "お振込の際は依頼人名に部屋番号と氏名をご記入ください。",
+    th: "กรุณาระบุหมายเลขห้องและชื่อ-นามสกุลในข้อมูลการโอน",
+    vi: "Vui lòng ghi số phòng và họ tên trong nội dung chuyển khoản.",
   },
 
   // ── Move-out confirmation / deposit settlement (퇴거 세대 확인서) ──────────
