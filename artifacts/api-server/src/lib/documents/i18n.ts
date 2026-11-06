@@ -511,6 +511,7 @@ const LABELS: Dict = {
   "wo.completedAt":     { en: "Completed",           ko: "완료일",         zh: "完成日",       ja: "完了日",         th: "วันที่เสร็จ",            vi: "Ngày hoàn thành" },
   "wo.partner":         { en: "Partner",             ko: "작업 파트너",    zh: "合作方",       ja: "施工パートナー", th: "พันธมิตรผู้ดำเนินงาน",   vi: "Đối tác thi công" },
   "wo.assignee":        { en: "Assignee",            ko: "담당자",         zh: "负责人",       ja: "担当者",         th: "ผู้รับผิดชอบ",           vi: "Người phụ trách" },
+  "wo.staff":           { en: "Staff in charge",     ko: "담당직원",       zh: "负责员工",     ja: "担当スタッフ",   th: "พนักงานผู้รับผิดชอบ",     vi: "Nhân viên phụ trách" },
   "wo.attendee":        { en: "Attendee",            ko: "입회자",         zh: "在场人",       ja: "立会人",         th: "ผู้เข้าร่วม",            vi: "Người chứng kiến" },
   "wo.accessMethod":    { en: "Access",              ko: "출입 방법",      zh: "进入方式",     ja: "入室方法",       th: "วิธีเข้าถึง",            vi: "Cách vào" },
   "wo.locationNote":    { en: "Location note",       ko: "현장 안내",      zh: "现场说明",     ja: "現場メモ",       th: "หมายเหตุสถานที่",        vi: "Ghi chú hiện trường" },

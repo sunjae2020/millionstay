@@ -161,37 +161,32 @@ function renderPhotoSessions(photos: WorkOrderDocPhoto[], lang: DocLang, emptyTe
     .join("");
 }
 
-/** 서명란 — 미서명이면 빈 칸, 서명 완료면 서명 이미지 + 인증 정보. */
+/**
+ * 확인 서명 — 무로그인 링크로 서명이 끝났을 때만 서명 이미지 + 인증 정보를 붙인다.
+ * 요청자·작업자·확인자 빈 서명란은 두지 않는다: 호수와 담당 직원·담당자·입회자가
+ * 머리 표에 이미 있어 중복이라는 현장 요청(2026-11).
+ */
 function renderSignatureBlock(d: WorkOrderDocInput, lang: DocLang): string {
   const sig = d.signature;
-  const confirmed = sig?.signature_image
-    ? `<img class="wo-sig-img" src="${escapeHtml(sig.signature_image)}" alt="" />` +
-      (sig.signer_name ? `<div class="wo-sig-name">${escapeHtml(sig.signer_name)}</div>` : "")
-    : "";
+  if (!sig?.signature_image) return "";
 
-  const table = `<table class="wo-sign">
-      <tr>
-        <th>${escapeHtml(t(lang, "wo.requestedBy"))}</th><td></td>
-        <th>${escapeHtml(t(lang, "wo.performedBy"))}</th><td></td>
-        <th>${escapeHtml(t(lang, "wo.confirmedBy"))}</th><td>${confirmed}</td>
-      </tr>
-    </table>`;
-
-  if (!sig?.signature_image) return table;
+  const image =
+    `<img class="wo-sig-img" src="${escapeHtml(sig.signature_image)}" alt="" />` +
+    (sig.signer_name ? `<div class="wo-sig-name">${escapeHtml(sig.signer_name)}</div>` : "");
 
   const rows: Array<[string, string]> = [
-    [t(lang, "wo.signerName"), sig.signer_name ?? DASH],
-    [t(lang, "wo.signedAt"), formatDocDate(sig.signed_at, lang, DASH)],
-    [t(lang, "wo.signIp"), sig.ip || DASH],
-    [t(lang, "wo.signDevice"), sig.user_agent || DASH],
-    [t(lang, "wo.signConsent"), sig.consent_text || t(lang, "wo.signConsentText")],
+    [t(lang, "wo.signerName"), escapeHtml(sig.signer_name ?? DASH)],
+    [t(lang, "wo.signedAt"), escapeHtml(formatDocDate(sig.signed_at, lang, DASH))],
+    [t(lang, "wo.signIp"), escapeHtml(sig.ip || DASH)],
+    [t(lang, "wo.signDevice"), escapeHtml(sig.user_agent || DASH)],
+    [t(lang, "wo.signConsent"), escapeHtml(sig.consent_text || t(lang, "wo.signConsentText"))],
   ];
-  if (sig.content_hash) rows.push([t(lang, "wo.signHash"), sig.content_hash]);
+  if (sig.content_hash) rows.push([t(lang, "wo.signHash"), escapeHtml(sig.content_hash)]);
+  rows.unshift([t(lang, "wo.confirmedBy"), image]);
 
-  return `${table}
-    <div class="wo-sec">${escapeHtml(t(lang, "wo.signAudit"))}</div>
+  return `<div class="wo-sec">${escapeHtml(t(lang, "wo.signAudit"))}</div>
     <table class="wo-grid wo-audit">
-      ${rows.map(([k, v]) => `<tr><th>${escapeHtml(k)}</th><td colspan="5">${escapeHtml(v)}</td></tr>`).join("")}
+      ${rows.map(([k, v]) => `<tr><th>${escapeHtml(k)}</th><td colspan="5">${v}</td></tr>`).join("")}
     </table>`;
 }
 
@@ -235,7 +230,10 @@ export interface WorkOrderDocInput {
   reported_at?: string | null;
   scheduled_at?: string | Date | null;
   completed_at?: string | Date | null;
+  /** 담당자 — 작업지시의 담당 연락처(assigned_contact). */
   assignee_name?: string | null;
+  /** 담당 직원 — 작업지시를 맡은 관리자 계정(assigned_user). */
+  staff_name?: string | null;
   partner_name?: string | null;
   attendee_name?: string | null;
   location_note?: string | null;
@@ -256,10 +254,6 @@ export interface WorkOrderDocInput {
 
 const WORK_ORDER_STYLE = `<style>
   ${SHARED_STYLE}
-  table.wo-sign { width:100%; border-collapse:collapse; font-size:11.5px; margin-top:14px; }
-  table.wo-sign th, table.wo-sign td { border:1px solid #b9c0cc; padding:5px 7px; }
-  table.wo-sign th { background:#eef3fa; font-weight:700; text-align:center; white-space:nowrap; width:16%; }
-  table.wo-sign td { height:44px; }
   .wo-session { font-size:11px; font-weight:700; color:#41506a; margin:10px 0 4px; }
   .wo-sig-img { max-height:38px; max-width:100%; display:block; margin:0 auto; }
   .wo-sig-name { text-align:center; font-size:10.5px; color:#41506a; margin-top:2px; }
@@ -307,7 +301,7 @@ export function buildWorkOrderBody(
       </tr>
       <tr>
         <th>${escapeHtml(t(lang, "wo.accessMethod"))}</th><td>${accessLabel(lang, d.access_method)}</td>
-        <th>${escapeHtml(t(lang, "wo.locationNote"))}</th><td colspan="3">${line(d.location_note)}</td>
+        <th>${escapeHtml(t(lang, "wo.staff"))}</th><td colspan="3">${line(d.staff_name)}</td>
       </tr>
     </table>
 

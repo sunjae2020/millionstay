@@ -74,7 +74,7 @@ async function publicSummary(contextType: string, contextId: number): Promise<un
       scheduled_at: data.scheduled_at ?? null,
       completed_at: data.completed_at ?? null,
       partner_name: data.partner_name ?? null,
-      assignee_name: data.assignee_name ?? null,
+      assignee_name: data.staff_name ?? data.assignee_name ?? null,
       photos: data.photos.map((p) => ({
         url: p.url,
         kind: p.kind,
