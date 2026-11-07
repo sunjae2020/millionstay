@@ -38,6 +38,8 @@ type EditableField = (typeof EDITABLE_FIELDS)[number];
 interface AccountRecord extends Partial<Record<EditableField, string | null>> {
   id: number;
   account_type?: string | null;
+  /** "Company" | "Individual" — 계정관리의 회사/개인 구분. */
+  entity_kind?: string | null;
   primary_contact_id?: number | null;
 }
 
@@ -48,7 +50,10 @@ interface Props {
   onAccountChange: (id: number | null) => void;
   /** 아직 계정 상세를 못 읽었을 때 보여줄 이름(계약 목록이 준 값). */
   fallbackName?: string | null;
-  /** 임대인 카드는 사업자등록번호를, 임차인 카드는 주민등록번호를 앞세운다. */
+  /**
+   * 임차인 카드에만 메신저 줄이 붙는다. 번호 칸(사업자·법인등록번호 / 주민등록번호)은
+   * 역할이 아니라 계정의 회사/개인 구분(entity_kind)을 따른다 — 법인 임차인도 있다.
+   */
   variant: "landlord" | "tenant";
   required?: boolean;
 }
@@ -96,17 +101,24 @@ export function ContractPartyCard({
     { orderFallbackCountry: orderFallbackFromLang((i18n.language?.slice(0, 2) as AddressLang) || "en"), omitCountry: true },
   );
 
-  const idLabel = variant === "landlord" ? t("account.label_biz_no") : t("account.label_resident_no");
-  const idValueRaw = variant === "landlord" ? account?.biz_registration_no : account?.resident_no;
-  const idValue = variant === "tenant" && idValueRaw ? maskResidentNo(idValueRaw) : idValueRaw;
+  // 법인이면 사업자등록번호·법인등록번호·대표자, 개인이면 주민등록번호. 구분이 법인으로
+  // 남아 있어도 주민등록번호만 적힌 옛 계정은 그 번호를 그대로 보여 준다.
+  const isCompany = account?.entity_kind !== "Individual";
+  const residentNo = account?.resident_no ? maskResidentNo(account.resident_no) : null;
 
   const rows: Array<[string, string | null | undefined]> = [
     [t("contract.party_address"), addressLine || null],
     [t("contract.party_phone"), account?.phone1 || account?.phone2 || null],
     [t("contract.party_email"), account?.account_email || null],
-    [idLabel, idValue || null],
   ];
-  if (variant === "landlord") rows.push([t("account.label_ceo"), account?.ceo_name || null]);
+  if (isCompany) {
+    rows.push([t("account.label_biz_no"), account?.biz_registration_no || null]);
+    rows.push([t("account.label_corp_no"), account?.corp_registration_no || null]);
+    rows.push([t("account.label_ceo"), account?.ceo_name || null]);
+    if (residentNo) rows.push([t("account.label_resident_no"), residentNo]);
+  } else {
+    rows.push([t("account.label_resident_no"), residentNo]);
+  }
   // 임차인은 메신저로 닿는 일이 많아 계약 화면에서 바로 보이게 한다.
   if (variant === "tenant") {
     const snsType = account?.sns_type ? t(snsLabelKey(account.sns_type)) : null;
@@ -231,7 +243,7 @@ export function ContractPartyCard({
               {field("address_postcode", t("account.label_postcode"))}
               {field("address_country", t("account.label_country"))}
             </div>
-            {variant === "landlord" ? (
+            {isCompany ? (
               <div className="grid grid-cols-2 gap-3">
                 {field("biz_registration_no", t("account.label_biz_no"), "000-00-00000")}
                 {field("corp_registration_no", t("account.label_corp_no"), "000000-0000000")}
@@ -241,6 +253,10 @@ export function ContractPartyCard({
               <>
                 {field("resident_no", t("account.label_resident_no"), "000000-0000000")}
                 <p className="text-xs text-muted-foreground">{t("account.hint_resident_no")}</p>
+              </>
+            )}
+            {variant === "tenant" && (
+              <>
                 <div className="grid grid-cols-3 gap-3">
                   <div className="grid gap-1.5">
                     <Label className="text-xs">{t("account.label_sns_type")}</Label>

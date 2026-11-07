@@ -1126,8 +1126,15 @@ export async function buildContractDocInput(
       corporate_no: pickText(a.corp_registration_no),
       // 주민등록번호는 사람에게 붙는 값이라 원본은 연락처에 있다.
       resident_no: pickText(a.resident_no, contact?.resident_no),
+      is_company: a.entity_kind !== "Individual",
     };
   }
+  // 표준서식(주택임대차·민간임대)의 임차인 번호 칸은 하나다. 법인 임차인은 그 칸에
+  // 법인등록번호(없으면 사업자등록번호)를 적는 것이 관행이고, 개인은 주민등록번호다.
+  const partyIdNo = (p: Awaited<ReturnType<typeof loadParty>>): string | null =>
+    !p ? null : p.is_company
+      ? (p.corporate_no ?? p.business_no ?? p.resident_no)
+      : p.resident_no;
   const [tenantParty, landlordParty] = await Promise.all([
     loadParty(row.tenant_account_id ?? null),
     loadParty(row.landlord_account_id ?? null),
@@ -1223,6 +1230,10 @@ export async function buildContractDocInput(
         phone: tenantPhone,
         email: tenantEmail,
         resident_no: tenantParty?.resident_no ?? null,
+        // 법인 임차인이면 계약서 을 칸이 사업자·법인등록번호 줄로 바뀐다.
+        is_company: tenantParty?.is_company ?? false,
+        business_no: tenantParty?.is_company ? tenantParty.business_no : null,
+        corporate_no: tenantParty?.is_company ? tenantParty.corporate_no : null,
       },
       broker,
       currency: c.currency ?? DEFAULT_CURRENCY,
@@ -1288,7 +1299,7 @@ export async function buildContractDocInput(
       address: tenantAddress,
       phone: tenantPhone,
       // 주민등록번호 — 연락처/계정관리에 적혀 있을 때만 찍힌다.
-      id_no: tenantParty?.resident_no ?? null,
+      id_no: partyIdNo(tenantParty),
     },
   };
 
@@ -1322,7 +1333,7 @@ export async function buildContractDocInput(
       address: tenantAddress,
       phone: tenantPhone,
       // 주민등록번호 — 연락처/계정관리에 적혀 있을 때만 찍힌다.
-      id_no: tenantParty?.resident_no ?? null,
+      id_no: partyIdNo(tenantParty),
     },
     property_address: [premises?.location, housingBuildingName, premises?.unit_no ? `${premises.unit_no}호` : null]
       .filter(Boolean).join(" ") || null,

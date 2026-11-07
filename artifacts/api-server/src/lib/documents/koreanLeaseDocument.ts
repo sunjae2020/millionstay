@@ -47,6 +47,11 @@ export interface LeaseParty {
    * 등록임대주택이 아니면 "선택 안 함"이 기본이라 대개 비어 있고, 비면 칸만 빈다.
    */
   rental_business_no?: string | null;
+  /**
+   * 임차인이 법인인지(계정관리 entity_kind). 법인이면 을 칸에 주민등록번호 대신
+   * 사업자등록번호·법인등록번호 줄이 나온다.
+   */
+  is_company?: boolean;
   /** 주민등록번호 (tenant) — omitted when blank. Never derived automatically. */
   resident_no?: string | null;
   /** Drawn signature / seal image, printed in place of the “(인)” 날인 mark. */
@@ -286,6 +291,8 @@ const dash = (v: string | null | undefined) => escapeHtml(v?.trim() ? v : "-");
 function renderParty(mark: string, p: LeaseParty, isLandlord: boolean): string {
   const idLabel = isLandlord ? "사업자등록번호" : "주민등록번호";
   const idValue = isLandlord ? p.business_no : p.resident_no;
+  // 법인 임차인 — 주민등록번호 칸 대신 사업자·법인등록번호를 싣는다.
+  const companyTenant = !isLandlord && !!p.is_company;
   return `<table style="${P_TABLE}">${P_COLS}
       ${partyHeader(mark)}
       <tr>
@@ -302,12 +309,21 @@ function renderParty(mark: string, p: LeaseParty, isLandlord: boolean): string {
         <th style="${P_HEAD}">연 락 처</th>
         <td style="${P_CELL}">${escapeHtml(p.phone ?? "")}</td>
       </tr>
+      ${companyTenant ? `<tr>
+        <th style="${P_HEAD}">사업자등록번호</th>
+        <td style="${P_CELL}">${dash(p.business_no)}</td>
+        <th style="${P_HEAD}">법인등록번호</th>
+        <td style="${P_CELL}">${dash(p.corporate_no)}</td>
+      </tr>
       <tr>
+        <th style="${P_HEAD}">이메일</th>
+        <td style="${P_CELL}" colspan="3">${dash(p.email)}</td>
+      </tr>` : `<tr>
         <th style="${P_HEAD}">${isLandlord ? "이메일" : escapeHtml(idLabel)}</th>
         <td style="${P_CELL}">${isLandlord ? dash(p.email) : escapeHtml(idValue ?? "")}</td>
         <th style="${P_HEAD}">${isLandlord ? "법인등록번호" : "이메일"}</th>
         <td style="${P_CELL}">${isLandlord ? escapeHtml(p.corporate_no ?? "") : dash(p.email)}</td>
-      </tr>
+      </tr>`}
       ${isLandlord ? `<tr>
         <th style="${P_HEAD}">${escapeHtml(idLabel)}</th>
         <td style="${P_CELL}">${escapeHtml(p.business_no ?? "")}</td>
