@@ -67,6 +67,12 @@ interface StatementTotals {
   billable_amount: number;
 }
 
+interface BillingOwner {
+  id: number;
+  name: string;
+  count: number;
+}
+
 interface Props {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -107,13 +113,18 @@ export function RepairBillingDialog({ open, onOpenChange }: Props) {
   const { data: summary, isFetching } = useQuery({
     queryKey: ["wo-billing-statement", query.toString()],
     queryFn: () =>
-      apiJson<{ data: { rows: StatementRow[]; totals: StatementTotals } }>(
+      apiJson<{ data: { rows: StatementRow[]; totals: StatementTotals; owners?: BillingOwner[] } }>(
         `/api/v1/work-orders/billing-statement?${query.toString()}`,
       ).then((r) => r.data),
     enabled: open,
   });
 
   const money = (v: number) => formatMoney(v, brandCurrency, currencyPosition);
+
+  // 청구 대상을 비우면 세대 소유주에게 청구된다. 소유주가 둘 이상이면 서버가
+  // 거절하므로, 누르기 전에 알려 주고 바로 고를 수 있게 한다.
+  const owners = summary?.owners ?? [];
+  const needsOwnerChoice = !accountId && owners.length > 1;
 
   function preview() {
     const p = new URLSearchParams(query);
@@ -235,6 +246,7 @@ export function RepairBillingDialog({ open, onOpenChange }: Props) {
               <AccountLookupSelect
                 value={accountId}
                 onChange={setAccountId}
+                displayValue={owners.find((o) => o.id === accountId)?.name}
                 lookupUrl="/api/v1/lookup/accounts"
                 placeholder={t("workorder.billing_ph_bill_to", "Company or account name")}
               />
@@ -273,7 +285,7 @@ export function RepairBillingDialog({ open, onOpenChange }: Props) {
             ) : summary && summary.totals.count > 0 ? (
               <div className="flex flex-wrap gap-x-6 gap-y-1">
                 <span>{t("workorder.billing_count", "Items")}: <strong>{summary.totals.count}</strong></span>
-                <span>{t("workorder.col_cost")}: <strong>{money(summary.totals.cost)}</strong></span>
+                <span>{t("workorder.billing_cost_total", "Work cost")}: <strong>{money(summary.totals.cost)}</strong></span>
                 <span>{t("workorder.billing_billed_total", "Billed")}: <strong>{money(summary.totals.billed)}</strong></span>
                 {summary.totals.billable_count < summary.totals.count && (
                   <span className="text-amber-700">
@@ -288,6 +300,19 @@ export function RepairBillingDialog({ open, onOpenChange }: Props) {
             )}
           </div>
 
+          {needsOwnerChoice && (
+            <div className="border border-amber-300 bg-amber-50 rounded-lg p-3 text-sm text-amber-900">
+              <p>{t("workorder.billing_multiple_owners", "These units belong to more than one owner. Choose who is billed, or narrow the period or property.")}</p>
+              <div className="flex flex-wrap gap-2 mt-2">
+                {owners.map((o) => (
+                  <Button key={o.id} type="button" size="sm" variant="outline" onClick={() => setAccountId(o.id)}>
+                    {t("workorder.billing_owner_option", "{{name}} · {{n}} item(s)", { name: o.name, n: o.count })}
+                  </Button>
+                ))}
+              </div>
+            </div>
+          )}
+
           <DialogFooter>
             <Button variant="outline" onClick={() => onOpenChange(false)}>{t("common.close")}</Button>
             <Button variant="outline" onClick={preview} disabled={!summary || summary.totals.count === 0}>
@@ -295,7 +320,7 @@ export function RepairBillingDialog({ open, onOpenChange }: Props) {
             </Button>
             <Button
               onClick={() => issue.mutate()}
-              disabled={issue.isPending || !summary || summary.totals.billable_count === 0}
+              disabled={issue.isPending || !summary || summary.totals.billable_count === 0 || needsOwnerChoice}
             >
               {t("workorder.billing_issue_invoice", "Create invoice")}
               {summary && summary.totals.billable_count > 0 ? ` · ${money(summary.totals.billable_amount)}` : ""}

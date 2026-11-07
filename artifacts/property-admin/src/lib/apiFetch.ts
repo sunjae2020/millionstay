@@ -131,9 +131,14 @@ export class ApiError extends Error {
 /** Friendly human messages keyed by HTTP status. Server-supplied error wins
  *  over the default if it's plausibly user-facing (length-bounded, no stack). */
 function friendlyMessage(status: number, serverError?: unknown): string {
+  // `{ error: { code, message } }` 형태도 많다 — 객체면 message를 꺼낸다.
+  const raw =
+    serverError && typeof serverError === "object" && typeof (serverError as any).message === "string"
+      ? (serverError as any).message
+      : serverError;
   const serverMsg =
-    typeof serverError === "string" && serverError.length > 0 && serverError.length < 500
-      ? serverError
+    typeof raw === "string" && raw.length > 0 && raw.length < 500
+      ? raw
       : null;
 
   // 0 == fetch threw (network down, CORS, server completely offline).

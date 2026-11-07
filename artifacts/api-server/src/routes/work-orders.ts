@@ -561,14 +561,50 @@ async function resolveBillTo(query: Record<string, any>): Promise<string | null>
   return raw || null;
 }
 
+/**
+ * 작업지시 세대의 소유주(`spaces.landlord_account_id`)별 건수. 청구 대상을 비워
+ * 두면 이 소유주에게 청구되므로, 둘 이상이면 발행 전에 화면에서 고르게 한다.
+ */
+async function loadBillingOwners(orders: WorkOrderRow[]): Promise<Array<{ id: number; name: string; count: number }>> {
+  const spaceIds = [...new Set(orders.map(o => o.space_id).filter(Boolean))] as number[];
+  if (!spaceIds.length) return [];
+  const spaces = await db.select({ id: spacesTable.id, landlord: spacesTable.landlord_account_id })
+    .from(spacesTable).where(inArray(spacesTable.id, spaceIds));
+  const ownerOf = new Map(spaces.map(s => [s.id, s.landlord]));
+  const counts = new Map<number, number>();
+  for (const o of orders) {
+    const owner = o.space_id ? ownerOf.get(o.space_id) : null;
+    if (owner) counts.set(owner, (counts.get(owner) ?? 0) + 1);
+  }
+  if (!counts.size) return [];
+  const accts = await db.select({ id: accountsTable.id, name: accountsTable.name })
+    .from(accountsTable).where(inArray(accountsTable.id, [...counts.keys()]));
+  const nameOf = new Map(accts.map(a => [a.id, a.name]));
+  return [...counts.entries()]
+    .map(([id, count]) => ({ id, name: nameOf.get(id) ?? `#${id}`, count }))
+    .sort((a, b) => b.count - a.count || a.id - b.id);
+}
+
+/** 건물을 고르지 않았어도 대상이 한 건물뿐이면 그 이름을 쓴다. */
+async function resolveBillingPropertyName(propertyId: number | null, orders: WorkOrderRow[]): Promise<string | null> {
+  const ids = propertyId ? [propertyId] : [...new Set(orders.map(o => o.property_id).filter(Boolean))] as number[];
+  if (ids.length !== 1) return null;
+  const [p] = await db.select({ name: propertiesTable.name }).from(propertiesTable)
+    .where(eq(propertiesTable.id, ids[0]!)).limit(1);
+  return p?.name ?? null;
+}
+
 // B — 명세서 미리보기용 JSON (합계·건수를 PDF를 굽기 전에 화면에서 확인한다).
 router.get("/v1/work-orders/billing-statement", async (req, res): Promise<void> => {
   const f = billingFiltersFrom(req.query as Record<string, any>);
-  const { rows } = await loadBillingRows(f);
+  const { rows, orders } = await loadBillingRows(f);
   // 이미 청구된 건은 화면에서 미리 보여 준다 — 발행 버튼을 누르고 나서야
   // "3건은 이미 청구됨"을 알게 되면 늦다.
   const invoiced = await loadInvoicedWorkOrders(rows.map((r) => r.work_order_id));
   const billable = rows.filter((r) => !invoiced.has(r.work_order_id));
+  // 소유주가 여럿이면 발행이 거절된다 — 그것도 누르기 전에 보여 준다.
+  const billableIds = new Set(billable.map((r) => r.work_order_id));
+  const owners = await loadBillingOwners(orders.filter((o) => billableIds.has(o.id)));
   res.json({
     success: true,
     data: {
@@ -585,6 +621,8 @@ router.get("/v1/work-orders/billing-statement", async (req, res): Promise<void> 
         billable_count: billable.length,
         billable_amount: billable.reduce((s, r) => s + r.billed, 0),
       },
+      /** 발행 대상 작업지시의 세대 소유주 — 청구 대상을 비워 두면 이 계정에 청구된다. */
+      owners,
     },
   });
 });
@@ -594,21 +632,19 @@ router.get("/v1/work-orders/billing-statement.pdf", async (req, res): Promise<vo
   const query = req.query as Record<string, any>;
   const f = billingFiltersFrom(query);
   if (String(query.photos ?? "1") === "0") f.photosPerUnit = 0;
-  const { rows } = await loadBillingRows(f);
+  const { rows, orders } = await loadBillingRows(f);
 
-  let propertyName: string | null = null;
-  if (f.propertyId) {
-    const [p] = await db.select({ name: propertiesTable.name }).from(propertiesTable)
-      .where(eq(propertiesTable.id, f.propertyId)).limit(1);
-    propertyName = p?.name ?? null;
-  }
+  const propertyName = await resolveBillingPropertyName(f.propertyId, orders);
+  // 청구 대상을 비워 두면 청구서는 세대 소유주에게 간다 — 명세서도 같은 이름을 적는다.
+  const billTo = (await resolveBillTo(query))
+    ?? ((await loadBillingOwners(orders)).map((o) => o.name).join(", ") || null);
 
   const company = await resolveCompanyInfo();
   const lang = normalizeLang(typeof query.lang === "string" ? query.lang : undefined);
   const html = buildRepairBillingHtml({
     data: {
       property_name: propertyName,
-      bill_to: await resolveBillTo(query),
+      bill_to: billTo,
       period_from: f.from,
       period_to: f.to,
       currency: String(query.currency ?? DEFAULT_CURRENCY),
@@ -695,15 +731,17 @@ router.post("/v1/work-orders/billing-statement/invoice", async (req, res): Promi
   const spaceIds = [...new Set(billable.map(r => orderById.get(r.work_order_id)?.space_id).filter(Boolean))] as number[];
   const resolved = await resolveBillingAccount(body.account_id ? Number(body.account_id) : null, spaceIds);
   if ("error" in resolved) {
+    const billableIds = new Set(billable.map(r => r.work_order_id));
+    const owners = await loadBillingOwners(orders.filter(o => billableIds.has(o.id)));
     res.status(400).json({
       success: false,
       error: {
         code: resolved.error,
         message: resolved.error === "MULTIPLE_OWNERS"
-          ? "These work orders belong to more than one owner — pass account_id to choose who is billed."
-          : "Could not resolve who to bill; pass account_id.",
+          ? `These work orders belong to more than one owner (${owners.map(o => `${o.name} ${o.count}`).join(", ")}) — choose who is billed.`
+          : "Could not resolve who to bill — choose an account to bill.",
       },
-      data: { candidates: resolved.candidates },
+      data: { candidates: resolved.candidates, owners },
     });
     return;
   }

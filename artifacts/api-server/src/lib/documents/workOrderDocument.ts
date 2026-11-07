@@ -400,6 +400,18 @@ const BILLING_STYLE = `<style>
   .wo-note { font-size:10px; color:#666; margin-top:8px; }
 </style>`;
 
+/**
+ * 제목의 상호 + 건물명. 건물명이 이미 상호를 품고 있으면("메트하임 여수 (Metheim
+ * Yeosu)") 상호를 또 붙이지 않는다 — "메트하임 여수 메트하임 여수 …"가 된다.
+ */
+function billingHeadingName(prefix: string, propertyName?: string | null): string {
+  const p = prefix.trim();
+  const b = (propertyName ?? "").trim();
+  if (!b) return p;
+  if (!p || b.includes(p)) return b;
+  return `${p} ${b}`;
+}
+
 export function buildRepairBillingBody(d: RepairBillingInput, lang: DocLang, headingPrefix: string): string {
   const money = (v: number) => formatDocMoney(v, d.currency);
   const totalCost = d.rows.reduce((s, r) => s + Number(r.cost ?? 0), 0);
@@ -447,7 +459,7 @@ export function buildRepairBillingBody(d: RepairBillingInput, lang: DocLang, hea
 
   return `${BILLING_STYLE}${photoSizeStyle(d.photo_size)}
     <div class="wo-title">
-      <h1>${escapeHtml([headingPrefix, d.property_name].filter(Boolean).join(" "))} ${escapeHtml(t(lang, "wo.billing.heading"))}</h1>
+      <h1>${escapeHtml(billingHeadingName(headingPrefix, d.property_name))} ${escapeHtml(t(lang, "wo.billing.heading"))}</h1>
       <div class="wo-sub">${escapeHtml(period || DASH)}</div>
     </div>
 
