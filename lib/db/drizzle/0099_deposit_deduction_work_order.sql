@@ -13,5 +13,5 @@
 
 ALTER TABLE deposit_deduction_items ADD COLUMN IF NOT EXISTS work_order_id integer;
 
-CREATE INDEX IF NOT EXISTS deposit_deduction_items_work_order_id_idx
+CREATE INDEX IF NOT EXISTS deposit_deduction_items_work_order_idx
   ON deposit_deduction_items (work_order_id);

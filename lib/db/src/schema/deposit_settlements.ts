@@ -90,7 +90,7 @@ export const depositDeductionItemsTable = pgTable("deposit_deduction_items", {
   photo_ids: jsonb("photo_ids").notNull().default([]), // condition_report_photos.id[]
   created_at: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 }, (t) => [
-  index("deposit_deduction_items_work_order_id_idx").on(t.work_order_id),
+  index("deposit_deduction_items_work_order_idx").on(t.work_order_id),
 ]);
 
 export const insertDepositSettlementSchema = createInsertSchema(depositSettlementsTable).omit({
