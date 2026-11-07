@@ -178,6 +178,7 @@ router.get("/v1/lookup/spaces", async (req, res): Promise<void> => {
     id: spacesTable.id,
     name: spacesTable.name,
     space_type: spacesTable.space_type,
+    custom_type_name: spacesTable.custom_type_name,
     property_address: propertiesTable.address,
     base_weekly_price: spacesTable.base_weekly_price,
   })
@@ -186,11 +187,18 @@ router.get("/v1/lookup/spaces", async (req, res): Promise<void> => {
     .where(conditions.length ? and(...conditions) : undefined)
     .limit(20);
 
-  res.json(rows.map((r) => ({
-    id: r.id,
-    display: `${r.name} (${r.space_type}) — ${r.property_address ?? ""}`,
-    base_weekly_price: r.base_weekly_price,
-  })));
+  // The tenant's own unit type ("A타입") is what users recognise; the generic
+  // space_type enum ("Whole Property") is only a fallback, and a missing type
+  // must not print as "(null)" — units of one building were rendering two ways.
+  res.json(rows.map((r) => {
+    const typeLabel = r.custom_type_name?.trim() || r.space_type?.trim() || "";
+    const address = r.property_address?.trim() || "";
+    return {
+      id: r.id,
+      display: `${r.name}${typeLabel ? ` (${typeLabel})` : ""}${address ? ` — ${address}` : ""}`,
+      base_weekly_price: r.base_weekly_price,
+    };
+  }));
 });
 
 router.get("/v1/lookup/suburbs", async (req, res): Promise<void> => {
