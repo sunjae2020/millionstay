@@ -2400,7 +2400,7 @@
     "placeholder_max_occupancy": "예: 2",
     "placeholder_floor_number": "예: 3",
     "placeholder_floor_area": "예: 25.5",
-    "placeholder_landlord_account": "계정 ID",
+    "placeholder_landlord_account": "계정 이름으로 검색",
     "tab_documents": "서류",
     "tab_defects": "하자 이력",
     "tab_work_orders": "하자보수",

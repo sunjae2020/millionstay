@@ -2400,7 +2400,7 @@
     "placeholder_max_occupancy": "e.g. 2",
     "placeholder_floor_number": "e.g. 3",
     "placeholder_floor_area": "e.g. 25.5",
-    "placeholder_landlord_account": "Account ID",
+    "placeholder_landlord_account": "Search by account name",
     "tab_documents": "Documents",
     "tab_defects": "Defect history",
     "tab_work_orders": "Maintenance",

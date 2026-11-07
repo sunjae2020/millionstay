@@ -25,7 +25,10 @@ import {
   getListSpacesQueryKey,
   getGetSpaceQueryKey,
   getGetSpaceAvailabilityQueryKey,
+  useGetAccount,
+  getGetAccountQueryKey,
 } from "@workspace/api-client-react";
+import { AccountLookupSelect } from "@/components/AccountLookupSelect";
 import { useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, Save, CalendarDays, Images, Plus, Trash2, PackagePlus, Copy, Check, RefreshCw, CalendarClock, Languages, FileText } from "lucide-react";
 import {
@@ -457,6 +460,12 @@ export default function SpaceDetail() {
   const { data: space, isLoading } = useGetSpace(
     id!,
     { query: { enabled: !isNew && !!id, queryKey: getGetSpaceQueryKey(id!) } }
+  );
+
+  // 임대인 칸은 이름으로 보여 준다 — 저장된 값은 계정 ID뿐이다.
+  const landlordId = space?.landlord_account_id ?? 0;
+  const { data: landlordAccount } = useGetAccount(
+    landlordId, { query: { enabled: landlordId > 0, queryKey: getGetAccountQueryKey(landlordId) } }
   );
 
   const { data: properties } = useListProperties({ search: propertySearch || undefined });
@@ -916,7 +925,20 @@ export default function SpaceDetail() {
                 <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider border-b pb-2">{t("space.section_accounts")}</h3>
                 <div className="flex flex-col gap-1.5">
                   <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">{t("space.label_landlord_account")}</Label>
-                  <Input {...register("landlord_account_id")} type="number" placeholder={t("space.placeholder_landlord_account")} />
+                  {/* 예전엔 계정 ID 숫자 칸이라 사실상 바꿀 수 없었다 — 이름으로 찾아 고른다. */}
+                  <Controller
+                    control={control}
+                    name="landlord_account_id"
+                    render={({ field }) => (
+                      <AccountLookupSelect
+                        value={field.value ? Number(field.value) : null}
+                        onChange={(v) => field.onChange(v ? String(v) : "")}
+                        displayValue={landlordAccount?.name ?? null}
+                        lookupUrl="/api/v1/lookup/accounts"
+                        placeholder={t("space.placeholder_landlord_account")}
+                      />
+                    )}
+                  />
                 </div>
               </div>
 

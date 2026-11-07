@@ -2365,7 +2365,7 @@
     "placeholder_max_occupancy": "vd: 2",
     "placeholder_floor_number": "vd: 3",
     "placeholder_floor_area": "vd: 25.5",
-    "placeholder_landlord_account": "Mã tài khoản",
+    "placeholder_landlord_account": "Tìm theo tên tài khoản",
     "tab_documents": "Tài liệu",
     "tab_defects": "Lịch sử lỗi",
     "tab_work_orders": "Sửa chữa",

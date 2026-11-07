@@ -2381,7 +2381,7 @@
     "placeholder_max_occupancy": "例: 2",
     "placeholder_floor_number": "例: 3",
     "placeholder_floor_area": "例: 25.5",
-    "placeholder_landlord_account": "アカウントID",
+    "placeholder_landlord_account": "アカウント名で検索",
     "tab_documents": "書類",
     "tab_defects": "不具合履歴",
     "tab_work_orders": "修繕",

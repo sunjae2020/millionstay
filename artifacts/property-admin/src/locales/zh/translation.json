@@ -2383,7 +2383,7 @@
     "placeholder_max_occupancy": "例如 2",
     "placeholder_floor_number": "例如 3",
     "placeholder_floor_area": "例如 25.5",
-    "placeholder_landlord_account": "账户 ID",
+    "placeholder_landlord_account": "按账户名称搜索",
     "tab_documents": "文件",
     "tab_defects": "缺陷记录",
     "tab_work_orders": "缺陷维修",
