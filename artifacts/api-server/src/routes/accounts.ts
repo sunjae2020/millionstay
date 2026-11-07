@@ -10,14 +10,23 @@ import {
 } from "@workspace/db";
 import bcrypt from "bcryptjs";
 import { validatePassword } from "../utils/passwordPolicy";
-import { invalidatePartnerCache } from "../middlewares/requirePartnerAuth";
 import { revokeAllForUser } from "../lib/refreshTokens";
-import { issuePartnerResetLink, portalBaseUrl, PORTAL_TYPES, BCRYPT_COST } from "../lib/partnerPortal";
+import {
+  issuePartnerResetLink, portalBaseUrl, PORTAL_TYPES, BCRYPT_COST,
+  generateTempPassword, buildPortalGuide, TEMP_PASSWORD_TTL_MS, type GuideLang,
+} from "../lib/partnerPortal";
+import { checkLockout, clearFailedAttempts } from "../lib/loginLockout";
+import {
+  invalidatePartnerCache, signPartnerImpersonationJWT, PARTNER_IMPERSONATION_TTL, type PortalType,
+} from "../middlewares/requirePartnerAuth";
+import { sendPortalGuideEmail } from "../lib/email";
+import { sendSms, smsBytes, smsType } from "../lib/sms";
+import { resolveEmailBrand } from "../lib/emailBrand";
 import { z } from "zod";
 import { logAction } from "../utils/auditLog";
 import { deletedFilter, makeBulkDelete, makeBulkRestore } from "../lib/softDelete";
 import { excludeConsolidated } from "../lib/billing/consolidatedInvoices";
-import { formatPersonName, formatFirstName, formatLastName } from "../lib/nameFormat";
+import { formatPersonName, formatFirstName, formatLastName, phoneDigits } from "../lib/nameFormat";
 import { enrichFromWebsite, downloadImage } from "../lib/accounts/websiteEnrich";
 import {
   verifyBizNo, isBizVerifyConfigured, isValidBizNoChecksum, formatBizNo, normaliseBizNo,
@@ -732,6 +741,8 @@ const PORTAL_USER_COLUMNS = {
   avatar_url: partnerUsersTable.avatar_url,
   is_active: partnerUsersTable.is_active,
   last_login_at: partnerUsersTable.last_login_at,
+  force_password_change: partnerUsersTable.force_password_change,
+  temp_password_expires_at: partnerUsersTable.temp_password_expires_at,
   created_at: partnerUsersTable.created_at,
   updated_at: partnerUsersTable.updated_at,
 };
@@ -988,6 +999,282 @@ router.delete("/v1/accounts/:id/portal-users/:userId", async (req, res): Promise
   });
 
   res.status(204).end();
+});
+
+
+/* ── 포털 사용 — 임시 비밀번호 · 로그인 상태 · 안내 문구 · 대신 열기 ──────────
+ *
+ * 위의 CRUD 가 "누가 로그인할 수 있는가"를 정한다면, 아래는 담당자가 실제로
+ * 파트너를 앉히기까지 하는 일들이다 — 비밀번호를 쥐여 주고, 못 들어온다는
+ * 전화를 받아 상태를 확인하고, 필요하면 그 사람 화면을 직접 열어 본다.
+ * ──────────────────────────────────────────────────────────────────────── */
+
+/**
+ * 이 사람이 로그인 시도 횟수 집계에 쓰는 키.
+ *
+ * 이메일과 휴대폰 둘 다 아이디로 쓸 수 있어(loginIdentifier 참조) 한 사람 앞으로
+ * 카운터가 둘 생길 수 있다. 잠금 조회·해제는 양쪽을 모두 봐야 "이메일로는
+ * 풀렸는데 번호로는 여전히 잠김" 같은 상태가 안 생긴다.
+ */
+function lockoutKeysOf(user: Record<string, any>): string[] {
+  const keys: string[] = [];
+  const email = String(user["email"] ?? "").toLowerCase().trim();
+  if (email) keys.push(email);
+  const digits = phoneDigits(user["phone"]);
+  if (digits.length >= 9) keys.push(digits);
+  return keys;
+}
+
+/** 잠금 상태는 두 키 중 "더 나쁜 쪽"이 곧 이 사람의 상태다. */
+async function portalLockState(user: Record<string, any>) {
+  const keys = lockoutKeysOf(user);
+  const states = await Promise.all(keys.map((k) => checkLockout(k, "partner")));
+  const locked = states.find((s) => s.locked) ?? null;
+  const failureCount = states.reduce((max, s) => Math.max(max, s.failureCount), 0);
+  return {
+    locked: !!locked,
+    retry_after_seconds: locked?.retryAfterSeconds ?? null,
+    failed_attempts: failureCount,
+    max_attempts: 5,
+  };
+}
+
+// GET /v1/accounts/:id/portal-users/:userId/login-status — 최근 로그인, 실패
+// 횟수, 잠금, 비밀번호 상태. 잠금은 별도 컬럼이 아니라 login_attempts 에서
+// 계산되므로(loginLockout) 목록에 같이 실어 보내지 않고 여기서만 조회한다.
+router.get("/v1/accounts/:id/portal-users/:userId/login-status", async (req, res): Promise<void> => {
+  const ids = await resolveAccountAndUser(req, res, true);
+  if (!ids) return;
+  const user = await loadPortalUser(ids.id, ids.userId);
+  if (!user) { res.status(404).json({ error: "Not found" }); return; }
+
+  const lock = await portalLockState(user);
+  const expiresAt = user["temp_password_expires_at"] as Date | null;
+  res.json({
+    last_login_at: user["last_login_at"] ?? null,
+    is_active: user["is_active"],
+    force_password_change: user["force_password_change"] === true,
+    temp_password_expires_at: expiresAt ?? null,
+    temp_password_active: !!(expiresAt && new Date(expiresAt) > new Date()),
+    ...lock,
+  });
+});
+
+// POST /v1/accounts/:id/portal-users/:userId/unlock — 반복 실패로 잠긴 로그인을
+// 담당자가 풀어 준다. 15분을 기다리게 하는 대신 실패 기록을 지운다.
+router.post("/v1/accounts/:id/portal-users/:userId/unlock", async (req, res): Promise<void> => {
+  const ids = await resolveAccountAndUser(req, res, true);
+  if (!ids) return;
+  const user = await loadPortalUser(ids.id, ids.userId);
+  if (!user) { res.status(404).json({ error: "Not found" }); return; }
+
+  const cleared = await clearFailedAttempts(lockoutKeysOf(user), "partner");
+  const actor = actorOf(req);
+  await logAction({
+    entityType: "partner_users", entityId: ids.userId, action: "UNBLOCK", ...actor,
+    newValue: { unlocked: true, cleared_attempts: cleared },
+  });
+  res.json({ success: true, cleared_attempts: cleared, ...(await portalLockState(user)) });
+});
+
+// POST /v1/accounts/:id/portal-users/:userId/temp-password — 1회용 비밀번호.
+// 응답에 평문이 한 번 실려 나가고 저장은 해시뿐이라, 화면을 닫으면 다시 볼 수
+// 없다. 파트너는 이 비밀번호로 들어와 곧바로 새 비밀번호를 정해야 한다.
+router.post("/v1/accounts/:id/portal-users/:userId/temp-password", async (req, res): Promise<void> => {
+  const ids = await resolveAccountAndUser(req, res, true);
+  if (!ids) return;
+  const user = await loadPortalUser(ids.id, ids.userId);
+  if (!user) { res.status(404).json({ error: "Not found" }); return; }
+
+  const password = generateTempPassword();
+  const expiresAt = new Date(Date.now() + TEMP_PASSWORD_TTL_MS);
+  await db.update(partnerUsersTable)
+    .set({
+      password_hash: await bcrypt.hash(password, BCRYPT_COST),
+      force_password_change: true,
+      temp_password_expires_at: expiresAt,
+      // 이전에 보낸 재설정 링크는 무효로 — 살아 있는 경로는 하나여야 한다.
+      reset_token_hash: null,
+      reset_token_expires_at: null,
+      tokens_invalid_after: new Date(),
+    })
+    .where(eq(partnerUsersTable.id, ids.userId));
+  invalidatePartnerCache(ids.userId);
+  try { await revokeAllForUser(ids.userId, "partner"); } catch {}
+
+  const actor = actorOf(req);
+  await logAction({
+    entityType: "partner_users", entityId: ids.userId, action: "UPDATE", ...actor,
+    newValue: { temp_password_issued: true, expires_at: expiresAt.toISOString() },
+  });
+
+  res.json({ temp_password: password, expires_at: expiresAt.toISOString() });
+});
+
+/* ── 이용 안내 문구 ───────────────────────────────────────────────────────── */
+
+/** 로그인 아이디 — 이메일이 없는 임차인은 휴대폰 번호가 곧 아이디다. */
+function loginIdOf(user: Record<string, any>): string {
+  return String(user["email"] ?? "").trim() || String(user["phone"] ?? "").trim();
+}
+
+async function composeGuide(user: Record<string, any>, body: Record<string, any>) {
+  const brand = await resolveEmailBrand();
+  const lang: GuideLang = String(body["lang"] ?? "").toLowerCase() === "en" ? "en" : "ko";
+  return {
+    lang,
+    ...buildPortalGuide({
+      portalType: String(user["portal_type"]),
+      loginId: loginIdOf(user),
+      password: typeof body["password"] === "string" ? body["password"] : null,
+      tempPasswordExpiresAt: (user["temp_password_expires_at"] as Date | null) ?? null,
+      brandName: brand.name,
+      lang,
+    }),
+  };
+}
+
+// POST /v1/accounts/:id/portal-users/:userId/guide — 안내 문구 미리보기.
+// 비밀번호가 담기므로 GET(+쿼리스트링)이 아니라 POST 다 — 쿼리는 접근 로그에
+// 그대로 남는다.
+router.post("/v1/accounts/:id/portal-users/:userId/guide", async (req, res): Promise<void> => {
+  const ids = await resolveAccountAndUser(req, res, true);
+  if (!ids) return;
+  const user = await loadPortalUser(ids.id, ids.userId);
+  if (!user) { res.status(404).json({ error: "Not found" }); return; }
+
+  const { subject, text } = await composeGuide(user, (req.body ?? {}) as Record<string, any>);
+  const bytes = smsBytes(text);
+  res.json({
+    subject, text,
+    sms_bytes: bytes,
+    sms_type: smsType(text),
+    can_email: !!String(user["email"] ?? "").trim(),
+    can_sms: phoneDigits(user["phone"]).length >= 9,
+  });
+});
+
+// POST /v1/accounts/:id/portal-users/:userId/guide/send — 같은 문구를 메일이나
+// 문자로. 문구를 클라이언트에서 받아 그대로 보내지 않고 여기서 다시 만든다 —
+// 발송 내용이 화면 미리보기와 어긋나지 않게, 그리고 임의 문구를 우리 발신
+// 주소로 실어 보내지 못하게.
+router.post("/v1/accounts/:id/portal-users/:userId/guide/send", async (req, res): Promise<void> => {
+  const ids = await resolveAccountAndUser(req, res, true);
+  if (!ids) return;
+  const user = await loadPortalUser(ids.id, ids.userId);
+  if (!user) { res.status(404).json({ error: "Not found" }); return; }
+
+  const body = (req.body ?? {}) as Record<string, any>;
+  const channel = String(body["channel"] ?? "email");
+  if (channel !== "email" && channel !== "sms") {
+    res.status(400).json({ error: "channel must be email or sms" });
+    return;
+  }
+  const { subject, text } = await composeGuide(user, body);
+
+  let sent = false;
+  let error: string | null = null;
+  if (channel === "email") {
+    const to = String(user["email"] ?? "").trim();
+    if (!to) { res.status(400).json({ error: "이 사용자에게는 이메일 주소가 없습니다" }); return; }
+    sent = await sendPortalGuideEmail({
+      to, subject, text,
+      name: formatPersonName(user["first_name"], user["last_name"]) || to,
+      portalUrl: portalBaseUrl(String(user["portal_type"])),
+    });
+    if (!sent) error = "메일을 보내지 못했습니다 — 메일 설정을 확인하세요";
+  } else {
+    const to = String(user["phone"] ?? "").trim();
+    if (!to) { res.status(400).json({ error: "이 사용자에게는 휴대폰 번호가 없습니다" }); return; }
+    const result = await sendSms({ to, text, smsOnly: true });
+    sent = result.ok;
+    if (!sent) error = result.error ?? "문자를 보내지 못했습니다";
+  }
+
+  const actor = actorOf(req);
+  await logAction({
+    entityType: "partner_users", entityId: ids.userId, action: "UPDATE", ...actor,
+    // 비밀번호는 기록하지 않는다 — 감사 로그는 보낸 사실만 남기면 된다.
+    newValue: { portal_guide_sent: sent, channel },
+  });
+
+  if (!sent) { res.status(502).json({ error }); return; }
+  res.json({ success: true, channel });
+});
+
+// POST /v1/accounts/:id/portal-users/:userId/impersonate — 담당자가 파트너
+// 포털을 그 사람으로 열어 본다("안 보인다"는 문의를 눈으로 확인하는 용도).
+//
+// 안전장치:
+//   - SuperAdmin·Admin 만(IMPERSONATION_ROLES). Viewer 는 requireAuth 가 POST 를
+//     이미 막지만, RBAC 매트릭스는 fail-open 이라(lib/rbac.ts) 사용자 정의 역할이
+//     통과할 수 있으므로 여기서 허용 목록으로 직접 막는다.
+//   - 토큰은 30분짜리 접근 토큰 하나뿐(refresh 없음)이고 `impersonated_by` 에
+//     관리자 id 가 박힌다. 그 세션에서는 비밀번호·패스키·개인정보 권리 행사
+//     경로가 막힌다(requirePartnerAuth IMPERSONATION_BLOCKED, passkeys resolveCaller).
+//   - 발급할 때마다 감사 로그(관리자 id·파트너 사용자 id·계정 id)를 남긴다.
+//   - 토큰은 쿼리스트링이 아니라 `#sso=` 프래그먼트로 넘긴다(서버 로그·Referer 에
+//     남지 않는다). 포털은 이미 통합 로그인 핸드오프로 이 프래그먼트를 읽는다.
+const IMPERSONATION_ROLES = new Set(["SuperAdmin", "Super Admin", "superadmin", "super_admin", "Admin"]);
+
+router.post("/v1/accounts/:id/portal-users/:userId/impersonate", async (req, res): Promise<void> => {
+  const role = String((req as any).user?.role ?? "");
+  const adminId = Number((req as any).user?.id);
+  if (!IMPERSONATION_ROLES.has(role) || !Number.isInteger(adminId) || adminId <= 0) {
+    res.status(403).json({ error: "포털 대신 열기는 관리자만 사용할 수 있습니다" });
+    return;
+  }
+
+  const ids = await resolveAccountAndUser(req, res, true);
+  if (!ids) return;
+
+  const user = await loadPortalUser(ids.id, ids.userId);
+  if (!user) { res.status(404).json({ error: "Not found" }); return; }
+  if (user["is_active"] !== true) {
+    res.status(409).json({ error: "포털 사용이 꺼져 있는 사용자입니다" });
+    return;
+  }
+  // 임시 비밀번호 상태면 포털이 비밀번호 변경 화면만 보여 준다 — 그 화면을
+  // 관리자가 대신 통과하면 파트너의 비밀번호를 관리자가 정하게 된다.
+  if (user["force_password_change"] === true) {
+    res.status(409).json({ error: "임시 비밀번호를 바꾸기 전인 사용자는 대신 열 수 없습니다" });
+    return;
+  }
+
+  let token: string;
+  try {
+    token = signPartnerImpersonationJWT({
+      id: Number(user["id"]),
+      email: String(user["email"] ?? ""),
+      account_id: Number(user["account_id"]),
+      portal_type: String(user["portal_type"]) as PortalType,
+    }, adminId);
+  } catch {
+    res.status(409).json({ error: "포털 종류가 올바르지 않은 사용자입니다" });
+    return;
+  }
+
+  const actor = actorOf(req);
+  const expiresAt = new Date(Date.now() + PARTNER_IMPERSONATION_TTL * 1000);
+  await logAction({
+    // 감사 로그에서는 "관리자가 이 파트너로 들어갔다"는 사실이 핵심이라 LOGIN 으로 남긴다.
+    entityType: "partner_users", entityId: ids.userId, action: "LOGIN", ...actor,
+    newValue: {
+      impersonated: true,
+      admin_user_id: adminId,
+      admin_email: actor.actorEmail,
+      partner_user_id: ids.userId,
+      account_id: ids.id,
+      portal_type: user["portal_type"],
+      expires_at: expiresAt.toISOString(),
+    },
+  });
+
+  res.json({
+    token,
+    portal_url: portalBaseUrl(String(user["portal_type"])),
+    expires_at: expiresAt.toISOString(),
+  });
 });
 
 const accountsSoftDelete = {

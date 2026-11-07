@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { Fragment, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
@@ -13,7 +13,8 @@ import { apiFetch, apiJson } from "@/lib/apiFetch";
 import { formatDate } from "@/lib/date";
 import { formatPersonName } from "@/lib/nameFormat";
 import { useKoreanNameOrder, orderNameFields } from "@/lib/personNameUi";
-import { KeyRound, Mail, Trash2, UserPlus, Eye, EyeOff, ExternalLink, Pencil } from "lucide-react";
+import { KeyRound, Mail, Trash2, UserPlus, Eye, EyeOff, ExternalLink, Pencil, ChevronRight, ChevronDown } from "lucide-react";
+import { AccountPortalUserPanel } from "./AccountPortalUserPanel";
 
 /**
  * 포털 사용 — per-person portal access for one account.
@@ -39,6 +40,9 @@ export interface PortalUser {
   portal_url: string;
   is_active: boolean;
   last_login_at: string | null;
+  /** 임시 비밀번호로 들어와 아직 새 비밀번호를 정하지 않은 상태. */
+  force_password_change: boolean;
+  temp_password_expires_at: string | null;
   created_at: string;
 }
 
@@ -98,6 +102,8 @@ export function AccountPortalUsers({ accountId, contacts, accountType }: Props) 
   });
 
   const [editing, setEditing] = useState<PortalUser | "new" | null>(null);
+  // 펼친 행 — 상세 패널(안내 문구·비밀번호·로그인 상태)은 한 번에 하나만 연다.
+  const [expandedId, setExpandedId] = useState<number | null>(null);
   const [pwTarget, setPwTarget] = useState<PortalUser | null>(null);
   const [busyId, setBusyId] = useState<number | null>(null);
   const [notice, setNotice] = useState<{ kind: "ok" | "error"; text: string } | null>(null);
@@ -198,16 +204,26 @@ export function AccountPortalUsers({ accountId, contacts, accountType }: Props) 
               <tr><td colSpan={6} className="px-4 py-8 text-center text-muted-foreground text-sm">{t("account.portal_empty")}</td></tr>
             ) : (
               users.map((u) => (
-                <tr key={u.id} className="hover:bg-muted/30 transition-colors">
+                <Fragment key={u.id}>
+                <tr
+                  className="hover:bg-muted/30 transition-colors cursor-pointer"
+                  onClick={() => setExpandedId((id) => (id === u.id ? null : u.id))}
+                >
                   <td className="px-4 py-3">
-                    <Badge variant="secondary" className={PORTAL_BADGE[u.portal_type]}>
-                      {t(`account.portal_type_${u.portal_type}`)}
-                    </Badge>
+                    <div className="flex items-center gap-1.5">
+                      {expandedId === u.id
+                        ? <ChevronDown className="h-4 w-4 text-muted-foreground shrink-0" />
+                        : <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />}
+                      <Badge variant="secondary" className={PORTAL_BADGE[u.portal_type]}>
+                        {t(`account.portal_type_${u.portal_type}`)}
+                      </Badge>
+                    </div>
                   </td>
                   <td className="px-4 py-3">
                     <span className="font-medium">{u.email}</span>
                     {u.portal_url && (
                       <a href={u.portal_url} target="_blank" rel="noreferrer"
+                        onClick={(e) => e.stopPropagation()}
                         className="ml-1.5 inline-flex align-middle text-muted-foreground hover:text-foreground"
                         title={t("account.portal_open")}>
                         <ExternalLink className="h-3.5 w-3.5" />
@@ -221,7 +237,7 @@ export function AccountPortalUsers({ accountId, contacts, accountType }: Props) 
                   <td className="px-4 py-3 text-muted-foreground">
                     {u.last_login_at ? formatDate(u.last_login_at) : t("account.portal_never")}
                   </td>
-                  <td className="px-4 py-3">
+                  <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
                     <div className="flex items-center gap-2">
                       <Switch checked={u.is_active} disabled={busyId === u.id}
                         onCheckedChange={(v) => void handleToggleActive(u, v)} />
@@ -230,7 +246,7 @@ export function AccountPortalUsers({ accountId, contacts, accountType }: Props) 
                       </span>
                     </div>
                   </td>
-                  <td className="px-2 py-3">
+                  <td className="px-2 py-3" onClick={(e) => e.stopPropagation()}>
                     <div className="flex justify-end gap-0.5">
                       <Button variant="ghost" size="icon" className="h-7 w-7" title={t("account.portal_edit")}
                         onClick={() => setEditing(u)}>
@@ -251,6 +267,20 @@ export function AccountPortalUsers({ accountId, contacts, accountType }: Props) 
                     </div>
                   </td>
                 </tr>
+                {expandedId === u.id && (
+                  <tr>
+                    <td colSpan={6} className="p-0">
+                      <AccountPortalUserPanel
+                        accountId={accountId}
+                        user={u}
+                        onNotice={setNotice}
+                        onChanged={refresh}
+                        onSetPassword={() => setPwTarget(u)}
+                      />
+                    </td>
+                  </tr>
+                )}
+                </Fragment>
               ))
             )}
           </tbody>

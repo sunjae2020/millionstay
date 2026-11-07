@@ -5,7 +5,7 @@
  * Default policy: 5 failures within 15 minutes → 15 minute lockout.
  */
 import { db, loginAttemptsTable } from "@workspace/db";
-import { and, eq, gte, lt } from "drizzle-orm";
+import { and, eq, gte, lt, inArray } from "drizzle-orm";
 
 export type UserType = "admin" | "guest" | "partner";
 
@@ -68,6 +68,32 @@ export async function checkLockout(email: string, userType: UserType): Promise<L
   }
 
   return { locked: false, failureCount: failures };
+}
+
+/**
+ * 잠금 해제 — 창(15분) 안의 실패 기록을 지운다.
+ *
+ * 잠금은 별도 플래그가 아니라 `login_attempts` 의 최근 실패 연속 횟수로 계산되므로
+ * (checkLockout 참조), 해제하려면 그 실패 기록 자체를 없애야 한다. 한 사람이
+ * 이메일과 휴대폰 두 가지로 로그인할 수 있어 키가 둘일 수 있으니 배열로 받는다.
+ *
+ * 성공 기록은 남긴다 — 감사 흔적이고, 어차피 잠금 계산에 걸리지 않는다.
+ */
+export async function clearFailedAttempts(keys: string[], userType: UserType): Promise<number> {
+  const normalised = [...new Set(keys.map((k) => k.toLowerCase().trim()).filter(Boolean))];
+  if (!normalised.length) return 0;
+  const since = new Date(Date.now() - WINDOW_MS);
+  const result = await db
+    .delete(loginAttemptsTable)
+    .where(
+      and(
+        inArray(loginAttemptsTable.email, normalised),
+        eq(loginAttemptsTable.user_type, userType),
+        eq(loginAttemptsTable.success, false),
+        gte(loginAttemptsTable.attempted_at, since),
+      ),
+    );
+  return (result as any).rowCount ?? 0;
 }
 
 /** Optional cleanup — call from a scheduler to keep the table small. */

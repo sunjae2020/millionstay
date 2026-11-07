@@ -14,6 +14,11 @@ export const partnerUsersTable = pgTable("partner_users", {
   avatar_url: text("avatar_url"),
   is_active: boolean("is_active").notNull().default(true),
   last_login_at: timestamp("last_login_at", { withTimezone: true }),
+  // Set when an operator issues a temporary password from 계정 → 포털 사용. The
+  // partner can sign in with it but reaches nothing except the change-password
+  // screen, and the login is refused outright once the expiry below passes.
+  force_password_change: boolean("force_password_change").notNull().default(false),
+  temp_password_expires_at: timestamp("temp_password_expires_at", { withTimezone: true }),
   // Auth: invalidate any access token issued before this timestamp.
   tokens_invalid_after: timestamp("tokens_invalid_after", { withTimezone: true }),
   deleted_at: timestamp("deleted_at", { withTimezone: true }),

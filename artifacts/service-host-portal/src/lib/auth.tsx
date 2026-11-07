@@ -24,6 +24,10 @@ interface PartnerUser {
   last_name: string | null;
   portal_type: string;
   account_id: number;
+  /** 담당자가 발급한 임시 비밀번호 상태 — 바꾸기 전까지 포털을 쓸 수 없다. */
+  force_password_change?: boolean;
+  /** 관리자가 "대신 열기"로 연 세션 — 상단 배너를 띄운다. */
+  impersonated?: boolean;
 }
 
 interface AuthContextType {
@@ -49,7 +53,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       const m = window.location.hash.match(/[#&]sso=([^&]+)/);
       if (m && m[1]) {
-        storeSession(decodeURIComponent(m[1]));
+        const handed = decodeURIComponent(m[1]);
+        // 관리자 "대신 열기" 토큰(impersonated_by 클레임)은 refresh 없이 30분만
+        // 산다. 이 브라우저에 남아 있던 다른 세션의 refresh 토큰으로 갱신되며
+        // 엉뚱한 사람으로 바뀌지 않도록, 그 경우엔 refresh 토큰을 지운다.
+        let impersonation = false;
+        try {
+          const claims = JSON.parse(atob(handed.split(".")[1]!.replace(/-/g, "+").replace(/_/g, "/")));
+          impersonation = !!claims?.impersonated_by;
+        } catch { /* not a decodable JWT — the server will reject it anyway */ }
+        if (impersonation) storeSession(handed, null);
+        else storeSession(handed);
         window.history.replaceState(null, "", window.location.pathname + window.location.search);
       }
     } catch { /* ignore malformed fragment */ }

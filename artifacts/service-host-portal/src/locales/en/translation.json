@@ -458,5 +458,23 @@
     "delete_confirm": "Delete this photo?",
     "delete_failed": "Could not delete the photo",
     "upload_failed": "Upload failed"
+  },
+  "force_password": {
+    "title": "Set a new password",
+    "subtitle": "You signed in with a temporary password. Choose your own password to carry on.",
+    "current": "Temporary password",
+    "new": "New password",
+    "confirm": "Confirm new password",
+    "policy": "At least 12 characters, with upper and lower case, a number and a symbol.",
+    "mismatch": "The two passwords do not match.",
+    "submit": "Save password",
+    "toggle_visibility": "Show or hide the password",
+    "done": "Password changed. Sign in again with your new password.",
+    "failed": "Could not change the password.",
+    "sign_out": "Sign out"
+  },
+  "impersonation": {
+    "banner": "An administrator is viewing this portal as {{email}}. This session ends automatically after 30 minutes.",
+    "end": "End session"
   }
 }

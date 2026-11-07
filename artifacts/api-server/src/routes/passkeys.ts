@@ -64,7 +64,10 @@ type Caller = {
  * Who is calling? The three token scopes use three separate secrets, so trying
  * them in turn is unambiguous — a token only verifies under its own scope.
  */
-async function resolveCaller(req: any): Promise<Caller | null> {
+/** resolveCaller 결과: 관리자 "대신 열기" 세션이라 패스키 관리를 거절해야 함. */
+const IMPERSONATED = Symbol("impersonated");
+
+async function resolveCaller(req: any): Promise<Caller | null | typeof IMPERSONATED> {
   const token = bearer(req);
   if (!token) return null;
 
@@ -88,6 +91,10 @@ async function resolveCaller(req: any): Promise<Caller | null> {
 
   try {
     const payload = verifyPartnerJWT(token);
+    // 관리자 "대신 열기" 세션은 파트너 본인이 아니다 — 그 세션에서 패스키를
+    // 등록·수정·삭제하게 두면 관리자가 파트너 계정에 영구 로그인 수단을 심을 수
+    // 있다. 패스키 관리는 본인 세션에서만.
+    if (payload.impersonated_by) return IMPERSONATED;
     const [user] = await db
       .select()
       .from(partnerUsersTable)
@@ -130,6 +137,7 @@ async function resolveCaller(req: any): Promise<Caller | null> {
 router.post("/v1/auth/passkey/register/options", async (req, res): Promise<void> => {
   try {
     const caller = await resolveCaller(req);
+    if (caller === IMPERSONATED) { fail(res, 403, "IMPERSONATION_FORBIDDEN", "Passkeys cannot be managed while an administrator is viewing this portal"); return; }
     if (!caller) { fail(res, 401, "UNAUTHORIZED", "Sign in first to add a passkey"); return; }
     const rp = resolveRp(req);
     if (!rp) { fail(res, 400, "BAD_ORIGIN", "Unrecognised origin"); return; }
@@ -176,6 +184,7 @@ router.post("/v1/auth/passkey/register/options", async (req, res): Promise<void>
 router.post("/v1/auth/passkey/register/verify", async (req, res): Promise<void> => {
   try {
     const caller = await resolveCaller(req);
+    if (caller === IMPERSONATED) { fail(res, 403, "IMPERSONATION_FORBIDDEN", "Passkeys cannot be managed while an administrator is viewing this portal"); return; }
     if (!caller) { fail(res, 401, "UNAUTHORIZED", "Sign in first to add a passkey"); return; }
     const rp = resolveRp(req);
     if (!rp) { fail(res, 400, "BAD_ORIGIN", "Unrecognised origin"); return; }
@@ -292,6 +301,7 @@ function publicCredential(row: any) {
 /** GET /api/v1/auth/passkey/credentials */
 router.get("/v1/auth/passkey/credentials", async (req, res): Promise<void> => {
   const caller = await resolveCaller(req);
+  if (caller === IMPERSONATED) { fail(res, 403, "IMPERSONATION_FORBIDDEN", "Passkeys cannot be managed while an administrator is viewing this portal"); return; }
   if (!caller) { fail(res, 401, "UNAUTHORIZED", "Sign in first"); return; }
   const rows = await listCredentials(caller.audience, caller.id);
   res.json({ success: true, data: rows.map(publicCredential) });
@@ -300,6 +310,7 @@ router.get("/v1/auth/passkey/credentials", async (req, res): Promise<void> => {
 /** PATCH /api/v1/auth/passkey/credentials/:id — rename a device */
 router.patch("/v1/auth/passkey/credentials/:id", async (req, res): Promise<void> => {
   const caller = await resolveCaller(req);
+  if (caller === IMPERSONATED) { fail(res, 403, "IMPERSONATION_FORBIDDEN", "Passkeys cannot be managed while an administrator is viewing this portal"); return; }
   if (!caller) { fail(res, 401, "UNAUTHORIZED", "Sign in first"); return; }
   const name = typeof req.body?.device_name === "string" ? req.body.device_name.trim().slice(0, 60) : "";
   if (!name) { fail(res, 400, "INVALID", "device_name is required"); return; }
@@ -322,6 +333,7 @@ router.patch("/v1/auth/passkey/credentials/:id", async (req, res): Promise<void>
 /** DELETE /api/v1/auth/passkey/credentials/:id */
 router.delete("/v1/auth/passkey/credentials/:id", async (req, res): Promise<void> => {
   const caller = await resolveCaller(req);
+  if (caller === IMPERSONATED) { fail(res, 403, "IMPERSONATION_FORBIDDEN", "Passkeys cannot be managed while an administrator is viewing this portal"); return; }
   if (!caller) { fail(res, 401, "UNAUTHORIZED", "Sign in first"); return; }
   const [row] = await db
     .update(webauthnCredentialsTable)
@@ -494,6 +506,7 @@ async function issueTokensFor(audience: PasskeyAudience, userId: number, req: an
         portal_type: user.portal_type,
         account_id: user.account_id,
         avatar_url: user.avatar_url,
+        force_password_change: user.force_password_change === true,
       },
     };
   }

@@ -54,6 +54,22 @@ router.post("/v1/auth/partner/login", async (req, res): Promise<void> => {
       return;
     }
 
+    // 임시 비밀번호는 발급 후 72시간만 산다. 지나면 비밀번호가 맞아도 들여보내지
+    // 않는다 — 담당자에게 다시 발급받아야 한다.
+    if (
+      user.force_password_change &&
+      user.temp_password_expires_at &&
+      new Date(user.temp_password_expires_at as any) < new Date()
+    ) {
+      await recordAttempt(attemptKey, "partner", false, ipOf(req));
+      res.status(401).json({
+        success: false,
+        error: "The temporary password has expired. Ask your contact to issue a new one.",
+        code: "TEMP_PASSWORD_EXPIRED",
+      });
+      return;
+    }
+
     if (!ALLOWED_PORTAL_TYPES.has(user.portal_type)) {
       // Misconfigured account — refuse to issue a token rather than emit garbage portal_type
       res.status(403).json({ success: false, error: "Account not configured" });
@@ -86,6 +102,7 @@ router.post("/v1/auth/partner/login", async (req, res): Promise<void> => {
         portal_type: user.portal_type,
         account_id: user.account_id,
         avatar_url: user.avatar_url,
+        force_password_change: user.force_password_change === true,
       },
     });
   } catch (err) {
@@ -145,6 +162,7 @@ router.get("/v1/auth/partner/me", requirePartnerAuth, async (req, res): Promise<
       avatar_url: partnerUsersTable.avatar_url,
       is_active: partnerUsersTable.is_active,
       last_login_at: partnerUsersTable.last_login_at,
+      force_password_change: partnerUsersTable.force_password_change,
     })
     .from(partnerUsersTable)
     .where(and(eq(partnerUsersTable.id, partner.id), isNull(partnerUsersTable.deleted_at)))
@@ -161,7 +179,8 @@ router.get("/v1/auth/partner/me", requirePartnerAuth, async (req, res): Promise<
     .where(eq(accountsTable.id, user.account_id))
     .limit(1);
 
-  res.json({ success: true, user: { ...user, account } });
+  // `impersonated`: 관리자가 "대신 열기"로 연 세션 — 포털이 상단에 배너를 띄운다.
+  res.json({ success: true, user: { ...user, account, impersonated: !!partner.impersonated_by } });
 });
 
 /* POST /api/v1/auth/partner/change-password */
@@ -181,10 +200,30 @@ router.post("/v1/auth/partner/change-password", requirePartnerAuth, async (req, 
   if (!user) { res.status(404).json({ success: false, error: "User not found" }); return; }
   const valid = await bcrypt.compare(current_password, user.password_hash);
   if (!valid) { res.status(400).json({ success: false, error: "Current password is incorrect" }); return; }
+  // 만료된 임시 비밀번호는 로그인뿐 아니라 여기서도 쓸 수 없다 — 만료 전에 받은
+  // 세션이 refresh 로 이어지고 있더라도 그 비밀번호로 새 비밀번호를 정하지 못한다.
+  if (
+    user.force_password_change &&
+    user.temp_password_expires_at &&
+    new Date(user.temp_password_expires_at as any) < new Date()
+  ) {
+    res.status(400).json({
+      success: false,
+      error: "The temporary password has expired. Ask your contact to issue a new one.",
+      code: "TEMP_PASSWORD_EXPIRED",
+    });
+    return;
+  }
   const password_hash = await bcrypt.hash(new_password, BCRYPT_COST);
   await db
     .update(partnerUsersTable)
-    .set({ password_hash, tokens_invalid_after: new Date() })
+    // 스스로 정한 비밀번호가 생겼으니 강제 변경도, 임시 비밀번호 만료도 끝난다.
+    .set({
+      password_hash,
+      force_password_change: false,
+      temp_password_expires_at: null,
+      tokens_invalid_after: new Date(),
+    })
     .where(eq(partnerUsersTable.id, partner.id));
   invalidatePartnerCache(partner.id);
   try { await revokeAllForUser(partner.id, "partner"); } catch {}
@@ -242,6 +281,8 @@ router.post("/v1/auth/partner/reset-password", async (req, res): Promise<void> =
       password_hash,
       reset_token_hash: null,
       reset_token_expires_at: null,
+      force_password_change: false,
+      temp_password_expires_at: null,
       tokens_invalid_after: new Date(),
       is_active: true,
     })

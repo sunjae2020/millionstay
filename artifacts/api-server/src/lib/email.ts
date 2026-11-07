@@ -555,6 +555,54 @@ export async function sendPasswordResetEmail(
   }
 }
 
+export interface PortalGuideEmailOptions {
+  to: string;
+  name: string;
+  subject: string;
+  /** 안내 문구 원문(줄바꿈 구분). 화면 미리보기와 같은 글이 그대로 나간다. */
+  text: string;
+  portalUrl: string;
+}
+
+/**
+ * 포털 이용 안내 메일 — 계정 → 포털 사용에서 담당자가 보낸다.
+ *
+ * 본문은 담당자가 화면에서 본 문구 그대로다. 문구를 여기서 다시 조립하면
+ * 미리보기와 실제 발송이 갈라지므로, 이 함수는 escape 후 테넌트 껍데기에
+ * 싸기만 한다.
+ */
+export async function sendPortalGuideEmail(opts: PortalGuideEmailOptions): Promise<boolean> {
+  const client = getResend();
+  if (!client) {
+    console.log(`[email] RESEND_API_KEY not set — portal guide for ${opts.to} not sent`);
+    return false;
+  }
+  const brand = await resolveEmailBrand();
+  const safeName = escapeHtml(opts.name || opts.to);
+  const safeUrl = escapeHtml(opts.portalUrl);
+  const html = renderEmailShell({
+    brand,
+    tag: opts.subject,
+    footerLines: [`This email was sent to ${escapeHtml(opts.to)}`],
+    body: `
+    <p class="lead">${safeName}</p>
+    <pre style="white-space:pre-wrap;word-break:break-word;font-family:inherit;font-size:14px;line-height:1.65;color:${brand.inkMuted};margin:0 0 14px;">${escapeHtml(opts.text)}</pre>
+    ${opts.portalUrl ? `<a href="${safeUrl}" class="btn">${escapeHtml(brand.name)} →</a>` : ""}`,
+  });
+  try {
+    await client.emails.send({
+      ...emailSender(brand.name),
+      to: [opts.to],
+      subject: opts.subject,
+      html,
+    });
+    return true;
+  } catch (err) {
+    console.error("[email] Failed to send portal guide:", err);
+    return false;
+  }
+}
+
 export async function sendRegistrationRequestEmail(to: string, name: string, adminPanelUrl: string): Promise<boolean> {
   const client = getResend();
   if (!client) {

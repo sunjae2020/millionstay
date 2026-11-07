@@ -458,5 +458,23 @@
     "delete_confirm": "删除这张照片？",
     "delete_failed": "无法删除照片",
     "upload_failed": "上传失败"
+  },
+  "force_password": {
+    "title": "请设置新密码",
+    "subtitle": "您使用临时密码登录。设置自己的密码后即可继续使用。",
+    "current": "临时密码",
+    "new": "新密码",
+    "confirm": "确认新密码",
+    "policy": "至少 12 位，需包含大写字母、小写字母、数字和符号各一个。",
+    "mismatch": "两次输入的密码不一致。",
+    "submit": "保存密码",
+    "toggle_visibility": "显示或隐藏密码",
+    "done": "密码已更改，请用新密码重新登录。",
+    "failed": "无法更改密码。",
+    "sign_out": "退出登录"
+  },
+  "impersonation": {
+    "banner": "管理员正在以 {{email}} 的身份查看此门户。此会话将在 30 分钟后自动结束。",
+    "end": "结束会话"
   }
 }

@@ -3,6 +3,8 @@ import { useTranslation } from "react-i18next";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { AuthProvider, useAuth } from "@/lib/auth";
 import LoginPage from "@/pages/LoginPage";
+import ForcePasswordChangePage from "@/pages/ForcePasswordChangePage";
+import ImpersonationBanner from "@/components/ImpersonationBanner";
 import ForgotPasswordPage from "@/pages/ForgotPasswordPage";
 import ResetPasswordPage from "@/pages/ResetPasswordPage";
 import OwnerApplicationPage from "@/pages/OwnerApplicationPage";
@@ -31,6 +33,13 @@ function PortalRoutes() {
     );
   }
 
+  // 임시 비밀번호로 들어온 사람은 새 비밀번호를 정하기 전까지 아무 화면도 볼 수
+  // 없다. 서버가 다른 파트너 API 를 403 으로 막고 있으므로(requirePartnerAuth),
+  // 여기서 막지 않으면 빈 화면과 오류만 보게 된다.
+  if (user && user.force_password_change) {
+    return <ForcePasswordChangePage />;
+  }
+
   if (!user || user.portal_type !== "owner") {
     return (
       <Switch>
@@ -43,22 +52,25 @@ function PortalRoutes() {
   }
 
   return (
-    <Switch>
-      <Route path="/" component={DashboardPage} />
-      <Route path="/properties" component={PropertiesPage} />
-      <Route path="/properties/:id" component={PropertyDetailPage} />
-      <Route path="/bookings" component={BookingsPage} />
-      <Route path="/revenue" component={RevenuePage} />
-      <Route path="/documents" component={DocumentsPage} />
-      {OWNER_SITE_ENABLED && <Route path="/site" component={SitePage} />}
-      {OWNER_SITE_ENABLED && <Route path="/inquiries" component={InquiriesPage} />}
-      <Route path="/support" component={SupportPage} />
-      <Route path="/support/:id" component={SupportDetailPage} />
-      <Route path="/security" component={SecurityPage} />
-      <Route>
-        <div className="p-8 text-muted-foreground">{t("common.page_not_found")}</div>
-      </Route>
-    </Switch>
+    <>
+      <ImpersonationBanner />
+      <Switch>
+        <Route path="/" component={DashboardPage} />
+        <Route path="/properties" component={PropertiesPage} />
+        <Route path="/properties/:id" component={PropertyDetailPage} />
+        <Route path="/bookings" component={BookingsPage} />
+        <Route path="/revenue" component={RevenuePage} />
+        <Route path="/documents" component={DocumentsPage} />
+        {OWNER_SITE_ENABLED && <Route path="/site" component={SitePage} />}
+        {OWNER_SITE_ENABLED && <Route path="/inquiries" component={InquiriesPage} />}
+        <Route path="/support" component={SupportPage} />
+        <Route path="/support/:id" component={SupportDetailPage} />
+        <Route path="/security" component={SecurityPage} />
+        <Route>
+          <div className="p-8 text-muted-foreground">{t("common.page_not_found")}</div>
+        </Route>
+      </Switch>
+    </>
   );
 }
 
