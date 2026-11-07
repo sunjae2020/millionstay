@@ -1,4 +1,4 @@
-import { pgTable, serial, integer, text, numeric, jsonb, timestamp, date } from "drizzle-orm/pg-core";
+import { pgTable, serial, integer, text, numeric, jsonb, timestamp, date, index } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 
@@ -71,6 +71,10 @@ export const depositDeductionItemsTable = pgTable("deposit_deduction_items", {
   id: serial("id").primaryKey(),
   deposit_settlement_id: integer("deposit_settlement_id").notNull(),
   condition_item_id: integer("condition_item_id"), // condition_report_items.id — evidence
+  // 이 라인이 나온 작업지시(work_orders.id) — 임차인 부담(charged_to='tenant')이고
+  // 보증금 차감(settlement_method='deposit_deduction')으로 정산하기로 한 퇴거청소·
+  // 하자보수. 같은 작업이 두 번 차감되지 않게 하는 연결고리다(0099).
+  work_order_id: integer("work_order_id"),
   description: text("description").notNull(),
   // Signed: positive = deducted from the deposit (차감(−)), negative = refunded
   // to the tenant (환급(+)). The move-out settlement form derives each line's
@@ -85,7 +89,9 @@ export const depositDeductionItemsTable = pgTable("deposit_deduction_items", {
   remark: text("remark"),
   photo_ids: jsonb("photo_ids").notNull().default([]), // condition_report_photos.id[]
   created_at: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
-});
+}, (t) => [
+  index("deposit_deduction_items_work_order_id_idx").on(t.work_order_id),
+]);
 
 export const insertDepositSettlementSchema = createInsertSchema(depositSettlementsTable).omit({
   id: true, created_at: true, updated_at: true,

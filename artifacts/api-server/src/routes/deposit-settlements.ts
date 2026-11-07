@@ -1,6 +1,6 @@
 import { Router, type IRouter } from "express";
 import { DEFAULT_CURRENCY } from "../lib/currency";
-import { eq, and, desc, sql, isNull, ilike } from "drizzle-orm";
+import { eq, and, desc, sql, isNull, ilike, ne } from "drizzle-orm";
 import {
   db,
   bookingsTable,
@@ -16,7 +16,10 @@ import {
   accountsTable,
   journalEntriesTable,
   journalLinesTable,
+  workOrdersTable,
 } from "@workspace/db";
+import { canonicalWorkOrderCategory } from "@workspace/api-zod";
+import { billedAmountOf } from "../lib/documents/workOrderDocument";
 import { getRateToAud } from "../lib/rateSnapshot";
 import { requireAuth } from "../middlewares/requireAuth";
 import { requireGuestAuth } from "../middlewares/requireGuestAuth";
@@ -189,9 +192,21 @@ async function loadSettlementDetail(id: number) {
   // 환급액(음수가 되면 GL 상계가 뒤집히므로)이고, 확인서가 찍는 값은 net_amount,
   // 차감이 보증금을 넘은 부족분은 shortfall — 인보이스로 회수할 금액이다.
   const net = round2(Number(s.deposit_held ?? 0) - Number(s.total_deducted ?? 0));
+  // 작업지시에서 온 라인은 화면에서 그 작업지시로 건너갈 수 있게 번호를 붙인다.
+  const woIds = [...new Set(deductions.map((d) => d.work_order_id).filter((v): v is number => v != null))];
+  const woRefs = new Map<number, string>();
+  if (woIds.length) {
+    const wos = await db.select({ id: workOrdersTable.id, order_ref: workOrdersTable.order_ref })
+      .from(workOrdersTable).where(inArray(workOrdersTable.id, woIds));
+    for (const w of wos) woRefs.set(w.id, w.order_ref);
+  }
   return {
     ...s,
-    deductions: deductions.map((d) => ({ ...d, kind: lineKind(d) })),
+    deductions: deductions.map((d) => ({
+      ...d,
+      kind: lineKind(d),
+      work_order_ref: d.work_order_id ? (woRefs.get(d.work_order_id) ?? null) : null,
+    })),
     net_amount: net,
     shortfall: net < 0 ? Math.abs(net) : 0,
   };
@@ -228,6 +243,165 @@ async function loadSettlementResponse(id: number) {
     as_of_date: doc.as_of_date,
   };
   return { ...detail, form: form ?? null };
+}
+
+/* ── 작업지시 → 보증금 차감 라인 ────────────────────────────────────────────
+   작업지시 상세에서 "청구 대상 = 임차인", "정산 방법 = 보증금 차감"으로 표시한
+   퇴거청소·하자보수는 퇴거 정산서의 차감 라인이 된다. 연결은
+   deposit_deduction_items.work_order_id 하나로 잡고, 같은 작업지시는 취소되지 않은
+   정산서 한 곳에만 걸린다 — 두 번 차감되지 않게.
+
+   금액은 작업지시 청구 명세서와 같은 값(billedAmountOf: net_cost → cost −
+   원천징수 + 부가세 → cost)을 쓴다. 원천징수율 추정(%)은 넣지 않는다 — 원장에
+   적힌 값이 없으면 작업비용 그대로다.
+
+   정산 확정 때 연결된 작업지시의 수령일자(settled_on)를 채우고, 확정 취소(reopen)
+   때는 그 확정이 채운 것만 되돌린다. 라인을 지우면 연결이 끊겨 작업지시는 미정산
+   상태로 남고 다시 후보로 돌아온다. */
+type WorkOrderRow = typeof workOrdersTable.$inferSelect;
+
+/** 작업 일자 — 계약 연결이 없는 작업지시를 계약 기간에 맞춰 볼 때 쓴다. */
+function workOrderDay(w: WorkOrderRow): string | null {
+  const candidates: Array<string | Date | null> = [w.reported_at, w.scheduled_start_at, w.scheduled_at, w.completed_at, w.created_at];
+  for (const c of candidates) {
+    if (!c) continue;
+    const d = c instanceof Date ? c : new Date(c);
+    if (!Number.isNaN(d.getTime())) return d.toISOString().slice(0, 10);
+  }
+  return null;
+}
+
+function addDaysIso(day: string, days: number): string {
+  const d = new Date(`${day.slice(0, 10)}T00:00:00Z`);
+  if (Number.isNaN(d.getTime())) return day;
+  d.setUTCDate(d.getUTCDate() + days);
+  return d.toISOString().slice(0, 10);
+}
+
+/** 퇴거청소는 계약 종료일 뒤에 잡히는 게 보통이라 종료일 뒤 이만큼까지 같은 임대로 본다. */
+const WORK_ORDER_AFTER_LEASE_GRACE_DAYS = 31;
+
+/** 이미 (취소되지 않은) 정산서 라인에 걸린 작업지시 id. */
+async function workOrdersAlreadyDeducted(ids: number[]): Promise<Set<number>> {
+  if (!ids.length) return new Set();
+  const rows = await db
+    .select({ work_order_id: depositDeductionItemsTable.work_order_id })
+    .from(depositDeductionItemsTable)
+    .innerJoin(depositSettlementsTable, eq(depositDeductionItemsTable.deposit_settlement_id, depositSettlementsTable.id))
+    .where(and(
+      inArray(depositDeductionItemsTable.work_order_id, ids),
+      ne(depositSettlementsTable.status, "cancelled"),
+      isNull(depositSettlementsTable.deleted_at),
+    ));
+  return new Set(rows.map((r) => r.work_order_id).filter((v): v is number => v != null));
+}
+
+/**
+ * 정산서가 끊는 임대에 속한, 임차인 부담·미정산 작업지시.
+ *  - 정산서의 계약(contract_id), 또는 예약 정산이면 그 예약에 달린 계약들
+ *  - 작업지시가 그 계약에 직접 연결됐거나, 계약 연결 없이 같은 세대(space_id)에서
+ *    계약 기간(시작일 ~ 종료일 + 유예) 안에 생긴 것
+ *  - 이미 다른(취소되지 않은) 정산서 라인에 걸린 것은 뺀다
+ * `depositDeductionOnly` 면 정산 방법이 '보증금 차감'인 것만 — 자동 라인용.
+ */
+async function deductibleWorkOrders(
+  s: { contract_id: number | null; booking_id: number | null },
+  opts: { depositDeductionOnly: boolean },
+): Promise<WorkOrderRow[]> {
+  const contracts = s.contract_id
+    ? await db.select().from(contractsTable).where(eq(contractsTable.id, s.contract_id))
+    : s.booking_id
+      ? await db.select().from(contractsTable).where(and(eq(contractsTable.booking_id, s.booking_id), isNull(contractsTable.deleted_at)))
+      : [];
+  if (!contracts.length) return [];
+
+  const base = and(
+    eq(workOrdersTable.charged_to, "tenant"),
+    isNull(workOrdersTable.settled_on),
+    isNull(workOrdersTable.deleted_at),
+    opts.depositDeductionOnly ? eq(workOrdersTable.settlement_method, "deposit_deduction") : undefined,
+  );
+
+  const byContract = await db.select().from(workOrdersTable)
+    .where(and(base, inArray(workOrdersTable.contract_id, contracts.map((c) => c.id))));
+
+  // 계약 연결 없이 세대에만 걸린 작업지시 — 계약 기간 안에 생긴 것만.
+  const bySpace: WorkOrderRow[] = [];
+  const spaceIds = [...new Set(contracts.map((c) => c.space_id).filter((v): v is number => v != null))];
+  if (spaceIds.length) {
+    const loose = await db.select().from(workOrdersTable)
+      .where(and(base, isNull(workOrdersTable.contract_id), inArray(workOrdersTable.space_id, spaceIds)));
+    for (const w of loose) {
+      const day = workOrderDay(w);
+      if (!day) continue;
+      const inLease = contracts.some((c) => {
+        if (c.space_id !== w.space_id || !c.start_date) return false;
+        if (day < c.start_date.slice(0, 10)) return false;
+        return !c.end_date || day <= addDaysIso(c.end_date, WORK_ORDER_AFTER_LEASE_GRACE_DAYS);
+      });
+      if (inLease) bySpace.push(w);
+    }
+  }
+
+  const all = [...byContract, ...bySpace].sort((a, b) => a.id - b.id);
+  const taken = await workOrdersAlreadyDeducted(all.map((w) => w.id));
+  return all.filter((w) => !taken.has(w.id));
+}
+
+/** 작업지시의 청구 금액 — 청구 명세서와 같은 규칙(원천징수율 추정 없이). */
+function workOrderDeductionAmount(w: WorkOrderRow): number {
+  return round2(billedAmountOf({ cost: w.cost, net_cost: w.net_cost, withholding_amount: w.withholding_amount, vat_amount: w.vat_amount }));
+}
+
+/** 라인 문구 — "<호수> <작업분류> 작업지시 <번호>" (확인서가 한국어 서식이라 한국어로). */
+async function workOrderDeductionLabels(rows: WorkOrderRow[]): Promise<Map<number, string>> {
+  const spaceIds = [...new Set(rows.map((w) => w.space_id).filter((v): v is number => v != null))];
+  const units = new Map<number, string>();
+  if (spaceIds.length) {
+    const spaces = await db.select({ id: spacesTable.id, name: spacesTable.name }).from(spacesTable).where(inArray(spacesTable.id, spaceIds));
+    for (const sp of spaces) units.set(sp.id, sp.name);
+  }
+  const out = new Map<number, string>();
+  for (const w of rows) {
+    const cat = canonicalWorkOrderCategory(w.category);
+    const catLabel = cat ? (() => { const k = `wo.cat.${cat}`; const l = t("ko", k); return l === k ? cat : l; })() : null;
+    const unit = w.space_id ? units.get(w.space_id) : null;
+    out.set(w.id, [unit, catLabel, "작업지시", w.order_ref].filter(Boolean).join(" "));
+  }
+  return out;
+}
+
+/** 자동 라인 — 정산서를 새로 뜰 때 보증금 차감으로 표시된 작업지시를 깐다. */
+async function seedWorkOrderDeductionLines(
+  settlementId: number,
+  s: { contract_id: number | null; booking_id: number | null },
+): Promise<number> {
+  const jobs = await deductibleWorkOrders(s, { depositDeductionOnly: true });
+  if (!jobs.length) return 0;
+  const labels = await workOrderDeductionLabels(jobs);
+  await db.insert(depositDeductionItemsTable).values(jobs.map((w) => ({
+    deposit_settlement_id: settlementId,
+    work_order_id: w.id,
+    kind: "deduct",
+    description: labels.get(w.id) ?? w.order_ref,
+    amount: String(workOrderDeductionAmount(w)),
+    remark: w.title,
+  })));
+  return jobs.length;
+}
+
+/** 확정 시: 이 정산서 라인에 걸린 미정산 작업지시에 수령일자를 채우고, 채운 id 를 돌려준다. */
+async function settleLinkedWorkOrders(settlementId: number, day: string): Promise<number[]> {
+  const lines = await db.select({ work_order_id: depositDeductionItemsTable.work_order_id })
+    .from(depositDeductionItemsTable)
+    .where(eq(depositDeductionItemsTable.deposit_settlement_id, settlementId));
+  const ids = [...new Set(lines.map((l) => l.work_order_id).filter((v): v is number => v != null))];
+  if (!ids.length) return [];
+  const updated = await db.update(workOrdersTable)
+    .set({ settled_on: day, updated_at: new Date() })
+    .where(and(inArray(workOrdersTable.id, ids), isNull(workOrdersTable.settled_on)))
+    .returning({ id: workOrdersTable.id });
+  return updated.map((u) => u.id);
 }
 
 /* ═══════════════════════════════════════════════════════════
@@ -284,8 +458,10 @@ adminRouter.post("/v1/bookings/:bookingId/deposit-settlements", async (req, res)
       })
       .returning();
     await seedStandardFormLines(row!.id);
+    // 예약에 달린 계약의 작업지시 중 보증금 차감으로 표시된 것.
+    const workOrderLines = await seedWorkOrderDeductionLines(row!.id, { contract_id: null, booking_id: bookingId });
     await recomputeTotals(row!.id);
-    void logAction({ entityType: ENTITY, entityId: row!.id, action: "CREATE", actorId: (req as any).user?.id ?? null, newValue: { settlement_ref, deposit_held: depositHeld } });
+    void logAction({ entityType: ENTITY, entityId: row!.id, action: "CREATE", actorId: (req as any).user?.id ?? null, newValue: { settlement_ref, deposit_held: depositHeld, work_order_lines: workOrderLines } });
     res.status(201).json({ success: true, data: await loadSettlementDetail(row!.id) });
   } catch (err: any) {
     res.status(500).json({ success: false, error: { code: "SERVER_ERROR", message: err.message } });
@@ -367,10 +543,12 @@ adminRouter.post("/v1/contracts/:contractId/deposit-settlements", async (req, re
         remark: inv.invoice_ref,
       });
     }
+    // 임차인 부담 + 보증금 차감으로 표시된 작업지시(퇴거청소·하자보수)도 차감 라인으로.
+    const workOrderLines = await seedWorkOrderDeductionLines(row!.id, { contract_id: contractId, booking_id: null });
     const totals = await recomputeTotals(row!.id);
 
-    void logAction({ entityType: ENTITY, entityId: row!.id, action: "CREATE", actorId: (req as any).user?.id ?? null, newValue: { settlement_ref, contract_id: contractId, deposit_held: depositHeld, deductions: deducted.length } });
-    res.status(201).json({ success: true, data: { ...row, ...totals, deductions: deducted.length } });
+    void logAction({ entityType: ENTITY, entityId: row!.id, action: "CREATE", actorId: (req as any).user?.id ?? null, newValue: { settlement_ref, contract_id: contractId, deposit_held: depositHeld, deductions: deducted.length, work_order_lines: workOrderLines } });
+    res.status(201).json({ success: true, data: { ...row, ...totals, deductions: deducted.length + workOrderLines } });
   } catch (err: any) {
     res.status(500).json({ success: false, error: { code: "SERVER_ERROR", message: err.message } });
   }
@@ -434,6 +612,40 @@ adminRouter.patch("/v1/deposit-settlements/:id", async (req, res): Promise<void>
   }
 });
 
+// 이 정산서로 끌어올 수 있는 작업지시 — 임대에 속한 임차인 부담·미정산 건 중
+// 아직 어느 정산서 라인에도 걸리지 않은 것. 정산 방법이 '보증금 차감'이 아니어도
+// (퇴거 시 납부로 잡았다가 보증금에서 빼기로 한 경우) 운영자가 고를 수 있게 보여준다.
+adminRouter.get("/v1/deposit-settlements/:id/candidate-work-orders", async (req, res): Promise<void> => {
+  try {
+    const id = Number(req.params.id);
+    const [s] = await db.select().from(depositSettlementsTable).where(eq(depositSettlementsTable.id, id)).limit(1);
+    if (!s) { res.status(404).json({ success: false, error: { code: "NOT_FOUND", message: "Settlement not found" } }); return; }
+    const jobs = await deductibleWorkOrders(s, { depositDeductionOnly: false });
+    const labels = await workOrderDeductionLabels(jobs);
+    res.json({
+      success: true,
+      data: jobs.map((w) => ({
+        id: w.id,
+        order_ref: w.order_ref,
+        title: w.title,
+        category: canonicalWorkOrderCategory(w.category),
+        space_id: w.space_id,
+        contract_id: w.contract_id,
+        status: w.status,
+        settlement_method: w.settlement_method,
+        reported_at: w.reported_at,
+        completed_at: w.completed_at,
+        cost: w.cost,
+        billed_amount: workOrderDeductionAmount(w),
+        currency: w.currency,
+        label: labels.get(w.id) ?? w.order_ref,
+      })),
+    });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: { code: "SERVER_ERROR", message: err.message } });
+  }
+});
+
 // Add a deduction line (draft only).
 adminRouter.post("/v1/deposit-settlements/:id/deductions", async (req, res): Promise<void> => {
   try {
@@ -441,21 +653,47 @@ adminRouter.post("/v1/deposit-settlements/:id/deductions", async (req, res): Pro
     const [s] = await db.select().from(depositSettlementsTable).where(eq(depositSettlementsTable.id, id)).limit(1);
     if (!s) { res.status(404).json({ success: false, error: { code: "NOT_FOUND", message: "Settlement not found" } }); return; }
     if (!["draft", "proposed"].includes(s.status)) { res.status(409).json({ success: false, error: { code: "LOCKED", message: "Settlement is finalized" } }); return; }
+
+    // 작업지시에서 온 라인 — 같은 작업지시가 두 정산서(또는 한 정산서에 두 번)
+    // 차감되지 않게 막고, 금액·문구를 비워 보내면 작업지시에서 채운다.
+    let workOrder: WorkOrderRow | null = null;
+    const rawWorkOrderId = req.body?.work_order_id;
+    if (rawWorkOrderId !== undefined && rawWorkOrderId !== null && rawWorkOrderId !== "") {
+      const woId = Number(rawWorkOrderId);
+      if (!Number.isInteger(woId) || woId <= 0) { res.status(400).json({ success: false, error: { code: "BAD_WORK_ORDER", message: "work_order_id must be a positive integer" } }); return; }
+      const [wo] = await db.select().from(workOrdersTable)
+        .where(and(eq(workOrdersTable.id, woId), isNull(workOrdersTable.deleted_at))).limit(1);
+      if (!wo) { res.status(404).json({ success: false, error: { code: "WORK_ORDER_NOT_FOUND", message: "Work order not found" } }); return; }
+      if ((await workOrdersAlreadyDeducted([woId])).size) {
+        res.status(409).json({ success: false, error: { code: "WORK_ORDER_ALREADY_DEDUCTED", message: "This work order is already a line on a settlement" } }); return;
+      }
+      if (wo.settled_on) {
+        res.status(409).json({ success: false, error: { code: "WORK_ORDER_SETTLED", message: "This work order is already settled" } }); return;
+      }
+      workOrder = wo;
+    }
+
     // A line is signed: positive deducts from the deposit (차감(−)), negative
     // refunds the tenant (환급(+), e.g. 장기수선충당금). `kind` is the friendly
-    // form the admin UI posts; a raw signed `amount` works too.
-    const rawAmount = Number(req.body?.amount);
+    // form the admin UI posts; a raw signed `amount` works too. A work-order line
+    // may omit amount — it defaults to the job's billed amount.
+    const amountGiven = req.body?.amount !== undefined && req.body?.amount !== null && req.body?.amount !== "";
+    const rawAmount = amountGiven ? Number(req.body.amount) : workOrder ? workOrderDeductionAmount(workOrder) : NaN;
     if (!Number.isFinite(rawAmount)) { res.status(400).json({ success: false, error: { code: "BAD_AMOUNT", message: "amount must be a number" } }); return; }
     const kind = req.body?.kind === "refund" ? "refund" : req.body?.kind === "deduct" ? "deduct" : null;
     const amount = kind ? (kind === "refund" ? -Math.abs(rawAmount) : Math.abs(rawAmount)) : rawAmount;
+    const fallbackDescription = workOrder
+      ? ((await workOrderDeductionLabels([workOrder])).get(workOrder.id) ?? workOrder.order_ref)
+      : "Deduction";
     await db.insert(depositDeductionItemsTable).values({
       deposit_settlement_id: id,
       // 0원 라인은 부호가 없으므로 구분을 따로 남겨야 서식에 차감/환급이 찍힌다.
       kind: kind ?? (amount < 0 ? "refund" : "deduct"),
       condition_item_id: Number.isFinite(Number(req.body?.condition_item_id)) && req.body?.condition_item_id ? Number(req.body.condition_item_id) : null,
-      description: typeof req.body?.description === "string" && req.body.description.trim() ? req.body.description.trim() : "Deduction",
+      work_order_id: workOrder?.id ?? null,
+      description: typeof req.body?.description === "string" && req.body.description.trim() ? req.body.description.trim() : fallbackDescription,
       amount: String(round2(amount)),
-      remark: typeof req.body?.remark === "string" && req.body.remark.trim() ? req.body.remark.trim() : null,
+      remark: typeof req.body?.remark === "string" && req.body.remark.trim() ? req.body.remark.trim() : (workOrder?.title ?? null),
       photo_ids: Array.isArray(req.body?.photo_ids) ? req.body.photo_ids : [],
     });
     await recomputeTotals(id);
@@ -587,12 +825,17 @@ adminRouter.post("/v1/deposit-settlements/:id/finalize", async (req, res): Promi
       });
       glPosted = !!entry;
     }
+    // 보증금에서 뺀 작업지시는 이걸로 받은 셈이다 — 수령일자(settled_on)를 채워
+    // 다음 정산서·청구에서 다시 잡히지 않게 한다. 채운 id 는 감사 기록에 남겨
+    // 확정 취소(reopen) 때 이 확정이 채운 것만 되돌린다.
+    const settledDay = new Date().toISOString().slice(0, 10);
+    const settledWorkOrders = await settleLinkedWorkOrders(id, settledDay);
     const audit = Array.isArray(s.audit_trail) ? s.audit_trail : [];
     await db.update(depositSettlementsTable).set({
       status: "finalized",
       finalized_at: new Date(),
       posting_key: glPosted ? postingKey : null,
-      audit_trail: [...audit, { event: "finalized", at: new Date().toISOString(), actor: (req as any).user?.id ?? null, refund: totals.refund_amount, deducted: totals.total_deducted, gl_posted: glPosted, gl_backed: glBacked }],
+      audit_trail: [...audit, { event: "finalized", at: new Date().toISOString(), actor: (req as any).user?.id ?? null, refund: totals.refund_amount, deducted: totals.total_deducted, gl_posted: glPosted, gl_backed: glBacked, settled_work_orders: settledWorkOrders, settled_on: settledDay }],
     }).where(eq(depositSettlementsTable.id, id));
     void logAction({ entityType: ENTITY, entityId: id, action: "PAYMENT", actorId: (req as any).user?.id ?? null, newValue: { status: "finalized", refund: totals.refund_amount, deducted: totals.total_deducted, gl_posted: glPosted } });
     // 확정된 정산은 곧 돈이 움직인다는 뜻이다 — 임차인에게 금액과 입금 예정일을 문자로.
@@ -645,11 +888,25 @@ adminRouter.post("/v1/deposit-settlements/:id/reopen", async (req, res): Promise
     }
 
     const audit = Array.isArray(s.audit_trail) ? s.audit_trail : [];
+    // 확정이 채운 작업지시 수령일자를 되돌린다 — 그 뒤 운영자가 손으로 바꾼 날짜는
+    // 건드리지 않도록, 확정 때 적은 날짜와 같은 것만.
+    const lastFinalize = [...audit].reverse().find((e: any) => e?.event === "finalized") as any;
+    const unsettleIds: number[] = Array.isArray(lastFinalize?.settled_work_orders)
+      ? lastFinalize.settled_work_orders.map(Number).filter((n: number) => Number.isInteger(n) && n > 0)
+      : [];
+    let unsettledWorkOrders: number[] = [];
+    if (unsettleIds.length && typeof lastFinalize?.settled_on === "string") {
+      const reverted = await db.update(workOrdersTable)
+        .set({ settled_on: null, updated_at: new Date() })
+        .where(and(inArray(workOrdersTable.id, unsettleIds), eq(workOrdersTable.settled_on, lastFinalize.settled_on)))
+        .returning({ id: workOrdersTable.id });
+      unsettledWorkOrders = reverted.map((r) => r.id);
+    }
     await db.update(depositSettlementsTable).set({
       status: "draft",
       finalized_at: null,
       posting_key: null,
-      audit_trail: [...audit, { event: "reopened", at: new Date().toISOString(), actor: (req as any).user?.id ?? null, gl_reversed: glReversed, reversed_key: s.posting_key ?? null }],
+      audit_trail: [...audit, { event: "reopened", at: new Date().toISOString(), actor: (req as any).user?.id ?? null, gl_reversed: glReversed, reversed_key: s.posting_key ?? null, unsettled_work_orders: unsettledWorkOrders }],
     }).where(eq(depositSettlementsTable.id, id));
     void logAction({ entityType: ENTITY, entityId: id, action: "STATUS_CHANGE", actorId: (req as any).user?.id ?? null, oldValue: { status: "finalized" }, newValue: { status: "draft", gl_reversed: glReversed } });
     res.json({ success: true, data: await loadSettlementDetail(id) });

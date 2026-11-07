@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { Link } from "wouter";
 import { apiJson } from "@/lib/apiFetch";
 import { Button } from "@/components/ui/button";
 import { Plus, Wallet, Lock, Unlock, Trash2, Send, FileText, Receipt, TriangleAlert } from "lucide-react";
@@ -20,6 +21,9 @@ type LineKind = "deduct" | "refund";
 type Deduction = {
   id: number; description: string; amount: string; remark: string | null;
   condition_item_id: number | null;
+  /** 이 라인이 나온 작업지시(보증금 차감으로 정산하는 퇴거청소·하자보수). */
+  work_order_id?: number | null;
+  work_order_ref?: string | null;
   /** 확인서 2번 표의 "구분". 금액 부호가 정본이고, 0원 라인은 이 값만이 의도를 말한다. */
   kind: LineKind;
 };
@@ -308,6 +312,11 @@ function SettlementCard({ s, onChanged }: { s: Settlement; onChanged: () => void
                         ) : d.description}
                         {d.condition_item_id ? (
                           <span className="ml-2 text-[11px] text-muted-foreground">↳ {t("deposit_settlement.evidence", { id: d.condition_item_id })}</span>
+                        ) : null}
+                        {d.work_order_id ? (
+                          <Link href={`/maintenance/work-orders/${d.work_order_id}`} className="ml-2 text-[11px] text-primary hover:underline">
+                            ↳ {t("deposit_settlement.work_order", { ref: d.work_order_ref ?? `#${d.work_order_id}` })}
+                          </Link>
                         ) : null}
                       </td>
                       <td className={`${td} text-center`}>

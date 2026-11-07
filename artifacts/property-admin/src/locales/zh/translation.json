@@ -5873,6 +5873,7 @@
     "deductions": "扣款",
     "refund": "退还租客",
     "evidence": "证据 #{{id}}",
+    "work_order": "工单 {{ref}}",
     "no_deductions": "无扣款 — 全额退还押金。",
     "add_deduction": "添加扣款",
     "finalized_gl": "已定稿 — 已过总账分录（借 已收押金 / 贷 现金 + 收入）。",

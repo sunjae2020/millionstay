@@ -5912,6 +5912,7 @@
     "deductions": "공제",
     "refund": "임차인 환급액",
     "evidence": "증빙 #{{id}}",
+    "work_order": "작업지시 {{ref}}",
     "no_deductions": "공제 없음 — 보증금 전액 환급.",
     "add_deduction": "공제 추가",
     "finalized_gl": "확정됨 — 총계정원장 분개 전기 완료 (차변 예치 보증금 / 대변 현금 + 수익).",

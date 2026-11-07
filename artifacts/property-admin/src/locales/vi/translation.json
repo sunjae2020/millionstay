@@ -5828,6 +5828,7 @@
     "deductions": "Khoản khấu trừ",
     "refund": "Hoàn trả cho người thuê",
     "evidence": "bằng chứng #{{id}}",
+    "work_order": "Lệnh công việc {{ref}}",
     "no_deductions": "Không có khoản khấu trừ — hoàn trả toàn bộ tiền đặt cọc.",
     "add_deduction": "Thêm khoản khấu trừ",
     "finalized_gl": "Đã hoàn tất — bút toán sổ cái đã được hạch toán (Nợ Tiền đặt cọc giữ / Có Tiền mặt + Doanh thu).",

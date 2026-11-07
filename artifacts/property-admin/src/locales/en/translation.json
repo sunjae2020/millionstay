@@ -5912,6 +5912,7 @@
     "deductions": "Deductions",
     "refund": "Refund to tenant",
     "evidence": "evidence #{{id}}",
+    "work_order": "Work order {{ref}}",
     "no_deductions": "No deductions — full deposit refunded.",
     "add_deduction": "Add deduction",
     "finalized_gl": "Finalized — GL entry posted (Dr Deposits Held / Cr Cash + Revenue).",
