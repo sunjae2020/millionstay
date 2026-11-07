@@ -1693,62 +1693,52 @@ router.put("/v1/contracts/:id", async (req, res): Promise<void> => {
   const [existing] = await db.select().from(contractsTable).where(eq(contractsTable.id, id));
   if (!existing) { res.status(404).json({ error: "NOT_FOUND" }); return; }
 
-  // Signed/Active contracts are immutable except for internal annotations —
-  // editing the terms/amounts would invalidate the captured e-signature (H-201).
-  const locked = existing.status === "Signed" || existing.status === "Active";
-  // 계약 경로는 계약 조건이 아니라 내부 운영 기록(수수료를 누구에게 얼마나 주는가)이라
-  // 서명 후에도 고칠 수 있어야 한다 — 잠긴 계약에서도 통과시킨다.
-  const updates = locked
-    ? {
-        document_url: data.document_url ?? existing.document_url,
-        ...(data.acquisition_channel !== undefined ? acquisitionChannelFields(data) : {}),
-        // 계약 체결일은 계약 조건이 아니라 기록해 두지 않았던 사실이다 — 지금까지
-        // 입주일에서 추정해 찍혀 왔으므로, 잠긴 계약에서도 바로잡을 수 있어야 한다.
-        ...(data.contract_date !== undefined ? { contract_date: data.contract_date || null } : {}),
-        notes: data.notes ?? existing.notes,
-      }
-    : {
-        booking_id: data.booking_id ?? null,
-        product_id: data.product_id ?? null,
-        contract_product_id: data.contract_product_id ?? null,
-        tenant_account_id: data.tenant_account_id ?? null,
-        landlord_account_id: data.landlord_account_id ?? null,
-        space_id: data.space_id ?? null,
-        start_date: data.start_date ?? null,
-        end_date: data.end_date ?? null,
-        contract_date: data.contract_date ?? null,
-        lease_mode: data.lease_mode ?? null,
-        rate_period: data.rate_period ?? null,
-        rate_amount: data.rate_amount ?? null,
-        weekly_rate: data.weekly_rate ?? null,
-        total_rent: data.total_rent ?? null,
-        bond_amount: data.bond_amount ?? null,
-        monthly_rent: data.monthly_rent ?? null,
-        actual_monthly_rent: data.actual_monthly_rent ?? null,
-        advance_amount: data.advance_amount ?? null,
-        contract_category: data.contract_category ?? null,
-        lease_form: data.lease_form ?? null,
-        rental_business_registration_id: registrationIdField(data),
-        doc_attachments: normalizeAttachmentsInput(data.doc_attachments, data.lease_form ?? null),
-        ...mltLeaseFields(data),
-        down_payment: data.down_payment ?? null,
-        down_payment_date: data.down_payment_date ?? null,
-        balance_amount: data.balance_amount ?? null,
-        balance_date: data.balance_date ?? null,
-        rent_due_day: data.rent_due_day ?? null,
-        currency: data.currency ?? DEFAULT_CURRENCY,
-        document_url: data.document_url ?? null,
-        ...acquisitionChannelFields(data),
-        // 계약서에 찍히는 납부계좌 — 비우면 payment_info 이름 규칙으로 자동 선택.
-        rent_payment_info_id: data.rent_payment_info_id ?? null,
-        deposit_payment_info_id: data.deposit_payment_info_id ?? null,
-        special_terms: data.special_terms ?? null,
-        terms_text: data.terms_text ?? null,
-        notes: data.notes ?? null,
-      };
-  // 이중 계약 가드 — 세대나 기간이 실제로 바뀔 때만 검사한다(잠긴 계약은 그 필드를
-  // 못 바꾸므로 해당 없음). 자기 자신은 제외한다.
-  if (!locked) {
+  // 서명·진행 중(Signed/Active) 계약도 모든 항목을 고칠 수 있다. 예전에는 잠가 두고
+  // 수정분을 조용히 버리면서 200 을 돌려줘, 화면에는 저장된 것처럼 보였다.
+  // 온라인 서명본은 서명 시점의 사본(contract_signing_requests.signed_snapshot)이
+  // 따로 보관되므로, 여기서 고쳐도 이미 서명한 문서는 바뀌지 않는다(H-201).
+  const updates = {
+    booking_id: data.booking_id ?? null,
+    product_id: data.product_id ?? null,
+    // 어드민 폼은 이 값을 보내지 않는다 — 키가 없으면 기존 값을 지킨다.
+    contract_product_id: data.contract_product_id !== undefined ? (data.contract_product_id ?? null) : existing.contract_product_id,
+    tenant_account_id: data.tenant_account_id ?? null,
+    landlord_account_id: data.landlord_account_id ?? null,
+    space_id: data.space_id ?? null,
+    start_date: data.start_date ?? null,
+    end_date: data.end_date ?? null,
+    contract_date: data.contract_date ?? null,
+    lease_mode: data.lease_mode ?? null,
+    rate_period: data.rate_period ?? null,
+    rate_amount: data.rate_amount ?? null,
+    weekly_rate: data.weekly_rate ?? null,
+    total_rent: data.total_rent ?? null,
+    bond_amount: data.bond_amount ?? null,
+    monthly_rent: data.monthly_rent ?? null,
+    actual_monthly_rent: data.actual_monthly_rent ?? null,
+    advance_amount: data.advance_amount ?? null,
+    contract_category: data.contract_category ?? null,
+    lease_form: data.lease_form ?? null,
+    rental_business_registration_id: registrationIdField(data),
+    doc_attachments: normalizeAttachmentsInput(data.doc_attachments, data.lease_form ?? null),
+    ...mltLeaseFields(data),
+    down_payment: data.down_payment ?? null,
+    down_payment_date: data.down_payment_date ?? null,
+    balance_amount: data.balance_amount ?? null,
+    balance_date: data.balance_date ?? null,
+    rent_due_day: data.rent_due_day ?? null,
+    currency: data.currency ?? DEFAULT_CURRENCY,
+    document_url: data.document_url ?? null,
+    ...acquisitionChannelFields(data),
+    // 계약서에 찍히는 납부계좌 — 비우면 payment_info 이름 규칙으로 자동 선택.
+    rent_payment_info_id: data.rent_payment_info_id ?? null,
+    deposit_payment_info_id: data.deposit_payment_info_id ?? null,
+    special_terms: data.special_terms ?? null,
+    terms_text: data.terms_text ?? null,
+    notes: data.notes ?? null,
+  };
+  // 이중 계약 가드 — 세대나 기간이 실제로 바뀔 때만 검사한다. 자기 자신은 제외한다.
+  {
     const newSpaceId = data.space_id ?? null;
     const newStart = data.start_date ?? null;
     const newEnd = data.end_date ?? null;
@@ -1826,7 +1816,7 @@ router.post("/v1/contracts/:id/sign", async (req, res): Promise<void> => {
  *   PATCH /v1/contracts/:id/issue-config
  *   { lease_form, doc_attachments[], contract_date, signing_mode, signing_mode_reason }
  *
- * 전체 PUT 은 보내지 않은 필드를 NULL 로 덮으므로(그리고 Signed/Active 는 잠김)
+ * 전체 PUT 은 보내지 않은 필드를 NULL 로 덮으므로
  * 위저드가 서식·첨부·서명방식만 건드릴 수 있게 따로 뚫었다. 넘기지 않은 키는
  * 그대로 둔다.
  */
@@ -1835,11 +1825,8 @@ router.patch("/v1/contracts/:id/issue-config", async (req, res): Promise<void> =
   if (!Number.isFinite(id)) { res.status(400).json({ error: "Invalid id" }); return; }
   const [existing] = await db.select().from(contractsTable).where(eq(contractsTable.id, id));
   if (!existing) { res.status(404).json({ error: "NOT_FOUND" }); return; }
-  // 체결된 계약의 서식을 바꾸면 이미 받은 서명·발행본과 어긋난다.
-  if (existing.status === "Signed" || existing.status === "Active") {
-    res.status(409).json({ error: "체결·진행 중인 계약은 발행 설정을 바꿀 수 없습니다.", code: "CONTRACT_LOCKED" });
-    return;
-  }
+  // 체결·진행 중 계약도 서식을 바꿀 수 있다 — 온라인 서명본은 서명 시점 사본이
+  // 따로 보관되므로 영향이 없다(PUT /v1/contracts/:id 와 같은 정책).
 
   const data = req.body ?? {};
   const updates: Record<string, unknown> = { updated_at: new Date() };
