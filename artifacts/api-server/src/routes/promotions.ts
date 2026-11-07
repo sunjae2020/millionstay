@@ -147,7 +147,7 @@ router.get("/v1/promotions/:id/associated-products", async (req, res): Promise<v
         min_contract_period_unit: accommodationCatalogTable.min_contract_period_unit,
       })
         .from(accommodationCatalogTable)
-        .where(eq(accommodationCatalogTable.promotion_id, promoId))
+        .where(and(eq(accommodationCatalogTable.promotion_id, promoId), isNull(accommodationCatalogTable.deleted_at)))
         .orderBy(accommodationCatalogTable.name),
       db.select({
         id: serviceCatalogTable.id,

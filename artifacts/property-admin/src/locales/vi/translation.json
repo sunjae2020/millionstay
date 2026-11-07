@@ -2524,7 +2524,11 @@
     "toast_saved": "Đã lưu",
     "toast_saved_desc": "Đã lưu sản phẩm thành công.",
     "toast_save_failed": "Không thể lưu sản phẩm.",
-    "err_unknown": "Lỗi không xác định"
+    "err_unknown": "Lỗi không xác định",
+    "archive_title": "Lưu trữ sản phẩm?",
+    "archive_desc": "\"{{name}}\" sẽ được chuyển vào kho lưu trữ và ẩn khỏi danh sách cũng như cửa sổ chọn khi đặt phòng/lập hợp đồng. Bạn có thể khôi phục từ kho lưu trữ sau.",
+    "archived": "Đã lưu trữ sản phẩm",
+    "archive_fail": "Không thể lưu trữ sản phẩm"
   },
   "contract_product": {
     "new": "Sản phẩm hợp đồng mới",

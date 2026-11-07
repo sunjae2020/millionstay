@@ -5,9 +5,9 @@ import { Layout, PageHeader } from "@/components/Layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Plus, Search, Pencil, Trash2 } from "lucide-react";
-import { DataTable, ACTIONS_KEY, type ColumnDef } from "@/components/ui/data-table";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { Plus, Search, Pencil, Archive } from "lucide-react";
+import { DataTable, useServerList, ACTIONS_KEY, type ColumnDef } from "@/components/ui/data-table";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -57,15 +57,8 @@ type Product = {
 
 type Promotion = { id: number; display: string };
 
-async function fetchProducts(q: string, promotionId: string): Promise<Product[]> {
-  const params = new URLSearchParams({ limit: "200" });
-  if (q) params.set("q", q);
-  if (promotionId && promotionId !== "_all") params.set("promotion_id", promotionId);
-  const res = await apiFetch(`/api/v1/accommodations?${params}`);
-  if (!res.ok) return [];
-  const json = await res.json();
-  return json.data ?? [];
-}
+/** 서버가 정렬할 수 있는 컬럼(api-server routes/product-catalog.ts 의 PRODUCT_SORT 와 1:1). */
+const SORTABLE_KEYS = ["name", "price", "currency", "promotion_id", "status", "created_at", "updated_at"];
 
 async function fetchPromotions(): Promise<Promotion[]> {
   const res = await apiFetch("/api/v1/lookup/promotions");
@@ -79,13 +72,20 @@ export default function ProductList() {
   const [q, setQ] = useState("");
   const [statusFilter, setStatusFilter] = useState("_all");
   const [promotionFilter, setPromotionFilter] = useState("_all");
-  const [deleteId, setDeleteId] = useState<number | null>(null);
-  const qc = useQueryClient();
+  const [archiveTarget, setArchiveTarget] = useState<Product | null>(null);
+  const [showDeleted, setShowDeleted] = useState(false);
   const { toast } = useToast();
 
-  const { data: products = [], isLoading } = useQuery({
-    queryKey: ["accommodation-products", q, promotionFilter],
-    queryFn: () => fetchProducts(q, promotionFilter),
+  const filters = {
+    q: q || undefined,
+    promotion_id: promotionFilter !== "_all" ? promotionFilter : undefined,
+    status: statusFilter !== "_all" ? statusFilter : undefined,
+    deleted: showDeleted ? "only" : undefined,
+  };
+  const { rows: products, total, isLoading, server, invalidate } = useServerList<Product>("/api/v1/accommodations", {
+    filters,
+    sortableKeys: SORTABLE_KEYS,
+    defaultSort: { key: "name", dir: "asc" },
   });
 
   const { data: promotions = [] } = useQuery<Promotion[]>({
@@ -93,25 +93,19 @@ export default function ProductList() {
     queryFn: fetchPromotions,
   });
 
-  const deleteMutation = useMutation({
+  // 단건 삭제 = 보관(소프트 삭제). 영구 삭제·복원은 DataTable 선택 툴바가 맡는다.
+  const archiveMutation = useMutation({
     mutationFn: async (id: number) => {
       const res = await apiFetch(`/api/v1/accommodations/${id}`, { method: "DELETE" });
-      if (!res.ok) throw new Error("Delete failed");
+      if (!res.ok) throw new Error("Archive failed");
     },
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["accommodation-products"] });
-      toast({ title: t("product.delete_title") });
-      setDeleteId(null);
+      invalidate();
+      toast({ title: t("product.archived") });
+      setArchiveTarget(null);
     },
-    onError: () => toast({ title: t("common.error"), description: t("product.delete_fail"), variant: "destructive" }),
+    onError: () => toast({ title: t("common.error"), description: t("product.archive_fail"), variant: "destructive" }),
   });
-
-  const filtered = products.filter((p) => {
-    if (statusFilter !== "_all" && p.status !== statusFilter) return false;
-    return true;
-  });
-
-  const deleteTarget = products.find(p => p.id === deleteId);
 
   const columns: ColumnDef<Product>[] = useMemo(
     () => [
@@ -179,24 +173,27 @@ export default function ProductList() {
                 <Pencil className="h-3.5 w-3.5 text-muted-foreground" />
               </button>
             </Link>
-            <button
-              className="p-1.5 rounded hover:bg-destructive/10 transition-colors"
-              onClick={() => setDeleteId(p.id)}
-            >
-              <Trash2 className="h-3.5 w-3.5 text-muted-foreground hover:text-destructive" />
-            </button>
+            {!showDeleted && (
+              <button
+                className="p-1.5 rounded hover:bg-destructive/10 transition-colors"
+                title={t("common.archive")}
+                onClick={() => setArchiveTarget(p)}
+              >
+                <Archive className="h-3.5 w-3.5 text-muted-foreground hover:text-destructive" />
+              </button>
+            )}
           </div>
         ),
       },
     ],
-    [t, currencyPosition],
+    [t, currencyPosition, showDeleted],
   );
 
   return (
     <Layout>
       <PageHeader
         title={t("nav.accommodation")}
-        subtitle={`${filtered.length} of ${products.length} ${t("common.total")}`}
+        subtitle={`${total} ${t("common.total")}`}
         actions={
           <Link href="/products/products/new">
             <Button>
@@ -209,14 +206,21 @@ export default function ProductList() {
 
       <div className="p-6">
         <DataTable
+          server={server}
           tableKey="accommodation-products"
           columns={columns}
-          data={filtered}
+          data={products}
           isLoading={isLoading}
           rowKey={(p) => p.id}
-          defaultSort={{ key: "name", dir: "asc" }}
           emptyText={t("product.no_products")}
-          editing={{ resource: "accommodations", onEdited: () => qc.invalidateQueries({ queryKey: ["accommodation-products"] }) }}
+          selection={{
+            enable: true,
+            resource: "accommodations",
+            onChanged: () => invalidate(),
+          }}
+          editing={{ resource: "accommodations", onEdited: () => invalidate() }}
+          showDeleted={showDeleted}
+          onToggleShowDeleted={setShowDeleted}
           toolbarExtra={
             <div className="flex flex-wrap items-center gap-2">
               <div className="relative w-56">
@@ -255,21 +259,21 @@ export default function ProductList() {
         />
       </div>
 
-      <AlertDialog open={deleteId !== null} onOpenChange={(open) => !open && setDeleteId(null)}>
+      <AlertDialog open={archiveTarget !== null} onOpenChange={(open) => !open && setArchiveTarget(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>{t("product.delete_title")}</AlertDialogTitle>
+            <AlertDialogTitle>{t("product.archive_title")}</AlertDialogTitle>
             <AlertDialogDescription>
-              {t("product.delete_desc_1")} <strong>{deleteTarget?.name}</strong>? {t("common.cannot_undo")}
+              {t("product.archive_desc", { name: archiveTarget?.name ?? "" })}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
             <AlertDialogAction
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-              onClick={() => deleteId !== null && deleteMutation.mutate(deleteId)}
+              onClick={() => archiveTarget && archiveMutation.mutate(archiveTarget.id)}
             >
-              {t("common.delete")}
+              {t("common.archive")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

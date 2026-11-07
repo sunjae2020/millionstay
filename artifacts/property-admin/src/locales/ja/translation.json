@@ -2541,7 +2541,11 @@
     "toast_saved": "保存しました",
     "toast_saved_desc": "商品を正常に保存しました。",
     "toast_save_failed": "商品の保存に失敗しました。",
-    "err_unknown": "不明なエラー"
+    "err_unknown": "不明なエラー",
+    "archive_title": "商品をアーカイブしますか？",
+    "archive_desc": "「{{name}}」はアーカイブに移動し、一覧や予約・契約の選択画面に表示されなくなります。後でアーカイブから復元できます。",
+    "archived": "商品をアーカイブしました",
+    "archive_fail": "商品のアーカイブに失敗しました"
   },
   "contract_product": {
     "new": "新規契約商品",

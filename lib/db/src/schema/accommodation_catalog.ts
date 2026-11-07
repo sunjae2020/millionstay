@@ -46,6 +46,8 @@ export const accommodationCatalogTable = pgTable("accommodation_catalog", {
   display_on_booking_page: boolean("display_on_booking_page").notNull().default(true),
   display_on_invoice: boolean("display_on_invoice").notNull().default(true),
   status: text("status").notNull().default("Active"),
+  // 소프트 삭제(보관함). NULL = 살아 있는 상품. 0100 마이그레이션.
+  deleted_at: timestamp("deleted_at"),
   created_at: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updated_at: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),
 });

@@ -2543,7 +2543,11 @@
     "toast_saved": "已保存",
     "toast_saved_desc": "产品保存成功。",
     "toast_save_failed": "产品保存失败。",
-    "err_unknown": "未知错误"
+    "err_unknown": "未知错误",
+    "archive_title": "归档产品？",
+    "archive_desc": "“{{name}}”将移至归档，并在列表及预订/合同选择窗口中隐藏。您可以稍后从归档中恢复。",
+    "archived": "产品已归档",
+    "archive_fail": "归档产品失败"
   },
   "contract_product": {
     "new": "新建合同产品",

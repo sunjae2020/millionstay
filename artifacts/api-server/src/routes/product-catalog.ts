@@ -1,5 +1,5 @@
 import { Router, type IRouter } from "express";
-import { eq, ilike, and, sql, SQL, asc, inArray } from "drizzle-orm";
+import { eq, ilike, and, sql, SQL, asc, inArray, isNull } from "drizzle-orm";
 import {
   db,
   accommodationCatalogTable,
@@ -13,13 +13,28 @@ import {
 } from "@workspace/db";
 
 import { keywordCondition } from "../lib/listSearch";
+import { deletedFilter, makeBulkDelete, makeBulkRestore } from "../lib/softDelete";
+import { parseListPage, parseSortParams, buildOrderBy, type SortMap } from "../utils/pagination.js";
 const router: IRouter = Router();
+
+/** 정렬 허용 컬럼 — ProductList 의 SORTABLE_KEYS 와 1:1. */
+const PRODUCT_SORT: SortMap = {
+  name: accommodationCatalogTable.name,
+  price: accommodationCatalogTable.price,
+  currency: accommodationCatalogTable.currency,
+  promotion_id: accommodationCatalogTable.promotion_id,
+  status: accommodationCatalogTable.status,
+  created_at: accommodationCatalogTable.created_at,
+  updated_at: accommodationCatalogTable.updated_at,
+};
 
 router.get("/v1/accommodations", async (req, res): Promise<void> => {
   try {
-    const { q, product_group_id, product_type_id, promotion_id, is_active, limit = "100", offset = "0" } = req.query as Record<string, string>;
+    const { q, product_group_id, product_type_id, promotion_id, is_active, status } = req.query as Record<string, string>;
+    const { limit, offset, page } = parseListPage(req.query);
 
-    const conditions: SQL[] = [];
+    // ?deleted=only → 보관함(소프트 삭제된 상품), 기본은 살아 있는 상품만.
+    const conditions: SQL[] = [deletedFilter(accommodationCatalogTable.deleted_at, req)];
     if (q) {
       // 상품명·설명에 더해 상품 태그로도 찾는다.
       conditions.push(keywordCondition(q, [
@@ -33,17 +48,19 @@ router.get("/v1/accommodations", async (req, res): Promise<void> => {
     if (promotion_id) conditions.push(eq(accommodationCatalogTable.promotion_id, Number(promotion_id)));
     if (is_active === "true") conditions.push(eq(accommodationCatalogTable.status, "Active"));
     if (is_active === "false") conditions.push(eq(accommodationCatalogTable.status, "Inactive"));
+    if (status) conditions.push(eq(accommodationCatalogTable.status, status));
 
-    const where = conditions.length > 0 ? and(...conditions) : undefined;
+    const where = and(...conditions);
+    const sort = parseSortParams(req.query, PRODUCT_SORT);
 
     const [rows, [{ count }]] = await Promise.all([
       db
         .select()
         .from(accommodationCatalogTable)
         .where(where)
-        .orderBy(asc(accommodationCatalogTable.name))
-        .limit(Number(limit))
-        .offset(Number(offset)),
+        .orderBy(...buildOrderBy(PRODUCT_SORT, sort, accommodationCatalogTable.id, [asc(accommodationCatalogTable.name)]))
+        .limit(limit)
+        .offset(offset),
       db.select({ count: sql<number>`count(*)::int` }).from(accommodationCatalogTable).where(where),
     ]);
 
@@ -94,7 +111,8 @@ router.get("/v1/accommodations", async (req, res): Promise<void> => {
       packed_services: svcMap[r.id] ?? [],
     }));
 
-    res.json({ success: true, data, meta: { total: count, limit: Number(limit), offset: Number(offset) } });
+    res.setHeader("X-Total-Count", String(count));
+    res.json({ success: true, data, meta: { total: count, limit, offset, page } });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Failed to list products" });
@@ -163,12 +181,38 @@ router.patch("/v1/accommodations/:id/deactivate", async (req, res): Promise<void
   }
 });
 
+/* ── POST /v1/accommodations/bulk-delete · bulk-restore ── */
+// 서비스 카탈로그와 같은 보관함 흐름: 보관 = deleted_at + status "Archived",
+// 복원 = deleted_at NULL + "Active", 영구 삭제는 SuperAdmin 만.
+const accommodationSoftDelete = {
+  table: accommodationCatalogTable,
+  idColumn: accommodationCatalogTable.id,
+  statusKey: "status",
+  archivedStatus: "Archived",
+  restoredStatus: "Active",
+};
+
+router.post("/v1/accommodations/bulk-delete", makeBulkDelete(accommodationSoftDelete));
+router.post("/v1/accommodations/bulk-restore", makeBulkRestore(accommodationSoftDelete));
+
+/* ── DELETE /v1/accommodations/:id ── 기본은 보관(소프트 삭제), ?permanent=true 는 영구 삭제 */
 router.delete("/v1/accommodations/:id", async (req, res): Promise<void> => {
   try {
     const id = Number(req.params.id);
     if (!id) { res.status(400).json({ error: "Invalid id" }); return; }
-    const [deleted] = await db.delete(accommodationCatalogTable).where(eq(accommodationCatalogTable.id, id)).returning();
-    if (!deleted) { res.status(404).json({ error: "Not found" }); return; }
+    const permanent = req.query.permanent === "true";
+    if (permanent) {
+      if ((req as any).user?.role !== "SuperAdmin") {
+        res.status(403).json({ error: "Only SuperAdmin can permanently delete records" }); return;
+      }
+      const [deleted] = await db.delete(accommodationCatalogTable).where(eq(accommodationCatalogTable.id, id)).returning();
+      if (!deleted) { res.status(404).json({ error: "Not found" }); return; }
+    } else {
+      const [archived] = await db.update(accommodationCatalogTable)
+        .set({ deleted_at: new Date(), status: "Archived" })
+        .where(eq(accommodationCatalogTable.id, id)).returning();
+      if (!archived) { res.status(404).json({ error: "Not found" }); return; }
+    }
     res.json({ success: true });
   } catch (err) {
     res.status(500).json({ error: "Failed to delete product" });
@@ -273,7 +317,7 @@ router.delete("/v1/accommodations/:id/services/:mapId", async (req, res): Promis
 router.get("/v1/lookup/products", async (req, res): Promise<void> => {
   try {
     const { q, space_id } = req.query as Record<string, string>;
-    const conditions: SQL[] = [eq(accommodationCatalogTable.status, "Active")];
+    const conditions: SQL[] = [eq(accommodationCatalogTable.status, "Active"), isNull(accommodationCatalogTable.deleted_at)];
     if (q) conditions.push(ilike(accommodationCatalogTable.name, `%${q}%`));
     if (space_id) conditions.push(eq(accommodationCatalogTable.space_id, Number(space_id)));
 

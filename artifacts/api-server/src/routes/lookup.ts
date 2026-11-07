@@ -265,7 +265,11 @@ router.get("/v1/lookup/products", async (req, res): Promise<void> => {
     })
     .from(accommodationCatalogTable)
     .leftJoin(spacesTable, eq(spacesTable.id, accommodationCatalogTable.space_id))
-    .where(q ? keywordCondition(q, [accommodationCatalogTable.name, accommodationCatalogTable.product_tag, spacesTable.name]) : undefined)
+    // 보관함(소프트 삭제)으로 간 상품은 선택 팝업에 띄우지 않는다.
+    .where(and(
+      isNull(accommodationCatalogTable.deleted_at),
+      q ? keywordCondition(q, [accommodationCatalogTable.name, accommodationCatalogTable.product_tag, spacesTable.name]) : undefined,
+    ))
     .orderBy(asc(accommodationCatalogTable.name))
     .limit(20);
   // The price is quoted in the product's OWN currency (a KRW rate card must not

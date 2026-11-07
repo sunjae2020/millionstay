@@ -310,6 +310,7 @@ async function listPublicSpaces(
         .where(and(
           inArray(accommodationCatalogTable.space_id, remainingIds),
           eq(accommodationCatalogTable.status, "Active"),
+          isNull(accommodationCatalogTable.deleted_at),
         ));
 
       const productMinBySpace = new Map<number, number>();
@@ -373,6 +374,7 @@ async function listPublicSpaces(
           .where(and(
             inArray(accommodationCatalogTable.space_id, paginatedIds),
             eq(accommodationCatalogTable.status, "Active"),
+            isNull(accommodationCatalogTable.deleted_at),
             eq(accommodationServiceCatalogTable.is_mandatory, true),
             eq(serviceCatalogTable.status, "Active"),
           ))
@@ -677,6 +679,7 @@ router.get("/v1/public/spaces/:id", async (req, res): Promise<void> => {
       .where(and(
         eq(accommodationCatalogTable.space_id, spaceId),
         eq(accommodationCatalogTable.status, "Active"),
+        isNull(accommodationCatalogTable.deleted_at),
       ))
       .orderBy(asc(accommodationCatalogTable.price)),
   ]);

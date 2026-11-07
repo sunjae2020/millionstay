@@ -2560,7 +2560,11 @@
     "toast_saved": "Saved",
     "toast_saved_desc": "Product saved successfully.",
     "toast_save_failed": "Failed to save product.",
-    "err_unknown": "Unknown error"
+    "err_unknown": "Unknown error",
+    "archive_title": "Archive Product?",
+    "archive_desc": "\"{{name}}\" will be moved to the archive and hidden from the list and booking/contract selectors. You can restore it from the archive later.",
+    "archived": "Product archived",
+    "archive_fail": "Failed to archive product"
   },
   "contract_product": {
     "new": "New Contract Product",
