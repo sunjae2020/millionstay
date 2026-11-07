@@ -23,6 +23,12 @@ export const invoicesTable = pgTable("invoices", {
   parent_invoice_id: integer("parent_invoice_id"),
   // 청구 대상 월 "YYYY-MM". 통합 청구서와 그 자식 모두에 채워진다.
   billing_period: text("billing_period"),
+  // 이 청구서가 덮는 마지막 대상 월 "YYYY-MM"(포함). 여러 달을 한 장으로 선납받은
+  // 청구서는 billing_period ~ billing_period_end 구간을 덮는다. 비어 있으면
+  // billing_period 한 달만 덮는다. 월세 자동 생성기가 이 구간 안의 달을 "이미
+  // 청구됨"으로 보고 건너뛴다 — 없으면 선납 계약에 매달 가짜 미납 청구서가 쌓인다.
+  // (0098 — 운영 Metheim DB 에는 이미 존재)
+  billing_period_end: text("billing_period_end"),
   // 공급가액(과세표준). 부가세를 붙이더라도 이 값은 세액을 포함하지 않는다 — 매출·정산·
   // 커미션 계산이 모두 이 컬럼을 쓰므로 세액이 섞이면 매출이 부풀고 정산이 틀어진다.
   // 세입자가 실제로 내는 금액은 amount + tax_amount 다.

@@ -349,6 +349,7 @@ async function upsertChildInvoice(args: {
       account_id: account.id,
       invoice_kind: "standard",
       billing_period: period,
+      billing_period_end: period,
       amount: String(total),
       currency,
       status: "Sent",

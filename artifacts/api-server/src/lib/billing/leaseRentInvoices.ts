@@ -112,11 +112,22 @@ export async function generateLeaseRentInvoices(opts: { year?: number; month?: n
     if (lease.end_date && dueDate > lease.end_date) { skipped++; continue; }
 
     // Already billed for this month? (covers both migrated and generated refs)
+    // Two ways a non-Void invoice can cover the month:
+    //   1. its due date falls in the month (the normal one-month invoice), or
+    //   2. the month sits inside a multi-month PREPAYMENT's covered range
+    //      billing_period ~ billing_period_end ("YYYY-MM", inclusive).
+    // Without (2) a tenant who paid three months up front got a fresh invoice for
+    // every later month, each aging into a phantom 미납 채권 (1815호).
+    //
+    // Void invoices never block: a voided invoice billed nothing, so the month is
+    // still owed. (Before voiding a duplicate that a prepayment already covers, set
+    // billing_period_end on the prepayment — otherwise the month is billed again.)
     //
     // ⚠️ This guard is deliberately BROAD — any invoice due in the month blocks the
     // rent invoice, even a deposit or cleaning bill. Narrowing it would double-bill
     // migrated data, so we DON'T. Instead, when the blocking invoice doesn't look
     // like rent, we log a WARN and count it so ops can spot silently skipped rent.
+    const period = `${year}-${pad(month)}`;
     const [existing] = await db.select({
       id: invoicesTable.id,
       ref: invoicesTable.invoice_ref,
@@ -127,8 +138,18 @@ export async function generateLeaseRentInvoices(opts: { year?: number; month?: n
       .where(and(
         eq(invoicesTable.contract_id, lease.id),
         isNull(invoicesTable.deleted_at),
-        gte(invoicesTable.due_date, monthStart),
-        lte(invoicesTable.due_date, monthEnd),
+        sql`${invoicesTable.status} <> 'Void'`,
+        or(
+          and(
+            gte(invoicesTable.due_date, monthStart),
+            lte(invoicesTable.due_date, monthEnd),
+          ),
+          and(
+            // 시작 월이 비어 있으면 납기일의 달을 시작으로 본다.
+            sql`coalesce(left(${invoicesTable.billing_period}, 7), left(${invoicesTable.due_date}, 7)) <= ${period}`,
+            sql`left(${invoicesTable.billing_period_end}, 7) >= ${period}`,
+          ),
+        ),
       ))
       .limit(1);
     if (existing) {
@@ -160,8 +181,19 @@ export async function generateLeaseRentInvoices(opts: { year?: number; month?: n
       unitName = space?.name ?? null;
     }
 
+    // RENT-<계약>-<YYYYMM> 은 UNIQUE 다. 그 달 청구서를 Void 한 뒤 다시 만드는
+    // 경우(위 가드가 Void 를 무시하므로 이제 가능하다) 같은 번호가 이미 있으므로
+    // -2, -3 … 접미사를 붙인다. 안 그러면 중복 키로 이번 실행 전체가 멈춘다.
+    const baseRef = `RENT-${lease.id}-${year}${pad(month)}`;
+    const taken = new Set((await db.select({ ref: invoicesTable.invoice_ref })
+      .from(invoicesTable)
+      .where(sql`${invoicesTable.invoice_ref} = ${baseRef} OR ${invoicesTable.invoice_ref} LIKE ${`${baseRef}-%`}`))
+      .map((r) => r.ref));
+    let invoiceRef = baseRef;
+    for (let n = 2; taken.has(invoiceRef); n++) invoiceRef = `${baseRef}-${n}`;
+
     const [rentInvoice] = await db.insert(invoicesTable).values({
-      invoice_ref: `RENT-${lease.id}-${year}${pad(month)}`,
+      invoice_ref: invoiceRef,
       contract_id: lease.id,
       account_id: lease.account_id ?? null,
       // 실 차임(월세)이 입력돼 있으면 그 금액으로, 없으면 계약서상의 차임으로 청구한다.
@@ -171,7 +203,9 @@ export async function generateLeaseRentInvoices(opts: { year?: number; month?: n
       due_date: dueDate,
       description: `${year}년 ${month}월 월세${unitName ? ` (${unitName})` : ""}`,
       // 대상 월을 남겨야 결제 일정의 그 달 회차와 맞출 수 있다.
-      billing_period: `${year}-${pad(month)}`,
+      billing_period: period,
+      // 한 달짜리 — 구간을 명시해 두면 납기일이 다음 달로 넘어가도 그 달을 덮는다.
+      billing_period_end: period,
     }).returning();
     // 생성한 청구서를 그 달의 회차에 박는다("청구했다"). 회차가 아직 없으면
     // (계약에서 일정을 안 뽑았으면) 조용히 지나간다 — 청구 자체는 이미 끝났다.

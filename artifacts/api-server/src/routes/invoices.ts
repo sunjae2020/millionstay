@@ -20,9 +20,9 @@ import { accountRecipients, contractPartyRecipients, parseRecipients, toRecipien
 import { resolveDocFileName, setDocFileName } from "../lib/documents/docFileName";
 import { formatPostalAddress } from "@workspace/address";
 import { getStripe } from "./stripe";
-import { postInvoicePaid, postInvoiceIssued } from "../lib/billing/gl";
+import { postInvoicePaid, postInvoiceIssued, postInvoiceVoided } from "../lib/billing/gl";
 import { generateSettlementsForInvoice } from "../lib/billing/payout";
-import { linkInvoiceToSchedule, recordInvoicePaymentTransaction } from "../lib/billing/scheduleLink";
+import { linkInvoiceToSchedule, recordInvoicePaymentTransaction, unlinkInvoiceFromSchedule } from "../lib/billing/scheduleLink";
 import { generateConsolidatedInvoices } from "../lib/billing/consolidatedInvoices";
 import { deletedFilter, makeBulkDelete, makeBulkRestore } from "../lib/softDelete";
 import { invoiceRecipient, notifySms } from "../lib/notify";
@@ -71,6 +71,19 @@ const TaxBody = z.object({
   tax_mode: z.enum(["none", "exclusive", "withholding"]).optional(),
   tax_rate: z.number().min(0).max(100).optional(),
 });
+
+/**
+ * 청구 대상 구간 "YYYY-MM" ~ "YYYY-MM"(양끝 포함). 여러 달을 한 장으로 선납받은
+ * 청구서에 billing_period_end 를 적어 두면 월세 자동 생성기가 그 구간 안의 달을
+ * 건너뛴다. end 만 비우면 billing_period 한 달짜리다.
+ */
+const PeriodBody = z.object({
+  billing_period: z.string().regex(/^\d{4}-\d{2}$/).nullish(),
+  billing_period_end: z.string().regex(/^\d{4}-\d{2}$/).nullish(),
+}).refine(
+  (p) => !p.billing_period || !p.billing_period_end || p.billing_period_end >= p.billing_period,
+  { message: "billing_period_end must not be before billing_period" },
+);
 
 /** 소수점 없는 통화(KRW·JPY)는 세액도 정수로 끊는다(35만 × 10% = 35,000). */
 function roundTax(amount: number, currency: string): number {
@@ -288,6 +301,8 @@ router.post("/v1/invoices", async (req, res): Promise<void> => {
   if (!itemsParsed.success) { res.status(400).json({ error: itemsParsed.error.message }); return; }
   const taxParsed = TaxBody.safeParse(req.body);
   if (!taxParsed.success) { res.status(400).json({ error: taxParsed.error.message }); return; }
+  const periodParsed = PeriodBody.safeParse(req.body);
+  if (!periodParsed.success) { res.status(400).json({ error: periodParsed.error.message }); return; }
   const lineItems = itemsParsed.data.line_items ?? [];
   const hasLineItems = lineItems.length > 0;
 
@@ -300,6 +315,8 @@ router.post("/v1/invoices", async (req, res): Promise<void> => {
     contract_id: parsed.data.contract_id ?? null,
     account_id: parsed.data.account_id ?? null,
     payment_info_id: parsed.data.payment_info_id ?? null,
+    billing_period: periodParsed.data.billing_period ?? null,
+    billing_period_end: periodParsed.data.billing_period_end ?? null,
     amount,
     tax_mode: taxMode,
     tax_rate: String(taxRate),
@@ -358,6 +375,8 @@ router.put("/v1/invoices/:id", async (req, res): Promise<void> => {
   if (!itemsParsed.success) { res.status(400).json({ error: itemsParsed.error.message }); return; }
   const taxParsed = TaxBody.safeParse(req.body);
   if (!taxParsed.success) { res.status(400).json({ error: taxParsed.error.message }); return; }
+  const periodParsed = PeriodBody.safeParse(req.body);
+  if (!periodParsed.success) { res.status(400).json({ error: periodParsed.error.message }); return; }
   const lineItems = itemsParsed.data.line_items; // undefined = leave untouched
   const id = Number(req.params.id);
 
@@ -366,6 +385,8 @@ router.put("/v1/invoices/:id", async (req, res): Promise<void> => {
   if (parsed.data.contract_id !== undefined) updates.contract_id = parsed.data.contract_id;
   if (parsed.data.account_id !== undefined) updates.account_id = parsed.data.account_id;
   if (parsed.data.payment_info_id !== undefined) updates.payment_info_id = parsed.data.payment_info_id;
+  if (periodParsed.data.billing_period !== undefined) updates.billing_period = periodParsed.data.billing_period ?? null;
+  if (periodParsed.data.billing_period_end !== undefined) updates.billing_period_end = periodParsed.data.billing_period_end ?? null;
   if (parsed.data.amount != null) updates.amount = String(parsed.data.amount);
   if (parsed.data.currency != null) updates.currency = parsed.data.currency;
   if (parsed.data.due_date !== undefined) updates.due_date = parsed.data.due_date;
@@ -514,13 +535,22 @@ async function notifyInvoicePaid(invoiceId: number, amount: number, currency: st
 }
 
 router.post("/v1/invoices/:id/void", async (req, res): Promise<void> => {
-  const existing = await db.select({ status: invoicesTable.status }).from(invoicesTable).where(eq(invoicesTable.id, Number(req.params.id))).then(r => r[0]);
+  const existing = await db.select({ status: invoicesTable.status, paid_at: invoicesTable.paid_at }).from(invoicesTable).where(eq(invoicesTable.id, Number(req.params.id))).then(r => r[0]);
   const [row] = await db.update(invoicesTable)
     .set({ status: "Void", updated_at: new Date() })
     .where(eq(invoicesTable.id, Number(req.params.id)))
     .returning();
   if (!row) { res.status(404).json({ error: "Not found" }); return; }
   await logAction({ entityType: "invoice", entityId: row.id, action: "STATUS_CHANGE", oldValue: { status: existing?.status }, newValue: { status: "Void" } });
+  // 발행 분개(Dr 미수금 / Cr 매출)를 역분개한다. 없으면 취소한 청구서의 채권·매출이
+  // 원장에 영원히 남는다(1815호 중복 월세 사례). posting_key invoice_void:<id> 로
+  // 멱등이고, 발행 전기가 없던 청구서는 no-op, 이미 입금이 잡힌 청구서는 역분개하지
+  // 않고 경고만 남긴다(환불·수정 판단이 필요). 통합 청구서 부모는 발행 전기를 하지
+  // 않으므로 자연히 no-op 이다. best-effort — 응답을 막지 않는다.
+  const wasPaid = existing?.status === "Paid" || existing?.paid_at != null;
+  void postInvoiceVoided({ id: row.id, currency: row.currency, wasPaid });
+  // 이 청구서를 가리키던 결제 일정 회차를 풀어 그 달을 다시 청구할 수 있게 한다.
+  void unlinkInvoiceFromSchedule(row.id);
   const [result] = await enrichInvoices([row]);
   res.json(result);
 });

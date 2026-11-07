@@ -102,6 +102,30 @@ export async function linkInvoiceToSchedule(invoiceId: number): Promise<number |
   }
 }
 
+/**
+ * 청구서가 무효(Void)가 되면 그 청구서를 가리키던 회차에서 떼어 낸다.
+ *
+ * 무효 청구서는 "청구했다"가 아니다. 붙여 두면 회차가 계속 '청구됨'으로 보이고,
+ * `findScheduleForInvoice` 가 invoice_id 가 빈 회차만 고르기 때문에 그 달을 다시
+ * 청구해도 새 청구서가 회차에 붙지 못한다. 떼어 낸 뒤 상태는 실제 입금(거래)
+ * 기준으로 다시 맞춘다 — 거래가 없으면 pending, 있으면 partial/paid 그대로다.
+ * 거래·분개는 건드리지 않는다. best-effort, 절대 throw 하지 않는다.
+ */
+export async function unlinkInvoiceFromSchedule(invoiceId: number): Promise<number[]> {
+  try {
+    const rows = await db.update(paymentSchedulesTable)
+      .set({ invoice_id: null, updated_at: new Date() })
+      .where(eq(paymentSchedulesTable.invoice_id, invoiceId))
+      .returning({ id: paymentSchedulesTable.id });
+    const ids = rows.map((r) => r.id);
+    if (ids.length) await recalcSchedulePaid(ids);
+    return ids;
+  } catch (err) {
+    console.error("[unlinkInvoiceFromSchedule]", err);
+    return [];
+  }
+}
+
 async function nextTxnRef(): Promise<string> {
   const year = new Date().getFullYear();
   const [row] = await db

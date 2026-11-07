@@ -9,8 +9,8 @@
 // posting helpers catch all errors, log, and return null instead of throwing.
 //
 // Money columns are numeric → strings; wrap reads in Number(), writes in String().
-import { and, desc, eq, gte, lte } from "drizzle-orm";
-import { db, journalEntriesTable, journalLinesTable, invoiceLineItemsTable } from "@workspace/db";
+import { and, desc, eq, gte, inArray, isNull, lte } from "drizzle-orm";
+import { db, journalEntriesTable, journalLinesTable, invoiceLineItemsTable, transactionsTable } from "@workspace/db";
 
 // ── Fixed chart of accounts ────────────────────────────────────────────────
 // Codes are OWNED BY THIS APP. AusBridge runs the same design on its own codes
@@ -248,6 +248,95 @@ export async function postInvoiceIssued(args: {
       ...creditLines,
     ],
   });
+}
+
+/**
+ * Reverse the issue posting when an invoice is VOIDED.
+ *
+ * Voiding used to flip `invoices.status` only, so a cancelled invoice left its
+ * Dr AR / Cr Revenue (+ VAT / deposit) entry standing — AR and revenue stayed
+ * overstated for every duplicate or mistaken invoice ever cancelled (1815호:
+ * duplicate RENT-434-202607/202608 → ₩1,000,000 phantom AR/revenue).
+ *
+ * The reversal MIRRORS the original entry line for line (debit ↔ credit) instead
+ * of re-deriving amounts, so VAT, withholding and deposit splits come back out
+ * exactly as they were booked even if the invoice was edited afterwards.
+ *
+ * Dated the day of the void (not the issue date): the period already reported
+ * stays as it was and the correction lands in the period it was made.
+ *
+ * Returns null — posts nothing — when:
+ *   - the invoice was never issued to the GL (Draft, imported/legacy rows, rows
+ *     the rent generator created as Sent, consolidated parents): nothing to undo;
+ *   - money has already been recorded against it (`invoice_paid:<id>` entry, a
+ *     confirmed/posted transaction, or the caller says it was Paid). Undoing a
+ *     paid invoice is a refund / credit-note decision, not a silent reversal —
+ *     reversing AR here would drive AR negative. Logged as a warning instead.
+ *
+ * Idempotent via posting_key `invoice_void:<id>`. Best-effort: never throws.
+ */
+export async function postInvoiceVoided(args: {
+  id: number;
+  currency: string;
+  /** Status was Paid / paid_at was set at the moment of voiding → skip. */
+  wasPaid?: boolean;
+  voidedAt?: string | null;
+}): Promise<typeof journalEntriesTable.$inferSelect | null> {
+  try {
+    const [issued] = await db
+      .select({ id: journalEntriesTable.id })
+      .from(journalEntriesTable)
+      .where(eq(journalEntriesTable.posting_key, `invoice_issued:${args.id}`))
+      .limit(1);
+    if (!issued) return null;
+
+    const [paidEntry] = await db
+      .select({ id: journalEntriesTable.id })
+      .from(journalEntriesTable)
+      .where(eq(journalEntriesTable.posting_key, `invoice_paid:${args.id}`))
+      .limit(1);
+    const [paidTxn] = await db
+      .select({ id: transactionsTable.id })
+      .from(transactionsTable)
+      .where(and(
+        eq(transactionsTable.invoice_id, args.id),
+        isNull(transactionsTable.deleted_at),
+        inArray(transactionsTable.status, ["confirmed", "posted"]),
+      ))
+      .limit(1);
+    if (args.wasPaid || paidEntry || paidTxn) {
+      console.warn(
+        `[gl] invoice ${args.id} voided but a payment is already recorded — issue entry left standing `
+        + `(needs a refund / credit note, not an automatic reversal)`,
+      );
+      return null;
+    }
+
+    const lines = await db
+      .select()
+      .from(journalLinesTable)
+      .where(eq(journalLinesTable.entry_id, issued.id));
+    if (!lines.length) return null;
+
+    return postEntry({
+      postingKey: `invoice_void:${args.id}`,
+      entryDate: args.voidedAt ? args.voidedAt.slice(0, 10) : sydneyToday(),
+      description: `Invoice voided #${args.id} (reverses invoice_issued:${args.id})`,
+      sourceType: "invoice",
+      sourceId: args.id,
+      currency: args.currency || "AUD",
+      // Mirror image: every debit becomes a credit and vice versa.
+      lines: lines.map((l) => ({
+        account_code: l.account_code,
+        account_name: l.account_name,
+        debit: Number(l.credit ?? 0),
+        credit: Number(l.debit ?? 0),
+      })),
+    });
+  } catch (err) {
+    console.error(`[gl] failed to reverse voided invoice ${args.id}:`, err);
+    return null;
+  }
 }
 
 /**
