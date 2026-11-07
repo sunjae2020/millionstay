@@ -428,7 +428,8 @@
     "uploading": "Đang tải lên…",
     "export_csv": "Xuất CSV",
     "export_csv_count": "Xuất {{count}} dòng ra CSV",
-    "export_csv_empty": "Không có dữ liệu để xuất"
+    "export_csv_empty": "Không có dữ liệu để xuất",
+    "retry": "Thử lại"
   },
   "lang": {
     "label": "Ngôn ngữ"
@@ -1877,6 +1878,14 @@
     "billing_invoice_created": "Đã tạo hóa đơn {{ref}}",
     "billing_invoice_skipped": "Đã bỏ qua {{n}} mục đã xuất hóa đơn.",
     "billing_invoice_failed": "Không thể tạo hóa đơn",
+    "billing_preset_this_month": "Tháng này",
+    "billing_preset_last_month": "Tháng trước",
+    "billing_preset_last_3m": "3 tháng gần nhất",
+    "billing_preset_this_year": "Năm nay",
+    "billing_preset_last_year": "Năm ngoái",
+    "billing_preset_all": "Toàn bộ",
+    "billing_load_failed": "Không tải được bảng kê.",
+    "billing_issue_disabled_hint": "Không có lệnh công việc chưa xuất hóa đơn trong kỳ này.",
     "billing_cost_total": "Chi phí công việc",
     "billing_multiple_owners": "Các căn này thuộc nhiều chủ sở hữu. Hãy chọn đối tượng thanh toán, hoặc thu hẹp khoảng thời gian hay tòa nhà.",
     "billing_owner_option": "{{name}} · {{n}} mục",

@@ -431,7 +431,8 @@
     "uploading": "上传中…",
     "export_csv": "导出 CSV",
     "export_csv_count": "导出 {{count}} 行为 CSV",
-    "export_csv_empty": "没有可导出的数据"
+    "export_csv_empty": "没有可导出的数据",
+    "retry": "重试"
   },
   "lang": {
     "label": "语言"
@@ -1896,6 +1897,14 @@
     "billing_invoice_created": "已生成请款单 {{ref}}",
     "billing_invoice_skipped": "已跳过 {{n}} 项已请款的条目。",
     "billing_invoice_failed": "无法生成请款单",
+    "billing_preset_this_month": "本月",
+    "billing_preset_last_month": "上月",
+    "billing_preset_last_3m": "最近3个月",
+    "billing_preset_this_year": "今年",
+    "billing_preset_last_year": "去年",
+    "billing_preset_all": "全部时间",
+    "billing_load_failed": "无法加载明细。",
+    "billing_issue_disabled_hint": "此期间没有尚未开票的工作指令。",
     "billing_cost_total": "作业费用",
     "billing_multiple_owners": "这些房间属于多个业主。请选择收费对象，或缩小期间或楼宇范围。",
     "billing_owner_option": "{{name}} · {{n}}项",
