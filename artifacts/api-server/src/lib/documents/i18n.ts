@@ -504,6 +504,8 @@ const LABELS: Dict = {
   // ── 작업지시서 (A) / 하자·청소 청구 명세서 (B) ─────────────────────────────
   "wo.heading":         { en: "Work Order",          ko: "작업지시서",     zh: "工作指令书",   ja: "作業指示書",     th: "ใบสั่งงาน",              vi: "Lệnh công việc" },
   "wo.billing.heading": { en: "Repair & Cleaning Billing Statement", ko: "임대청소 · 하자 청구 명세서", zh: "保洁与维修请款明细", ja: "清掃・不具合請求明細書", th: "ใบแจ้งค่าทำความสะอาดและซ่อมแซม", vi: "Bảng kê chi phí vệ sinh & sửa chữa" },
+  "wo.billing.kind.registered": { en: "Registered rental units", ko: "임대사업자 등록 세대", zh: "租赁业者登记住户", ja: "賃貸事業者登録住戸", th: "ห้องที่จดทะเบียนผู้ประกอบการให้เช่า", vi: "Căn hộ đăng ký kinh doanh cho thuê" },
+  "wo.billing.kind.general": { en: "General lease units", ko: "일반 임대 세대", zh: "一般租赁住户", ja: "一般賃貸住戸", th: "ห้องเช่าทั่วไป", vi: "Căn hộ cho thuê thông thường" },
   "wo.category":        { en: "Work type",           ko: "작업분류",       zh: "作业分类",     ja: "作業区分",       th: "ประเภทงาน",              vi: "Loại công việc" },
   "wo.status":          { en: "Status",              ko: "상태",           zh: "状态",         ja: "状態",           th: "สถานะ",                  vi: "Trạng thái" },
   "wo.reportedAt":      { en: "Reported",            ko: "접수일",         zh: "受理日",       ja: "受付日",         th: "วันที่แจ้ง",             vi: "Ngày tiếp nhận" },

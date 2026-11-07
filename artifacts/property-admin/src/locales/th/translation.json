@@ -1986,7 +1986,12 @@
     "dispatch_search_ph": "ค้นหาชื่อ เบอร์โทร หรือประเภทงาน",
     "dispatch_no_results": "ไม่พบพาร์ทเนอร์ที่ตรงกับการค้นหา",
     "dispatch_account_only": "บัญชี",
-    "dispatch_count": "{{shown}} จาก {{total}} พาร์ทเนอร์"
+    "dispatch_count": "{{shown}} จาก {{total}} พาร์ทเนอร์",
+    "billing_rental_kind": "ประเภทห้อง",
+    "billing_rental_kind_all": "ทุกห้อง",
+    "billing_rental_kind_registered": "ห้องที่จดทะเบียนผู้ประกอบการให้เช่า",
+    "billing_rental_kind_general": "ห้องเช่าทั่วไป",
+    "billing_rental_kind_hint": "ห้องที่จดทะเบียน = ห้องที่อยู่ในรายการของใบจดทะเบียนในแท็บ บัญชี → ผู้ประกอบการให้เช่า"
   },
   "csticket": {
     "search_placeholder": "ค้นหาตั๋ว...",

@@ -2006,7 +2006,12 @@
     "dispatch_search_ph": "Search name, phone, trade…",
     "dispatch_no_results": "No partners match your search.",
     "dispatch_account_only": "Account",
-    "dispatch_count": "{{shown}} of {{total}} partners"
+    "dispatch_count": "{{shown}} of {{total}} partners",
+    "billing_rental_kind": "Unit type",
+    "billing_rental_kind_all": "All units",
+    "billing_rental_kind_registered": "Registered rental units",
+    "billing_rental_kind_general": "General lease units",
+    "billing_rental_kind_hint": "Registered = listed on a rental business registration (Accounts → Rental business)."
   },
   "csticket": {
     "search_placeholder": "Search tickets...",

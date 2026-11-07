@@ -116,6 +116,8 @@ export function RepairBillingDialog({ open, onOpenChange }: Props) {
   const [propertyId, setPropertyId] = useState<number | null>(null);
   const [categories, setCategories] = useState<string[]>([]);
   const [status, setStatus] = useState("_all");
+  // 같은 소유주라도 임대사업자 등록 세대와 일반 세대는 따로 청구한다.
+  const [rentalKind, setRentalKind] = useState("_all");
   const [withholdingPct, setWithholdingPct] = useState("3.3");
   const [includePhotos, setIncludePhotos] = useState(true);
   const [photosPerUnit, setPhotosPerUnit] = useState("6");
@@ -130,10 +132,11 @@ export function RepairBillingDialog({ open, onOpenChange }: Props) {
     if (propertyId) p.set("property_id", String(propertyId));
     if (categories.length) p.set("category", categories.join(","));
     if (status !== "_all") p.set("status", status);
+    if (rentalKind !== "_all") p.set("rental_kind", rentalKind);
     if (Number(withholdingPct) > 0) p.set("withholding_pct", withholdingPct);
     p.set("photos_per_unit", includePhotos ? photosPerUnit : "0");
     return p;
-  }, [from, to, propertyId, categories, status, withholdingPct, includePhotos, photosPerUnit]);
+  }, [from, to, propertyId, categories, status, rentalKind, withholdingPct, includePhotos, photosPerUnit]);
 
   const { data: summary, isFetching, error, refetch } = useQuery({
     queryKey: ["wo-billing-statement", query.toString()],
@@ -263,18 +266,34 @@ export function RepairBillingDialog({ open, onOpenChange }: Props) {
             </p>
           </div>
 
-          <div>
-            <Label>{t("workorder.label_status")}</Label>
-            <Select value={status} onValueChange={setStatus}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="_all">{t("workorder.all_statuses")}</SelectItem>
-                <SelectItem value="Completed">{t("workorder.status_completed")}</SelectItem>
-                <SelectItem value="PendingReview">{t("workorder.status_pending_review")}</SelectItem>
-                <SelectItem value="InProgress">{t("workorder.status_in_progress")}</SelectItem>
-                <SelectItem value="Open">{t("workorder.status_open")}</SelectItem>
-              </SelectContent>
-            </Select>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <Label>{t("workorder.label_status")}</Label>
+              <Select value={status} onValueChange={setStatus}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="_all">{t("workorder.all_statuses")}</SelectItem>
+                  <SelectItem value="Completed">{t("workorder.status_completed")}</SelectItem>
+                  <SelectItem value="PendingReview">{t("workorder.status_pending_review")}</SelectItem>
+                  <SelectItem value="InProgress">{t("workorder.status_in_progress")}</SelectItem>
+                  <SelectItem value="Open">{t("workorder.status_open")}</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label>{t("workorder.billing_rental_kind", "Unit type")}</Label>
+              <Select value={rentalKind} onValueChange={setRentalKind}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="_all">{t("workorder.billing_rental_kind_all", "All units")}</SelectItem>
+                  <SelectItem value="registered">{t("workorder.billing_rental_kind_registered", "Registered rental units")}</SelectItem>
+                  <SelectItem value="general">{t("workorder.billing_rental_kind_general", "General lease units")}</SelectItem>
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground mt-1">
+                {t("workorder.billing_rental_kind_hint", "Registered = listed on a rental business registration (Accounts → Rental business).")}
+              </p>
+            </div>
           </div>
 
           <div className="grid grid-cols-2 gap-3">

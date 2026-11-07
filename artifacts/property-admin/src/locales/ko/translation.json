@@ -2006,7 +2006,12 @@
     "dispatch_search_ph": "업체명·전화번호·업종으로 검색",
     "dispatch_no_results": "검색 결과가 없습니다.",
     "dispatch_account_only": "계정",
-    "dispatch_count": "{{total}}곳 중 {{shown}}곳"
+    "dispatch_count": "{{total}}곳 중 {{shown}}곳",
+    "billing_rental_kind": "세대 구분",
+    "billing_rental_kind_all": "전체 세대",
+    "billing_rental_kind_registered": "임대사업자 등록 세대",
+    "billing_rental_kind_general": "일반 임대 세대",
+    "billing_rental_kind_hint": "등록 세대 = 계정 → 임대사업자 탭의 등록증 세대 목록에 있는 세대."
   },
   "csticket": {
     "search_placeholder": "티켓 검색...",

@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { DEFAULT_CURRENCY } from "../lib/currency";
 import multer from "multer";
-import { db, workOrdersTable, workOrderPhotosTable, contractSigningRequestsTable, propertiesTable, spacesTable, contactsTable, serviceHostsTable, invoicesTable, invoiceLineItemsTable, accountsTable, contractsTable, usersTable } from "@workspace/db";
+import { db, rentalBusinessUnitsTable, rentalBusinessRegistrationsTable, workOrdersTable, workOrderPhotosTable, contractSigningRequestsTable, propertiesTable, spacesTable, contactsTable, serviceHostsTable, invoicesTable, invoiceLineItemsTable, accountsTable, contractsTable, usersTable } from "@workspace/db";
 import { formatPersonName } from "../lib/nameFormat";
 import { sendAppointmentConfirmationEmail } from "../lib/email";
 import { eq, ilike, and, isNull, inArray, desc, sql, asc } from "drizzle-orm";
@@ -473,7 +473,15 @@ interface BillingFilters {
   statuses: string[];
   withholdingPct: number;
   photosPerUnit: number;
+  /**
+   * 임대사업자 등록 세대(`registered`) / 일반 세대(`general`) / 전체(null).
+   * 같은 소유주라도 등록 세대와 일반 세대는 따로 청구한다 — 구분 기준은 계정이
+   * 아니라 세대가 임대사업자 등록증의 세대 목록(`rental_business_units`)에 있는지다.
+   */
+  rentalKind: RentalKind | null;
 }
+
+type RentalKind = "registered" | "general";
 
 function billingFiltersFrom(query: Record<string, any>): BillingFilters {
   const list = (v: any) => String(v ?? "").split(",").map((x) => x.trim()).filter(Boolean);
@@ -488,7 +496,22 @@ function billingFiltersFrom(query: Record<string, any>): BillingFilters {
     statuses: list(query.status),
     withholdingPct: Number.isFinite(pct) && pct > 0 ? pct : 0,
     photosPerUnit: Number.isFinite(per) && per >= 0 ? Math.min(per, 12) : 6,
+    rentalKind: query.rental_kind === "registered" || query.rental_kind === "general" ? query.rental_kind : null,
   };
+}
+
+/** 임대사업자 등록증(삭제 안 된)의 세대 목록에 실린 공간 id. */
+async function loadRegisteredSpaceIds(spaceIds: number[]): Promise<Set<number>> {
+  if (!spaceIds.length) return new Set();
+  const rows = await db.select({ space_id: rentalBusinessUnitsTable.space_id })
+    .from(rentalBusinessUnitsTable)
+    .leftJoin(rentalBusinessRegistrationsTable, eq(rentalBusinessRegistrationsTable.id, rentalBusinessUnitsTable.registration_id))
+    .where(and(
+      isNull(rentalBusinessUnitsTable.deleted_at),
+      isNull(rentalBusinessRegistrationsTable.deleted_at),
+      inArray(rentalBusinessUnitsTable.space_id, spaceIds),
+    ));
+  return new Set(rows.map((r) => r.space_id).filter((v): v is number => v != null));
 }
 
 /**
@@ -508,7 +531,7 @@ async function loadBillingRows(f: BillingFilters): Promise<{ rows: RepairBilling
   if (f.statuses.length) conditions.push(inArray(workOrdersTable.status, f.statuses));
 
   const all = await db.select().from(workOrdersTable).where(and(...conditions));
-  const inRange = all.filter((w) => {
+  let inRange = all.filter((w) => {
     const d = workDateOf(w);
     if (!d) return !f.from && !f.to;
     const key = ymd(d);
@@ -516,6 +539,14 @@ async function loadBillingRows(f: BillingFilters): Promise<{ rows: RepairBilling
     if (f.to && key > f.to) return false;
     return true;
   });
+  if (f.rentalKind) {
+    // 세대 없는 작업지시(공용부 등)는 등록 세대가 아니므로 "일반"에 들어간다.
+    const registered = await loadRegisteredSpaceIds(
+      [...new Set(inRange.map((w) => w.space_id).filter(Boolean))] as number[],
+    );
+    const want = f.rentalKind === "registered";
+    inRange = inRange.filter((w) => (w.space_id != null && registered.has(w.space_id)) === want);
+  }
   inRange.sort((a, b) => {
     const da = workDateOf(a)?.getTime() ?? 0;
     const db_ = workDateOf(b)?.getTime() ?? 0;
@@ -652,6 +683,7 @@ router.get("/v1/work-orders/billing-statement.pdf", async (req, res): Promise<vo
       includePhotos: f.photosPerUnit > 0,
       withholdingPct: f.withholdingPct,
       photo_size: normalizeDocPhotoSize(query.photo_size),
+      rental_kind: f.rentalKind,
     },
     company,
     lang,
@@ -763,7 +795,7 @@ router.post("/v1/work-orders/billing-statement/invoice", async (req, res): Promi
     status: "Draft",
     billing_period: period,
     due_date: body.due_date ?? null,
-    description: `${period ?? ""} 하자·청소 청구 (${billable.length}건)`.trim(),
+    description: `${period ?? ""} 하자·청소 청구${f.rentalKind === "registered" ? " · 임대사업자 세대" : f.rentalKind === "general" ? " · 일반 세대" : ""} (${billable.length}건)`.trim(),
     notes: body.notes ?? null,
   });
 

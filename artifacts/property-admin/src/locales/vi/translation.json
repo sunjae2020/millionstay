@@ -1971,7 +1971,12 @@
     "dispatch_search_ph": "Tìm theo tên, số điện thoại, ngành nghề",
     "dispatch_no_results": "Không có đối tác phù hợp.",
     "dispatch_account_only": "Tài khoản",
-    "dispatch_count": "{{shown}} / {{total}} đối tác"
+    "dispatch_count": "{{shown}} / {{total}} đối tác",
+    "billing_rental_kind": "Loại căn hộ",
+    "billing_rental_kind_all": "Tất cả căn hộ",
+    "billing_rental_kind_registered": "Căn hộ đăng ký kinh doanh cho thuê",
+    "billing_rental_kind_general": "Căn hộ cho thuê thông thường",
+    "billing_rental_kind_hint": "Căn hộ đăng ký = có trong danh sách căn hộ của giấy đăng ký ở tab Tài khoản → Kinh doanh cho thuê."
   },
   "csticket": {
     "search_placeholder": "Tìm kiếm phiếu hỗ trợ...",

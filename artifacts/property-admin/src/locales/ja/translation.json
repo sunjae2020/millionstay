@@ -1988,7 +1988,12 @@
     "dispatch_search_ph": "業者名・電話番号・業種で検索",
     "dispatch_no_results": "該当するパートナーがありません。",
     "dispatch_account_only": "アカウント",
-    "dispatch_count": "{{total}}社中 {{shown}}社"
+    "dispatch_count": "{{total}}社中 {{shown}}社",
+    "billing_rental_kind": "住戸区分",
+    "billing_rental_kind_all": "全住戸",
+    "billing_rental_kind_registered": "賃貸事業者登録住戸",
+    "billing_rental_kind_general": "一般賃貸住戸",
+    "billing_rental_kind_hint": "登録住戸 = アカウント → 賃貸事業者タブの登録証の住戸一覧にある住戸。"
   },
   "csticket": {
     "search_placeholder": "チケットを検索...",

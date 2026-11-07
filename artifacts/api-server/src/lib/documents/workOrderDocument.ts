@@ -383,6 +383,8 @@ export interface RepairBillingInput {
   withholdingPct?: number;
   /** 증빙 사진 타일 크기 (기본 m). */
   photo_size?: DocPhotoSize;
+  /** 임대사업자 등록 세대만 / 일반 세대만 뽑은 명세서면 제목 아래에 적는다. */
+  rental_kind?: "registered" | "general" | null;
 }
 
 const BILLING_STYLE = `<style>
@@ -460,7 +462,7 @@ export function buildRepairBillingBody(d: RepairBillingInput, lang: DocLang, hea
   return `${BILLING_STYLE}${photoSizeStyle(d.photo_size)}
     <div class="wo-title">
       <h1>${escapeHtml(billingHeadingName(headingPrefix, d.property_name))} ${escapeHtml(t(lang, "wo.billing.heading"))}</h1>
-      <div class="wo-sub">${escapeHtml(period || DASH)}</div>
+      <div class="wo-sub">${escapeHtml([period || DASH, d.rental_kind ? t(lang, `wo.billing.kind.${d.rental_kind}`) : null].filter(Boolean).join(" · "))}</div>
     </div>
 
     <table class="wo-grid">
