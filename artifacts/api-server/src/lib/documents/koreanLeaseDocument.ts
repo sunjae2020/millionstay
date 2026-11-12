@@ -122,7 +122,10 @@ export interface KoreanLeaseDocInput {
    * @deprecated 첨부 경로(leaseAttachments)로 옮겨갔다.
    */
   annex_text: string | null;
-  /** 제11조(특약사항) 본문 — 이 계약에만 적용되는 특약. 계약일반조항 뒤에 이어진다. */
+  /**
+   * 이 계약의 특약 — 계약서 본문에는 더 이상 찍지 않는다(제11조 특약사항 삭제,
+   * 2026-11-10). 첨부 문서 "별지 특약사항"으로만 나간다.
+   */
   special_terms?: string | null;
 }
 
@@ -438,12 +441,26 @@ function renderProse(text: string | null | undefined): string {
 }
 
 /**
- * 제11조(특약사항)의 내용 — 계약마다 다르므로 템플릿이 아니라 계약에서 온다.
- * 조항 본문이 제11조 제목까지 찍고 끝나고, 그 다음 줄에 이 목록이 이어진다.
+ * 계약서 본문에서 제N조(특약사항) 조항을 통째로 들어낸다 — 제목 문단과, 다음
+ * 조항 제목이 나올 때까지 이어지는 문단까지.
+ *
+ * 특약은 첨부 문서 "별지 특약사항"으로만 나간다. 본문에도 함께 찍으면 할인된
+ * 차임(특별 판매가 등)이 계약서 본문에 남아, 나중에 정가와 다투는 근거가 된다
+ * (2026-11-10 운영 요청). 템플릿이 제11조 제목을 품고 있어도 여기서 걸러진다.
  */
-function renderSpecialTerms(d: KoreanLeaseDocInput): string {
-  if (!d.special_terms?.trim()) return "";
-  return `<div style="margin-top:-4px;">${renderProse(d.special_terms)}</div>`;
+const SPECIAL_TERMS_HEADING = /^제\s*\d+\s*조\s*\(\s*특약\s*사항\s*\)/;
+const ARTICLE_HEADING = /^제\s*\d+\s*조\s*\(/;
+function stripSpecialTermsArticle(text: string | null | undefined): string | null {
+  if (!text?.trim()) return null;
+  const plain = reflowClauses(/<[a-z/!][^>]*>/i.test(text) ? htmlToText(text) : text);
+  let skipping = false;
+  const kept = plain.split(/\n{2,}/).filter((raw) => {
+    const p = raw.trim();
+    if (SPECIAL_TERMS_HEADING.test(p)) { skipping = true; return false; }
+    if (skipping && ARTICLE_HEADING.test(p)) skipping = false;
+    return !skipping;
+  });
+  return kept.join("\n\n").trim() || null;
 }
 
 export function buildKoreanLeaseBody(d: KoreanLeaseDocInput, lang: DocLang = "ko"): string {
@@ -460,8 +477,7 @@ export function buildKoreanLeaseBody(d: KoreanLeaseDocInput, lang: DocLang = "ko
     ${renderParties(d)}
     ${d.clauses_text?.trim() ? `
       <div style="text-align:center;font-size:15px;font-weight:700;background:#F2F2F2;padding:8px;margin:22px 0 14px;">계약일반조항</div>
-      ${renderProse(d.clauses_text)}` : ""}
-    ${renderSpecialTerms(d)}
+      ${renderProse(stripSpecialTermsArticle(d.clauses_text))}` : ""}
   `;
 }
 

@@ -1251,7 +1251,7 @@ export async function buildContractDocInput(
       accounts: await resolveLeaseAccounts(row),
       clauses_text: termsText,
       annex_text: annexText,
-      // 제11조(특약사항) 본문 — 템플릿이 아니라 이 계약에 적어 둔 특약이 찍힌다.
+      // 본문에는 찍히지 않는다(제11조 삭제) — 별지 특약사항 첨부로만 나간다.
       special_terms: row.special_terms,
     };
   }
